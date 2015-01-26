@@ -160,6 +160,14 @@ define(function (require) {
 
     exports.init = function () {
         setWH();
+        YUANBAO_IMG = new Image();
+        // YUANBAO_IMG.addEventListener('load', imgLoaded, false);
+        YUANBAO_IMG.src = require.toUrl('../../img/jinyuanbao.png');
+
+        WAN_IMG = new Image();
+        // WAN_IMG.addEventListener('load', wanLoaded, false);
+        WAN_IMG.src = require.toUrl('../../img/wan.png');
+
         document.querySelector('.start').addEventListener('click', startFunc, false);
         // document.querySelector('.stop').addEventListener('click', stopFunc, false);
     };
@@ -173,13 +181,8 @@ define(function (require) {
         canvas.setAttribute('width', cWidth);
         canvas.setAttribute('height', cHeight);
 
-        YUANBAO_IMG = new Image();
-        YUANBAO_IMG.addEventListener('load', imgLoaded, false);
-        YUANBAO_IMG.src = require.toUrl('../../img/jinyuanbao.png');
-
-        WAN_IMG = new Image();
-        WAN_IMG.addEventListener('load', wanLoaded, false);
-        WAN_IMG.src = require.toUrl('../../img/wan.png');
+        imgLoaded();
+        wanLoaded();
 
         window.addEventListener('mousedown', mousedownFunc, false);
         document.querySelector('.stop').addEventListener('click', stopFunc, false);
