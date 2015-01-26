@@ -26,10 +26,9 @@ define(function (require) {
         this.cType = opts.cType || '';
         this.updateCount = 0;
         this.stop = false;
+        this.children = opts.children || [];
+        this.img = opts.img || null;
     }
-
-    // Rect.prototype = require('common/observer').prototype;
-    // Rect.prototype.constructor = Rect;
 
     Rect.prototype.update = function () {
         var me = this;
@@ -41,15 +40,32 @@ define(function (require) {
         me.fire('afterUpdate', me);
     };
 
-    Rect.prototype.draw = function () {
+    Rect.prototype.draw = function (x, y, width, height) {
         var me = this;
+        x = x || me.x;
+        y = y || me.y;
+        width = width || me.width;
+        height = height || me.height;
+
         me.fire('beforeDraw', me);
         me.ctx.beginPath();
         me.ctx.lineWidth = me.config.lineWidth;
         me.ctx.fillStyle = me.config.fillStyle;
         me.ctx.strokeStyle = me.config.strokeStyle;
-        me.ctx.rect(me.x, me.y, me.width, me.height);
+        me.ctx.rect(x, y, width, height);
         me.ctx.stroke();
+
+        for (var i = 0, len = me.children.length; i < len; i++) {
+            var child = me.children[i];
+            if (!child.deviationX) {
+                child.deviationX = Math.abs(child.x - me.x);
+            }
+            if (!child.deviationY) {
+                child.deviationY = Math.abs(child.y - len);
+            }
+            child.draw(me.x + child.deviationX, child.deviationY, child.width, child.height);
+            me.ctx.drawImage(child.img, me.x + child.deviationX, child.deviationY);//, me.width, me.height);
+        }
         me.fire('afterDraw', me);
     };
 
