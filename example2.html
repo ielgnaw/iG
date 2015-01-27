@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>example1</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            /*background-image: url(./img/example2/bg.jpg);*/
+        }
+
+        #main {
+            width: 100%;
+            margin: 0 auto;
+            padding-top: 100px;
+            text-align: center;
+        }
+
+        #main span {
+            display: block;
+            margin: 0 auto;
+            width: 200px;
+            height: 20px;
+            line-height: 20px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            z-index: 2147483647;
+            padding: 5px;
+        }
+
+        #go {
+            text-decoration: none;
+            color: #0f80e3;
+            display: block;
+            margin-top: 10px;
+        }
+
+        a.button {
+            -webkit-animation-duration: 2s;
+            -moz-animation-duration: 2s;
+            -webkit-animation-iteration-count: infinite;
+            -moz-animation-iteration-count: infinite;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        @-webkit-keyframes orangellowPulse {
+            from {
+                background-color: #fc9200;
+                -webkit-box-shadow: 0 0 9px #333;
+            }
+            50% {
+                background-color: #ffb515;
+                -webkit-box-shadow: 0 0 18px #ffb515;
+            }
+            to {
+                background-color: #fc9200;
+                -webkit-box-shadow: 0 0 9px #333;
+            }
+        }
+
+        @-moz-keyframes orangellowPulse {
+            from {
+                background-color: #fc9200;
+                -moz-box-shadow: 0 0 9px #333;
+            }
+            50% {
+                background-color: #ffb515;
+                -moz-box-shadow: 0 0 18px #ffb515;
+            }
+            to {
+                background-color: #fc9200;
+                -moz-box-shadow: 0 0 9px #333;
+            }
+        }
+
+        .orangellow.button {
+            -moz-animation-name: orangellowPulse;
+            -moz-animation-duration: 3s;
+        }
+
+    </style>
+    <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-8-6/esl.js"></script>
+</head>
+
+<body>
+    <div id="main">
+        这是正常页面
+        <span>我的 zIndex 是 2147483647</span>
+        <a href="#" id="go">走你</a>
+    </div>
+    <!-- <canvas id="surface"></canvas> -->
+    <script>
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = (
+                window.webkitRequestAnimationFrame
+                    || window.mozRequestAnimationFrame
+                    || window.msRequestAnimationFrame
+                    || window.oRequestAnimationFrame
+                    || function (callback) {
+                            return window.setTimeout(callback, 17 /*~ 1000/60*/);
+                       }
+            );
+        }
+
+        if (!window.cancelAnimationFrame) {
+            window.cancelAnimationFrame = (
+                window.cancelRequestAnimationFrame
+                    || window.webkitCancelAnimationFrame
+                    || window.webkitCancelRequestAnimationFrame
+                    || window.mozCancelAnimationFrame
+                    || window.mozCancelRequestAnimationFrame
+                    || window.msCancelAnimationFrame
+                    || window.msCancelRequestAnimationFrame
+                    || window.oCancelAnimationFrame
+                    || window.oCancelRequestAnimationFrame
+                    || window.clearTimeout
+            );
+        }
+
+        require.config({
+            'baseUrl': 'src',
+            'paths': {
+                'common': './common'
+            },
+            'packages': [
+                {
+                    'name': 'jquery',
+                    'location': '../dep/jquery/1.9.1/src',
+                    'main': 'jquery.min'
+                }
+            ]
+        });
+
+        require(['example2/main'], function (main) {
+            main.init();
+        });
+
+
+    /*window.onload = function () {
+        // Set canvas drawing surface
+        var space = document.getElementById("surface");
+        var surface = space.getContext("2d");
+        // surface.scale(1,1);
+
+        // Set Particles
+        var particles = [];
+        var particle_count = 350;
+        for(var i = 0; i < particle_count; i++) {
+            particles.push(new particle());
+        }
+        var time = 0;
+        // Set wrapper and canvas items size
+        var canvasWidth=320;
+        var canvasHeight=480;
+        // $(".wrapper").css({width:canvasWidth,height:canvasHeight});
+        // space.setAttribute('width', canvasWidth);
+        // space.setAttribute('height', canvasHeight);
+        // space.style.width = canvasWidth;
+        // space.style.height = canvasHeight;
+
+        function particle() {
+
+            this.speed = {x: -1+Math.random()*2, y: -5+Math.random()*5};
+            canvasWidth = (document.getElementById("surface").width);
+            canvasHeight= (document.getElementById("surface").height);
+            this.location = {x: canvasWidth/2, y: (canvasHeight/2)+35};
+
+            this.radius = .5+Math.random()*1;
+
+            this.life = 10+Math.random()*10;
+            this.death = this.life;
+
+            this.r = 255;
+            this.g = Math.round(Math.random()*155);
+            this.b = 0;
+        }
+
+        function ParticleAnimation(){
+            surface.globalCompositeOperation = "source-over";
+            surface.fillStyle = "black";
+            surface.fillRect(0, 0, canvasWidth, canvasHeight);
+            surface.globalCompositeOperation = "lighter";
+
+            for(var i = 0; i < particles.length; i++) {
+                var p = particles[i];
+
+                surface.beginPath();
+
+                p.opacity = Math.round(p.death/p.life*100)/100
+                var gradient = surface.createRadialGradient(p.location.x, p.location.y, 0, p.location.x, p.location.y, p.radius);
+                gradient.addColorStop(0, "rgba("+p.r+", "+p.g+", "+p.b+", "+p.opacity+")");
+                gradient.addColorStop(0.5, "rgba("+p.r+", "+p.g+", "+p.b+", "+p.opacity+")");
+                gradient.addColorStop(1, "rgba("+p.r+", "+p.g+", "+p.b+", 0)");
+                surface.fillStyle = gradient;
+                surface.arc(p.location.x, p.location.y, p.radius, Math.PI*2, false);
+                surface.fill();
+                p.death--;
+                p.radius++;
+                p.location.x += (p.speed.x);
+                p.location.y += (p.speed.y);
+
+                //regenerate particles
+                if(p.death < 0 || p.radius < 0){
+                    //a brand new particle replacing the dead one
+                    particles[i] = new particle();
+                }
+            }
+
+            requestAnimationFrame(ParticleAnimation);
+
+        }
+
+        ParticleAnimation();
+    }*/
+    </script>
+</body>
+</html>
