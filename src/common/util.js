@@ -472,6 +472,21 @@ define(function (require) {
         }
     })();
 
+    /**
+     * 设置 css3 样式
+     *
+     * @param {HTML.Element} obj dom 元素
+     * @param {string} name 样式属性名
+     * @param {string} value 样式属性值
+     */
+    util.setCSS3Style = function (obj, name, value) {
+        obj.style['webkit' + name.charAt(0).toUpperCase() + name.substring(1)] = value;
+        obj.style['moz' + name.charAt(0).toUpperCase() + name.substring(1)] = value;
+        obj.style['ms' + name.charAt(0).toUpperCase() + name.substring(1)] = value;
+        obj.style['o' + name.charAt(0).toUpperCase() + name.substring(1)] = value;
+        obj.style[name] = value;
+    };
+
     return util;
 
 });
