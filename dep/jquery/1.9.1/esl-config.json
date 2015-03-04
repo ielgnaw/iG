@@ -1,8 +1,0 @@
-{
-    "packages": [
-        {
-            "name": "esl",
-            "location": "lib/esl/0.0.1"
-        }
-    ]
-}
