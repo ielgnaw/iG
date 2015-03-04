@@ -68,11 +68,11 @@
      */
     ig.inherits = function (subClass, superClass) {
         Empty.prototype = superClass.prototype;
-        var subPrototype = subClass.prototype;
+        var subProto = subClass.prototype;
         var proto = subClass.prototype = new Empty();
 
-        for (var key in subPrototype) {
-            proto[key] = subPrototype[key];
+        for (var key in subProto) {
+            proto[key] = subProto[key];
         }
 
         subClass.prototype.constructor = subClass;
@@ -80,6 +80,46 @@
 
         return subClass;
     };
+
+    /**
+     * 根据角度计算弧度
+     * 弧度 = 角度 * Math.PI / 180
+     *
+     * @param {number} deg 角度值
+     *
+     * @return {number} 弧度值
+     */
+    ig.deg2Rad = function (deg) {
+        return deg * Math.PI / 180;
+    };
+
+    /**
+     * 根据弧度计算角度
+     * 角度 = 弧度 * 180 / Math.PI
+     *
+     * @param {number} rad 弧度值
+     *
+     * @return {number} 角度值
+     */
+    ig.rad2Deg = function (rad) {
+        return rad * 180 / Math.PI;
+    };
+
+})(root || this, ig || {});
+
+/**
+ * @file 图片加载
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+(function (root, ig, undefined) {
+
+    function ImageLoader(images) {
+        this.images = images || [];
+    };
+    console.warn(1);
+    ig.ImageLoader = ImageLoader;
+
 })(root || this, ig || {});
 
 /**
@@ -290,7 +330,9 @@
 
     ig.env = {
         browser: platform.browser,
-        os: platform.os
+        os: platform.os,
+        supportOrientation: (typeof root.orientation == 'number' && typeof root.onorientationchange == 'object'),
+        supportTouch: ('ontouchstart' in root) || root.DocumentTouch && document instanceof DocumentTouch
     };
 })(root || this, ig || {});
 

@@ -18,18 +18,20 @@
 
             require(['ig'], function (ig) {
                 console.warn(ig);
-                var lastTime = 0;
-                function calculateFps(time) {
-                    var now = +new Date();
-                    var fps = 1000 / (now - lastTime);
-                    lastTime = now;
-                    return fps;
-                }
+                // alert(ig.env.supportTouch);
+                // alert(ig.env.supportOrientation);
+                // var lastTime = 0;
+                // function calculateFps(time) {
+                //     var now = +new Date();
+                //     var fps = 1000 / (now - lastTime);
+                //     lastTime = now;
+                //     return fps;
+                // }
 
-                function test() {
-                    // console.log(calculateFps().toFixed());
-                    // requestAnimFrame(test);
-                }
+                // function test() {
+                //     console.log(calculateFps().toFixed());
+                //     requestAnimFrame(test);
+                // }
                 // requestAnimFrame(test);
             });
         </script>

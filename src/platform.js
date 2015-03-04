@@ -206,6 +206,8 @@
 
     ig.env = {
         browser: platform.browser,
-        os: platform.os
+        os: platform.os,
+        supportOrientation: (typeof root.orientation == 'number' && typeof root.onorientationchange == 'object'),
+        supportTouch: ('ontouchstart' in root) || root.DocumentTouch && document instanceof DocumentTouch
     };
 })(root || this, ig || {});
