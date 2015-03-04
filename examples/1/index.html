@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Title</title>
+        <link href="" rel="stylesheet">
+        <script type="text/javascript" src="../../js/ig.js"></script>
+    </head>
+    <body>
+        <script>
+            function P(name) {
+                this.age = 12;
+                this.sex = 'F';
+                this.name = name || '';
+            }
+
+            P.prototype.show = function () {
+                console.warn(this.name + '---' + this.age + '---' + this.sex);
+            };
+
+            var p = new P('wl');
+            console.warn(p);
+            p.show();
+
+            function S(name) {
+                this.name = name;
+            }
+
+            ig.inherits(S, P);
+            var s = new S('c');
+            console.warn(s);
+            s.show();
+        </script>
+    </body>
+</html>

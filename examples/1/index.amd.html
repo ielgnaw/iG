@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Title</title>
+        <link href="" rel="stylesheet">
+        <script src="http://s1.bdstatic.com/r/www/cache/ecom/esl/1-8-6/esl.js"></script>
+    </head>
+    <body>
+        <script>
+            require.config({
+                'baseUrl': '/js',
+                'paths': {
+                },
+                'packages': [
+                ]
+            });
+
+            require(['ig'], function (ig) {
+                console.warn(ig);
+                var lastTime = 0;
+                function calculateFps(time) {
+                    var now = +new Date();
+                    var fps = 1000 / (now - lastTime);
+                    lastTime = now;
+                    return fps;
+                }
+
+                function test() {
+                    // console.log(calculateFps().toFixed());
+                    // requestAnimFrame(test);
+                }
+                // requestAnimFrame(test);
+            });
+        </script>
+    </body>
+</html>
