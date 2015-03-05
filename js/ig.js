@@ -22,7 +22,7 @@
     /**
      * requestAnimationFrame polyfill
      */
-    root.requestAnimFrame = (function () {
+    ig.requestAnimFrame = (function () {
         return root.requestAnimationFrame
             || root.webkitRequestAnimationFrame
             || root.mozRequestAnimationFrame
@@ -44,7 +44,7 @@
     /**
      * cancelAnimationFrame polyfill
      */
-    root.cancelAnimFrame = (function () {
+    ig.cancelAnimFrame = (function () {
         return root.cancelAnimationFrame
                 || root.webkitCancelAnimationFrame
                 || root.webkitCancelRequestAnimationFrame
@@ -57,6 +57,9 @@
                 || root.clearTimeout;
     })();
 
+    /**
+     * 空函数
+     */
     ig.noop = function () {};
 
     /**
@@ -305,6 +308,8 @@
 
 (function (root, ig, undefined) {
 
+    var arrayProto = Array.prototype;
+
     /**
      * 图片加载构造器
      *
@@ -356,29 +361,36 @@
 
     ImageLoader.prototype.addImage = function (imageUrls) {
         var me = this;
-        if (Array.isArray(imageUrls)) {
-            me.imageUrls.concat(imageUrls);
-        }
-        else {
-            me.imageUrls.push(imageUrls);
-        }
+        arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
     };
 
     var il = new ImageLoader();
 
-    il.addImage('/examples/1/img/mute_35x35.png');
-    il.addImage('/examples/1/img/thinNumbers_25x32.png');
-    il.addImage('/examples/1/img/fatNumbers_33x41.png');
-    il.addImage('/examples/1/img/pop_156x141.png');
-    il.addImage('/examples/1/img/dots_64x86.png');
-    il.addImage('/examples/1/img/panels_383x550.png');
-    il.addImage('/examples/1/img/quitBut.png');
-    il.addImage('/examples/1/img/playBut.png');
-    il.addImage('/examples/1/img/hud.png');
-    il.addImage('/examples/1/img/rotateDeviceMessage.jpg');
-    il.addImage('/examples/1/img/bg.jpg');
+    // il.addImage('/examples/1/img/mute_35x35.png');
+    // il.addImage('/examples/1/img/thinNumbers_25x32.png');
+    // il.addImage('/examples/1/img/fatNumbers_33x41.png');
+    // il.addImage('/examples/1/img/pop_156x141.png');
+    // il.addImage('/examples/1/img/dots_64x86.png');
+    // il.addImage('/examples/1/img/panels_383x550.png');
+    // il.addImage('/examples/1/img/quitBut.png');
+    // il.addImage('/examples/1/img/playBut.png');
+    // il.addImage('/examples/1/img/hud.png');
+    // il.addImage('/examples/1/img/rotateDeviceMessage.jpg');
+    // il.addImage('/examples/1/img/bg.jpg');
+    il.addImage([
+        '/examples/1/img/mute_35x35.png',
+        '/examples/1/img/thinNumbers_25x32.png',
+        '/examples/1/img/fatNumbers_33x41.png',
+        '/examples/1/img/pop_156x141.png',
+        '/examples/1/img/dots_64x86.png',
+        '/examples/1/img/panels_383x550.png',
+        '/examples/1/img/quitBut.png',
+        '/examples/1/img/playBut.png',
+        '/examples/1/img/hud.png',
+        '/examples/1/img/rotateDeviceMessage.jpg',
+        '/examples/1/img/bg.jpg'
+    ]);
 
-    var percentComplete = il.loadImages();
     var interval = setInterval(function (e) {
         var percentComplete = il.loadImages();
         console.warn(il);

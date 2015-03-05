@@ -8,7 +8,7 @@
     /**
      * requestAnimationFrame polyfill
      */
-    root.requestAnimFrame = (function () {
+    ig.requestAnimFrame = (function () {
         return root.requestAnimationFrame
             || root.webkitRequestAnimationFrame
             || root.mozRequestAnimationFrame
@@ -30,7 +30,7 @@
     /**
      * cancelAnimationFrame polyfill
      */
-    root.cancelAnimFrame = (function () {
+    ig.cancelAnimFrame = (function () {
         return root.cancelAnimationFrame
                 || root.webkitCancelAnimationFrame
                 || root.webkitCancelRequestAnimationFrame
@@ -43,6 +43,9 @@
                 || root.clearTimeout;
     })();
 
+    /**
+     * 空函数
+     */
     ig.noop = function () {};
 
     /**
