@@ -43,7 +43,7 @@
                 || root.clearTimeout;
     })();
 
-    var Empty = function () {};
+    ig.noop = function () {};
 
     /**
      * 为类型构造器建立继承关系
@@ -53,9 +53,9 @@
      * @return {Function} 返回 subClass 构造器
      */
     ig.inherits = function (subClass, superClass) {
-        Empty.prototype = superClass.prototype;
+        ig.noop.prototype = superClass.prototype;
         var subProto = subClass.prototype;
-        var proto = subClass.prototype = new Empty();
+        var proto = subClass.prototype = new ig.noop();
 
         for (var key in subProto) {
             proto[key] = subProto[key];
@@ -89,6 +89,23 @@
      */
     ig.rad2Deg = function (rad) {
         return rad * 180 / Math.PI;
+    };
+
+    /**
+     * 把页面上的鼠标坐标换成相对于 canvas 的坐标
+     *
+     * @param {HTML.Element} canvas canvas 元素
+     * @param {number} x 相对于页面的横坐标
+     * @param {number} y 相对于页面的纵坐标
+     *
+     * @return {Object} 相对于 canvas 的坐标对象
+     */
+    ig.window2Canvas = function (canvas, x, y) {
+        var boundRect = canvas.getBoundingClientRect();
+        return {
+            x: Math.round(x - boundRect.left * (canvas.width / boundRect.width)),
+            y: Math.round(y - boundRect.top * (canvas.height / boundRect.height))
+        };
     };
 
 })(root || this, ig || {});

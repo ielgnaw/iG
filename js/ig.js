@@ -57,7 +57,7 @@
                 || root.clearTimeout;
     })();
 
-    var Empty = function () {};
+    ig.noop = function () {};
 
     /**
      * 为类型构造器建立继承关系
@@ -67,9 +67,9 @@
      * @return {Function} 返回 subClass 构造器
      */
     ig.inherits = function (subClass, superClass) {
-        Empty.prototype = superClass.prototype;
+        ig.noop.prototype = superClass.prototype;
         var subProto = subClass.prototype;
-        var proto = subClass.prototype = new Empty();
+        var proto = subClass.prototype = new ig.noop();
 
         for (var key in subProto) {
             proto[key] = subProto[key];
@@ -105,6 +105,197 @@
         return rad * 180 / Math.PI;
     };
 
+    /**
+     * 把页面上的鼠标坐标换成相对于 canvas 的坐标
+     *
+     * @param {HTML.Element} canvas canvas 元素
+     * @param {number} x 相对于页面的横坐标
+     * @param {number} y 相对于页面的纵坐标
+     *
+     * @return {Object} 相对于 canvas 的坐标对象
+     */
+    ig.window2Canvas = function (canvas, x, y) {
+        var boundRect = canvas.getBoundingClientRect();
+        return {
+            x: Math.round(x - boundRect.left * (canvas.width / boundRect.width)),
+            y: Math.round(y - boundRect.top * (canvas.height / boundRect.height))
+        };
+    };
+
+})(root || this, ig || {});
+
+/**
+ * @file 自定义事件处理
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+(function (root, ig, undefined) {
+
+    var guidKey = '_observerGUID';
+
+    /**
+     * 提供与事件相关的操作的基类
+     *
+     * @constructor
+     */
+    function Event() {
+        this._events = {};
+    }
+
+    /**
+     * 注册一个事件处理函数
+     *
+     * @param {string} type 事件的类型，如果类型为`*`则在所有事件触发时执行
+     * @param {Function} handler 事件的处理函数
+     * @public
+     */
+    Event.prototype.on = function (type, handler) {
+        if (!this._events) {
+            this._events = {};
+        }
+
+        var pool = this._events[type];
+        if (!pool) {
+            pool = this._events[type] = [];
+        }
+        if (!handler.hasOwnProperty(guidKey)) {
+            handler[guidKey] = +new Date();
+        }
+        pool.push(handler);
+    };
+
+    /**
+     * 注销一个事件处理函数
+     * @param {string} type 事件的类型，
+     * 如果值为`*`仅会注销通过`*`为类型注册的事件，并不会将所有事件注销
+     * @param {Function=} handler 事件的处理函数，
+     * 无此参数则注销`type`指定类型的所有事件处理函数
+     * @public
+     */
+    Event.prototype.un = function (type, handler) {
+        if (!this._events) {
+            return;
+        }
+
+        if (!handler) {
+            this._events[type] = [];
+            return;
+        }
+
+        var pool = this._events[type];
+        if (pool) {
+            for (var i = 0; i < pool.length; i++) {
+                if (pool[i] === handler) {
+                    pool.splice(i, 1);
+                    // 当前Event实现去重是在`fire`阶段做的，
+                    // 因此可能通过`on`注册多个相同的handler，
+                    // 所以继续循环，不作退出处理
+                    i--;
+                }
+            }
+        }
+    };
+
+    /**
+     * 触发指定类型的事件
+     *
+     * 事件处理函数的执行顺序如下：
+     *
+     * 1. 如果对象上存在名称为`on{type}`的方法，执行该方法
+     * 2. 按照事件注册时的先后顺序，依次执行类型为`type`的处理函数
+     * 3. 按照事件注册时的先后顺序，依次执行类型为`*`的处理函数
+     *
+     * 关于事件对象，分为以下2种情况：
+     *
+     * - 如果`event`参数是个对象，则会添加`type`属性后传递给处理函数
+     * - 其它情况下，`event`参数的值将作为事件对象中的`data`属性
+     *
+     * 事件处理函数有去重功能，同一个事件处理函数只会执行一次
+     *
+     * @param {string=} type 事件类型
+     * @param {Object=} event 事件对象
+     * @public
+     */
+    Event.prototype.fire = function (type, event) {
+        // `.fire({ type: click, data: 'data' })`这样的情况
+        if (arguments.length === 1 && typeof type === 'object') {
+            event = type;
+            type = event.type;
+        }
+
+        // 无论`this._events`有没有被初始化，
+        // 如果有直接挂在对象上的方法是要触发的
+        var inlineHandler = this['on' + type];
+        if (typeof inlineHandler === 'function') {
+            inlineHandler.call(this, event);
+        }
+
+        if (!this._events) {
+            return;
+        }
+
+        // 到了这里，有`.fire(type)`和`.fire(type, event)`两种情况
+        if (event == null) {
+            event = {};
+        }
+        if (Object.prototype.toString.call(event) !== '[object Object]') {
+            event = {data: event};
+        }
+        event.type = type;
+        event.target = this;
+
+        var alreadyInvoked = {};
+        var pool = this._events[type];
+        if (pool) {
+            // 由于在执行过程中，某个处理函数可能会用`un`取消事件的绑定，
+            // 这可能导致循环过程中`i`的不准确，因此复制一份。
+            // 这个策略会使得在事件处理函数中把后续的处理函数取消掉在当前无效。
+            //
+            // NOTICE: 这个性能不高，有空再改改
+            pool = pool.slice();
+
+            for (var i = 0; i < pool.length; i++) {
+                var handler = pool[i];
+                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                    handler.call(this, event);
+                }
+            }
+        }
+
+        // 类型为`*`的事件在所有事件触发时都要触发
+        if (type !== '*') {
+            var allPool = this._events['*'];
+            if (!allPool) {
+                return;
+            }
+
+            allPool = allPool.slice();
+
+            /* eslint-disable no-redeclare */
+            for (var i = 0; i < allPool.length; i++) {
+                var handler = allPool[i];
+                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                    handler.call(this, event);
+                }
+            }
+            /* eslint-enable no-redeclare */
+        }
+    };
+
+    /**
+     * 在无继承关系的情况下，使一个对象拥有事件处理的功能
+     *
+     * @param {*} target 需要支持事件处理功能的对象
+     */
+    Event.enable = function (target) {
+        target._events = {};
+        target.on = Event.prototype.on;
+        target.un = Event.prototype.un;
+        target.fire = Event.prototype.fire;
+    };
+
+    ig.Event = Event;
+
 })(root || this, ig || {});
 
 /**
@@ -114,10 +305,100 @@
 
 (function (root, ig, undefined) {
 
-    function ImageLoader(images) {
-        this.images = images || [];
+    /**
+     * 图片加载构造器
+     *
+     * @constructor
+     */
+    function ImageLoader() {
+        this.images = {};
+        this.imageUrls = [];
+        this.imagesLoadedCount = 0;
+        this.imagesErrorLoadedCount = 0;
+        this.imageIndex = 0;
+        this.imageLoadingProgressCallback = ig.noop;
     };
-    console.warn(1);
+
+    ImageLoader.prototype.imageLoadedCallback = function () {
+        this.imagesLoadedCount++;
+    };
+
+    ImageLoader.prototype.imageLoadedErrorCallback = function () {
+        this.imagesErrorLoadedCount++;
+    };
+
+    ImageLoader.prototype.loadImage = function (imageUrl) {
+        var me = this;
+        var img = new Image();
+        img.src = imageUrl;
+        img.addEventListener('load', function (e) {
+            me.imageLoadedCallback(e);
+        });
+        img.addEventListener('error', function (e) {
+            me.imageLoadedErrorCallback(e);
+        });
+
+        me.images[imageUrl] = img;
+    };
+
+    ImageLoader.prototype.loadImages = function (imageUrl) {
+        var me = this;
+
+        var imageUrlsLen = me.imageUrls.length;
+
+        if (me.imageIndex < imageUrlsLen) {
+            me.loadImage(me.imageUrls[me.imageIndex]);
+            me.imageIndex++;
+        }
+
+        return (me.imagesLoadedCount + me.imagesErrorLoadedCount) / imageUrlsLen * 100;
+    };
+
+    ImageLoader.prototype.addImage = function (imageUrls) {
+        var me = this;
+        if (Array.isArray(imageUrls)) {
+            me.imageUrls.concat(imageUrls);
+        }
+        else {
+            me.imageUrls.push(imageUrls);
+        }
+    };
+
+    var il = new ImageLoader();
+
+    il.addImage('/examples/1/img/mute_35x35.png');
+    il.addImage('/examples/1/img/thinNumbers_25x32.png');
+    il.addImage('/examples/1/img/fatNumbers_33x41.png');
+    il.addImage('/examples/1/img/pop_156x141.png');
+    il.addImage('/examples/1/img/dots_64x86.png');
+    il.addImage('/examples/1/img/panels_383x550.png');
+    il.addImage('/examples/1/img/quitBut.png');
+    il.addImage('/examples/1/img/playBut.png');
+    il.addImage('/examples/1/img/hud.png');
+    il.addImage('/examples/1/img/rotateDeviceMessage.jpg');
+    il.addImage('/examples/1/img/bg.jpg');
+
+    var percentComplete = il.loadImages();
+    var interval = setInterval(function (e) {
+        var percentComplete = il.loadImages();
+        console.warn(il);
+        console.warn(percentComplete.toFixed());
+
+        if (percentComplete >= 100) {
+            clearInterval(interval)
+        }
+    }, 16);
+
+
+
+    ig.inherits(ImageLoader, ig.Event);
+
+    // var a = new ImageLoader();
+    // a.on('test', function () {
+    //     console.error(arguments);
+    // });
+    // a.fire('test', {s: 1});
+    // console.warn(a);
     ig.ImageLoader = ImageLoader;
 
 })(root || this, ig || {});
