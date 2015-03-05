@@ -18,7 +18,7 @@
                     var me = this;
                     var start;
                     var finish;
-                    root.setTimeout(function () {
+                    setTimeout(function () {
                         start = +new Date();
                         callback(start);
                         finish = +new Date();
