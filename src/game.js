@@ -5,5 +5,8 @@
 
 (function (root, ig, undefined) {
 
+    function Game() {
+
+    }
 
 })(root || this, ig || {});

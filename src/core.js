@@ -111,4 +111,8 @@
         };
     };
 
+    ig.resetMatrix = function () {
+
+    };
+
 })(root || this, ig || {});

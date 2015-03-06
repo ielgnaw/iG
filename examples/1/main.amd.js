@@ -17,10 +17,9 @@ define(function (require) {
     var exports = {};
 
     exports.init = function () {
-        console.warn(backingStoreRatio);
-        console.log(require('ig'));
-        var designWidth = 640;
-        var designHeight = 1136;
+        console.log(ig.env);
+        var designWidth = 414;
+        var designHeight = 736;
         var viewWidth = document.documentElement.clientWidth;
         var viewHeight = document.documentElement.clientHeight;
         var scale = viewWidth / designWidth;
@@ -29,33 +28,35 @@ define(function (require) {
         canvas.style.width = viewWidth + 'px';
         canvas.style.height = viewHeight + 'px';
 
-        var devicePixelRatio = window.devicePixelRatio || 1;
+        // var devicePixelRatio = window.devicePixelRatio || 1;
 
-        var backingStoreRatio = ctx.webkitBackingStorePixelRatio
-            || ctx.mozBackingStorePixelRatio
-            || ctx.msBackingStorePixelRatio
-            || ctx.oBackingStorePixelRatio
-            || ctx.backingStorePixelRatio
-            || 1;
+        // var backingStoreRatio = ctx.webkitBackingStorePixelRatio
+        //     || ctx.mozBackingStorePixelRatio
+        //     || ctx.msBackingStorePixelRatio
+        //     || ctx.oBackingStorePixelRatio
+        //     || ctx.backingStorePixelRatio
+        //     || 1;
 
-        var ratio = devicePixelRatio / backingStoreRatio;
-        console.warn(ratio);
+        // var ratio = devicePixelRatio / backingStoreRatio;
+        // console.warn(ratio);
 
-        if (devicePixelRatio !== backingStoreRatio) {
-            var oldWidth = canvas.width;
-            var oldHeight = canvas.height;
+        // if (devicePixelRatio !== backingStoreRatio) {
+        //     var oldWidth = canvas.width;
+        //     var oldHeight = canvas.height;
 
-            canvas.width = oldWidth * ratio;
-            canvas.height = oldHeight * ratio;
+        //     canvas.width = oldWidth * ratio;
+        //     canvas.height = oldHeight * ratio;
 
-            canvas.style.width = oldWidth + 'px';
-            canvas.style.height = oldHeight + 'px';
+        //     canvas.style.width = oldWidth + 'px';
+        //     canvas.style.height = oldHeight + 'px';
 
-            // now scale the context to counter
-            // the fact that we've manually scaled
-            // our canvas element
-            context.scale(ratio, ratio);
-        }
+        //     ctx.scale(ratio, ratio);
+        //     console.warn(ctx);
+        // }
+
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
     };
 
     return exports;

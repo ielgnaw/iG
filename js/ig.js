@@ -125,6 +125,10 @@
         };
     };
 
+    ig.resetMatrix = function () {
+
+    };
+
 })(root || this, ig || {});
 
 /**
@@ -308,6 +312,9 @@
 
 (function (root, ig, undefined) {
 
+    function Game() {
+
+    }
 
 })(root || this, ig || {});
 
