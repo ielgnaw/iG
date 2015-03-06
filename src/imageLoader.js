@@ -88,29 +88,29 @@
     // il.addImage('/examples/1/img/hud.png');
     // il.addImage('/examples/1/img/rotateDeviceMessage.jpg');
     // il.addImage('/examples/1/img/bg.jpg');
-    il.addImage([
-        '/examples/1/img/mute_35x35.png',
-        '/examples/1/img/thinNumbers_25x32.png',
-        '/examples/1/img/fatNumbers_33x41.png',
-        '/examples/1/img/pop_156x141.png',
-        '/examples/1/img/dots_64x86.png',
-        '/examples/1/img/panels_383x550.png',
-        '/examples/1/img/quitBut.png',
-        '/examples/1/img/playBut.png',
-        '/examples/1/img/hud.png',
-        '/examples/1/img/rotateDeviceMessage.jpg',
-        '/examples/1/img/bg.jpg'
-    ]);
+    // il.addImage([
+    //     '/examples/1/img/mute_35x35.png',
+    //     '/examples/1/img/thinNumbers_25x32.png',
+    //     '/examples/1/img/fatNumbers_33x41.png',
+    //     '/examples/1/img/pop_156x141.png',
+    //     '/examples/1/img/dots_64x86.png',
+    //     '/examples/1/img/panels_383x550.png',
+    //     '/examples/1/img/quitBut.png',
+    //     '/examples/1/img/playBut.png',
+    //     '/examples/1/img/hud.png',
+    //     '/examples/1/img/rotateDeviceMessage.jpg',
+    //     '/examples/1/img/bg.jpg'
+    // ]);
 
-    var interval = setInterval(function (e) {
-        var percentComplete = il.loadImages();
-        console.warn(il);
-        console.warn(percentComplete.toFixed());
+    // var interval = setInterval(function (e) {
+    //     var percentComplete = il.loadImages();
+    //     console.warn(il);
+    //     console.warn(percentComplete.toFixed());
 
-        if (percentComplete >= 100) {
-            clearInterval(interval)
-        }
-    }, 16);
+    //     if (percentComplete >= 100) {
+    //         clearInterval(interval)
+    //     }
+    // }, 16);
 
 
 
