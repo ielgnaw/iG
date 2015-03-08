@@ -1,35 +1,432 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Title</title>
-        <link href="" rel="stylesheet">
+        <style>
+            .container {
+                width: 800px;
+                margin: 0 auto;
+            }
+            canvas {
+                border: 1px solid #ddd;
+            }
+        </style>
         <script type="text/javascript" src="../../js/ig.js"></script>
     </head>
     <body>
+        <div class="container">
+            <canvas id="canvas" width="800" height="400"></canvas>
+        </div>
+        <button id="start">Start</button>
+        <button id="end">End</button>
         <script>
-            function P(name) {
-                this.age = 12;
-                this.sex = 'F';
-                this.name = name || '';
+            var canvas = document.querySelector('#canvas');
+            var ctx = canvas.getContext('2d');
+            // ctx.strokeStyle = 'red';
+            // ctx.beginPath();
+            // ctx.moveTo(20, 20);
+            // ctx.lineTo(40, 40);
+            // ctx.moveTo(60, 60);
+            // ctx.lineTo(280, 80);
+            // ctx.closePath();
+            // ctx.stroke();
+
+            // ctx.beginPath();
+            // ctx.arc(300, 300, 50, 0, Math.PI * 2, false);
+            // ctx.closePath();
+            // ctx.stroke();
+
+            // ctx.fillText('hello', 20, 20);
+
+            // ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // canvas.setAttribute('width', 800);
+            // canvas.setAttribute('height', 400);
+            // ctx.strokeRect(10, 10, 200, 200);
+
+
+
+            /**
+             *
+             * 在 canvas 画布中，使用的是如下的 3 * 3 的矩阵
+             *
+             *      a  c  e       x 轴缩放   x 轴倾斜   x 轴平移
+             *      b  d  f   =   y 轴倾斜   y 轴缩放   y 轴平移
+             *      0  0  1          0         0         1
+             *
+             * 单位矩阵
+             *
+             *      1  0  0
+             *      0  1  0
+             *      0  0  1
+             */
+            // ctx.transform(2, 0, 0, 1, 150, 150);
+            // ctx.fillRect(0, 0, 100, 100);
+
+
+            // ctx.fillStyle = 'rgb(63, 169, 245)'; // 目标 destination
+            // ctx.fillRect(50, 50, 100, 100);
+            // // ctx.globalCompositeOperation = 'source-over';
+            // // ctx.globalCompositeOperation = 'destination-over';
+            // // ctx.globalCompositeOperation = 'source-atop';
+            // // ctx.globalCompositeOperation = 'destination-atop';
+            // // ctx.globalCompositeOperation = 'source-in';
+            // // ctx.globalCompositeOperation = 'destination-in';
+            // // ctx.globalCompositeOperation = 'source-out';
+            // // ctx.globalCompositeOperation = 'destination-out';
+            // // ctx.globalCompositeOperation = 'lighter';
+            // // ctx.globalCompositeOperation = 'copy';
+            // ctx.globalCompositeOperation = 'xor';
+            // ctx.fillStyle = 'rgb(255, 123, 172)'; // 源 source
+            // ctx.fillRect(100, 100, 100, 100);
+
+
+            // ctx.shadowBlur = 20;
+            // ctx.shadowColor = 'rgb(0, 0, 0)';
+            // ctx.fillRect(50, 50, 100, 100);
+
+            // ctx.shadowBlur = 0;
+            // ctx.shadowOffsetX = 10;
+            // ctx.shadowOffsetY = 10;
+            // ctx.shadowColor = 'rgba(100, 100, 100, 0.5)';
+            // ctx.fillRect(200, 50, 100, 100);
+
+            // var gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+            // gradient.addColorStop(0, 'rgb(0, 0, 0)');
+            // gradient.addColorStop(1, 'rgb(255, 255, 255)');
+            // ctx.fillStyle = gradient;
+            // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // lineTo 的每次调用都是从子路径的最后一个坐标值（由 moveTo 或 lineTo 留下）开始画线
+            // 绘制一条线连接到 lineTo 参数所定义的坐标值，然后把子路径更新到新的坐标值。
+            // ctx.beginPath();
+            // ctx.moveTo(100, 50);
+            // ctx.lineTo(150, 150);
+            // ctx.lineTo(50, 150);
+            // ctx.closePath();
+            // ctx.stroke();
+            // // ctx.fill();
+
+            // 二次贝塞尔曲线
+            // ctx.lineWidth = 5;
+            // ctx.beginPath();
+            // ctx.moveTo(50, 250);
+            // ctx.quadraticCurveTo(250, 100, 450, 250);
+            // ctx.stroke();
+
+            // 三次贝塞尔曲线
+            // ctx.lineWidth = 5;
+            // ctx.beginPath();
+            // ctx.moveTo(50, 250);
+            // ctx.bezierCurveTo(150, 50, 350, 450, 450, 250);
+            // ctx.stroke();
+
+            // var dataUrl = canvas.toDataURL();
+            // console.warn(dataUrl);
+
+            // 灰度值 = (R * 30 + G * 59 + B * 11 + 50) / 100
+
+            // canvas.width = 120;
+            // canvas.height = 120;
+            // ctx.shadowBlur = 20;
+            // ctx.shadowColor = 'rgb(0, 0, 0)';
+            // var img = new Image();
+            // img.src = 'http://tp3.sinaimg.cn/1675431450/180/5636904790/1';
+            // img.onload = function () {
+            //     ctx.drawImage(img, 10, 10);
+            // };
+
+            // ctx.fillRect(0, 0, 20, 20);
+            // var imageData = ctx.getImageData(0, 0, 3, 3);
+            // var width = imageData.width;
+            // var x = 2;
+            // var y = 2;
+            // var pixelRed = ((y - 1) * (width * 4)) + ((x - 1) * 4);
+            // var pixelGreen = pixelRed + 1;
+            // var pixelBlue = pixelRed + 2;
+            // var pixelAlppa = pixelRed + 3;
+            // console.warn(imageData);
+            // console.warn(pixelRed, pixelGreen, pixelBlue, pixelAlppa);
+
+            // var imageData = ctx.createImageData(200, 200);
+            // var pixels = imageData.data;
+            // var numPixels = imageData.width * imageData.height;
+            // for (var i = 0; i < numPixels; i++) {
+            //     pixels[i * 4] = Math.floor(Math.random() * 255); // 红
+            //     pixels[i * 4 + 1] = Math.floor(Math.random() * 255); // 绿
+            //     pixels[i * 4 + 2] = Math.floor(Math.random() * 255); // 蓝
+            //     pixels[i * 4 + 3] = 255; // 透明
+            // }
+            // ctx.putImageData(imageData, 0, 0);
+
+            // var numPixels = imageData.width * imageData.height;
+            // for (var i = 0; i < numPixels; i++) {
+            //     pixels[i * 4] = Math.floor(Math.random() * 255); // 红
+            //     pixels[i * 4 + 1] = Math.floor(Math.random() * 255); // 绿
+            //     pixels[i * 4 + 2] = Math.floor(Math.random() * 255); // 蓝
+            //     pixels[i * 4 + 3] = 255; // 透明
+            // }
+            // ctx.putImageData(imageData, 0, 0);
+
+
+            /*var playAni = false;
+
+            var startBtn = document.querySelector('#start');
+            startBtn.addEventListener('click', function (e) {
+                playAni = true;
+                animate();
+            });
+
+            var endBtn = document.querySelector('#end');
+            endBtn.addEventListener('click', function (e) {
+                playAni = false;
+            });
+
+            function Shape(opts) {
+                opts = opts || {};
+                this.x = opts.x; // 横坐标
+                this.y = opts.y; // 纵坐标
+                this.width = opts.width; // 宽
+                this.height = opts.height; // 长
+
+                this.radius = Math.random() * 30; // 半径，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
+                this.angle = 0; // 角度
+
+                // 速度指速率和方向，速率指像素移动的数目
+                // x += vX
+                // y += vY
+                this.vX = opts.vX || 0; // 横轴速度
+                this.vY = opts.vY || 0; // 纵轴速度
+
+                // vX += aX
+                // vY += aY
+                this.aX = opts.aX || 0; // 横轴加速度
+                this.aY = opts.aY || 0; // 纵轴加速度
+
+                this.reverseX = false;
+                this.reverseY = false;
+
+                this.friction = opts.friction || 0; // 摩擦力
+
+                // 动量 = 质量 * 速度
             }
 
-            P.prototype.show = function () {
-                console.warn(this.name + '---' + this.age + '---' + this.sex);
-            };
+            var shapes = [];
 
-            var p = new P('wl');
-            console.warn(p);
-            p.show();
-
-            function S(name) {
-                this.name = name;
+            for (var i = 0; i < 2; i++) {
+                var x = Math.random() * 250;
+                var y = Math.random() * 250;
+                var width = Math.random() * 50;
+                var height = width;
+                shapes.push(new Shape(
+                    {
+                        x: x,
+                        y: y,
+                        width: width,
+                        height: height
+                    }
+                ));
             }
 
-            ig.inherits(S, P);
-            var s = new S('c');
-            console.warn(s);
-            s.show();
+            var shapesLen = shapes.length;
+
+            function animate() {
+                if (playAni) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    for (var i = 0; i < shapesLen; i++) {
+                        var tmpShape = shapes[i];
+                        var x;
+                        var y;
+                        // x = tmpShape.x = tmpShape.x + 4;
+                        // y = tmpShape.y = tmpShape.y + 2;
+
+                        // 圆弧运动
+                        // x = tmpShape.x + (tmpShape.radius * Math.cos(tmpShape.angle * (Math.PI / 180)));
+                        // y = tmpShape.y + (tmpShape.radius * Math.sin(tmpShape.angle * (Math.PI / 180)));
+                        // tmpShape.angle += 5;
+                        // if (tmpShape.angle > 360) {
+                        //     tmpShape.angle = 0;
+                        // }
+
+                        if (tmpShape.x < 0) {
+                            tmpShape.reverseX = false;
+                        }
+                        else if (tmpShape.x + tmpShape.width > canvas.width) {
+                            tmpShape.reverseX = true;
+                        }
+
+                        if (tmpShape.y < 0) {
+                            tmpShape.reverseY = false;
+                        }
+                        else if (tmpShape.y + tmpShape.height > canvas.height) {
+                            tmpShape.reverseY = true;
+                        }
+
+                        if (!tmpShape.reverseX) {
+                            x = tmpShape.x += 2;
+                        }
+                        else {
+                            x = tmpShape.x -= 2;
+                        }
+
+                        if (!tmpShape.reverseY) {
+                            y = tmpShape.y += 2;
+                        }
+                        else {
+                            y = tmpShape.y -= 2;
+                        }
+
+                        ctx.fillRect(x, y, tmpShape.width, tmpShape.height);
+                    }
+                    setTimeout(animate, 33);
+                }
+            }*/
+
+
+            function sprite(options) {
+
+                var that = {};
+                var frameIndex = 0;
+                var tickCount = 0;
+                var ticksPerFrame = options.ticksPerFrame || 0;
+                var numberOfFrames = options.numberOfFrames || 1;
+
+                that.context = options.context;
+                that.width = options.width;
+                that.height = options.height;
+                that.x = options.x || 0;
+                that.y = options.y || 0;
+                that.image = options.image;
+                that.scaleRatio = 1;
+
+                that.update = function () {
+                    tickCount += 1;
+                    if (tickCount > ticksPerFrame) {
+                        tickCount = 0;
+                        if (frameIndex < numberOfFrames - 1) {
+                            frameIndex += 1;
+                        }
+                        else {
+                            frameIndex = 0;
+                        }
+                    }
+                };
+
+                that.render = function () {
+                    that.context.drawImage(
+                        that.image,
+                        frameIndex * that.width / numberOfFrames,
+                        0,
+                        that.width / numberOfFrames,
+                        that.height,
+                        that.x,
+                        that.y,
+                        that.width / numberOfFrames * that.scaleRatio,
+                        that.height * that.scaleRatio
+                    );
+                };
+
+                that.getFrameWidth = function () {
+                    return that.width / numberOfFrames;
+                };
+
+                return that;
+            }
+
+
+            var imgs = [
+                {
+                    url: './img/sprite-sheet-test.png',
+                    width: 260, // 图片总宽度
+                    height: 65,
+                    numberOfFrames: 4,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test1.png',
+                    width: 640, // 图片总宽度
+                    height: 65,
+                    numberOfFrames: 10,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test2.png',
+                    width: 440, // 图片总宽度
+                    height: 65,
+                    numberOfFrames: 10,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test3.jpg',
+                    width: 310, // 图片总宽度
+                    height: 80,
+                    numberOfFrames: 4,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test4.png',
+                    width: 1024, // 图片总宽度
+                    height: 80,
+                    numberOfFrames: 16,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test5.png',
+                    width: 576, // 图片总宽度
+                    height: 54,
+                    numberOfFrames: 6,
+                    ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test6.png',
+                    width: 500, // 图片总宽度
+                    height: 72,
+                    numberOfFrames: 10,
+                    ticksPerFrame: 0
+                }
+
+            ];
+
+            var il = new ig.ImageLoader();
+
+            for (var i = 0, len = imgs.length; i < len; i++) {
+                il.addImage(imgs[i].url);
+            }
+
+            var imgLoadInterval = setInterval(function (e) {
+                var percentComplete = il.loadImages();
+
+                if (percentComplete >= 100) {
+                    clearInterval(imgLoadInterval);
+                    loadComplate();
+                }
+            }, 16);
+
+            function loadComplate() {
+                var sList = [];
+                for (var i = 0, len = imgs.length; i < len; i++) {
+                    sList.push(
+                        sprite({
+                            context: ctx,
+                            x: 100 * i + i,
+                            y: 100,
+                            width: imgs[i].width,
+                            height: imgs[i].height,
+                            image: il.images[imgs[i].url],
+                            numberOfFrames: imgs[i].numberOfFrames,
+                            ticksPerFrame: imgs[i].ticksPerFrame
+                        })
+                    );
+                }
+
+                setInterval(function () {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    for (var i = 0, len = sList.length; i < len; i++) {
+                        sList[i].update();
+                        sList[i].render();
+                    }
+                }, 100)
+            }
         </script>
     </body>
 </html>
