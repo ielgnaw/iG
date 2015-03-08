@@ -14,12 +14,13 @@ var config = {
     /**
      * concat 的文件列表
      * start 为开头，end 为结尾，concat 顺序如下：`start.js -> !(start|end).js -> end.js`
-     * !(start|end).js 这里面的所有 js，均为相互独立的，所以顺序无所谓
      *
      * @type {Array}
      */
     jsFiles: [
         'src/start.js',
+        'src/core.js',
+        'src/event.js',
         'src/!(end).js',
         'src/end.js'
     ],
