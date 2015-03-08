@@ -208,6 +208,7 @@
         browser: platform.browser,
         os: platform.os,
         supportOrientation: (typeof root.orientation == 'number' && typeof root.onorientationchange == 'object'),
-        supportTouch: ('ontouchstart' in root) || root.DocumentTouch && document instanceof DocumentTouch
+        supportTouch: ('ontouchstart' in root) || root.DocumentTouch && document instanceof DocumentTouch,
+        supportGeolocation: (navigator.geolocation != null)
     };
 })(root || this, ig || {});
