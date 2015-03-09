@@ -2,8 +2,12 @@
 exports.modules = {
     main: {name: 'ig/ig'},
     parts: [
-        {name: 'ig/b'},
-        {name: 'ig/a'}
+        {name: 'ig/util'},
+        {name: 'ig/event'},
+        {name: 'ig/platform'},
+        {name: 'ig/BaseSprite'},
+        {name: 'ig/ImageLoader'}
+        // ,{name: 'ig/test/one'}
     ]
 };
 

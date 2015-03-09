@@ -1,8 +1,3 @@
-/**
- * @file build 主逻辑，感谢 erik~~
- * @author ielgnaw(wuji0223@gmail.com)
- */
-
 var fs = require('fs');
 var path = require('path');
 
@@ -44,7 +39,7 @@ exports.analyse = function (debug) {
     var main = modules.main;
     // analyse dependencies
     main.dependencies = subtract(analyse(main.name, 1, {}, main.exclude), BUILTIN_MODULES);
-    debug && writeFile('analyses/echarts.dependencies', main.dependencies.join('\n'));
+    debug && writeFile('analyses/ig.dependencies', main.dependencies.join('\n'));
     modules.parts.forEach(function (mod) {
         mod.dependencies = subtract(analyse(mod.name, 1, {}, mod.exclude), BUILTIN_MODULES);
         debug && writeFile(
@@ -95,7 +90,7 @@ exports.packAsAll = function () {
         hasMap: hasMap
     });
     var code = wrapStart + wrapNut + result + wrapEnd;
-    var name = (conf.name || 'echarts') + '-all';
+    var name = (conf.name || 'ig') + '-all';
     writeFile(
         'source/' + name + '.js', code
     );

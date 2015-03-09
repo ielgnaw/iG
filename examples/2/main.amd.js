@@ -8,7 +8,8 @@ define(function (require) {
     var exports = {};
 
     exports.init = function () {
-        console.warn('aaaa init');
+        console.warn('init');
+        console.warn(require('ig').init());
     };
 
     return exports;

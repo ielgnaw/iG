@@ -1,52 +1,16 @@
 /**
- * @file 核心
+ * @file Description
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-(function (root, ig, undefined) {
+define(function (require) {
 
-    /**
-     * requestAnimationFrame polyfill
-     */
-    ig.requestAnimFrame = (function () {
-        return root.requestAnimationFrame
-            || root.webkitRequestAnimationFrame
-            || root.mozRequestAnimationFrame
-            || root.msRequestAnimationFrame
-            || root.oRequestAnimationFrame
-            || function (callback, elem) {
-                    var me = this;
-                    var start;
-                    var finish;
-                    setTimeout(function () {
-                        start = +new Date();
-                        callback(start);
-                        finish = +new Date();
-                        me.timeout = 1000 / 60 - (finish - start);
-                    }, me.timeout);
-                };
-    })();
-
-    /**
-     * cancelAnimationFrame polyfill
-     */
-    ig.cancelAnimFrame = (function () {
-        return root.cancelAnimationFrame
-                || root.webkitCancelAnimationFrame
-                || root.webkitCancelRequestAnimationFrame
-                || root.mozCancelAnimationFrame
-                || root.mozCancelRequestAnimationFrame
-                || root.msCancelAnimationFrame
-                || root.msCancelRequestAnimationFrame
-                || root.oCancelAnimationFrame
-                || root.oCancelRequestAnimationFrame
-                || root.clearTimeout;
-    })();
+    var exports = {};
 
     /**
      * 空函数
      */
-    ig.noop = function () {};
+    exports.noop = function () {};
 
     /**
      * 为类型构造器建立继承关系
@@ -55,10 +19,10 @@
      * @param {Function} superClass 父类构造器
      * @return {Function} 返回 subClass 构造器
      */
-    ig.inherits = function (subClass, superClass) {
-        ig.noop.prototype = superClass.prototype;
+    exports.inherits = function (subClass, superClass) {
+        exports.noop.prototype = superClass.prototype;
         var subProto = subClass.prototype;
-        var proto = subClass.prototype = new ig.noop();
+        var proto = subClass.prototype = new exports.noop();
 
         for (var key in subProto) {
             proto[key] = subProto[key];
@@ -78,7 +42,7 @@
      *
      * @return {number} 弧度值
      */
-    ig.deg2Rad = function (deg) {
+    exports.deg2Rad = function (deg) {
         return deg * Math.PI / 180;
     };
 
@@ -90,7 +54,7 @@
      *
      * @return {number} 角度值
      */
-    ig.rad2Deg = function (rad) {
+    exports.rad2Deg = function (rad) {
         return rad * 180 / Math.PI;
     };
 
@@ -103,7 +67,7 @@
      *
      * @return {Object} 相对于 canvas 的坐标对象
      */
-    ig.window2Canvas = function (canvas, x, y) {
+    exports.window2Canvas = function (canvas, x, y) {
         var boundRect = canvas.getBoundingClientRect();
         return {
             x: Math.round(x - boundRect.left * (canvas.width / boundRect.width)),
@@ -118,7 +82,7 @@
      * @param {Object} thisContext 上下文
      * @param {Array} args 参数
      */
-    ig.fastApply = function (func, thisContext, args) {
+    exports.fastApply = function (func, thisContext, args) {
         switch (args.length) {
             case 0:
                 return func.call(
@@ -165,4 +129,6 @@
         }
     };
 
-})(root || this, ig || {});
+    return exports;
+
+});

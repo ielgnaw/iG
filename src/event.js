@@ -1,9 +1,9 @@
 /**
- * @file 自定义事件处理
+ * @file Description
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-(function (root, ig, undefined) {
+define(function (require) {
 
     var guidKey = '_observerGUID';
 
@@ -168,6 +168,6 @@
         target.fire = Event.prototype.fire;
     };
 
-    ig.Event = Event;
+    return Event;
 
-})(root || this, ig || {});
+});

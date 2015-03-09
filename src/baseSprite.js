@@ -1,9 +1,9 @@
 /**
- * @file 所有显示在游戏中的对象的基类，包括精灵、精灵表、场景等等
+ * @file Description
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-(function (root, ig, undefined) {
+define(function (require) {
 
     /**
      * 绘制 debug 用的矩形
@@ -71,7 +71,7 @@
         me.scale = opts.scale || 1;
 
         // 旋转角度，这里使用的是角度，canvas 使用的是弧度
-        me.angle = opt.angle || 0;
+        me.angle = opts.angle || 0;
 
         // 半径，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
         me.radius = Math.random() * 30;
@@ -118,7 +118,7 @@
      */
     BaseSprite.prototype.draw = function (ctx) {
         var me = this;
-        me.update(ctx);
+        // me.update(ctx);
 
         ctx.save();
         ctx.globalAlpha = me.alpha;
@@ -131,34 +131,8 @@
         ctx.restore();
     };
 
-    // BaseSprite.prototype.draw = function (ctx) {
-    //     var me = this;
-    //     me.update(screen);
-    //     ctx.save();
-    //     ctx.globalAlpha = me.alpha;
-    //     ctx.rotate(me.rotation * Math.PI / 180);
-    //     ctx.translate(me.offsetX * me.scale, me.offsetY * me.scale);
-    //     me._draw(screen);
-    //     me.debugRect(screen);
-    //     ctx.restore();
-    // }
+    require('./util').inherits(BaseSprite, require('./event'));
 
-    ig.inherits(BaseSprite, ig.Event);
+    return BaseSprite;
 
-    // var bs = new BaseSprite();
-
-    // function TestSub() {
-
-    // }
-
-    // ig.inherits(TestSub, BaseSprite);
-    // ig.inherits(BaseSprite, ig.Event);
-
-    // var ts = new TestSub();
-    // console.warn(ts);
-    // console.warn(bs);
-
-    ig.BaseSprite = BaseSprite;
-
-})(root || this, ig || {});
-
+});

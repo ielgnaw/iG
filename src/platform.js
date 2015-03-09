@@ -1,9 +1,9 @@
 /**
- * @file 平台检测
+ * @file Description
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-(function (root, ig, undefined) {
+define(function (require) {
 
     /**
      * ua 探测
@@ -204,11 +204,14 @@
 
     var platform = detect(navigator.userAgent);
 
-    ig.env = {
+    var exports = {
         browser: platform.browser,
         os: platform.os,
-        supportOrientation: (typeof root.orientation == 'number' && typeof root.onorientationchange == 'object'),
-        supportTouch: ('ontouchstart' in root) || root.DocumentTouch && document instanceof DocumentTouch,
+        supportOrientation: (typeof window.orientation == 'number' && typeof window.onorientationchange == 'object'),
+        supportTouch: ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch,
         supportGeolocation: (navigator.geolocation != null)
     };
-})(root || this, ig || {});
+
+    return exports;
+
+});

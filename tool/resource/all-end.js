@@ -28,4 +28,7 @@
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
 
+var ig = require('ig');
+_global['ig'] = ig;
+
 })(window);
