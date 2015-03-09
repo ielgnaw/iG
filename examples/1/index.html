@@ -10,6 +10,11 @@
             canvas {
                 border: 1px solid #ddd;
             }
+            .imgload-result {
+                width: 800px;
+                margin: 0 auto;
+                margin-top: 20px;
+            }
         </style>
         <script type="text/javascript" src="../../js/ig.js"></script>
     </head>
@@ -17,8 +22,9 @@
         <div class="container">
             <canvas id="canvas" width="800" height="400"></canvas>
         </div>
-        <button id="start">Start</button>
-        <button id="end">End</button>
+        <div class="imgload-result">111</div>
+        <!-- <button id="start">Start</button> -->
+        <!-- <button id="end">End</button> -->
         <script>
             var canvas = document.querySelector('#canvas');
             var ctx = canvas.getContext('2d');
@@ -293,6 +299,7 @@
                 that.context = options.context;
                 that.width = options.width;
                 that.height = options.height;
+                that.originalHeight = options.originalHeight;
                 that.x = options.x || 0;
                 that.y = options.y || 0;
                 that.image = options.image;
@@ -315,7 +322,7 @@
                     that.context.drawImage(
                         that.image,
                         frameIndex * that.width / numberOfFrames,
-                        0,
+                        that.originalHeight || 0,
                         that.width / numberOfFrames,
                         that.height,
                         that.x,
@@ -338,6 +345,7 @@
                     url: './img/sprite-sheet-test.png',
                     width: 260, // 图片总宽度
                     height: 65,
+                    originalHeight: 0,
                     numberOfFrames: 4,
                     ticksPerFrame: 0
                 },
@@ -345,6 +353,7 @@
                     url: './img/sprite-sheet-test1.png',
                     width: 640, // 图片总宽度
                     height: 65,
+                    originalHeight: 0,
                     numberOfFrames: 10,
                     ticksPerFrame: 0
                 },
@@ -352,6 +361,7 @@
                     url: './img/sprite-sheet-test2.png',
                     width: 440, // 图片总宽度
                     height: 65,
+                    originalHeight: 0,
                     numberOfFrames: 10,
                     ticksPerFrame: 0
                 },
@@ -359,6 +369,7 @@
                     url: './img/sprite-sheet-test3.jpg',
                     width: 310, // 图片总宽度
                     height: 80,
+                    originalHeight: 0,
                     numberOfFrames: 4,
                     ticksPerFrame: 0
                 },
@@ -366,6 +377,7 @@
                     url: './img/sprite-sheet-test4.png',
                     width: 1024, // 图片总宽度
                     height: 80,
+                    originalHeight: 0,
                     numberOfFrames: 16,
                     ticksPerFrame: 0
                 },
@@ -373,6 +385,7 @@
                     url: './img/sprite-sheet-test5.png',
                     width: 576, // 图片总宽度
                     height: 54,
+                    originalHeight: 0,
                     numberOfFrames: 6,
                     ticksPerFrame: 0
                 },
@@ -380,9 +393,19 @@
                     url: './img/sprite-sheet-test6.png',
                     width: 500, // 图片总宽度
                     height: 72,
+                    originalHeight: 0,
                     numberOfFrames: 10,
                     ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test7.jpg',
+                    width: 368, // 图片总宽度
+                    height: 50, // 渲染的高度
+                    originalHeight: 310, // 原图中的高度偏移
+                    numberOfFrames: 9,
+                    ticksPerFrame: 0
                 }
+
 
             ];
 
@@ -392,10 +415,12 @@
                 il.addImage(imgs[i].url);
             }
 
-            var imgLoadInterval = setInterval(function (e) {
-                var percentComplete = il.loadImages();
+            var imgloadResultNode = document.querySelector('.imgload-result');
 
-                if (percentComplete >= 100) {
+            var imgLoadInterval = setInterval(function (e) {
+                var percent = il.loadImages();
+                imgloadResultNode.innerHTML = '图片加载进度：' + percent.toFixed() + '%';
+                if (percent >= 100) {
                     clearInterval(imgLoadInterval);
                     loadComplate();
                 }
@@ -411,6 +436,7 @@
                             y: 100,
                             width: imgs[i].width,
                             height: imgs[i].height,
+                            originalHeight: imgs[i].originalHeight,
                             image: il.images[imgs[i].url],
                             numberOfFrames: imgs[i].numberOfFrames,
                             ticksPerFrame: imgs[i].ticksPerFrame
