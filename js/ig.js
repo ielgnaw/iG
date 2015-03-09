@@ -356,6 +356,40 @@
 })(root || this, ig || {});
 
 /**
+ * @file Description
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+define(function (require) {
+
+    var exports = {};
+
+    exports.init = function () {
+        console.warn('aaaa init');
+    };
+
+    return exports;
+
+});
+
+/**
+ * @file Description
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+define(function (require) {
+
+    var exports = {};
+
+    exports.init = function () {
+        console.warn('bbbb init');
+    };
+
+    return exports;
+
+});
+
+/**
  * @file 所有显示在游戏中的对象的基类，包括精灵、精灵表、场景等等
  * @author ielgnaw(wuji0223@gmail.com)
  */
@@ -532,6 +566,25 @@
     }
 
 })(root || this, ig || {});
+
+/**
+ * @file Description
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+define(function (require) {
+
+    var exports = {};
+
+    exports.init = function () {
+        console.warn('ig init');
+        var a = require('./a');
+        // var b = require('b');
+    };
+
+    return exports;
+
+});
 
 /**
  * @file 图片加载
