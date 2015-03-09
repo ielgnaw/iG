@@ -404,8 +404,15 @@
                     originalHeight: 310, // 原图中的高度偏移
                     numberOfFrames: 9,
                     ticksPerFrame: 0
+                },
+                {
+                    url: './img/sprite-sheet-test8.png',
+                    width: 384, // 图片总宽度
+                    height: 32, // 渲染的高度
+                    originalHeight: 0, // 原图中的高度偏移
+                    numberOfFrames: 12,
+                    ticksPerFrame: 0
                 }
-
 
             ];
 
@@ -432,7 +439,7 @@
                     sList.push(
                         sprite({
                             context: ctx,
-                            x: 100 * i + i,
+                            x: 80 * i + i,
                             y: 100,
                             width: imgs[i].width,
                             height: imgs[i].height,
