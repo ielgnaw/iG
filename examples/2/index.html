@@ -69,15 +69,7 @@
             var canvas = document.querySelector('#canvas');
             var ctx = canvas.getContext('2d');
 
-            // var bs = new ig.BaseSprite(ctx);
-            // bs.on('BaseSprite:draw', function () {
-            //     console.log(arguments);
-            // });
-
-            // bs.draw(ctx);
-
             var g = new ig.Game();
-            g.start();
 
             g.on('Game:afterRender', function (data) {
                 console.log(
@@ -87,28 +79,92 @@
                 );
             });
 
-            g.createStage({
+            function Ball(opts) {
+                ig.DisplayObject.apply(this, arguments);
+                this.r = opts.r || 10;
+                this.color = '#fff';
+            }
+
+            Ball.prototype.constructor = Ball;
+            Ball.prototype.update = function () {
+                var w = this.stageOwner.width;
+                var h = this.stageOwner.height;
+                if (this.x < this.r || this.x > w - this.r) {
+                    this.vX = -this.vX;
+                };
+                if (this.y < this.r || this.y > h - this.r) {
+                    this.vY = -this.vY;
+                }
+                // this.moveStep();
+                Ball.superClass.update.call(this);
+                // this.constructor.prototype.update();
+            };
+            Ball.prototype.render = function(ctx) {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.arc(this.x,this.y,this.r-3,0,Math.PI*2);
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.strokeStyle ="white";
+                ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+                ctx.stroke();
+                Ball.superClass.render.apply(this, arguments);
+            };
+
+            ig.util.inherits(Ball, ig.DisplayObject);
+
+            var stage = g.createStage({
                 width: 1000,
                 height: 500,
                 // containerBgColor: 'rgba(255, 0, 0, .1)',
                 // containerBgColor: '#fff',
                 containerBgColor: 'white',
                 canvas: document.querySelector('#canvas')
-            })
+            });
 
-            // st.setBgImg('img/bg1.jpg', 'full');
+            // stage.on('Stage:beforeRender', function (data) {
+            //     console.log('Stage:beforeRender');
+            // });
+
+            // stage.on('Stage:beforeRender', function (data) {
+            //     console.log('Stage:afterRender');
+            // });
+
+            for (var i = 0; i < 10; i++) {
+                var obj = new Ball({
+                    name: i,
+                    r: 10
+                });
+                obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
+                obj.vX = ig.util.randomInt(5, 10);
+                obj.vY = ig.util.randomInt(5, 10);
+                obj.color = 'red';
+                stage.addDisplayObject(obj);
+
+                // obj.on('DisplayObject:render', function (data) {
+                //     console.log('DisplayObject:render', data);
+                // });
+            }
+
+            g.start();
+            console.warn(g);
+            console.warn(g.getStageStack());
+            console.warn(g.getCurrentStage());
+
             setTimeout(function () {
-                alert('变化场景');
-                g.getStageList()[0].setContainerBgImg('./img/bg.jpg', 'full');
+                // g.pause();
+                // alert('变化场景');
+                g.getCurrentStage().setContainerBgImg('./img/bg.jpg', 'full');
                 setTimeout(function () {
-                    alert('又变了');
-                    g.getStageList()[0].setContainerBgImg('./img/bg1.jpg', 'full');
-                    // g.pause();
+                //     alert('又变了');
+                    g.getCurrentStage().setContainerBgImg('./img/bg1.jpg', 'full');
+                //     // g.pause();
                     setTimeout(function () {
                         g.pause();
-                    }, 2000);
+                    }, 3000);
                 }, 3000);
-            }, 2000);
+            }, 3000);
 
         </script>
     </body>

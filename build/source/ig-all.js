@@ -160,6 +160,7 @@ define('ig/ig', ['require'], function (require) {
             proto[key] = selfPrototype[key];
         }
         subClass.prototype.constructor = subClass;
+        subClass.superClass = superClass.prototype;
         return subClass;
     };
     exports.deg2Rad = function (deg) {
@@ -214,6 +215,43 @@ define('ig/ig', ['require'], function (require) {
         if (candidateIndex !== -1) {
             list.splice(list, 1);
         }
+    };
+    exports.parseColor = function (color, toNumber) {
+        if (toNumber === true) {
+            if (typeof color === 'number') {
+                return color | 0;
+            }
+            if (typeof color === 'string' && color[0] === '#') {
+                color = color.slice(1);
+            }
+            return parseInt(color, 16);
+        } else {
+            if (typeof color === 'number') {
+                color = '#' + ('00000' + (color | 0).toString(16)).substr(-6);
+            }
+            return color;
+        }
+    };
+    exports.colorToRGB = function (color, alpha) {
+        if (typeof color === 'string' && color[0] === '#') {
+            color = window.parseInt(color.slice(1), 16);
+        }
+        alpha = alpha === undefined ? 1 : alpha;
+        var r = color >> 16 & 255;
+        var g = color >> 8 & 255;
+        var b = color & 255;
+        var a = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha;
+        if (a === 1) {
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        } else {
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+        }
+    };
+    exports.randomInt = function (min, max) {
+        return Math.floor(Math.random() * max + min);
+    };
+    exports.randomFloat = function (min, max) {
+        return Math.random() * (max - min) + min;
     };
     exports.domWrap = function (curNode, newNode) {
         var _el = curNode.cloneNode(true);
@@ -481,67 +519,6 @@ define('ig/ig', ['require'], function (require) {
         supportGeolocation: navigator.geolocation != null
     };
     return exports;
-});define('ig/BaseSprite', [
-    'require',
-    './util',
-    './Event'
-], function (require) {
-    function _drawDebugRect(ctx) {
-        var me = this;
-        ctx.save();
-        ctx.beginPath();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#fff';
-        ctx.globalAlpha = 0.8;
-        ctx.rect(me.x, me.y, me.width, me.height);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.restore();
-    }
-    function BaseSprite(opts) {
-        opts = opts || {};
-        var me = this;
-        me.x = opts.x || 0;
-        me.y = opts.y || 0;
-        me.width = opts.width || 20;
-        me.height = opts.height || 20;
-        me.vX = opts.vX || 0;
-        me.vY = opts.vY || 0;
-        me.aX = opts.aX || 0;
-        me.aY = opts.aY || 0;
-        me.reverseX = false;
-        me.reverseY = false;
-        me.alpha = opts.alpha || 1;
-        me.scale = opts.scale || 1;
-        me.angle = opts.angle || 0;
-        me.radius = Math.random() * 30;
-        me.status = 1;
-        me.customProp = {};
-        me.debug = false;
-    }
-    BaseSprite.prototype.isHit = function (otherSprite) {
-        var me = this;
-        var minX = me.x > otherSprite.x ? me.x : otherSprite.x;
-        var maxX = me.x + me.width < otherSprite.x + otherSprite.width ? me.x + me.width : otherSprite.x + otherSprite.width;
-        var minY = me.y > otherSprite.y ? me.y : otherSprite.y;
-        var maxY = me.y + me.width < otherSprite.y + otherSprite.width ? me.y + me.width : otherSprite.y + otherSprite.width;
-        return minX <= maxX && minY <= maxY;
-    };
-    BaseSprite.prototype.draw = function (ctx) {
-        var me = this;
-        ctx.save();
-        ctx.globalAlpha = me.alpha;
-        ctx.rotate(me.rotation * Math.PI / 180);
-        ctx.translate(me.x * me.scale, me.y * me.scale);
-        me.fire('BaseSprite:draw', me);
-        if (me.debug) {
-            _drawDebugRect.call(me, ctx);
-        }
-        ;
-        ctx.restore();
-    };
-    require('./util').inherits(BaseSprite, require('./Event'));
-    return BaseSprite;
 });define('ig/ImageLoader', [
     'require',
     './util',
@@ -603,7 +580,7 @@ define('ig/ig', ['require'], function (require) {
         Event.apply(this, arguments);
         this.paused = false;
         this.curGameFrameMonitor = new FrameMonitor();
-        this.stageList = [];
+        this.stageStack = [];
         this.stages = {};
     }
     Game.prototype = {
@@ -623,6 +600,11 @@ define('ig/ig', ['require'], function (require) {
                     minFrame: me.curGameFrameMonitor.min
                 }
             });
+            var curStage = me.getCurrentStage();
+            if (curStage) {
+                curStage.update();
+                curStage.render();
+            }
             me.fire('Game:afterRender', {
                 data: {
                     curFrame: me.curGameFrameMonitor.cur,
@@ -653,61 +635,61 @@ define('ig/ig', ['require'], function (require) {
         stop: function () {
             window.cancelAnimationFrame(this.requestID);
         },
+        getStageStack: function () {
+            return this.stageStack;
+        },
+        getStageByName: function (name) {
+            return this.stages[name];
+        },
         createStage: function (stageOpts) {
             var stage = new Stage(stageOpts);
             this.pushStage(stage);
             return stage;
         },
-        getStageList: function () {
-            return this.stageList;
-        },
-        getStageByName: function (stageName) {
-            return this.stages[stageName];
-        },
         pushStage: function (stage) {
             var me = this;
-            if (!me.getStageByName(stage.stageName)) {
-                me.stageList.push(stage);
-                me.stages[stage.stageName] = stage;
+            if (!me.getStageByName(stage.name)) {
+                me.stageStack.push(stage);
+                me.stages[stage.name] = stage;
                 me.sortStageIndex();
             }
         },
         popStage: function () {
             var me = this;
-            var st = me.stageList.pop();
-            if (st) {
-                st.clean();
-                delete me.stages[st.stageName];
+            var stage = me.stageStack.pop();
+            if (stage) {
+                stage.clean();
+                delete me.stages[stage.name];
                 me.sortStageIndex();
             }
         },
         sortStageIndex: function () {
-            var stageList = this.stageList;
-            for (var i = 0, len = stageList.length; i < len; i++) {
-                stageList[i].container.style.zIndex = i;
+            var stageStack = this.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].container.style.zIndex = i;
             }
         },
-        remove: function (stageName) {
+        removeStageByName: function (name) {
             var me = this;
-            var st = me.getStageByName(stageName);
+            var st = me.getStageByName(name);
             if (st) {
                 st.clean();
-                delete me.stages[st.stageName];
-                var stageList = me.stageList;
-                util.removeArrByCondition(stageList, function (s) {
-                    return s.stageName === stageName;
+                delete me.stages[st.name];
+                var stageStack = me.stageStack;
+                util.removeArrByCondition(stageStack, function (s) {
+                    return s.name === name;
                 });
                 me.sortStageIndex();
             }
         },
         swapStage: function (from, to) {
             var me = this;
-            var stageList = me.stageList;
-            var len = stageList.length;
+            var stageStack = me.stageStack;
+            var len = stageStack.length;
             if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
-                var sc = stageList[from];
-                stageList[from] = stageList[to];
-                stageList[to] = sc;
+                var sc = stageStack[from];
+                stageStack[from] = stageStack[to];
+                stageStack[to] = sc;
                 me.sortStageIndex();
             }
         },
@@ -716,15 +698,15 @@ define('ig/ig', ['require'], function (require) {
         },
         getCurrentStage: function () {
             var me = this;
-            return me.stageList[me.stageList.length - 1];
+            return me.stageStack[me.stageStack.length - 1];
         },
         clearAllStage: function () {
             var me = this;
-            for (var i = 0, len = me.stageList.length; i < len; i++) {
-                me.stageList[i].clean();
+            for (var i = 0, len = me.stageStack.length; i < len; i++) {
+                me.stageStack[i].clean();
             }
             me.stages = {};
-            me.stageList = [];
+            me.stageStack = [];
         }
     };
     util.inherits(Game, Event);
@@ -772,10 +754,15 @@ define('ig/ig', ['require'], function (require) {
     return FrameMonitor;
 });define('ig/Stage', [
     'require',
-    './util'
+    './Event',
+    './util',
+    './DisplayObject'
 ], function (require) {
+    var Event = require('./Event');
     var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
     function Stage(opts) {
+        Event.apply(this, arguments);
         opts = opts || {};
         if (!opts.canvas) {
             throw new Error('Stage must be require a canvas param');
@@ -784,7 +771,7 @@ define('ig/ig', ['require'], function (require) {
         this.ctx = this.canvas.getContext('2d');
         this.container = this.canvas.parentNode;
         this.guid = 0;
-        this.stageName = opts.stageName || 'ig_stage_' + ++this.guid;
+        this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + this.guid++ : opts.name;
         this.x = opts.x || 0;
         this.y = opts.y || 0;
         this.width = opts.width || this.canvas.width;
@@ -792,9 +779,15 @@ define('ig/ig', ['require'], function (require) {
         this.containerBgColor = opts.containerBgColor || '#000';
         this.setSize();
         this.setContainerBgColor();
+        this.displayObjectList = [];
+        this.displayObjects = {};
     }
     Stage.prototype = {
         constructor: Stage,
+        clear: function () {
+            var me = this;
+            me.ctx.clearRect(0, 0, me.width, me.height);
+        },
         setSize: function (width, height) {
             var me = this;
             me.width = width || me.width;
@@ -822,9 +815,180 @@ define('ig/ig', ['require'], function (require) {
                 me.container.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                 break;
             }
+        },
+        clean: function () {
+            var me = this;
+            me.container.removeChild(me.canvas);
+            me.container.parentNode.removeChild(me.container);
+            me.canvas = me.container = me.ctx = null;
+        },
+        update: function () {
+            for (var i = 0, len = this.displayObjectList.length; i < len; i++) {
+                this.displayObjectList[i].update();
+            }
+        },
+        render: function () {
+            var me = this;
+            me.clear();
+            me.fire('Stage:beforeRender', { data: {} });
+            this.sortDisplayObject();
+            this.renderDisplayObject();
+            me.fire('Stage:afterRender', { data: {} });
+        },
+        renderDisplayObject: function () {
+            var me = this;
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+            me.ctx.save();
+            for (var i = 0; i < len; i++) {
+                displayObjectStatus = me.displayObjectList[i].status;
+                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                    me.displayObjectList[i].render(me.ctx);
+                }
+            }
+            me.ctx.restore();
+        },
+        sortDisplayObject: function () {
+            this.displayObjectList.sort(function (o1, o2) {
+                return o1.zIndex - o2.zIndex;
+            });
+        },
+        getDisplayObjectList: function () {
+            return this.displayObjectList;
+        },
+        getDisplayObjectByName: function (name) {
+            return this.displayObjects[name];
+        },
+        createDisplayObject: function (displayObjOpts) {
+            var displayObj = new DisplayObject(displayObjOpts);
+            this.addDisplayObject(displayObj);
+            return displayObj;
+        },
+        addDisplayObject: function (displayObj) {
+            var me = this;
+            if (!me.getDisplayObjectByName(displayObj.name)) {
+                displayObj.stageOwner = me;
+                me.displayObjectList.push(displayObj);
+                me.displayObjects[displayObj.name] = displayObj;
+            }
+        },
+        removeDisplayObject: function (displayObj) {
+            this.removeDisplayObjectByName(displayObj.name);
+        },
+        removeDisplayObjectByName: function (name) {
+            var me = this;
+            var candidateObj = me.displayObjects[name];
+            if (candidateObj) {
+                delete me.displayObjects[candidateObj.name];
+                var displayObjectList = me.displayObjectList;
+                util.removeArrByCondition(displayObjectList, function (o) {
+                    return o.name === name;
+                });
+            }
+        },
+        getDisplayObjectByName: function (name) {
+            return this.displayObjects[name];
+        },
+        clearAllDisplayObject: function () {
+            this.displayObjectList = [];
+            this.displayObjects = {};
         }
     };
+    util.inherits(Stage, Event);
     return Stage;
+});define('ig/DisplayObject', [
+    'require',
+    './Event',
+    './util'
+], function (require) {
+    var Event = require('./Event');
+    var util = require('./util');
+    function DisplayObject(opts) {
+        Event.apply(this, arguments);
+        opts = opts || {};
+        this.guid = 0;
+        this.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + this.guid++ : opts.name;
+        this.stageOwner = null;
+        this.x = opts.x || 0;
+        this.y = opts.y || 0;
+        this.width = opts.width || 20;
+        this.height = opts.height || 20;
+        this.vX = opts.vX || 0;
+        this.vY = opts.vY || 0;
+        this.aX = opts.aX || 0;
+        this.aY = opts.aY || 0;
+        this.reverseX = false;
+        this.reverseY = false;
+        this.alpha = opts.alpha || 1;
+        this.scale = opts.scale || 1;
+        this.angle = opts.angle || 0;
+        this.radius = Math.random() * 30;
+        this.zIndex = 0;
+        this.status = 1;
+        this.customProp = {};
+        this.debug = false;
+    }
+    DisplayObject.prototype = {
+        constructor: DisplayObject,
+        setPos: function (x, y) {
+            var me = this;
+            me.x = x || me.x;
+            me.y = y || me.y;
+        },
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
+        },
+        moveStep: function () {
+            var me = this;
+            me.vX += me.aX;
+            me.vY += me.aY;
+            me.x += me.vX;
+            me.y += me.vY;
+        },
+        rotate: function (angle) {
+            this.angle = angle;
+        },
+        update: function () {
+            this.moveStep();
+        },
+        render: function (ctx) {
+            var me = this;
+            ctx.save();
+            ctx.globalAlpha = me.alpha;
+            ctx.rotate(me.angle * Math.PI / 180);
+            ctx.translate(me.x * me.scale, me.y * me.scale);
+            me.fire('DisplayObject:render', me);
+            if (me.debug) {
+                _drawDebugRect.call(me, ctx);
+            }
+            ;
+            ctx.restore();
+        },
+        isHit: function (other) {
+            var me = this;
+            var minX = me.x > other.x ? me.x : other.x;
+            var maxX = me.x + me.width < other.x + other.width ? me.x + me.width : other.x + other.width;
+            var minY = me.y > other.y ? me.y : other.y;
+            var maxY = me.y + me.width < other.y + other.width ? me.y + me.width : other.y + other.width;
+            return minX <= maxX && minY <= maxY;
+        }
+    };
+    function _drawDebugRect(ctx) {
+        var me = this;
+        ctx.save();
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#fff';
+        ctx.globalAlpha = 0.8;
+        ctx.rect(me.x, me.y, me.width, me.height);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+    }
+    util.inherits(DisplayObject, Event);
+    return DisplayObject;
 });// var zrender = require('zrender');
 // zrender.tool = {
 //     color : require('zrender/tool/color'),
@@ -850,8 +1014,6 @@ define('ig/ig', ['require'], function (require) {
 
 // require("ig/platform");
 
-// require("ig/BaseSprite");
-
 // require("ig/ImageLoader");
 
 // require("ig/Game");
@@ -859,6 +1021,8 @@ define('ig/ig', ['require'], function (require) {
 // require("ig/FrameMonitor");
 
 // require("ig/Stage");
+
+// require("ig/DisplayObject");
 
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
@@ -871,8 +1035,6 @@ ig['Event'] = require('ig/Event');
 
 ig['env'] = require('ig/platform');
 
-ig['BaseSprite'] = require('ig/BaseSprite');
-
 ig['ImageLoader'] = require('ig/ImageLoader');
 
 ig['Game'] = require('ig/Game');
@@ -880,6 +1042,8 @@ ig['Game'] = require('ig/Game');
 ig['FrameMonitor'] = require('ig/FrameMonitor');
 
 ig['Stage'] = require('ig/Stage');
+
+ig['DisplayObject'] = require('ig/DisplayObject');
 
 
 _global['ig'] = ig;

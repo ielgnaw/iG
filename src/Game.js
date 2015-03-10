@@ -30,7 +30,7 @@ define(function (require) {
         this.curGameFrameMonitor = new FrameMonitor();
 
         // 当前游戏实例中的所有场景，堆栈，后进先出
-        this.stageList = [];
+        this.stageStack = [];
 
         // 当前游戏实例中的所有场景，对象，方便读取
         this.stages = {};
@@ -64,7 +64,12 @@ define(function (require) {
                 }
             });
 
-            // do things
+            var curStage = me.getCurrentStage();
+            // debugger
+            if (curStage) {
+                curStage.update();
+                curStage.render();
+            }
 
             me.fire('Game:afterRender', {
                 data: {
@@ -116,13 +121,24 @@ define(function (require) {
         },
 
         /**
-         * 给游戏设置场景管理器
+         * 获取当前游戏里面的所有场景
          *
-         * @param {Object} stageManager 场景管理器
+         * @return {Array} 所有场景集合
          */
-        // setStageManager: function (stageManager) {
-        //     this.stageManager = stageManager;
-        // },
+        getStageStack: function () {
+            return this.stageStack;
+        },
+
+        /**
+         * 根据场景名字获取场景对象
+         *
+         * @param {string} name 场景名字
+         *
+         * @return {Object} 场景对象
+         */
+        getStageByName: function (name) {
+            return this.stages[name];
+        },
 
         /**
          * 创建一个场景
@@ -138,35 +154,15 @@ define(function (require) {
         },
 
         /**
-         * 获取当前游戏里面的所有场景
-         *
-         * @return {[type]} [description]
-         */
-        getStageList: function () {
-            return this.stageList;
-        },
-
-        /**
-         * 根据场景名字获取苍井对象
-         *
-         * @param {string} stageName 场景名字
-         *
-         * @return {Object} 场景对象
-         */
-        getStageByName: function (stageName) {
-            return this.stages[stageName];
-        },
-
-        /**
          * 添加场景，场景入栈
          *
          * @param {Object} stage 场景对象
          */
         pushStage: function (stage) {
             var me = this;
-            if (!me.getStageByName(stage.stageName)) {
-                me.stageList.push(stage);
-                me.stages[stage.stageName] = stage;
+            if (!me.getStageByName(stage.name)) {
+                me.stageStack.push(stage);
+                me.stages[stage.name] = stage;
                 me.sortStageIndex();
             }
         },
@@ -176,10 +172,10 @@ define(function (require) {
          */
         popStage: function () {
             var me = this;
-            var st = me.stageList.pop();
-            if (st) {
-                st.clean();
-                delete me.stages[st.stageName];
+            var stage = me.stageStack.pop();
+            if (stage) {
+                stage.clean();
+                delete me.stages[stage.name];
                 me.sortStageIndex();
             }
         },
@@ -188,9 +184,9 @@ define(function (require) {
          * 场景排序
          */
         sortStageIndex: function () {
-            var stageList = this.stageList;
-            for (var i = 0, len = stageList.length; i < len; i++) {
-                stageList[i].container.style.zIndex = i;
+            var stageStack = this.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].container.style.zIndex = i;
             }
         },
 
@@ -198,19 +194,17 @@ define(function (require) {
          * 根据名字移除一个场景，它和 popStage 的区别是
          * popStage 只会清除栈顶的那一个
          *
-         * @param {string} stageName 场景名字
-         *
-         * @return {[type]} [description]
+         * @param {string} name 场景名字
          */
-        remove: function (stageName) {
+        removeStageByName: function (name) {
             var me = this;
-            var st = me.getStageByName(stageName);
+            var st = me.getStageByName(name);
             if (st) {
                 st.clean();
-                delete me.stages[st.stageName];
-                var stageList = me.stageList;
-                util.removeArrByCondition(stageList, function (s) {
-                    return s.stageName === stageName;
+                delete me.stages[st.name];
+                var stageStack = me.stageStack;
+                util.removeArrByCondition(stageStack, function (s) {
+                    return s.name === name;
                 });
                 me.sortStageIndex();
             }
@@ -224,14 +218,14 @@ define(function (require) {
          */
         swapStage: function (from, to) {
             var me = this;
-            var stageList = me.stageList;
-            var len = stageList.length;
+            var stageStack = me.stageStack;
+            var len = stageStack.length;
             if (from >= 0 && from <= len - 1
                     && to >= 0 && to <= len - 1
             ) {
-                var sc = stageList[from];
-                stageList[from] = stageList[to];
-                stageList[to] = sc;
+                var sc = stageStack[from];
+                stageStack[from] = stageStack[to];
+                stageStack[to] = sc;
                 me.sortStageIndex();
             }
         },
@@ -254,7 +248,7 @@ define(function (require) {
          */
         getCurrentStage: function () {
             var me = this;
-            return me.stageList[me.stageList.length - 1];
+            return me.stageStack[me.stageStack.length - 1];
         },
 
         /**
@@ -262,11 +256,11 @@ define(function (require) {
          */
         clearAllStage: function () {
             var me = this;
-            for (var i = 0, len = me.stageList.length; i < len; i++) {
-                me.stageList[i].clean();
+            for (var i = 0, len = me.stageStack.length; i < len; i++) {
+                me.stageStack[i].clean();
             }
             me.stages = {};
-            me.stageList = [];
+            me.stageStack = [];
         }
 
     };
