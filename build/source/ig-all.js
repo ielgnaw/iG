@@ -654,10 +654,9 @@ define('ig/ig', ['require'], function (require) {
             window.cancelAnimationFrame(this.requestID);
         },
         createStage: function (stageOpts) {
-            var st = new Stage(stageOpts);
-            console.warn(st);
-            this.pushStage(st);
-            return st;
+            var stage = new Stage(stageOpts);
+            this.pushStage(stage);
+            return stage;
         },
         getStageList: function () {
             return this.stageList;
@@ -668,9 +667,9 @@ define('ig/ig', ['require'], function (require) {
         pushStage: function (stage) {
             var me = this;
             if (!me.getStageByName(stage.stageName)) {
-                this.stageList.push(stage);
-                this.stages[stage.stageName] = stage;
-                this.sortStageIndex();
+                me.stageList.push(stage);
+                me.stages[stage.stageName] = stage;
+                me.sortStageIndex();
             }
         },
         popStage: function () {
@@ -809,7 +808,7 @@ define('ig/ig', ['require'], function (require) {
         setContainerBgColor: function (color) {
             var me = this;
             me.containerBgColor = me.containerBgColor || '#000';
-            this.container.style.backgroundColor = me.containerBgColor;
+            me.container.style.backgroundColor = me.containerBgColor;
         },
         setContainerBgImg: function (imgUrl, repeatPattern) {
             var me = this;
@@ -820,7 +819,7 @@ define('ig/ig', ['require'], function (require) {
                 me.container.style.backgroundPosition = 'center';
                 break;
             case 'full':
-                me.container.style.backgroundSize = this.width + 'px ' + this.height + 'px';
+                me.container.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                 break;
             }
         }

@@ -75,7 +75,7 @@ define(function (require) {
         setContainerBgColor: function (color) {
             var me = this;
             me.containerBgColor = me.containerBgColor || '#000';
-            this.container.style.backgroundColor = me.containerBgColor;
+            me.container.style.backgroundColor = me.containerBgColor;
         },
 
         /**
@@ -96,7 +96,7 @@ define(function (require) {
                     break;
                 // 拉伸
                 case 'full':
-                    me.container.style.backgroundSize = this.width + 'px ' + this.height + 'px';
+                    me.container.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                     break;
             }
         },

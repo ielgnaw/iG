@@ -22,6 +22,7 @@ define(function (require) {
      */
     function Game() {
         Event.apply(this, arguments);
+
         // 暂停
         this.paused = false;
 
@@ -131,11 +132,9 @@ define(function (require) {
          * @return {Object} 创建的场景对象
          */
         createStage: function (stageOpts) {
-            var st = new Stage(stageOpts);
-            console.warn(st);
-            // var st = {};
-            this.pushStage(st);
-            return st;
+            var stage = new Stage(stageOpts);
+            this.pushStage(stage);
+            return stage;
         },
 
         /**
@@ -166,9 +165,9 @@ define(function (require) {
         pushStage: function (stage) {
             var me = this;
             if (!me.getStageByName(stage.stageName)) {
-                this.stageList.push(stage);
-                this.stages[stage.stageName] = stage;
-                this.sortStageIndex();
+                me.stageList.push(stage);
+                me.stages[stage.stageName] = stage;
+                me.sortStageIndex();
             }
         },
 
