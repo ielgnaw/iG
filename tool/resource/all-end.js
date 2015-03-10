@@ -22,13 +22,17 @@
 //     }
 // }
 // /** /if */
-// /** for: ${parts} as ${mod} */
+/** for: ${parts} as ${mod} */
 // require("${mod.name}");
-// /** /for */
+/** /for */
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
 
 var ig = require('ig');
+/** for: ${parts} as ${mod} */
+ig['${mod.refName}'] = require('${mod.name}');
+/** /for */
+
 _global['ig'] = ig;
 
 })(window);

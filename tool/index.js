@@ -82,12 +82,8 @@ exports.packAsAll = function () {
     });
 
     // write file by wrapped code
-    var hasMap = modules.parts.filter(function (mod) {
-        return mod.name.indexOf('chart/map') >= 0;
-    }).length > 0;
     var wrapEnd = etpl.compile(wrapEndTpl)({
-        parts: modules.parts,
-        hasMap: hasMap
+        parts: modules.parts
     });
     var code = wrapStart + wrapNut + result + wrapEnd;
     var name = (conf.name || 'ig') + '-all';

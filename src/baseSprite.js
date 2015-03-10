@@ -131,7 +131,7 @@ define(function (require) {
         ctx.restore();
     };
 
-    require('./util').inherits(BaseSprite, require('./event'));
+    require('./util').inherits(BaseSprite, require('./Event'));
 
     return BaseSprite;
 

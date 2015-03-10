@@ -20,16 +20,16 @@ define(function (require) {
      * @return {Function} 返回 subClass 构造器
      */
     exports.inherits = function (subClass, superClass) {
-        exports.noop.prototype = superClass.prototype;
-        var subProto = subClass.prototype;
-        var proto = subClass.prototype = new exports.noop();
 
-        for (var key in subProto) {
-            proto[key] = subProto[key];
+        var Empty = function () {};
+        Empty.prototype = superClass.prototype;
+        var selfPrototype = subClass.prototype;
+        var proto = subClass.prototype = new Empty();
+
+        for (var key in selfPrototype) {
+            proto[key] = selfPrototype[key];
         }
-
         subClass.prototype.constructor = subClass;
-        subClass.superClass = superClass.prototype;
 
         return subClass;
     };

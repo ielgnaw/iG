@@ -75,7 +75,7 @@ define(function (require) {
         arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
     };
 
-    require('./util').inherits(ImageLoader, require('./event'));
+    require('./util').inherits(ImageLoader, require('./Event'));
 
     return ImageLoader;
 

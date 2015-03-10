@@ -33,48 +33,67 @@
         </div>
         <script>
 
-            var imageLoader = new ig.ImageLoader();
-            imageLoader.addImage([
-                './img/mute_35x35.png',
-                './img/thinNumbers_25x32.png',
-                './img/fatNumbers_33x41.png',
-                './img/pop_156x141.png',
-                './img/dots_64x86.png',
-                './img/panels_383x550.png',
-                './img/quitBut.png',
-                './img/playBut.png',
-                './img/hud.png',
-                './img/rotateDeviceMessage.jpg',
-                './img/bg.jpg',
-                './img/sprite-sheet-test.png',
-                './img/sprite-sheet-test1.png',
-                './img/sprite-sheet-test2.png',
-                './img/sprite-sheet-test3.jpg',
-                './img/sprite-sheet-test4.png',
-                './img/sprite-sheet-test5.png',
-                './img/sprite-sheet-test6.png',
-                './img/sprite-sheet-test7.jpg',
-                './img/sprite-sheet-test8.png',
-            ]);
+            // var imageLoader = new ig.ImageLoader();
+            // imageLoader.addImage([
+            //     './img/mute_35x35.png',
+            //     './img/thinNumbers_25x32.png',
+            //     './img/fatNumbers_33x41.png',
+            //     './img/pop_156x141.png',
+            //     './img/dots_64x86.png',
+            //     './img/panels_383x550.png',
+            //     './img/quitBut.png',
+            //     './img/playBut.png',
+            //     './img/hud.png',
+            //     './img/rotateDeviceMessage.jpg',
+            //     './img/bg.jpg',
+            //     './img/sprite-sheet-test.png',
+            //     './img/sprite-sheet-test1.png',
+            //     './img/sprite-sheet-test2.png',
+            //     './img/sprite-sheet-test3.jpg',
+            //     './img/sprite-sheet-test4.png',
+            //     './img/sprite-sheet-test5.png',
+            //     './img/sprite-sheet-test6.png',
+            //     './img/sprite-sheet-test7.jpg',
+            //     './img/sprite-sheet-test8.png',
+            // ]);
 
-            var interval = setInterval(function (e) {
-                var percent = imageLoader.loadImages();
-                console.warn(percent.toFixed());
+            // var interval = setInterval(function (e) {
+            //     var percent = imageLoader.loadImages();
+            //     console.warn(percent.toFixed());
 
-                if (percent >= 100) {
-                    clearInterval(interval);
-                }
-            }, 16);
+            //     if (percent >= 100) {
+            //         clearInterval(interval);
+            //     }
+            // }, 16);
 
             var canvas = document.querySelector('#canvas');
             var ctx = canvas.getContext('2d');
 
-            var bs = new ig.BaseSprite(ctx);
-            bs.on('BaseSprite:draw', function () {
-                console.log(arguments);
+            // var bs = new ig.BaseSprite(ctx);
+            // bs.on('BaseSprite:draw', function () {
+            //     console.log(arguments);
+            // });
+
+            // bs.draw(ctx);
+
+            var g = new ig.Game();
+            g.start(60);
+
+            g.on('Game:afterRender', function (data) {
+                console.log(
+                    '最大帧数：' + data.data.maxFrame,
+                    '最小帧数：' + data.data.minFrame,
+                    '当前帧数：' + data.data.curFrame
+                );
             });
 
-            bs.draw(ctx);
+            setTimeout(function () {
+                g.pause();
+                // setTimeout(function () {
+                //     g.unpause();
+                // }, 2000);
+            }, 3000);
+
         </script>
     </body>
 </html>

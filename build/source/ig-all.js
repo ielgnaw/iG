@@ -127,14 +127,7 @@ var require, define;
     }
 }());
 define('ig', ['ig/ig'], function (main) {return main;});
-define('ig/ig', [
-    'require',
-    './util',
-    './event',
-    './platform',
-    './BaseSprite',
-    './ImageLoader'
-], function (require) {
+define('ig/ig', ['require'], function (require) {
     window.requestAnimationFrame = function () {
         return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame || function (callback, elem) {
             var me = this;
@@ -152,25 +145,47 @@ define('ig/ig', [
         return window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelAnimationFrame || window.mozCancelRequestAnimationFrame || window.msCancelAnimationFrame || window.msCancelRequestAnimationFrame || window.oCancelAnimationFrame || window.oCancelRequestAnimationFrame || window.clearTimeout;
     }();
     var exports = {};
-    exports.util = require('./util');
-    exports.Event = require('./event');
-    exports.env = require('./platform');
-    exports.BaseSprite = require('./BaseSprite');
-    exports.ImageLoader = require('./ImageLoader');
+    exports.frameMonitor = {
+        max: 0,
+        min: 9999,
+        cur: 0,
+        curTime: 0,
+        expendPerFrame: 0,
+        startTimePerSecond: 0,
+        totalPerSecond: 0,
+        start: function () {
+            this.curTime = this.startTimePerSecond = new Date();
+        },
+        update: function () {
+            var cTime = new Date();
+            if (cTime - this.startTimePerSecond >= 1000) {
+                this.cur = this.totalPerSecond;
+                this.max = this.cur > this.max ? this.cur : this.max;
+                this.min = this.cur < this.min ? this.cur : this.min;
+                this.totalPerSecond = 0;
+                this.startTimePerSecond = cTime;
+            } else {
+                ++this.totalPerSecond;
+            }
+            this.expendPerFrame = cTime - this.curTime;
+            this.curTime = cTime;
+        }
+    };
     return exports;
 });define('ig/util', ['require'], function (require) {
     var exports = {};
     exports.noop = function () {
     };
     exports.inherits = function (subClass, superClass) {
-        exports.noop.prototype = superClass.prototype;
-        var subProto = subClass.prototype;
-        var proto = subClass.prototype = new exports.noop();
-        for (var key in subProto) {
-            proto[key] = subProto[key];
+        var Empty = function () {
+        };
+        Empty.prototype = superClass.prototype;
+        var selfPrototype = subClass.prototype;
+        var proto = subClass.prototype = new Empty();
+        for (var key in selfPrototype) {
+            proto[key] = selfPrototype[key];
         }
         subClass.prototype.constructor = subClass;
-        subClass.superClass = superClass.prototype;
         return subClass;
     };
     exports.deg2Rad = function (deg) {
@@ -213,7 +228,7 @@ define('ig/ig', [
         }
     };
     return exports;
-});define('ig/event', ['require'], function (require) {
+});define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
     function Event() {
         this._events = {};
@@ -467,7 +482,7 @@ define('ig/ig', [
 });define('ig/BaseSprite', [
     'require',
     './util',
-    './event'
+    './Event'
 ], function (require) {
     function _drawDebugRect(ctx) {
         var me = this;
@@ -523,12 +538,12 @@ define('ig/ig', [
         ;
         ctx.restore();
     };
-    require('./util').inherits(BaseSprite, require('./event'));
+    require('./util').inherits(BaseSprite, require('./Event'));
     return BaseSprite;
 });define('ig/ImageLoader', [
     'require',
     './util',
-    './event'
+    './Event'
 ], function (require) {
     var arrayProto = Array.prototype;
     function ImageLoader() {
@@ -569,8 +584,73 @@ define('ig/ig', [
         var me = this;
         arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
     };
-    require('./util').inherits(ImageLoader, require('./event'));
+    require('./util').inherits(ImageLoader, require('./Event'));
     return ImageLoader;
+});define('ig/Game', [
+    'require',
+    'ig',
+    './Event',
+    './util'
+], function (require) {
+    var ig = require('ig');
+    var Event = require('./Event');
+    var util = require('./util');
+    function Game(opts) {
+        Event.apply(this, arguments);
+        this.paused = false;
+    }
+    Game.prototype = {
+        constructor: Game,
+        addListener: function (ln) {
+            this.listeners.push(ln);
+        },
+        clearListener: function () {
+            this.listeners.length = 0;
+        },
+        render: function () {
+            var me = this;
+            me.fire('Game:beforeRender', {
+                data: {
+                    curFrame: ig.frameMonitor.cur,
+                    maxFrame: ig.frameMonitor.max,
+                    minFrame: ig.frameMonitor.min
+                }
+            });
+            me.fire('Game:afterRender', {
+                data: {
+                    curFrame: ig.frameMonitor.cur,
+                    maxFrame: ig.frameMonitor.max,
+                    minFrame: ig.frameMonitor.min
+                }
+            });
+        },
+        start: function (fps) {
+            var me = this;
+            fps = fps || 60;
+            var spf = 1000 / fps | 0;
+            ig.frameMonitor.start();
+            me.timer = setInterval(function () {
+                ig.frameMonitor.update();
+                if (!me.paused) {
+                    me.render();
+                }
+            }, spf);
+        },
+        pause: function () {
+            this.paused = true;
+        },
+        unpause: function () {
+            this.paused = false;
+        },
+        stop: function () {
+            clearInterval(this.timer);
+        },
+        setStageManager: function (stageManager) {
+            this.stageManager = stageManager;
+        }
+    };
+    util.inherits(Game, Event);
+    return Game;
 });// var zrender = require('zrender');
 // zrender.tool = {
 //     color : require('zrender/tool/color'),
@@ -589,21 +669,37 @@ define('ig/ig', [
 // var echarts = require('echarts');
 // echarts.config = require('echarts/config');
 // 
-// 
+
 // require("ig/util");
-// 
-// require("ig/event");
-// 
+
+// require("ig/Event");
+
 // require("ig/platform");
-// 
+
 // require("ig/BaseSprite");
-// 
+
 // require("ig/ImageLoader");
-// 
+
+// require("ig/Game");
+
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
 
 var ig = require('ig');
+
+ig['util'] = require('ig/util');
+
+ig['Event'] = require('ig/Event');
+
+ig['env'] = require('ig/platform');
+
+ig['BaseSprite'] = require('ig/BaseSprite');
+
+ig['ImageLoader'] = require('ig/ImageLoader');
+
+ig['Game'] = require('ig/Game');
+
+
 _global['ig'] = ig;
 
 })(window);
