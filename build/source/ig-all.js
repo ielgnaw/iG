@@ -145,32 +145,6 @@ define('ig/ig', ['require'], function (require) {
         return window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelAnimationFrame || window.mozCancelRequestAnimationFrame || window.msCancelAnimationFrame || window.msCancelRequestAnimationFrame || window.oCancelAnimationFrame || window.oCancelRequestAnimationFrame || window.clearTimeout;
     }();
     var exports = {};
-    exports.frameMonitor = {
-        max: 0,
-        min: 9999,
-        cur: 0,
-        curTime: 0,
-        expendPerFrame: 0,
-        startTimePerSecond: 0,
-        totalPerSecond: 0,
-        start: function () {
-            this.curTime = this.startTimePerSecond = new Date();
-        },
-        update: function () {
-            var cTime = new Date();
-            if (cTime - this.startTimePerSecond >= 1000) {
-                this.cur = this.totalPerSecond;
-                this.max = this.cur > this.max ? this.cur : this.max;
-                this.min = this.cur < this.min ? this.cur : this.min;
-                this.totalPerSecond = 0;
-                this.startTimePerSecond = cTime;
-            } else {
-                ++this.totalPerSecond;
-            }
-            this.expendPerFrame = cTime - this.curTime;
-            this.curTime = cTime;
-        }
-    };
     return exports;
 });define('ig/util', ['require'], function (require) {
     var exports = {};
@@ -588,62 +562,64 @@ define('ig/ig', ['require'], function (require) {
     return ImageLoader;
 });define('ig/Game', [
     'require',
-    'ig',
     './Event',
-    './util'
+    './util',
+    './FrameMonitor'
 ], function (require) {
-    var ig = require('ig');
     var Event = require('./Event');
     var util = require('./util');
-    function Game(opts) {
+    var FrameMonitor = require('./FrameMonitor');
+    function Game() {
         Event.apply(this, arguments);
         this.paused = false;
+        this.curGameFrameMonitor = new FrameMonitor();
     }
     Game.prototype = {
         constructor: Game,
-        addListener: function (ln) {
-            this.listeners.push(ln);
-        },
-        clearListener: function () {
-            this.listeners.length = 0;
-        },
         render: function () {
             var me = this;
+            me.curGameFrameMonitor.update();
+            if (!me.paused) {
+                me.requestID = window.requestAnimationFrame(function () {
+                    me.render.call(me);
+                });
+            }
             me.fire('Game:beforeRender', {
                 data: {
-                    curFrame: ig.frameMonitor.cur,
-                    maxFrame: ig.frameMonitor.max,
-                    minFrame: ig.frameMonitor.min
+                    curFrame: me.curGameFrameMonitor.cur,
+                    maxFrame: me.curGameFrameMonitor.max,
+                    minFrame: me.curGameFrameMonitor.min
                 }
             });
             me.fire('Game:afterRender', {
                 data: {
-                    curFrame: ig.frameMonitor.cur,
-                    maxFrame: ig.frameMonitor.max,
-                    minFrame: ig.frameMonitor.min
+                    curFrame: me.curGameFrameMonitor.cur,
+                    maxFrame: me.curGameFrameMonitor.max,
+                    minFrame: me.curGameFrameMonitor.min
                 }
             });
         },
         start: function (fps) {
             var me = this;
-            fps = fps || 60;
-            var spf = 1000 / fps | 0;
-            ig.frameMonitor.start();
-            me.timer = setInterval(function () {
-                ig.frameMonitor.update();
-                if (!me.paused) {
-                    me.render();
-                }
-            }, spf);
+            me.paused = false;
+            me.curGameFrameMonitor.reset();
+            me.requestID = window.requestAnimationFrame(function () {
+                me.curGameFrameMonitor.start();
+                me.render.call(me);
+            });
         },
         pause: function () {
             this.paused = true;
         },
-        unpause: function () {
-            this.paused = false;
+        play: function () {
+            var me = this;
+            me.paused = false;
+            me.requestID = window.requestAnimationFrame(function () {
+                me.render.call(me);
+            });
         },
         stop: function () {
-            clearInterval(this.timer);
+            window.cancelAnimationFrame(this.requestID);
         },
         setStageManager: function (stageManager) {
             this.stageManager = stageManager;
@@ -651,6 +627,47 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Game, Event);
     return Game;
+});define('ig/FrameMonitor', ['require'], function (require) {
+    function FrameMonitor() {
+        this.max = 0;
+        this.min = 9999;
+        this.cur = 0;
+        this.curTime = 0;
+        this.expendPerFrame = 0;
+        this.startTimePerSecond = 0;
+        this.totalPerSecond = 0;
+    }
+    FrameMonitor.prototype = {
+        constructor: FrameMonitor,
+        reset: function () {
+            var me = this;
+            me.max = 0;
+            me.min = 9999;
+            me.cur = 0;
+            me.curTime = 0;
+            me.expendPerFrame = 0;
+            me.startTimePerSecond = 0;
+            me.totalPerSecond = 0;
+        },
+        start: function () {
+            this.curTime = this.startTimePerSecond = new Date();
+        },
+        update: function () {
+            var cTime = new Date();
+            if (cTime - this.startTimePerSecond >= 1000) {
+                this.cur = this.totalPerSecond;
+                this.max = this.cur > this.max ? this.cur : this.max;
+                this.min = this.cur < this.min ? this.cur : this.min;
+                this.totalPerSecond = 0;
+                this.startTimePerSecond = cTime;
+            } else {
+                ++this.totalPerSecond;
+            }
+            this.expendPerFrame = cTime - this.curTime;
+            this.curTime = cTime;
+        }
+    };
+    return FrameMonitor;
 });// var zrender = require('zrender');
 // zrender.tool = {
 //     color : require('zrender/tool/color'),
@@ -682,6 +699,8 @@ define('ig/ig', ['require'], function (require) {
 
 // require("ig/Game");
 
+// require("ig/FrameMonitor");
+
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
 
@@ -698,6 +717,8 @@ ig['BaseSprite'] = require('ig/BaseSprite');
 ig['ImageLoader'] = require('ig/ImageLoader');
 
 ig['Game'] = require('ig/Game');
+
+ig['FrameMonitor'] = require('ig/FrameMonitor');
 
 
 _global['ig'] = ig;

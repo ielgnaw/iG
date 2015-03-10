@@ -8,7 +8,8 @@ exports.modules = {
         {name: 'ig/platform', refName: 'env'},  // window.ig.env
         {name: 'ig/BaseSprite', refName: 'BaseSprite'}, // window.ig.BaseSprite
         {name: 'ig/ImageLoader', refName: 'ImageLoader'}, // window.ig.ImageLoader
-        {name: 'ig/Game', refName: 'Game'} // window.ig.Game
+        {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
+        {name: 'ig/FrameMonitor', refName: 'FrameMonitor'}, // window.ig.FrameMonitor
         // ,{name: 'ig/test/one'}
     ]
 };
