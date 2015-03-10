@@ -129,6 +129,58 @@ define(function (require) {
         }
     };
 
+    /**
+     * 根据条件删除数组里的第一个满足条件的项，只会删除第一个，改变的是原数组
+     *
+     * @param {Array} list 待删除的数组
+     * @param {Function} callback 条件函数，返回 true 就执行
+     */
+    exports.removeArrByCondition = function (list, callback) {
+        var candidateIndex = -1;
+        var tmp;
+        for (var i = 0, len = list.length; i < len; i++) {
+            tmp = list[i];
+            if (callback(tmp)) {
+                candidateIndex = i;
+                break;
+            }
+        }
+
+        if (candidateIndex !== -1) {
+            list.splice(list, 1);
+        }
+    };
+
+    /**
+     * 为 dom 节点添加一个父节点
+     * domWrap(curNode, document.createElement('div'));
+     * domWrap(curNode, '<div style="color:blue;"></div>');
+     *
+     * @param {HTML.Element} curNode 待添加父节点的节点
+     * @param {HTML.Element | string} newNode 要作为父节点的节点
+     *
+     * @return {HTML.Element} 原节点
+     */
+    exports.domWrap = function (curNode, newNode) {
+        var _el = curNode.cloneNode(true);
+
+        // newNode = '<div style="color:blue"></div>';
+        if (typeof newNode === 'string') {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = newNode;
+            tmp = tmp.children[0];
+            tmp.appendChild(_el);
+            curNode.parentNode.replaceChild(tmp, curNode);
+        }
+        // newNode = document.createElement('div');
+        else {
+            newNode.appendChild(_el);
+            curNode.parentNode.replaceChild(newNode, curNode);
+        }
+
+        return _el;
+    }
+
     return exports;
 
 });

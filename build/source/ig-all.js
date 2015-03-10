@@ -201,6 +201,34 @@ define('ig/ig', ['require'], function (require) {
             return func.apply(thisContext, args);
         }
     };
+    exports.removeArrByCondition = function (list, callback) {
+        var candidateIndex = -1;
+        var tmp;
+        for (var i = 0, len = list.length; i < len; i++) {
+            tmp = list[i];
+            if (callback(tmp)) {
+                candidateIndex = i;
+                break;
+            }
+        }
+        if (candidateIndex !== -1) {
+            list.splice(list, 1);
+        }
+    };
+    exports.domWrap = function (curNode, newNode) {
+        var _el = curNode.cloneNode(true);
+        if (typeof newNode === 'string') {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = newNode;
+            tmp = tmp.children[0];
+            tmp.appendChild(_el);
+            curNode.parentNode.replaceChild(tmp, curNode);
+        } else {
+            newNode.appendChild(_el);
+            curNode.parentNode.replaceChild(newNode, curNode);
+        }
+        return _el;
+    };
     return exports;
 });define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -564,15 +592,19 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './Event',
     './util',
+    './Stage',
     './FrameMonitor'
 ], function (require) {
     var Event = require('./Event');
     var util = require('./util');
+    var Stage = require('./Stage');
     var FrameMonitor = require('./FrameMonitor');
     function Game() {
         Event.apply(this, arguments);
         this.paused = false;
         this.curGameFrameMonitor = new FrameMonitor();
+        this.stageList = [];
+        this.stages = {};
     }
     Game.prototype = {
         constructor: Game,
@@ -599,7 +631,7 @@ define('ig/ig', ['require'], function (require) {
                 }
             });
         },
-        start: function (fps) {
+        start: function () {
             var me = this;
             me.paused = false;
             me.curGameFrameMonitor.reset();
@@ -611,7 +643,7 @@ define('ig/ig', ['require'], function (require) {
         pause: function () {
             this.paused = true;
         },
-        play: function () {
+        resume: function () {
             var me = this;
             me.paused = false;
             me.requestID = window.requestAnimationFrame(function () {
@@ -621,8 +653,79 @@ define('ig/ig', ['require'], function (require) {
         stop: function () {
             window.cancelAnimationFrame(this.requestID);
         },
-        setStageManager: function (stageManager) {
-            this.stageManager = stageManager;
+        createStage: function (stageOpts) {
+            var st = new Stage(stageOpts);
+            console.warn(st);
+            this.pushStage(st);
+            return st;
+        },
+        getStageList: function () {
+            return this.stageList;
+        },
+        getStageByName: function (stageName) {
+            return this.stages[stageName];
+        },
+        pushStage: function (stage) {
+            var me = this;
+            if (!me.getStageByName(stage.stageName)) {
+                this.stageList.push(stage);
+                this.stages[stage.stageName] = stage;
+                this.sortStageIndex();
+            }
+        },
+        popStage: function () {
+            var me = this;
+            var st = me.stageList.pop();
+            if (st) {
+                st.clean();
+                delete me.stages[st.stageName];
+                me.sortStageIndex();
+            }
+        },
+        sortStageIndex: function () {
+            var stageList = this.stageList;
+            for (var i = 0, len = stageList.length; i < len; i++) {
+                stageList[i].container.style.zIndex = i;
+            }
+        },
+        remove: function (stageName) {
+            var me = this;
+            var st = me.getStageByName(stageName);
+            if (st) {
+                st.clean();
+                delete me.stages[st.stageName];
+                var stageList = me.stageList;
+                util.removeArrByCondition(stageList, function (s) {
+                    return s.stageName === stageName;
+                });
+                me.sortStageIndex();
+            }
+        },
+        swapStage: function (from, to) {
+            var me = this;
+            var stageList = me.stageList;
+            var len = stageList.length;
+            if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
+                var sc = stageList[from];
+                stageList[from] = stageList[to];
+                stageList[to] = sc;
+                me.sortStageIndex();
+            }
+        },
+        getStageIndex: function (stage) {
+            return stage.container.style.zIndex;
+        },
+        getCurrentStage: function () {
+            var me = this;
+            return me.stageList[me.stageList.length - 1];
+        },
+        clearAllStage: function () {
+            var me = this;
+            for (var i = 0, len = me.stageList.length; i < len; i++) {
+                me.stageList[i].clean();
+            }
+            me.stages = {};
+            me.stageList = [];
         }
     };
     util.inherits(Game, Event);
@@ -668,6 +771,61 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     return FrameMonitor;
+});define('ig/Stage', [
+    'require',
+    './util'
+], function (require) {
+    var util = require('./util');
+    function Stage(opts) {
+        opts = opts || {};
+        if (!opts.canvas) {
+            throw new Error('Stage must be require a canvas param');
+        }
+        this.canvas = opts.canvas;
+        this.ctx = this.canvas.getContext('2d');
+        this.container = this.canvas.parentNode;
+        this.guid = 0;
+        this.stageName = opts.stageName || 'ig_stage_' + ++this.guid;
+        this.x = opts.x || 0;
+        this.y = opts.y || 0;
+        this.width = opts.width || this.canvas.width;
+        this.height = opts.height || this.canvas.height;
+        this.containerBgColor = opts.containerBgColor || '#000';
+        this.setSize();
+        this.setContainerBgColor();
+    }
+    Stage.prototype = {
+        constructor: Stage,
+        setSize: function (width, height) {
+            var me = this;
+            me.width = width || me.width;
+            me.height = height || me.height;
+            me.container.style.width = me.width + 'px';
+            me.container.style.height = me.height + 'px';
+            me.canvas.width = me.width;
+            me.canvas.height = me.height;
+            console.log(me.canvas);
+        },
+        setContainerBgColor: function (color) {
+            var me = this;
+            me.containerBgColor = me.containerBgColor || '#000';
+            this.container.style.backgroundColor = me.containerBgColor;
+        },
+        setContainerBgImg: function (imgUrl, repeatPattern) {
+            var me = this;
+            me.container.style.backgroundImage = 'url(' + imgUrl + ')';
+            switch (repeatPattern) {
+            case 'center':
+                me.container.style.backgroundRepeat = 'no-repeat';
+                me.container.style.backgroundPosition = 'center';
+                break;
+            case 'full':
+                me.container.style.backgroundSize = this.width + 'px ' + this.height + 'px';
+                break;
+            }
+        }
+    };
+    return Stage;
 });// var zrender = require('zrender');
 // zrender.tool = {
 //     color : require('zrender/tool/color'),
@@ -701,6 +859,8 @@ define('ig/ig', ['require'], function (require) {
 
 // require("ig/FrameMonitor");
 
+// require("ig/Stage");
+
 // _global['echarts'] = echarts;
 // _global['zrender'] = zrender;
 
@@ -719,6 +879,8 @@ ig['ImageLoader'] = require('ig/ImageLoader');
 ig['Game'] = require('ig/Game');
 
 ig['FrameMonitor'] = require('ig/FrameMonitor');
+
+ig['Stage'] = require('ig/Stage');
 
 
 _global['ig'] = ig;

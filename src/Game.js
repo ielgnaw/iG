@@ -1,5 +1,7 @@
 /**
  * @file Game 类
+ * 游戏的主启动在这里，渲染过程：
+ * Game: render --> Stage: render --> DisplayObject: render
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
@@ -7,9 +9,17 @@ define(function (require) {
 
     var Event = require('./Event');
     var util = require('./util');
+    var Stage = require('./Stage');
 
     var FrameMonitor = require('./FrameMonitor');
 
+    /**
+     * Game 类
+     * 一个游戏实例应该对应一个 FrameMonitor 的实例
+     * 同时，一个游戏应该对这个游戏中的场景进行管理
+     *
+     * @constructor
+     */
     function Game() {
         Event.apply(this, arguments);
         // 暂停
@@ -17,6 +27,12 @@ define(function (require) {
 
         // 一个游戏对应一个 FrameMonitor 的实例
         this.curGameFrameMonitor = new FrameMonitor();
+
+        // 当前游戏实例中的所有场景，堆栈，后进先出
+        this.stageList = [];
+
+        // 当前游戏实例中的所有场景，对象，方便读取
+        this.stages = {};
     }
 
     Game.prototype = {
@@ -62,7 +78,7 @@ define(function (require) {
         /**
          * 游戏开始
          */
-        start: function (fps) {
+        start: function () {
             var me = this;
             me.paused = false;
 
@@ -83,7 +99,7 @@ define(function (require) {
         /**
          * 从暂停状态恢复
          */
-        play: function () {
+        resume: function () {
             var me = this;
             me.paused = false;
             me.requestID = window.requestAnimationFrame(function () {
@@ -103,9 +119,157 @@ define(function (require) {
          *
          * @param {Object} stageManager 场景管理器
          */
-        setStageManager: function (stageManager) {
-            this.stageManager = stageManager;
+        // setStageManager: function (stageManager) {
+        //     this.stageManager = stageManager;
+        // },
+
+        /**
+         * 创建一个场景
+         *
+         * @param {Object} stageOpts 创建场景所需的参数
+         *
+         * @return {Object} 创建的场景对象
+         */
+        createStage: function (stageOpts) {
+            var st = new Stage(stageOpts);
+            console.warn(st);
+            // var st = {};
+            this.pushStage(st);
+            return st;
+        },
+
+        /**
+         * 获取当前游戏里面的所有场景
+         *
+         * @return {[type]} [description]
+         */
+        getStageList: function () {
+            return this.stageList;
+        },
+
+        /**
+         * 根据场景名字获取苍井对象
+         *
+         * @param {string} stageName 场景名字
+         *
+         * @return {Object} 场景对象
+         */
+        getStageByName: function (stageName) {
+            return this.stages[stageName];
+        },
+
+        /**
+         * 添加场景，场景入栈
+         *
+         * @param {Object} stage 场景对象
+         */
+        pushStage: function (stage) {
+            var me = this;
+            if (!me.getStageByName(stage.stageName)) {
+                this.stageList.push(stage);
+                this.stages[stage.stageName] = stage;
+                this.sortStageIndex();
+            }
+        },
+
+        /**
+         * 场景出栈
+         */
+        popStage: function () {
+            var me = this;
+            var st = me.stageList.pop();
+            if (st) {
+                st.clean();
+                delete me.stages[st.stageName];
+                me.sortStageIndex();
+            }
+        },
+
+        /**
+         * 场景排序
+         */
+        sortStageIndex: function () {
+            var stageList = this.stageList;
+            for (var i = 0, len = stageList.length; i < len; i++) {
+                stageList[i].container.style.zIndex = i;
+            }
+        },
+
+        /**
+         * 根据名字移除一个场景，它和 popStage 的区别是
+         * popStage 只会清除栈顶的那一个
+         *
+         * @param {string} stageName 场景名字
+         *
+         * @return {[type]} [description]
+         */
+        remove: function (stageName) {
+            var me = this;
+            var st = me.getStageByName(stageName);
+            if (st) {
+                st.clean();
+                delete me.stages[st.stageName];
+                var stageList = me.stageList;
+                util.removeArrByCondition(stageList, function (s) {
+                    return s.stageName === stageName;
+                });
+                me.sortStageIndex();
+            }
+        },
+
+        /**
+         * 交换场景位置
+         *
+         * @param {number} from 起始位置
+         * @param {number} to 目标位置
+         */
+        swapStage: function (from, to) {
+            var me = this;
+            var stageList = me.stageList;
+            var len = stageList.length;
+            if (from >= 0 && from <= len - 1
+                    && to >= 0 && to <= len - 1
+            ) {
+                var sc = stageList[from];
+                stageList[from] = stageList[to];
+                stageList[to] = sc;
+                me.sortStageIndex();
+            }
+        },
+
+        /**
+         * 获取场景的 zIndex，场景的排序实际上就是变化 zIndex
+         *
+         * @param {Object} stage 场景对象
+         *
+         * @return {number} zIndex
+         */
+        getStageIndex: function (stage) {
+            return stage.container.style.zIndex;
+        },
+
+        /**
+         * 获取当前场景，栈的第一个为当前场景
+         *
+         * @return {Object} 场景对象
+         */
+        getCurrentStage: function () {
+            var me = this;
+            return me.stageList[me.stageList.length - 1];
+        },
+
+        /**
+         * 清除所有场景
+         */
+        clearAllStage: function () {
+            var me = this;
+            for (var i = 0, len = me.stageList.length; i < len; i++) {
+                me.stageList[i].clean();
+            }
+            me.stages = {};
+            me.stageList = [];
         }
+
     };
 
     util.inherits(Game, Event);

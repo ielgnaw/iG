@@ -10,6 +10,7 @@ exports.modules = {
         {name: 'ig/ImageLoader', refName: 'ImageLoader'}, // window.ig.ImageLoader
         {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
         {name: 'ig/FrameMonitor', refName: 'FrameMonitor'}, // window.ig.FrameMonitor
+        {name: 'ig/Stage', refName: 'Stage'}, // window.ig.FrameMonitor
         // ,{name: 'ig/test/one'}
     ]
 };
