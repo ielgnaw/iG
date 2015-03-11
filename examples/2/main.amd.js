@@ -9,7 +9,7 @@ define(function (require) {
 
     exports.init = function () {
         console.warn('init');
-        console.warn(require('ig').init());
+        console.warn(require('ig/Game'));
     };
 
     return exports;

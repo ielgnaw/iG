@@ -8,6 +8,8 @@ define(function (require) {
     var Event = require('./Event');
     var util = require('./util');
 
+    var guid = 0;
+
     /**
      * 可显示的对象
      * 这个类是所有可以在场景中显示的对象的基类
@@ -20,8 +22,7 @@ define(function (require) {
         Event.apply(this, arguments);
 
         opts = opts || {};
-        this.guid = 0;
-        this.name = (opts.name === null || opts.name === undefined) ? ('ig_displayobject_' + (this.guid++)) : opts.name;
+        this.name = (opts.name === null || opts.name === undefined) ? ('ig_displayobject_' + (guid++)) : opts.name;
 
         // 当前 DisplayObject 实例的拥有者，指场景
         this.stageOwner = null;
@@ -66,7 +67,7 @@ define(function (require) {
         this.status = 1;
 
         // 自定义的属性
-        this.customProp = {};
+        this.customProp = opts.customProp || {};
 
         // 当前这个 DisplayObject 实例是否开启 debug 模式
         // 开始 debug 模式即绘制这个 DisplayObject 实例的时候会带上边框
@@ -74,6 +75,9 @@ define(function (require) {
     }
 
     DisplayObject.prototype = {
+        /**
+         * 还原 constructor
+         */
         constructor: DisplayObject,
 
         /**

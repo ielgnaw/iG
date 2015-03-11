@@ -28,6 +28,7 @@
         <script type="text/javascript" src="../../build/source/ig-all.js"></script>
     </head>
     <body>
+        <div class="show-frame">帧数：123</div>
         <div class="container">
             <canvas id='canvas' width='800' height='400'></canvas>
         </div>
@@ -69,50 +70,14 @@
             var canvas = document.querySelector('#canvas');
             var ctx = canvas.getContext('2d');
 
+            var showFrameNode = document.querySelector('.show-frame');
+
             var g = new ig.Game();
 
             g.on('Game:afterRender', function (data) {
-                console.log(
-                    '最大帧数：' + data.data.maxFrame,
-                    '最小帧数：' + data.data.minFrame,
-                    '当前帧数：' + data.data.curFrame
-                );
+                showFrameNode.innerHTML = ''
+                    + '当前帧数：' + data.data.curFrame
             });
-
-            function Ball(opts) {
-                ig.DisplayObject.apply(this, arguments);
-                this.r = opts.r || 10;
-                this.color = '#fff';
-            }
-
-            Ball.prototype.constructor = Ball;
-            Ball.prototype.update = function () {
-                var w = this.stageOwner.width;
-                var h = this.stageOwner.height;
-                if (this.x < this.r || this.x > w - this.r) {
-                    this.vX = -this.vX;
-                };
-                if (this.y < this.r || this.y > h - this.r) {
-                    this.vY = -this.vY;
-                }
-                // this.moveStep();
-                Ball.superClass.update.call(this);
-                // this.constructor.prototype.update();
-            };
-            Ball.prototype.render = function(ctx) {
-                ctx.beginPath();
-                ctx.fillStyle = this.color;
-                ctx.arc(this.x,this.y,this.r-3,0,Math.PI*2);
-                ctx.fill();
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.strokeStyle ="white";
-                ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
-                ctx.stroke();
-                Ball.superClass.render.apply(this, arguments);
-            };
-
-            ig.util.inherits(Ball, ig.DisplayObject);
 
             var stage = g.createStage({
                 width: 1000,
@@ -131,15 +96,26 @@
             //     console.log('Stage:afterRender');
             // });
 
-            for (var i = 0; i < 10; i++) {
-                var obj = new Ball({
+            var ballCount = 25;
+            for (var i = 0; i < ballCount; i++) {
+                var obj = new ig.Shape.Ball({
                     name: i,
                     r: 10
                 });
                 obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
                 obj.vX = ig.util.randomInt(5, 10);
                 obj.vY = ig.util.randomInt(5, 10);
-                obj.color = 'red';
+                // obj.color = 'red';
+                obj.color = ''
+                    + 'rgba('
+                    + ig.util.randomInt(0, 255)
+                    + ','
+                    + ig.util.randomInt(0, 255)
+                    + ','
+                    + ig.util.randomInt(0, 255)
+                    + ', '
+                    + ig.util.randomFloat(1, 1)
+                    + ')';
                 stage.addDisplayObject(obj);
 
                 // obj.on('DisplayObject:render', function (data) {
@@ -147,24 +123,20 @@
                 // });
             }
 
-            g.start();
-            console.warn(g);
-            console.warn(g.getStageStack());
-            console.warn(g.getCurrentStage());
+            // g.start();
 
-            setTimeout(function () {
-                // g.pause();
-                // alert('变化场景');
-                g.getCurrentStage().setContainerBgImg('./img/bg.jpg', 'full');
-                setTimeout(function () {
-                //     alert('又变了');
-                    g.getCurrentStage().setContainerBgImg('./img/bg1.jpg', 'full');
-                //     // g.pause();
-                    setTimeout(function () {
-                        g.pause();
-                    }, 3000);
-                }, 3000);
-            }, 3000);
+            // setTimeout(function () {
+            //     g.getCurrentStage().setContainerBgColor('#000');
+            //     setTimeout(function () {
+            //         g.getCurrentStage().setContainerBgImg('./img/bg.jpg', 'full');
+            //         setTimeout(function () {
+            //             g.getCurrentStage().setContainerBgImg('./img/bg1.jpg', 'full');
+            //             setTimeout(function () {
+            //                 g.pause();
+            //             }, 3000);
+            //         }, 3000);
+            //     }, 3000)
+            // }, 3000);
 
         </script>
     </body>

@@ -273,87 +273,90 @@ define('ig/ig', ['require'], function (require) {
     function Event() {
         this._events = {};
     }
-    Event.prototype.on = function (type, handler) {
-        if (!this._events) {
-            this._events = {};
-        }
-        var pool = this._events[type];
-        if (!pool) {
-            pool = this._events[type] = [];
-        }
-        if (!handler.hasOwnProperty(guidKey)) {
-            handler[guidKey] = +new Date();
-        }
-        pool.push(handler);
-    };
-    Event.prototype.un = function (type, handler) {
-        if (!this._events) {
-            return;
-        }
-        if (!handler) {
-            this._events[type] = [];
-            return;
-        }
-        var pool = this._events[type];
-        if (pool) {
-            for (var i = 0; i < pool.length; i++) {
-                if (pool[i] === handler) {
-                    pool.splice(i, 1);
-                    i--;
-                }
+    Event.prototype = {
+        constructor: Event,
+        on: function (type, handler) {
+            if (!this._events) {
+                this._events = {};
             }
-        }
-    };
-    Event.prototype.fire = function (type, event) {
-        if (arguments.length === 1 && typeof type === 'object') {
-            event = type;
-            type = event.type;
-        }
-        var inlineHandler = this['on' + type];
-        if (typeof inlineHandler === 'function') {
-            inlineHandler.call(this, event);
-        }
-        if (!this._events) {
-            return;
-        }
-        if (event == null) {
-            event = {};
-        }
-        if (Object.prototype.toString.call(event) !== '[object Object]') {
-            event = { data: event };
-        }
-        event.type = type;
-        event.target = this;
-        var alreadyInvoked = {};
-        var pool = this._events[type];
-        if (pool) {
-            pool = pool.slice();
-            for (var i = 0; i < pool.length; i++) {
-                var handler = pool[i];
-                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
-                    handler.call(this, event);
-                }
+            var pool = this._events[type];
+            if (!pool) {
+                pool = this._events[type] = [];
             }
-        }
-        if (type !== '*') {
-            var allPool = this._events['*'];
-            if (!allPool) {
+            if (!handler.hasOwnProperty(guidKey)) {
+                handler[guidKey] = +new Date();
+            }
+            pool.push(handler);
+        },
+        un: function (type, handler) {
+            if (!this._events) {
                 return;
             }
-            allPool = allPool.slice();
-            for (var i = 0; i < allPool.length; i++) {
-                var handler = allPool[i];
-                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
-                    handler.call(this, event);
+            if (!handler) {
+                this._events[type] = [];
+                return;
+            }
+            var pool = this._events[type];
+            if (pool) {
+                for (var i = 0; i < pool.length; i++) {
+                    if (pool[i] === handler) {
+                        pool.splice(i, 1);
+                        i--;
+                    }
                 }
             }
+        },
+        fire: function (type, event) {
+            if (arguments.length === 1 && typeof type === 'object') {
+                event = type;
+                type = event.type;
+            }
+            var inlineHandler = this['on' + type];
+            if (typeof inlineHandler === 'function') {
+                inlineHandler.call(this, event);
+            }
+            if (!this._events) {
+                return;
+            }
+            if (event == null) {
+                event = {};
+            }
+            if (Object.prototype.toString.call(event) !== '[object Object]') {
+                event = { data: event };
+            }
+            event.type = type;
+            event.target = this;
+            var alreadyInvoked = {};
+            var pool = this._events[type];
+            if (pool) {
+                pool = pool.slice();
+                for (var i = 0; i < pool.length; i++) {
+                    var handler = pool[i];
+                    if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                        handler.call(this, event);
+                    }
+                }
+            }
+            if (type !== '*') {
+                var allPool = this._events['*'];
+                if (!allPool) {
+                    return;
+                }
+                allPool = allPool.slice();
+                for (var i = 0; i < allPool.length; i++) {
+                    var handler = allPool[i];
+                    if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                        handler.call(this, event);
+                    }
+                }
+            }
+        },
+        enable: function (target) {
+            target._events = {};
+            target.on = Event.prototype.on;
+            target.un = Event.prototype.un;
+            target.fire = Event.prototype.fire;
         }
-    };
-    Event.enable = function (target) {
-        target._events = {};
-        target.on = Event.prototype.on;
-        target.un = Event.prototype.un;
-        target.fire = Event.prototype.fire;
     };
     return Event;
 });define('ig/platform', ['require'], function (require) {
@@ -761,6 +764,7 @@ define('ig/ig', ['require'], function (require) {
     var Event = require('./Event');
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var guid = 0;
     function Stage(opts) {
         Event.apply(this, arguments);
         opts = opts || {};
@@ -770,8 +774,7 @@ define('ig/ig', ['require'], function (require) {
         this.canvas = opts.canvas;
         this.ctx = this.canvas.getContext('2d');
         this.container = this.canvas.parentNode;
-        this.guid = 0;
-        this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + this.guid++ : opts.name;
+        this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
         this.x = opts.x || 0;
         this.y = opts.y || 0;
         this.width = opts.width || this.canvas.width;
@@ -796,11 +799,10 @@ define('ig/ig', ['require'], function (require) {
             me.container.style.height = me.height + 'px';
             me.canvas.width = me.width;
             me.canvas.height = me.height;
-            console.log(me.canvas);
         },
         setContainerBgColor: function (color) {
             var me = this;
-            me.containerBgColor = me.containerBgColor || '#000';
+            me.containerBgColor = color || me.containerBgColor;
             me.container.style.backgroundColor = me.containerBgColor;
         },
         setContainerBgImg: function (imgUrl, repeatPattern) {
@@ -823,8 +825,15 @@ define('ig/ig', ['require'], function (require) {
             me.canvas = me.container = me.ctx = null;
         },
         update: function () {
-            for (var i = 0, len = this.displayObjectList.length; i < len; i++) {
-                this.displayObjectList[i].update();
+            var me = this;
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+            for (var i = 0; i < len; i++) {
+                displayObjectStatus = me.displayObjectList[i].status;
+                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                    this.displayObjectList[i].update();
+                }
             }
         },
         render: function () {
@@ -843,7 +852,7 @@ define('ig/ig', ['require'], function (require) {
             me.ctx.save();
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
                     me.displayObjectList[i].render(me.ctx);
                 }
             }
@@ -887,9 +896,6 @@ define('ig/ig', ['require'], function (require) {
                 });
             }
         },
-        getDisplayObjectByName: function (name) {
-            return this.displayObjects[name];
-        },
         clearAllDisplayObject: function () {
             this.displayObjectList = [];
             this.displayObjects = {};
@@ -904,11 +910,11 @@ define('ig/ig', ['require'], function (require) {
 ], function (require) {
     var Event = require('./Event');
     var util = require('./util');
+    var guid = 0;
     function DisplayObject(opts) {
         Event.apply(this, arguments);
         opts = opts || {};
-        this.guid = 0;
-        this.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + this.guid++ : opts.name;
+        this.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + guid++ : opts.name;
         this.stageOwner = null;
         this.x = opts.x || 0;
         this.y = opts.y || 0;
@@ -926,7 +932,7 @@ define('ig/ig', ['require'], function (require) {
         this.radius = Math.random() * 30;
         this.zIndex = 0;
         this.status = 1;
-        this.customProp = {};
+        this.customProp = opts.customProp || {};
         this.debug = false;
     }
     DisplayObject.prototype = {
@@ -989,61 +995,169 @@ define('ig/ig', ['require'], function (require) {
     }
     util.inherits(DisplayObject, Event);
     return DisplayObject;
-});// var zrender = require('zrender');
-// zrender.tool = {
-//     color : require('zrender/tool/color'),
-//     math : require('zrender/tool/math'),
-//     util : require('zrender/tool/util'),
-//     vector : require('zrender/tool/vector'),
-//     area : require('zrender/tool/area'),
-//     event : require('zrender/tool/event')
-// }
-
-// zrender.animation = {
-//     Animation : require('zrender/animation/Animation'),
-//     Cip : require('zrender/animation/Clip'),
-//     easing : require('zrender/animation/easing')
-// }
-// var echarts = require('echarts');
-// echarts.config = require('echarts/config');
-// 
-
-// require("ig/util");
-
-// require("ig/Event");
-
-// require("ig/platform");
-
-// require("ig/ImageLoader");
-
-// require("ig/Game");
-
-// require("ig/FrameMonitor");
-
-// require("ig/Stage");
-
-// require("ig/DisplayObject");
-
-// _global['echarts'] = echarts;
-// _global['zrender'] = zrender;
-
+});define('ig/Shape/Ball', [
+    'require',
+    '../util',
+    '../DisplayObject'
+], function (require) {
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    function Ball(opts) {
+        var me = this;
+        DisplayObject.apply(me, arguments);
+        me.r = opts.r || 10;
+        me.color = '#fff';
+    }
+    Ball.prototype = {
+        constructor: Ball,
+        update: function () {
+            var me = this;
+            var w = me.stageOwner.width;
+            var h = me.stageOwner.height;
+            if (me.x < me.r || me.x > w - me.r) {
+                me.vX = -me.vX;
+            }
+            ;
+            if (me.y < me.r || me.y > h - me.r) {
+                me.vY = -me.vY;
+            }
+            Ball.superClass.update.call(me);
+        },
+        render: function (ctx) {
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+            ctx.arc(this.x, this.y, this.r - 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.strokeStyle = 'white';
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.stroke();
+            Ball.superClass.render.apply(this, arguments);
+        }
+    };
+    util.inherits(Ball, DisplayObject);
+    return Ball;
+});
 var ig = require('ig');
 
-ig['util'] = require('ig/util');
 
-ig['Event'] = require('ig/Event');
+var modName = 'ig/util';
+var refName = 'util';
+var folderName = '';
 
-ig['env'] = require('ig/platform');
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
 
-ig['ImageLoader'] = require('ig/ImageLoader');
+var modName = 'ig/Event';
+var refName = 'Event';
+var folderName = '';
 
-ig['Game'] = require('ig/Game');
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
 
-ig['FrameMonitor'] = require('ig/FrameMonitor');
+var modName = 'ig/platform';
+var refName = 'env';
+var folderName = '';
 
-ig['Stage'] = require('ig/Stage');
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
 
-ig['DisplayObject'] = require('ig/DisplayObject');
+var modName = 'ig/ImageLoader';
+var refName = 'ImageLoader';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/Game';
+var refName = 'Game';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/FrameMonitor';
+var refName = 'FrameMonitor';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/Stage';
+var refName = 'Stage';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/DisplayObject';
+var refName = 'DisplayObject';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/Shape/Ball';
+var refName = 'Ball';
+var folderName = 'Shape';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
 
 
 _global['ig'] = ig;

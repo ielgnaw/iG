@@ -10,7 +10,8 @@ exports.modules = {
         {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
         {name: 'ig/FrameMonitor', refName: 'FrameMonitor'}, // window.ig.FrameMonitor
         {name: 'ig/Stage', refName: 'Stage'}, // window.ig.FrameMonitor
-        {name: 'ig/DisplayObject', refName: 'DisplayObject'} // window.ig.FrameMonitor
+        {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
+        {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'} // window.ig.FrameMonitor
         // ,{name: 'ig/test/one'}
     ]
 };

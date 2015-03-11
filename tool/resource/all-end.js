@@ -1,36 +1,19 @@
-// var zrender = require('zrender');
-// zrender.tool = {
-//     color : require('zrender/tool/color'),
-//     math : require('zrender/tool/math'),
-//     util : require('zrender/tool/util'),
-//     vector : require('zrender/tool/vector'),
-//     area : require('zrender/tool/area'),
-//     event : require('zrender/tool/event')
-// }
-
-// zrender.animation = {
-//     Animation : require('zrender/animation/Animation'),
-//     Cip : require('zrender/animation/Clip'),
-//     easing : require('zrender/animation/easing')
-// }
-// var echarts = require('echarts');
-// echarts.config = require('echarts/config');
-// /** if: ${hasMap} */
-// echarts.util = {
-//     mapData : {
-//         params : require('echarts/util/mapData/params')
-//     }
-// }
-// /** /if */
-/** for: ${parts} as ${mod} */
-// require("${mod.name}");
-/** /for */
-// _global['echarts'] = echarts;
-// _global['zrender'] = zrender;
 
 var ig = require('ig');
+
 /** for: ${parts} as ${mod} */
-ig['${mod.refName}'] = require('${mod.name}');
+var modName = '${mod.name}';
+var refName = '${mod.refName}';
+var folderName = '${mod.folder}';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
 /** /for */
 
 _global['ig'] = ig;

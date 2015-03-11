@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var batch = require('gulp-batch');
 
 gulp.task('watch', function () {
-    gulp.watch(['src/**/*.js', 'tool/conf.js', 'gulpfile.js'], batch(function (e, cb) {
+    gulp.watch(['src/**/*.js', 'tool/**/*.js', 'gulpfile.js'], batch(function (e, cb) {
         // gulp.start('dev');
         // cb();
         // e.on('data', console.log).on('end', cb);

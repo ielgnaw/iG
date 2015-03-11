@@ -9,6 +9,8 @@ define(function (require) {
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
 
+    var guid = 0;
+
     /**
      * 场景类构造函数
      * 可以把场景想象成 canvas 以及 canvas 的容器
@@ -31,8 +33,7 @@ define(function (require) {
         this.ctx = this.canvas.getContext('2d');
         this.container = this.canvas.parentNode;
 
-        this.guid = 0;
-        this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (this.guid++) : opts.name;
+        this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
 
         this.x = opts.x || 0;
         this.y = opts.y || 0;
@@ -54,6 +55,9 @@ define(function (require) {
     }
 
     Stage.prototype = {
+        /**
+         * 还原 constructor
+         */
         constructor: Stage,
 
         /**
@@ -81,7 +85,6 @@ define(function (require) {
             me.canvas.width = me.width;
             me.canvas.height = me.height;
 
-            console.log(me.canvas);
         },
 
         /**
@@ -91,7 +94,7 @@ define(function (require) {
          */
         setContainerBgColor: function (color) {
             var me = this;
-            me.containerBgColor = me.containerBgColor || '#000';
+            me.containerBgColor = color || me.containerBgColor;
             me.container.style.backgroundColor = me.containerBgColor;
         },
 
@@ -132,8 +135,15 @@ define(function (require) {
          * 场景的更新，需要更新场景里面的所有精灵
          */
         update: function () {
-            for (var i = 0, len = this.displayObjectList.length; i < len; i++) {
-                this.displayObjectList[i].update();
+            var me = this;
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+            for (var i = 0; i < len; i++) {
+                displayObjectStatus = me.displayObjectList[i].status;
+                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                    this.displayObjectList[i].update();
+                }
             }
         },
 
@@ -169,7 +179,7 @@ define(function (require) {
             me.ctx.save();
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
                     me.displayObjectList[i].render(me.ctx);
                 }
             }
@@ -259,24 +269,13 @@ define(function (require) {
         },
 
         /**
-         * 根据名字获取 displayObject
-         *
-         * @param {string} name displayObject 的名字
-         *
-         * @return {Object} displayObject 对象
-         */
-        getDisplayObjectByName: function (name) {
-            return this.displayObjects[name];
-        },
-
-        /**
          * 清除所有 displayObject
          */
         clearAllDisplayObject: function () {
             this.displayObjectList = [];
             this.displayObjects = {};
         }
-    }
+    };
 
     util.inherits(Stage, Event);
 
