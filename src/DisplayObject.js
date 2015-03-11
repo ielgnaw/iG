@@ -56,7 +56,9 @@ define(function (require) {
         // 半径，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
         this.radius = Math.random() * 30;
         // z-index
-        this.zIndex = 0;
+        this.zIndex = opts.zIndex || 0;
+        // 图片
+        this.image = opts.image || null;
 
         // 当前 DisplayObject 实例的状态
         // 1: 可见，每帧需要更新，各种状态都正常

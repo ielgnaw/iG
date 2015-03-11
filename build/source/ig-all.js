@@ -930,7 +930,8 @@ define('ig/ig', ['require'], function (require) {
         this.scale = opts.scale || 1;
         this.angle = opts.angle || 0;
         this.radius = Math.random() * 30;
-        this.zIndex = 0;
+        this.zIndex = opts.zIndex || 0;
+        this.image = opts.image || null;
         this.status = 1;
         this.customProp = opts.customProp || {};
         this.debug = false;
