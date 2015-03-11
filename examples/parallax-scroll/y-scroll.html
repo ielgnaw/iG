@@ -144,7 +144,7 @@
                     speed: speed2 * 0.5, // 滚动速度
                     x: 0, // 图像在画布中的左上角的横轴坐标
                     y: 0, // 图像在画布中的左上角的纵轴坐标
-                    zIndex: 2
+                    zIndex: 1
                 });
                 stage.addDisplayObject(obj2);
 
@@ -156,7 +156,7 @@
                     speed: speed3 * 0.5, // 滚动速度
                     x: 0, // 图像在画布中的左上角的横轴坐标
                     y: 0, // 图像在画布中的左上角的纵轴坐标
-                    zIndex: 3
+                    zIndex: 2
                 });
                 stage.addDisplayObject(obj3);
 
@@ -165,7 +165,7 @@
                     var obj = new ig.Shape.Ball({
                         name: i,
                         r: 10,
-                        zIndex: (i % 3) + 1
+                        zIndex: (i % 2) + 1
                     });
 
                     obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 280));
