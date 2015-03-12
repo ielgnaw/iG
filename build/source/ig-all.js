@@ -912,29 +912,33 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var guid = 0;
     function DisplayObject(opts) {
-        Event.apply(this, arguments);
+        var me = this;
         opts = opts || {};
-        this.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + guid++ : opts.name;
-        this.stageOwner = null;
-        this.x = opts.x || 0;
-        this.y = opts.y || 0;
-        this.width = opts.width || 20;
-        this.height = opts.height || 20;
-        this.vX = opts.vX || 0;
-        this.vY = opts.vY || 0;
-        this.aX = opts.aX || 0;
-        this.aY = opts.aY || 0;
-        this.reverseX = false;
-        this.reverseY = false;
-        this.alpha = opts.alpha || 1;
-        this.scale = opts.scale || 1;
-        this.angle = opts.angle || 0;
-        this.radius = Math.random() * 30;
-        this.zIndex = opts.zIndex || 0;
-        this.image = opts.image || null;
-        this.status = 1;
-        this.customProp = opts.customProp || {};
-        this.debug = false;
+        Event.apply(me, arguments);
+        me.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + guid++ : opts.name;
+        me.stageOwner = null;
+        me.x = opts.x || 0;
+        me.y = opts.y || 0;
+        me.width = opts.width || 0;
+        me.height = opts.height || 0;
+        me.radius = opts.radius || 0;
+        me.scale = opts.scale || 1;
+        me.angle = opts.angle || 0;
+        me.alpha = opts.alpha || 1;
+        me.zIndex = opts.zIndex || 0;
+        me.fillStyle = opts.fillStyle || null;
+        me.strokeStyle = opts.strokeStyle || null;
+        me.image = opts.image || null;
+        me.vX = opts.vX || 0;
+        me.vY = opts.vY || 0;
+        me.aX = opts.aX || 0;
+        me.aY = opts.aY || 0;
+        me.reverseVX = false;
+        me.reverseVY = false;
+        me.status = 1;
+        me.customProp = opts.customProp || {};
+        me.debug = false;
+        me.setPos(me.x, me.y);
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
@@ -944,8 +948,9 @@ define('ig/ig', ['require'], function (require) {
             me.y = y || me.y;
         },
         move: function (x, y) {
-            this.x += x;
-            this.y += y;
+            var me = this;
+            me.x += x;
+            me.y += y;
         },
         moveStep: function () {
             var me = this;
@@ -958,20 +963,10 @@ define('ig/ig', ['require'], function (require) {
             this.angle = angle;
         },
         update: function () {
-            this.moveStep();
+            return true;
         },
         render: function (ctx) {
-            var me = this;
-            ctx.save();
-            ctx.globalAlpha = me.alpha;
-            ctx.rotate(me.angle * Math.PI / 180);
-            ctx.translate(me.x * me.scale, me.y * me.scale);
-            me.fire('DisplayObject:render', me);
-            if (me.debug) {
-                _drawDebugRect.call(me, ctx);
-            }
-            ;
-            ctx.restore();
+            return true;
         },
         isHit: function (other) {
             var me = this;
@@ -1006,33 +1001,20 @@ define('ig/ig', ['require'], function (require) {
     function Ball(opts) {
         var me = this;
         DisplayObject.apply(me, arguments);
-        me.r = opts.r || 10;
-        me.color = '#fff';
     }
     Ball.prototype = {
         constructor: Ball,
         update: function () {
-            var me = this;
-            var w = me.stageOwner.width;
-            var h = me.stageOwner.height;
-            if (me.x < me.r || me.x > w - me.r) {
-                me.vX = -me.vX;
-            }
-            ;
-            if (me.y < me.r || me.y > h - me.r) {
-                me.vY = -me.vY;
-            }
-            Ball.superClass.update.call(me);
         },
         render: function (ctx) {
             ctx.beginPath();
             ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, this.r - 3, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
             ctx.fill();
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.strokeStyle = 'white';
-            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.stroke();
             Ball.superClass.render.apply(this, arguments);
         }
