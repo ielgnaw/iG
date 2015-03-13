@@ -96,11 +96,11 @@
             //     console.log('Stage:afterRender');
             // });
 
-            var ballCount = 55;
+            var ballCount = 155;
             for (var i = 0; i < ballCount; i++) {
                 var obj = new ig.Shape.Ball({
                     name: i,
-                    r: 10
+                    radius: 10
                 });
                 obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
                 obj.vX = ig.util.randomInt(5, 10);
@@ -125,18 +125,20 @@
 
             g.start();
 
-            // setTimeout(function () {
-            //     g.getCurrentStage().setContainerBgColor('#000');
-            //     setTimeout(function () {
-            //         g.getCurrentStage().setContainerBgImg('./img/bg.jpg', 'full');
-            //         setTimeout(function () {
-            //             g.getCurrentStage().setContainerBgImg('./img/bg1.jpg', 'full');
-            //             setTimeout(function () {
-            //                 g.pause();
-            //             }, 3000);
-            //         }, 3000);
-            //     }, 3000)
-            // }, 3000);
+            // g.getCurrentStage().setContainerBgColor('#000');
+
+            setTimeout(function () {
+                g.getCurrentStage().setContainerBgColor('#000');
+                setTimeout(function () {
+                    g.getCurrentStage().setContainerBgImg('./img/bg.jpg', 'full');
+                    setTimeout(function () {
+                        g.getCurrentStage().setContainerBgImg('./img/bg1.jpg', 'full');
+                        setTimeout(function () {
+                            g.pause();
+                        }, 13000);
+                    }, 3000);
+                }, 3000)
+            }, 3000);
 
         </script>
     </body>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>横轴视差滚动</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: #ddd;
+            }
+
+            .container {
+                position: relative;
+                width: 600px;
+                height: 400px;
+                margin: 10px auto;
+                background: #fff;
+                border: thin inset rgba(100,150,230,0.5);
+                top: 100px;
+            }
+
+            canvas {
+                /*border: 2px solid #ddd;*/
+            }
+
+        </style>
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <img src="./img/1.png" style="position: absolute;left:-2000px;top:-2000px;"/>
+        <div class="show-frame">帧数：123</div>
+        <div class="container">
+            <canvas id='canvas' width='600' height='400'></canvas>
+        </div>
+        <script>
+            window.onload = function () {
+                var canvas = document.querySelector('#canvas');
+                var ctx = canvas.getContext('2d');
+                var showFrameNode = document.querySelector('.show-frame');
+
+                var imgs = [
+                    './img/1.jpg',
+                    './img/1.png',
+                    './img/2.png',
+                    './img/bg.jpg',
+                    './img/bg1.png',
+                    './img/bg2.png',
+                    './img/bg3.png',
+                ];
+
+                var il = new ig.ImageLoader();
+
+                for (var i = 0, len = imgs.length; i < len; i++) {
+                    il.addImage(imgs[i]);
+                }
+
+                var imgLoadInterval = setInterval(function (e) {
+                    var percent = il.loadImages();
+                    console.log('图片加载进度：' + percent.toFixed() + '%');
+                    if (percent >= 100) {
+                        clearInterval(imgLoadInterval);
+                        loadComplate();
+                    }
+                }, 16);
+
+                function loadComplate() {
+                    var g = new ig.Game();
+                    g.on('Game:afterRender', function (data) {
+                        showFrameNode.innerHTML = ''
+                            + '当前帧数：' + data.data.curFrame
+                    });
+
+                    var stage = g.createStage({
+                        width: 600,
+                        height: 400,
+                        containerBgColor: '#fff',
+                        canvas: canvas
+                    });
+
+                    var bg1 = new Image();
+                    bg1.src = './img/1.png';
+                    var speed1 = 3;
+                    var obj1 = new ig.ParallaxScroll({
+                        image: bg1,  // 图像
+                        aX: 5,
+                        // speed: speed1 * 0.5, // 滚动速度
+                        x: 0, // 图像在画布中的左上角的横轴坐标
+                        y: 0, // 图像在画布中的左上角的纵轴坐标
+                        zIndex: 1
+                        ,repeat: 'repeat'
+                    });
+                    stage.addDisplayObject(obj1);
+
+                    // var bg2 = new Image();
+                    // bg2.src = './img/bg2.png';
+                    // var speed2 = 3;
+                    // var obj2 = new XScrollBackground({
+                    //     image: bg2,  // 图像
+                    //     speed: speed2 * 0.5, // 滚动速度
+                    //     x: 0, // 图像在画布中的左上角的横轴坐标
+                    //     y: 80, // 图像在画布中的左上角的纵轴坐标
+                    //     zIndex: 2
+                    // });
+                    // stage.addDisplayObject(obj2);
+
+                    // var bg3 = new Image();
+                    // bg3.src = './img/bg3.png';
+                    // var speed3 = 3;
+                    // var obj3 = new XScrollBackground({
+                    //     image: bg3,  // 图像
+                    //     speed: speed3 * 0.5, // 滚动速度
+                    //     x: 0, // 图像在画布中的左上角的横轴坐标
+                    //     y: 10, // 图像在画布中的左上角的纵轴坐标
+                    //     zIndex: 3
+                    // });
+                    // stage.addDisplayObject(obj3);
+
+                    var ballCount = 3;
+                    for (var i = 0; i < ballCount; i++) {
+                        var obj = new ig.Shape.Ball({
+                            name: i,
+                            radius: 15,
+                            x: ig.util.randomInt(20, 400),
+                            y: ig.util.randomInt(20, 300),
+                            zIndex: (i % 3) + 1
+                        });
+
+                        // obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
+                        obj.vX = ig.util.randomInt(5, 10);
+                        obj.vY = ig.util.randomInt(5, 10);
+                        // obj.color = 'red';
+                        obj.color = ''
+                            + 'rgba('
+                            + ig.util.randomInt(0, 255)
+                            + ','
+                            + ig.util.randomInt(0, 255)
+                            + ','
+                            + ig.util.randomInt(0, 255)
+                            + ', '
+                            + ig.util.randomFloat(1, 1)
+                            + ')';
+                        stage.addDisplayObject(obj);
+                    }
+
+                    var displayObjectList = stage.getDisplayObjectList();
+                    var len = displayObjectList.length;
+                    // test
+                    canvas.onmousemove = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.aaa = ig.util.getMouseCoords(e.target, e); // 测试  放在 window 上
+                        for (var i = 0; i < len; i++) {
+                            if (displayObjectList[i] instanceof ig.Shape.Ball) {
+                                displayObjectList[i].isMouseIn();
+                            }
+                        }
+                    };
+                    g.start();
+
+                    // setTimeout(function () {
+                    //     g.stop();
+                    // }, 2000);
+                }
+            }
+        </script>
+    </body>
+</html>

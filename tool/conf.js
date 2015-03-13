@@ -11,6 +11,7 @@ exports.modules = {
         {name: 'ig/FrameMonitor', refName: 'FrameMonitor'}, // window.ig.FrameMonitor
         {name: 'ig/Stage', refName: 'Stage'}, // window.ig.FrameMonitor
         {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
+        {name: 'ig/ParallaxScroll', refName: 'ParallaxScroll'}, // window.ig.FrameMonitor
         {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'} // window.ig.FrameMonitor
         // ,{name: 'ig/test/one'}
     ]

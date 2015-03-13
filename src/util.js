@@ -5,6 +5,9 @@
 
 define(function (require) {
 
+    var DEG2RAD_OPERAND = Math.PI / 180;
+    var RAD2DEG_OPERAND = 180 / Math.PI;
+
     var exports = {};
 
     /**
@@ -45,7 +48,7 @@ define(function (require) {
      * @return {number} 弧度值
      */
     exports.deg2Rad = function (deg) {
-        return deg * Math.PI / 180;
+        return deg * DEG2RAD_OPERAND;
     };
 
     /**
@@ -57,7 +60,7 @@ define(function (require) {
      * @return {number} 角度值
      */
     exports.rad2Deg = function (rad) {
-        return rad * 180 / Math.PI;
+        return rad * RAD2DEG_OPERAND;
     };
 
     /**
@@ -259,6 +262,69 @@ define(function (require) {
         }
 
         return _el;
+    };
+
+    /**
+     * 把页面上的鼠标坐标换成相对于 canvas 的坐标
+     *
+     * @param {HTML.Element} canvas canvas 元素
+     * @param {number} x 相对于页面的横坐标
+     * @param {number} y 相对于页面的纵坐标
+     *
+     * @return {Object} 相对于 canvas 的坐标对象
+     */
+    exports.windowToCanvas = function (canvas, x, y) {
+        var boundRect = canvas.getBoundingClientRect();
+        var width = canvas.width;
+        var height = canvas.height;
+        return {
+            x: Math.round(x - boundRect.left * (width / boundRect.width)),
+            y: Math.round(y - boundRect.top * (height / boundRect.height))
+        };
+    };
+
+    /**
+     * 获取鼠标相对于 canvas 的坐标
+     * http://stackoverflow.com/a/27204937/2747251
+     *
+     * @param {HTML.Element} canvas canvas 节点
+     * @param {HTML.Event} event dom 事件对象
+     *
+     * @return {Object} 鼠标相对于 canvas 的坐标
+     */
+    exports.getMouseCoords = function (canvas, event) {
+        var boundRect = canvas.getBoundingClientRect();
+        var top = boundRect.top;
+        var bottom = boundRect.bottom;
+        var left = boundRect.left;
+        var right = boundRect.right;
+
+        // border
+        var styles = getComputedStyle(canvas, null);
+        if (styles) {
+            var topBorder = parseInt(styles.getPropertyValue('border-top-width'), 10);
+            var rightBorder = parseInt(styles.getPropertyValue('border-right-width'), 10);
+            var bottomBorder = parseInt(styles.getPropertyValue('border-bottom-width'), 10);
+            var leftBorder = parseInt(styles.getPropertyValue('border-left-width'), 10);
+            left += leftBorder;
+            right -= rightBorder;
+            top += topBorder;
+            bottom -= bottomBorder;
+        }
+
+        var ret = {};
+        ret.x = event.clientX - left;
+        ret.y = event.clientY - top;
+
+        var width = right - left;
+        // image
+        if (canvas.width !== width) {
+            var height = bottom - top;
+            ret.x = ret.x * (canvas.width / width);
+            ret.y = ret.y * (canvas.height / height);
+        }
+
+        return ret;
     };
 
     return exports;

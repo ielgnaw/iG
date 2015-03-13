@@ -65,7 +65,7 @@ define(function (require) {
             });
 
             var curStage = me.getCurrentStage();
-            // debugger
+
             if (curStage) {
                 curStage.update();
                 curStage.render();

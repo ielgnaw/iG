@@ -125,6 +125,7 @@ define(function (require) {
 
         // 初始化的时候设置位置
         me.setPos(me.x, me.y);
+
     }
 
     DisplayObject.prototype = {
@@ -234,6 +235,23 @@ define(function (require) {
                         ? me.y + me.width : other.y + other.width;
 
             return minX <= maxX && minY <= maxY;
+        },
+
+        //判断鼠标当前坐标是否在当前渲染对象区域中
+        isMouseIn: function () {
+            var me = this;
+            var x = window.aaa.x;
+            var y = window.aaa.y;
+            var stage = me.stageOwner;
+            var stageX = stage.x;
+            var stageY = stage.y;
+            var hw = 0;
+            var hh = 0;
+            if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius
+                    && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius
+            ) {
+                console.warn('你碰到我了');
+            }
         }
     };
 

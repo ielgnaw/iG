@@ -48,10 +48,6 @@ define(function (require) {
         this.displayObjectList = [];
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
-
-        // this.listeners = [];
-        // this.displayObjectList = [];
-        // this.displayObjects = {};
     }
 
     Stage.prototype = {

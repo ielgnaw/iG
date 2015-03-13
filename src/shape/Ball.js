@@ -27,16 +27,16 @@ define(function (require) {
          */
         constructor: Ball,
         update: function () {
-            // var me = this;
-            // var w = me.stageOwner.width;
-            // var h = me.stageOwner.height;
-            // if (me.x < me.radius || me.x > w - me.radius) {
-            //     me.vX = -me.vX;
-            // };
-            // if (me.y < me.radius || me.y > h - me.radius) {
-            //     me.vY = -me.vY;
-            // }
-            // me.moveStep();
+            var me = this;
+            var w = me.stageOwner.width;
+            var h = me.stageOwner.height;
+            if (me.x < me.radius || me.x > w - me.radius) {
+                me.vX = -me.vX;
+            };
+            if (me.y < me.radius || me.y > h - me.radius) {
+                me.vY = -me.vY;
+            }
+            me.moveStep();
         },
         render: function(ctx) {
             ctx.beginPath();

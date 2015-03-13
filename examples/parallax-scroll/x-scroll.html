@@ -17,14 +17,13 @@
                 margin: 10px auto;
                 background: #fff;
                 border: thin inset rgba(100,150,230,0.5);
+                top: 100px;
             }
 
-            #readout {
-                margin-top: 10px;
-                margin-left: 15px;
-                color: blue;
-                position: absolute;
+            canvas {
+                /*border: 2px solid #ddd;*/
             }
+
         </style>
         <script type="text/javascript" src="../../build/source/ig-all.js"></script>
     </head>
@@ -155,7 +154,7 @@
                     image: bg3,  // 图像
                     speed: speed3 * 0.5, // 滚动速度
                     x: 0, // 图像在画布中的左上角的横轴坐标
-                    y: 110, // 图像在画布中的左上角的纵轴坐标
+                    y: 10, // 图像在画布中的左上角的纵轴坐标
                     zIndex: 3
                 });
                 stage.addDisplayObject(obj3);
@@ -186,6 +185,20 @@
                         + ')';
                     stage.addDisplayObject(obj);
                 }
+
+                var displayObjectList = stage.getDisplayObjectList();
+                var len = displayObjectList.length;
+                // test
+                canvas.onmousemove = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.aaa = ig.util.getMouseCoords(e.target, e); // 测试  放在 window 上
+                    for (var i = 0; i < len; i++) {
+                        if (displayObjectList[i] instanceof ig.Shape.Ball) {
+                            displayObjectList[i].isMouseIn();
+                        }
+                    }
+                };
 
                 g.start();
             }

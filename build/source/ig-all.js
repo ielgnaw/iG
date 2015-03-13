@@ -147,6 +147,8 @@ define('ig/ig', ['require'], function (require) {
     var exports = {};
     return exports;
 });define('ig/util', ['require'], function (require) {
+    var DEG2RAD_OPERAND = Math.PI / 180;
+    var RAD2DEG_OPERAND = 180 / Math.PI;
     var exports = {};
     exports.noop = function () {
     };
@@ -164,10 +166,10 @@ define('ig/ig', ['require'], function (require) {
         return subClass;
     };
     exports.deg2Rad = function (deg) {
-        return deg * Math.PI / 180;
+        return deg * DEG2RAD_OPERAND;
     };
     exports.rad2Deg = function (rad) {
-        return rad * 180 / Math.PI;
+        return rad * RAD2DEG_OPERAND;
     };
     exports.window2Canvas = function (canvas, x, y) {
         var boundRect = canvas.getBoundingClientRect();
@@ -266,6 +268,43 @@ define('ig/ig', ['require'], function (require) {
             curNode.parentNode.replaceChild(newNode, curNode);
         }
         return _el;
+    };
+    exports.windowToCanvas = function (canvas, x, y) {
+        var boundRect = canvas.getBoundingClientRect();
+        var width = canvas.width;
+        var height = canvas.height;
+        return {
+            x: Math.round(x - boundRect.left * (width / boundRect.width)),
+            y: Math.round(y - boundRect.top * (height / boundRect.height))
+        };
+    };
+    exports.getMouseCoords = function (canvas, event) {
+        var boundRect = canvas.getBoundingClientRect();
+        var top = boundRect.top;
+        var bottom = boundRect.bottom;
+        var left = boundRect.left;
+        var right = boundRect.right;
+        var styles = getComputedStyle(canvas, null);
+        if (styles) {
+            var topBorder = parseInt(styles.getPropertyValue('border-top-width'), 10);
+            var rightBorder = parseInt(styles.getPropertyValue('border-right-width'), 10);
+            var bottomBorder = parseInt(styles.getPropertyValue('border-bottom-width'), 10);
+            var leftBorder = parseInt(styles.getPropertyValue('border-left-width'), 10);
+            left += leftBorder;
+            right -= rightBorder;
+            top += topBorder;
+            bottom -= bottomBorder;
+        }
+        var ret = {};
+        ret.x = event.clientX - left;
+        ret.y = event.clientY - top;
+        var width = right - left;
+        if (canvas.width !== width) {
+            var height = bottom - top;
+            ret.x = ret.x * (canvas.width / width);
+            ret.y = ret.y * (canvas.height / height);
+        }
+        return ret;
     };
     return exports;
 });define('ig/Event', ['require'], function (require) {
@@ -975,6 +1014,19 @@ define('ig/ig', ['require'], function (require) {
             var minY = me.y > other.y ? me.y : other.y;
             var maxY = me.y + me.width < other.y + other.width ? me.y + me.width : other.y + other.width;
             return minX <= maxX && minY <= maxY;
+        },
+        isMouseIn: function () {
+            var me = this;
+            var x = window.aaa.x;
+            var y = window.aaa.y;
+            var stage = me.stageOwner;
+            var stageX = stage.x;
+            var stageY = stage.y;
+            var hw = 0;
+            var hh = 0;
+            if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius) {
+                console.warn('你碰到我了');
+            }
         }
     };
     function _drawDebugRect(ctx) {
@@ -991,6 +1043,50 @@ define('ig/ig', ['require'], function (require) {
     }
     util.inherits(DisplayObject, Event);
     return DisplayObject;
+});define('ig/ParallaxScroll', [
+    'require',
+    './util',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var newImage4Repeat = new Image();
+    function ParallaxScroll(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('ParallaxScroll must be require a image param');
+        }
+        DisplayObject.apply(this, arguments);
+        this.image = opts.image;
+        this.repeat = opts.repeat;
+    }
+    var text = 0;
+    ParallaxScroll.prototype = {
+        constructor: ParallaxScroll,
+        update: function () {
+            var me = this;
+            me.vX = (me.vX + me.aX) % me.image.width;
+        },
+        render: function (ctx) {
+            var me = this;
+            text = text + 5;
+            var canvasWidth = ctx.canvas.width;
+            ctx.drawImage(me.image, me.vX, me.y);
+        }
+    };
+    function _renderRepeatImage(ctx) {
+        var me = this;
+        ctx.save();
+        ctx.fillStyle = ctx.createPattern(me.image, me.repeat);
+        ctx.fillRect(me.x, me.y, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
+        if (!newImage4Repeat.src) {
+            newImage4Repeat.src = canvas.toDataURL();
+            me.image = newImage4Repeat;
+        }
+    }
+    util.inherits(ParallaxScroll, DisplayObject);
+    return ParallaxScroll;
 });define('ig/Shape/Ball', [
     'require',
     '../util',
@@ -1005,6 +1101,17 @@ define('ig/ig', ['require'], function (require) {
     Ball.prototype = {
         constructor: Ball,
         update: function () {
+            var me = this;
+            var w = me.stageOwner.width;
+            var h = me.stageOwner.height;
+            if (me.x < me.radius || me.x > w - me.radius) {
+                me.vX = -me.vX;
+            }
+            ;
+            if (me.y < me.radius || me.y > h - me.radius) {
+                me.vY = -me.vY;
+            }
+            me.moveStep();
         },
         render: function (ctx) {
             ctx.beginPath();
@@ -1118,6 +1225,19 @@ else {
 
 var modName = 'ig/DisplayObject';
 var refName = 'DisplayObject';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/ParallaxScroll';
+var refName = 'ParallaxScroll';
 var folderName = '';
 
 if (folderName) {
