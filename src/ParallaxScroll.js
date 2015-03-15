@@ -31,7 +31,7 @@ define(function (require) {
         this.image = opts.image;
 
         // 是否 repeat
-        // 可选值: repeat, repeat-x, repeat-y ，默认不重复
+        // 可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
         this.repeat = opts.repeat;
 
         // 滚动加速度
@@ -39,8 +39,6 @@ define(function (require) {
 
         // this.vX = opts.vX || 0;
     }
-
-    var text = 0;
 
     ParallaxScroll.prototype = {
         /**
@@ -56,7 +54,7 @@ define(function (require) {
             var me = this;
             // console.warn(me.vX, me.aX, me.image.width);
             // if (me.image.width) {
-                me.vX = (me.vX + me.aX) % me.image.width;
+            me.vX = (me.vX + me.aX) % me.image.width;
             // }
         },
 
@@ -67,27 +65,26 @@ define(function (require) {
          */
         render: function (ctx) {
             var me = this;
-            text = text + 5;
             var canvasWidth = ctx.canvas.width;
-            ctx.drawImage(me.image, me.vX, me.y);
+            // ctx.drawImage(me.image, me.vX, me.y);
             // console.warn(me.vX);
             // ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
             // console.warn(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
 
-            // if (me.repeat) {
-            //     _renderRepeatImage.call(me, ctx);
-            // }
+            if (me.repeat) {
+                _renderRepeatImage.call(me, ctx);
+            }
 
-            // // 滚动距离已经超出图片宽度
-            // if (me.vX + canvasWidth > me.image.width) {
-            //     var d0 = me.image.width - me.vX;
-            //     var d1 = canvasWidth - d0;
-            //     ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
-            //     ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
-            // }
-            // else {
-            //     ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
-            // }
+            // 滚动距离已经超出图片宽度
+            if (me.vX + canvasWidth > me.image.width) {
+                var d0 = me.image.width - me.vX;
+                var d1 = canvasWidth - d0;
+                ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
+                ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
+            }
+            else {
+                ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
+            }
         }
     }
 

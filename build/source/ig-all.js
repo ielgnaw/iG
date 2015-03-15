@@ -306,6 +306,16 @@ define('ig/ig', ['require'], function (require) {
         }
         return ret;
     };
+    var nativeBind = Function.prototype.bind;
+    exports.bind = nativeBind ? function (fn) {
+        return nativeBind.apply(fn, [].slice.call(arguments, 1));
+    } : function (fn, context) {
+        var extraArgs = [].slice.call(arguments, 2);
+        return function () {
+            var args = extraArgs.concat([].slice.call(arguments));
+            return fn.apply(context, args);
+        };
+    };
     return exports;
 });define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -1060,7 +1070,6 @@ define('ig/ig', ['require'], function (require) {
         this.image = opts.image;
         this.repeat = opts.repeat;
     }
-    var text = 0;
     ParallaxScroll.prototype = {
         constructor: ParallaxScroll,
         update: function () {
@@ -1069,9 +1078,18 @@ define('ig/ig', ['require'], function (require) {
         },
         render: function (ctx) {
             var me = this;
-            text = text + 5;
             var canvasWidth = ctx.canvas.width;
-            ctx.drawImage(me.image, me.vX, me.y);
+            if (me.repeat) {
+                _renderRepeatImage.call(me, ctx);
+            }
+            if (me.vX + canvasWidth > me.image.width) {
+                var d0 = me.image.width - me.vX;
+                var d1 = canvasWidth - d0;
+                ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
+                ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
+            } else {
+                ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
+            }
         }
     };
     function _renderRepeatImage(ctx) {
