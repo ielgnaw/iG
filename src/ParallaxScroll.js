@@ -32,7 +32,7 @@ define(function (require) {
 
         // 是否 repeat
         // 可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
-        this.repeat = opts.repeat;
+        this.repeat = opts.repeat || 'no-repeat';
 
         // 滚动加速度
         // this.scrollSpeed = opts.scrollSpeed;
@@ -50,12 +50,10 @@ define(function (require) {
          * 更新状态
          */
         update: function () {
-            // debugger
             var me = this;
-            // console.warn(me.vX, me.aX, me.image.width);
-            // if (me.image.width) {
             me.vX = (me.vX + me.aX) % me.image.width;
-            // }
+
+            me.vY = (me.vY + me.aY) % me.image.height;
         },
 
         /**
@@ -66,25 +64,33 @@ define(function (require) {
         render: function (ctx) {
             var me = this;
             var canvasWidth = ctx.canvas.width;
-            // ctx.drawImage(me.image, me.vX, me.y);
-            // console.warn(me.vX);
-            // ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
-            // console.warn(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
+            var canvasHeight = ctx.canvas.height;
 
-            if (me.repeat) {
+            if (me.repeat !== 'no-repeat') {
                 _renderRepeatImage.call(me, ctx);
             }
-
+            // console.warn(me.vX);
             // 滚动距离已经超出图片宽度
             if (me.vX + canvasWidth > me.image.width) {
                 var d0 = me.image.width - me.vX;
                 var d1 = canvasWidth - d0;
+
                 ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
                 ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
+
+                ctx.drawImage(me.image, 0, 0, d1, me.image.height, me.x + d0, me.image.height - me.vY, d1, me.image.height);
             }
-            else {
-                ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
+
+            if (me.vY + canvasHeight > me.image.height) {
+                var d0 = me.image.height - me.vY;
+                var d1 = canvasHeight - d0;
+                ctx.drawImage(me.image, me.vX, me.vY, me.image.width, d0, me.x, me.y, me.image.width, d0);
+                ctx.drawImage(me.image, me.vX, 0, me.image.width, d1, me.x, me.y + d0, me.image.width, d1);
+
+                ctx.drawImage(me.image, 0, 0, me.image.width, d1, me.image.width - me.vX, me.y + d0, me.image.width, d1);
             }
+
+            ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
         }
     }
 
@@ -98,8 +104,6 @@ define(function (require) {
             newImage4Repeat.src = canvas.toDataURL();
             me.image = newImage4Repeat;
         }
-        // me.image = newImage4Repeat;
-        // me.image.src = canvas.toDataURL('image/png');
     }
 
     util.inherits(ParallaxScroll, DisplayObject);

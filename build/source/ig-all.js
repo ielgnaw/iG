@@ -1068,18 +1068,20 @@ define('ig/ig', ['require'], function (require) {
         }
         DisplayObject.apply(this, arguments);
         this.image = opts.image;
-        this.repeat = opts.repeat;
+        this.repeat = opts.repeat || 'no-repeat';
     }
     ParallaxScroll.prototype = {
         constructor: ParallaxScroll,
         update: function () {
             var me = this;
             me.vX = (me.vX + me.aX) % me.image.width;
+            me.vY = (me.vY + me.aY) % me.image.height;
         },
         render: function (ctx) {
             var me = this;
             var canvasWidth = ctx.canvas.width;
-            if (me.repeat) {
+            var canvasHeight = ctx.canvas.height;
+            if (me.repeat !== 'no-repeat') {
                 _renderRepeatImage.call(me, ctx);
             }
             if (me.vX + canvasWidth > me.image.width) {
@@ -1087,9 +1089,16 @@ define('ig/ig', ['require'], function (require) {
                 var d1 = canvasWidth - d0;
                 ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
                 ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
-            } else {
-                ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
+                ctx.drawImage(me.image, 0, 0, d1, me.image.height, me.x + d0, me.image.height - me.vY, d1, me.image.height);
             }
+            if (me.vY + canvasHeight > me.image.height) {
+                var d0 = me.image.height - me.vY;
+                var d1 = canvasHeight - d0;
+                ctx.drawImage(me.image, me.vX, me.vY, me.image.width, d0, me.x, me.y, me.image.width, d0);
+                ctx.drawImage(me.image, me.vX, 0, me.image.width, d1, me.x, me.y + d0, me.image.width, d1);
+                ctx.drawImage(me.image, 0, 0, me.image.width, d1, me.image.width - me.vX, me.y + d0, me.image.width, d1);
+            }
+            ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
         }
     };
     function _renderRepeatImage(ctx) {

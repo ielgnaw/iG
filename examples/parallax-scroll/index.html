@@ -17,7 +17,7 @@
                 margin: 10px auto;
                 background: #fff;
                 border: thin inset rgba(100,150,230,0.5);
-                top: 100px;
+                top: 10px;
             }
 
             canvas {
@@ -35,7 +35,11 @@
         </div>
         <script>
             var img = new Image();
-            img.src = './img/1.png';
+            img.src = './img/700*700.jpeg';
+            // img.src = './img/700*700-1.jpeg';
+            // img.src = './img/bg.jpg';
+            // img.src = './img/bg1.jpg';
+            // img.src = './img/1.png';
             img.onload = function () {
                 var canvas = document.querySelector('#canvas');
                 var ctx = canvas.getContext('2d');
@@ -57,17 +61,16 @@
                         canvas: canvas
                     });
 
-                    var bg1 = new Image();
-                    bg1.src = './img/1.png';
                     var speed1 = 3;
                     var obj1 = new ig.ParallaxScroll({
-                        image: bg1,  // 图像
-                        aX: 5,
+                        image: img,  // 图像
+                        aX: 3,
+                        aY: 3,
                         // speed: speed1 * 0.5, // 滚动速度
                         x: 0, // 图像在画布中的左上角的横轴坐标
                         y: 0, // 图像在画布中的左上角的纵轴坐标
                         zIndex: 1
-                        ,repeat: 'repeat'
+                        // ,repeat: 'repeat'
                     });
                     stage.addDisplayObject(obj1);
 
