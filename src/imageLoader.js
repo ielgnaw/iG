@@ -20,14 +20,16 @@ define(function (require) {
     function ImageLoader(opts) {
         opts = opts || {};
         Event.apply(this, arguments);
+
         this.images = {};
+        this.imageList = [];
 
         var imageUrls = opts.imageUrls || [];
         Array.isArray(imageUrls) ? (this.imageUrls = imageUrls) : (this.imageUrls = [imageUrls]);
 
         this.imagesLoadedCount = 0;
         this.imagesErrorLoadedCount = 0;
-        this.imageIndex = 0;
+
         this.allCallback = opts.allCallback || util.noop;
     }
 
@@ -58,6 +60,7 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 var imgSrc = me.imageUrls[i];
                 me.images[imgSrc] = new Image();
+                me.imageList.push(me.images[imgSrc]);
 
                 /* jshint loopfunc:true */
                 me.images[imgSrc].addEventListener('load', function (e) {

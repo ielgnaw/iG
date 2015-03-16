@@ -53,14 +53,14 @@ define(function (require) {
          * 启动帧状态监控
          */
         start: function () {
-            this.curTime = this.startTimePerSecond = new Date();
+            this.curTime = this.startTimePerSecond = +new Date();
         },
 
         /**
          * 游戏循环前调用此方法，更新和计算帧数
          */
         update: function () {
-            var cTime = new Date();
+            var cTime = +new Date();
             if (cTime - this.startTimePerSecond >= 1000) {
                 // 当前帧数
                 this.cur = this.totalPerSecond;

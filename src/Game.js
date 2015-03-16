@@ -163,6 +163,7 @@ define(function (require) {
         pushStage: function (stage) {
             var me = this;
             if (!me.getStageByName(stage.name)) {
+                stage.gameOwner = me;
                 me.stageStack.push(stage);
                 me.stages[stage.name] = stage;
                 me.sortStageIndex();

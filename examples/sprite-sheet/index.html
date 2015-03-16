@@ -9,7 +9,7 @@
         <meta name="screen-orientation" content="portrait"/>
         <meta name="x5-fullscreen" content="true"/>
         <meta name="360-fullscreen" content="true"/>
-        <title>图片加载</title>
+        <title>SpriteSheet</title>
         <style>
             body {
                 margin: 0;
@@ -55,27 +55,13 @@
 
             var li = new ig.ImageLoader({
                 allCallback: function () {
-                    console.log('all done');
+                    loadComplete();
                 },
-                // imageUrls: [
-                //     './img/1.jpg',
-                //     './img/1.png',
-                //     './img/2.png',
-                //     './img/700*700.jpeg'
-                // ]
-                imageUrls: './img/700*700.jpeg'
+                imageUrls: [
+                    './img/sprite-sheet3.png'
+                ]
             });
 
-            li.addImages([
-                './img/bg.jpg',
-                './img/bg1.jpg',
-                './img/bg1.png',
-                './img/bg2.jpg',
-                './img/bg2.png',
-                './img/bg3.jpg',
-                './img/bg3.png',
-                './img/bg4.jpg'
-            ]);
             li.load();
 
             li.on('ImageLoader:imageLoaded', function (data) {
@@ -85,9 +71,43 @@
                 console.log('ImageLoader:imageLoadedError', data.data.progress);
             });
             li.on('ImageLoader:allImageLoaded', function (data) {
-                console.log('ImageLoader:allImageLoaded', data);
-                console.warn('all done');
             });
+
+            function loadComplete() {
+                var showFrameNode = document.querySelector('.show-frame');
+                var g = new ig.Game();
+                g.on('Game:afterRender', function (data) {
+                    showFrameNode.innerHTML = ''
+                        + '当前帧数：' + data.data.curFrame
+                });
+                var stage = g.createStage({
+                    width: 600,
+                    height: 400,
+                    containerBgColor: '#fff',
+                    canvas: canvas
+                });
+
+                for (var i = 0; i < 30; i++) {
+                    var obj = new ig.SpriteSheet({
+                        image: li.imageList[0],
+                        x: ig.util.randomInt(30, 520),
+                        y: ig.util.randomInt(40, 320),
+                        frameStartX: 0,
+                        // frameStartY: ig.util.randomInt(1, 10),
+                        frameStartY: 0,
+                        total: 16 + 16 + 9,
+                        frameWidth: 64,
+                        frameHeight: 86,
+                        zIndex: i
+                    });
+                    stage.addDisplayObject(obj);
+                }
+
+                console.warn(g);
+                g.start();
+            }
+
+
         </script>
     </body>
 </html>

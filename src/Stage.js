@@ -49,9 +49,11 @@ define(function (require) {
         this.width = opts.width || this.canvas.width;
         this.canvas.width = this.width;
         this.offCanvas.width = this.width;
+
         this.height = opts.height || this.canvas.height;
         this.canvas.height = this.height;
         this.offCanvas.height = this.height;
+
         this.containerBgColor = opts.containerBgColor || '#000';
 
         this.setSize();
@@ -190,14 +192,16 @@ define(function (require) {
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
+
+            me.offCtx.save();
+            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.ctx.save();
                     me.displayObjectList[i].render(me.offCtx);
-                    me.ctx.restore();
                 }
             }
+            me.offCtx.restore();
             me.ctx.drawImage(me.offCanvas, 0, 0);
         },
 

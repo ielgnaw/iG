@@ -588,11 +588,11 @@ define('ig/ig', ['require'], function (require) {
         opts = opts || {};
         Event.apply(this, arguments);
         this.images = {};
+        this.imageList = [];
         var imageUrls = opts.imageUrls || [];
         Array.isArray(imageUrls) ? this.imageUrls = imageUrls : this.imageUrls = [imageUrls];
         this.imagesLoadedCount = 0;
         this.imagesErrorLoadedCount = 0;
-        this.imageIndex = 0;
         this.allCallback = opts.allCallback || util.noop;
     }
     ImageLoader.prototype = {
@@ -607,6 +607,7 @@ define('ig/ig', ['require'], function (require) {
             for (var i = 0; i < len; i++) {
                 var imgSrc = me.imageUrls[i];
                 me.images[imgSrc] = new Image();
+                me.imageList.push(me.images[imgSrc]);
                 me.images[imgSrc].addEventListener('load', function (e) {
                     me.imagesLoadedCount++;
                     me.fire('ImageLoader:imageLoaded', {
@@ -726,6 +727,7 @@ define('ig/ig', ['require'], function (require) {
         pushStage: function (stage) {
             var me = this;
             if (!me.getStageByName(stage.name)) {
+                stage.gameOwner = me;
                 me.stageStack.push(stage);
                 me.stages[stage.name] = stage;
                 me.sortStageIndex();
@@ -812,10 +814,10 @@ define('ig/ig', ['require'], function (require) {
             me.totalPerSecond = 0;
         },
         start: function () {
-            this.curTime = this.startTimePerSecond = new Date();
+            this.curTime = this.startTimePerSecond = +new Date();
         },
         update: function () {
-            var cTime = new Date();
+            var cTime = +new Date();
             if (cTime - this.startTimePerSecond >= 1000) {
                 this.cur = this.totalPerSecond;
                 this.max = this.cur > this.max ? this.cur : this.max;
@@ -935,14 +937,15 @@ define('ig/ig', ['require'], function (require) {
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
+            me.offCtx.save();
+            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.ctx.save();
                     me.displayObjectList[i].render(me.offCtx);
-                    me.ctx.restore();
                 }
             }
+            me.offCtx.restore();
             me.ctx.drawImage(me.offCanvas, 0, 0);
         },
         sortDisplayObject: function () {
@@ -1010,7 +1013,8 @@ define('ig/ig', ['require'], function (require) {
         me.width = opts.width || 0;
         me.height = opts.height || 0;
         me.radius = opts.radius || 0;
-        me.scale = opts.scale || 1;
+        me.scaleX = opts.scaleX || 1;
+        me.scaleY = opts.scaleY || 1;
         me.angle = opts.angle || 0;
         me.alpha = opts.alpha || 1;
         me.zIndex = opts.zIndex || 0;
@@ -1058,7 +1062,11 @@ define('ig/ig', ['require'], function (require) {
             me.y += me.vY;
         },
         rotate: function (angle) {
-            this.angle = angle;
+            var me = this;
+            var offCtx = me.stageOwner.offCtx;
+            offCtx.save();
+            offCtx.rotate(util.deg2Rad(me.angle));
+            offCtx.restore();
         },
         update: function () {
             return true;
@@ -1102,6 +1110,69 @@ define('ig/ig', ['require'], function (require) {
     }
     util.inherits(DisplayObject, Event);
     return DisplayObject;
+});define('ig/SpriteSheet', [
+    'require',
+    './util',
+    './DisplayObject'
+], function (require) {
+    'use strict';
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var guid = 0;
+    var ANIMATION_DELAY = 0;
+    function SpriteSheet(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('SpriteSheet must be require a image param');
+        }
+        DisplayObject.apply(this, arguments);
+        this.name = opts.name === null || opts.name === undefined ? 'ig_spritesheet_' + guid++ : opts.name;
+        this.relativeX = 0;
+        this.relativeY = 0;
+        this.frameWidth = opts.frameWidth || 32;
+        this.frameHeight = opts.frameHeight || 32;
+        this.total = opts.total || 1;
+        this.totalBackup = this.total;
+        this.frameIndex = 0;
+        this.frameStartX = opts.frameStartX || 0;
+        this.frameStartXBackup = this.frameStartX;
+        this.frameStartY = opts.frameStartY || 0;
+        this.frameStartYBackup = this.frameStartY;
+    }
+    SpriteSheet.prototype = {
+        constructor: SpriteSheet,
+        update: function () {
+            var me = this;
+            if (ANIMATION_DELAY % 7 === 0) {
+                me.relativeY = me.frameStartY * me.frameHeight;
+                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth;
+                me.frameIndex++;
+                if (me.frameIndex >= me.total) {
+                    me.frameIndex = 0;
+                    me.frameStartY = me.frameStartYBackup;
+                    me.total = me.totalBackup;
+                }
+                if (me.frameIndex * me.frameWidth >= me.image.width) {
+                    me.frameStartY++;
+                    me.total = me.total - me.frameIndex;
+                    me.frameIndex = 0;
+                }
+            }
+            ANIMATION_DELAY++;
+        },
+        render: function (offCtx) {
+            var me = this;
+            offCtx.save();
+            offCtx.globalAlpha = me.alpha;
+            offCtx.translate(me.x, me.y);
+            offCtx.rotate(util.deg2Rad(me.angle));
+            offCtx.scale(me.scaleX, me.scaleY);
+            offCtx.drawImage(me.image, me.relativeX, me.relativeY, me.frameWidth, me.frameHeight, -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight);
+            offCtx.restore();
+        }
+    };
+    util.inherits(SpriteSheet, DisplayObject);
+    return SpriteSheet;
 });define('ig/ParallaxScroll', [
     'require',
     './util',
@@ -1334,6 +1405,19 @@ else {
 
 var modName = 'ig/DisplayObject';
 var refName = 'DisplayObject';
+var folderName = '';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/SpriteSheet';
+var refName = 'SpriteSheet';
 var folderName = '';
 
 if (folderName) {

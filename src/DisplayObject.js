@@ -24,7 +24,8 @@ define(function (require) {
      * @param {number} opts.width 宽度，默认 0
      * @param {number} opts.height 高度，默认 0
      * @param {number} opts.radius 半径，默认 0，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
-     * @param {number} opts.scale 缩放倍数，默认 1
+     * @param {number} opts.scaleX 横轴缩放倍数，默认 1
+     * @param {number} opts.scaleY 纵轴缩放倍数，默认 1
      * @param {number} opts.angle 旋转角度，这里使用的是角度，canvas 使用的是弧度，默认 1
      * @param {number} opts.alpha 透明度，默认 1
      * @param {number} opts.zIndex 层叠关系，类似 css z-index 概念，默认 0
@@ -71,8 +72,11 @@ define(function (require) {
         // 半径，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
         me.radius = opts.radius || 0;
 
-        // 缩放倍数
-        me.scale = opts.scale || 1;
+        // 横轴缩放倍数
+        me.scaleX = opts.scaleX || 1;
+
+        // 纵轴缩放倍数
+        me.scaleY = opts.scaleY || 1;
 
         // 旋转角度，这里使用的是角度，canvas 使用的是弧度
         me.angle = opts.angle || 0;
@@ -203,7 +207,11 @@ define(function (require) {
          * @param {number} angle 旋转的角度
          */
         rotate: function (angle) {
-           this.angle = angle;
+            var me = this;
+            var offCtx = me.stageOwner.offCtx;
+            offCtx.save();
+            offCtx.rotate(util.deg2Rad(me.angle));
+            offCtx.restore();
         },
 
         /**
