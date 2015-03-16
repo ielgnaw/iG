@@ -221,22 +221,22 @@ define(function (require) {
          * 每帧渲染，这个方法应该是由子类重写的
          * `SubClass.superClass.render.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
          *
-         * @param {Object} ctx 2d context 对象
+         * @param {Object} offCtx 离屏 canvas 2d context 对象
          */
-        render: function (ctx) {
+        render: function (offCtx) {
             return true;
             // var me = this;
             // console.warn(me);
             // var me = this;
-            // ctx.save();
-            // ctx.globalAlpha = me.alpha;
-            // ctx.rotate(me.angle * Math.PI / 180);
-            // ctx.translate(me.x * me.scale, me.y * me.scale);
+            // offCtx.save();
+            // offCtx.globalAlpha = me.alpha;
+            // offCtx.rotate(me.angle * Math.PI / 180);
+            // offCtx.translate(me.x * me.scale, me.y * me.scale);
             // me.fire('DisplayObject:render', me);
             // if (me.debug) {
-            //     _drawDebugRect.call(me, ctx);
+            //     _drawDebugRect.call(me, offCtx);
             // }
-            // ctx.restore();
+            // offCtx.restore();
         },
 
         /**
@@ -281,19 +281,19 @@ define(function (require) {
     /**
      * 绘制 debug 用的矩形
      *
-     * @param {Object} ctx canvas 2d 上下文对象
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
      */
-    function _drawDebugRect(ctx) {
+    function _drawDebugRect(offCtx) {
         var me = this;
-        ctx.save();
-        ctx.beginPath();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#fff';
-        ctx.globalAlpha = 0.8;
-        ctx.rect(me.x, me.y, me.width, me.height);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.restore();
+        offCtx.save();
+        offCtx.beginPath();
+        offCtx.lineWidth = 1;
+        offCtx.strokeStyle = '#fff';
+        offCtx.globalAlpha = 0.8;
+        offCtx.rect(me.x, me.y, me.width, me.height);
+        offCtx.closePath();
+        offCtx.stroke();
+        offCtx.restore();
     }
 
     util.inherits(DisplayObject, Event);

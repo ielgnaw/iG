@@ -33,14 +33,25 @@ define(function (require) {
         // this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
         this.canvas = opts.canvas;
         this.ctx = this.canvas.getContext('2d');
+        this.offCanvas = document.createElement('canvas');
+        this.offCtx = this.offCanvas.getContext('2d');
+        // this.backBuffer.width = this.canvas.width;
+        // this.backBuffer.height = this.canvas.height;
+        // this.backBufferContext2D = this.backBuffer.getContext('2d');
+
         this.container = this.canvas.parentNode;
 
         this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
 
         this.x = opts.x || 0;
         this.y = opts.y || 0;
+
         this.width = opts.width || this.canvas.width;
+        this.canvas.width = this.width;
+        this.offCanvas.width = this.width;
         this.height = opts.height || this.canvas.height;
+        this.canvas.height = this.height;
+        this.offCanvas.height = this.height;
         this.containerBgColor = opts.containerBgColor || '#000';
 
         this.setSize();
@@ -82,6 +93,9 @@ define(function (require) {
 
             me.canvas.width = me.width;
             me.canvas.height = me.height;
+
+            me.offCanvas.width = me.width;
+            me.offCanvas.height = me.height;
 
         },
 
@@ -126,7 +140,9 @@ define(function (require) {
             var me = this;
             me.container.removeChild(me.canvas);
             me.container.parentNode.removeChild(me.container);
-            me.canvas = me.container = me.ctx = null;
+            me.container = null;
+            me.canvas = me.ctx = null;
+            me.offCanvas = me.offCtx = null;
         },
 
         /**
@@ -178,10 +194,11 @@ define(function (require) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
                     me.ctx.save();
-                    me.displayObjectList[i].render(me.ctx);
+                    me.displayObjectList[i].render(me.offCtx);
                     me.ctx.restore();
                 }
             }
+            me.ctx.drawImage(me.offCanvas, 0, 0);
         },
 
         /**

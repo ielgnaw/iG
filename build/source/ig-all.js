@@ -849,12 +849,18 @@ define('ig/ig', ['require'], function (require) {
         }
         this.canvas = opts.canvas;
         this.ctx = this.canvas.getContext('2d');
+        this.offCanvas = document.createElement('canvas');
+        this.offCtx = this.offCanvas.getContext('2d');
         this.container = this.canvas.parentNode;
         this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
         this.x = opts.x || 0;
         this.y = opts.y || 0;
         this.width = opts.width || this.canvas.width;
+        this.canvas.width = this.width;
+        this.offCanvas.width = this.width;
         this.height = opts.height || this.canvas.height;
+        this.canvas.height = this.height;
+        this.offCanvas.height = this.height;
         this.containerBgColor = opts.containerBgColor || '#000';
         this.setSize();
         this.setContainerBgColor();
@@ -875,6 +881,8 @@ define('ig/ig', ['require'], function (require) {
             me.container.style.height = me.height + 'px';
             me.canvas.width = me.width;
             me.canvas.height = me.height;
+            me.offCanvas.width = me.width;
+            me.offCanvas.height = me.height;
         },
         setContainerBgColor: function (color) {
             var me = this;
@@ -898,7 +906,9 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.container.removeChild(me.canvas);
             me.container.parentNode.removeChild(me.container);
-            me.canvas = me.container = me.ctx = null;
+            me.container = null;
+            me.canvas = me.ctx = null;
+            me.offCanvas = me.offCtx = null;
         },
         update: function () {
             var me = this;
@@ -929,10 +939,11 @@ define('ig/ig', ['require'], function (require) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
                     me.ctx.save();
-                    me.displayObjectList[i].render(me.ctx);
+                    me.displayObjectList[i].render(me.offCtx);
                     me.ctx.restore();
                 }
             }
+            me.ctx.drawImage(me.offCanvas, 0, 0);
         },
         sortDisplayObject: function () {
             this.displayObjectList.sort(function (o1, o2) {
@@ -1052,7 +1063,7 @@ define('ig/ig', ['require'], function (require) {
         update: function () {
             return true;
         },
-        render: function (ctx) {
+        render: function (offCtx) {
             return true;
         },
         isHit: function (other) {
@@ -1077,17 +1088,17 @@ define('ig/ig', ['require'], function (require) {
             }
         }
     };
-    function _drawDebugRect(ctx) {
+    function _drawDebugRect(offCtx) {
         var me = this;
-        ctx.save();
-        ctx.beginPath();
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#fff';
-        ctx.globalAlpha = 0.8;
-        ctx.rect(me.x, me.y, me.width, me.height);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.restore();
+        offCtx.save();
+        offCtx.beginPath();
+        offCtx.lineWidth = 1;
+        offCtx.strokeStyle = '#fff';
+        offCtx.globalAlpha = 0.8;
+        offCtx.rect(me.x, me.y, me.width, me.height);
+        offCtx.closePath();
+        offCtx.stroke();
+        offCtx.restore();
     }
     util.inherits(DisplayObject, Event);
     return DisplayObject;
@@ -1122,10 +1133,10 @@ define('ig/ig', ['require'], function (require) {
             me.vX = (me.vX + me.aX) % me.image.width;
             me.vY = (me.vY + me.aY) % me.image.height;
         },
-        render: function (ctx) {
+        render: function (offCtx) {
             var me = this;
             if (me.repeat !== 'no-repeat') {
-                _renderRepeatImage.call(me, ctx);
+                _renderRepeatImage.call(me, offCtx);
             }
             var imageWidth = me.image.width;
             var imageHeight = me.image.height;
@@ -1153,12 +1164,12 @@ define('ig/ig', ['require'], function (require) {
                     if (y === 0) {
                         newScrollPos.y = me.vY;
                     }
-                    drawArea = _drawScroll.call(me, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                    drawArea = _drawScroll.call(me, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
                 }
             }
         }
     };
-    function _drawScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+    function _drawScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
         var me = this;
         var xOffset = Math.abs(newScrollPos.x) % imageWidth;
         var yOffset = Math.abs(newScrollPos.y) % imageHeight;
@@ -1166,20 +1177,20 @@ define('ig/ig', ['require'], function (require) {
         var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
         var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
         var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
-        ctx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+        offCtx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
         return {
             width: width,
             height: height
         };
     }
-    function _renderRepeatImage(ctx) {
+    function _renderRepeatImage(offCtx) {
         var me = this;
-        ctx.save();
-        ctx.fillStyle = ctx.createPattern(me.image, me.repeat);
-        ctx.fillRect(me.x, me.y, ctx.canvas.width, ctx.canvas.height);
-        ctx.restore();
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(me.image, me.repeat);
+        offCtx.fillRect(me.x, me.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
         if (!newImage4Repeat.src) {
-            newImage4Repeat.src = ctx.canvas.toDataURL();
+            newImage4Repeat.src = offCtx.canvas.toDataURL();
             me.image = newImage4Repeat;
         }
     }

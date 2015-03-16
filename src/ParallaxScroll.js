@@ -65,17 +65,14 @@ define(function (require) {
         /**
          * 渲染
          *
-         * @param {Object} ctx 2d context 对象
+         * @param {Object} offCtx 离屏 canvas 2d context 对象
          */
-        render: function (ctx) {
+        render: function (offCtx) {
             var me = this;
 
             if (me.repeat !== 'no-repeat') {
-                _renderRepeatImage.call(me, ctx);
+                _renderRepeatImage.call(me, offCtx);
             }
-
-            // var canvasWidth = ctx.canvas.width;
-            // var canvasHeight = ctx.canvas.height;
 
             var imageWidth = me.image.width;
             var imageHeight = me.image.height;
@@ -111,7 +108,7 @@ define(function (require) {
                     if (y === 0) {
                         newScrollPos.y = me.vY;
                     }
-                    drawArea = _drawScroll.call(me, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                    drawArea = _drawScroll.call(me, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
                 }
             }
         }
@@ -120,7 +117,7 @@ define(function (require) {
     /**
      * 绘制滚动的区域
      *
-     * @param {Object} ctx 2d 上下文
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
      * @param {Object} newPos 新的绘制的起点坐标对象
      * @param {Object} newArea 新绘制区域的大小对象
      * @param {Object} newScrollPos 滚动的区域起点的坐标对象
@@ -129,7 +126,7 @@ define(function (require) {
      *
      * @return {Object} 待绘制区域的宽高
      */
-    function _drawScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+    function _drawScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
         var me = this;
         var xOffset = Math.abs(newScrollPos.x) % imageWidth;
         var yOffset = Math.abs(newScrollPos.y) % imageHeight;
@@ -138,7 +135,7 @@ define(function (require) {
         var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
         var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
 
-        ctx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+        offCtx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
 
         return {
             width: width,
@@ -149,17 +146,17 @@ define(function (require) {
     /**
      * 绘制 repeat, repeat-x, repeat-y
      *
-     * @param {Object} ctx 2d 上下文
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
      */
-    function _renderRepeatImage(ctx) {
+    function _renderRepeatImage(offCtx) {
         var me = this;
-        ctx.save();
-        ctx.fillStyle = ctx.createPattern(me.image, me.repeat);
-        ctx.fillRect(me.x, me.y, ctx.canvas.width, ctx.canvas.height);
-        ctx.restore();
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(me.image, me.repeat);
+        offCtx.fillRect(me.x, me.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
 
         if (!newImage4Repeat.src) {
-            newImage4Repeat.src = ctx.canvas.toDataURL();
+            newImage4Repeat.src = offCtx.canvas.toDataURL();
             me.image = newImage4Repeat;
         }
     }
