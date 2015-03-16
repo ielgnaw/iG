@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     /**
      * FrameMonitor 类
      *

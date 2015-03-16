@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     /**
      * ua 探测
      * from saber-env

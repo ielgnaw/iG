@@ -128,6 +128,7 @@ var require, define;
 }());
 define('ig', ['ig/ig'], function (main) {return main;});
 define('ig/ig', ['require'], function (require) {
+    'use strict';
     window.requestAnimationFrame = function () {
         return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame || function (callback, elem) {
             var me = this;
@@ -147,6 +148,7 @@ define('ig/ig', ['require'], function (require) {
     var exports = {};
     return exports;
 });define('ig/util', ['require'], function (require) {
+    'use strict';
     var DEG2RAD_OPERAND = Math.PI / 180;
     var RAD2DEG_OPERAND = 180 / Math.PI;
     var exports = {};
@@ -318,6 +320,7 @@ define('ig/ig', ['require'], function (require) {
     };
     return exports;
 });define('ig/Event', ['require'], function (require) {
+    'use strict';
     var guidKey = '_observerGUID';
     function Event() {
         this._events = {};
@@ -409,6 +412,7 @@ define('ig/ig', ['require'], function (require) {
     };
     return Event;
 });define('ig/platform', ['require'], function (require) {
+    'use strict';
     function detect(ua) {
         var os = {};
         var browser = {};
@@ -576,6 +580,7 @@ define('ig/ig', ['require'], function (require) {
     './util',
     './Event'
 ], function (require) {
+    'use strict';
     var arrayProto = Array.prototype;
     function ImageLoader() {
         this.images = {};
@@ -624,6 +629,7 @@ define('ig/ig', ['require'], function (require) {
     './Stage',
     './FrameMonitor'
 ], function (require) {
+    'use strict';
     var Event = require('./Event');
     var util = require('./util');
     var Stage = require('./Stage');
@@ -764,6 +770,7 @@ define('ig/ig', ['require'], function (require) {
     util.inherits(Game, Event);
     return Game;
 });define('ig/FrameMonitor', ['require'], function (require) {
+    'use strict';
     function FrameMonitor() {
         this.max = 0;
         this.min = 9999;
@@ -810,6 +817,7 @@ define('ig/ig', ['require'], function (require) {
     './util',
     './DisplayObject'
 ], function (require) {
+    'use strict';
     var Event = require('./Event');
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
@@ -898,14 +906,14 @@ define('ig/ig', ['require'], function (require) {
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
-            me.ctx.save();
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                    me.ctx.save();
                     me.displayObjectList[i].render(me.ctx);
+                    me.ctx.restore();
                 }
             }
-            me.ctx.restore();
         },
         sortDisplayObject: function () {
             this.displayObjectList.sort(function (o1, o2) {
@@ -957,6 +965,7 @@ define('ig/ig', ['require'], function (require) {
     './Event',
     './util'
 ], function (require) {
+    'use strict';
     var Event = require('./Event');
     var util = require('./util');
     var guid = 0;
@@ -995,6 +1004,16 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.x = x || me.x;
             me.y = y || me.y;
+        },
+        setAcceleration: function (ax, ay) {
+            var me = this;
+            me.aX = ax || me.aX;
+            me.aY = ay || me.aY;
+        },
+        resetAcceleration: function () {
+            var me = this;
+            me.aX = 0;
+            me.aY = 0;
         },
         move: function (x, y) {
             var me = this;
@@ -1058,8 +1077,10 @@ define('ig/ig', ['require'], function (require) {
     './util',
     './DisplayObject'
 ], function (require) {
+    'use strict';
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var guid = 0;
     var newImage4Repeat = new Image();
     function ParallaxScroll(opts) {
         opts = opts || {};
@@ -1067,8 +1088,13 @@ define('ig/ig', ['require'], function (require) {
             throw new Error('ParallaxScroll must be require a image param');
         }
         DisplayObject.apply(this, arguments);
+        this.name = opts.name === null || opts.name === undefined ? 'ig_parallaxscroll_' + guid++ : opts.name;
         this.image = opts.image;
-        this.repeat = opts.repeat || 'no-repeat';
+        this.repeat = opts.repeat && [
+            'repeat',
+            'repeat-x',
+            'repeat-y'
+        ].indexOf(opts.repeat) !== -1 ? opts.repeat : 'no-repeat';
     }
     ParallaxScroll.prototype = {
         constructor: ParallaxScroll,
@@ -1079,28 +1105,54 @@ define('ig/ig', ['require'], function (require) {
         },
         render: function (ctx) {
             var me = this;
-            var canvasWidth = ctx.canvas.width;
-            var canvasHeight = ctx.canvas.height;
             if (me.repeat !== 'no-repeat') {
                 _renderRepeatImage.call(me, ctx);
             }
-            if (me.vX + canvasWidth > me.image.width) {
-                var d0 = me.image.width - me.vX;
-                var d1 = canvasWidth - d0;
-                ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
-                ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
-                ctx.drawImage(me.image, 0, 0, d1, me.image.height, me.x + d0, me.image.height - me.vY, d1, me.image.height);
+            var imageWidth = me.image.width;
+            var imageHeight = me.image.height;
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    var newPos = {
+                        x: me.x + x,
+                        y: me.y + y
+                    };
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+                    if (x === 0) {
+                        newScrollPos.x = me.vX;
+                    }
+                    if (y === 0) {
+                        newScrollPos.y = me.vY;
+                    }
+                    drawArea = _drawScroll.call(me, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                }
             }
-            if (me.vY + canvasHeight > me.image.height) {
-                var d0 = me.image.height - me.vY;
-                var d1 = canvasHeight - d0;
-                ctx.drawImage(me.image, me.vX, me.vY, me.image.width, d0, me.x, me.y, me.image.width, d0);
-                ctx.drawImage(me.image, me.vX, 0, me.image.width, d1, me.x, me.y + d0, me.image.width, d1);
-                ctx.drawImage(me.image, 0, 0, me.image.width, d1, me.image.width - me.vX, me.y + d0, me.image.width, d1);
-            }
-            ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
         }
     };
+    function _drawScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var me = this;
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+        ctx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+        return {
+            width: width,
+            height: height
+        };
+    }
     function _renderRepeatImage(ctx) {
         var me = this;
         ctx.save();
@@ -1108,7 +1160,7 @@ define('ig/ig', ['require'], function (require) {
         ctx.fillRect(me.x, me.y, ctx.canvas.width, ctx.canvas.height);
         ctx.restore();
         if (!newImage4Repeat.src) {
-            newImage4Repeat.src = canvas.toDataURL();
+            newImage4Repeat.src = ctx.canvas.toDataURL();
             me.image = newImage4Repeat;
         }
     }

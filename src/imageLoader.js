@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var arrayProto = Array.prototype;
 
     /**

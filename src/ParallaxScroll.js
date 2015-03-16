@@ -8,9 +8,18 @@
 
 define(function (require) {
 
+    'use strict';
+
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
 
+    var guid = 0;
+
+    /**
+     * 作为 repeat 时的新图片
+     *
+     * @type {Image}
+     */
     var newImage4Repeat = new Image();
 
     /**
@@ -27,17 +36,15 @@ define(function (require) {
 
         DisplayObject.apply(this, arguments);
 
+        this.name = (opts.name === null || opts.name === undefined) ? ('ig_parallaxscroll_' + (guid++)) : opts.name;
+
         // 图片
         this.image = opts.image;
 
         // 是否 repeat
         // 可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
-        this.repeat = opts.repeat || 'no-repeat';
-
-        // 滚动加速度
-        // this.scrollSpeed = opts.scrollSpeed;
-
-        // this.vX = opts.vX || 0;
+        this.repeat = (opts.repeat && ['repeat', 'repeat-x', 'repeat-y'].indexOf(opts.repeat) !== -1)
+            ? opts.repeat : 'no-repeat';
     }
 
     ParallaxScroll.prototype = {
@@ -52,7 +59,6 @@ define(function (require) {
         update: function () {
             var me = this;
             me.vX = (me.vX + me.aX) % me.image.width;
-
             me.vY = (me.vY + me.aY) % me.image.height;
         },
 
@@ -63,45 +69,97 @@ define(function (require) {
          */
         render: function (ctx) {
             var me = this;
-            var canvasWidth = ctx.canvas.width;
-            var canvasHeight = ctx.canvas.height;
 
             if (me.repeat !== 'no-repeat') {
                 _renderRepeatImage.call(me, ctx);
             }
-            // console.warn(me.vX);
-            // 滚动距离已经超出图片宽度
-            if (me.vX + canvasWidth > me.image.width) {
-                var d0 = me.image.width - me.vX;
-                var d1 = canvasWidth - d0;
 
-                ctx.drawImage(me.image, me.vX, me.vY, d0, me.image.height, me.x, me.y, d0, me.image.height);
-                ctx.drawImage(me.image, 0, me.vY, d1, me.image.height, me.x + d0, me.y, d1, me.image.height);
+            // var canvasWidth = ctx.canvas.width;
+            // var canvasHeight = ctx.canvas.height;
 
-                ctx.drawImage(me.image, 0, 0, d1, me.image.height, me.x + d0, me.image.height - me.vY, d1, me.image.height);
+            var imageWidth = me.image.width;
+            var imageHeight = me.image.height;
+
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
+
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    // 从左上角开始画下一个块
+                    var newPos = {
+                        x: me.x + x,
+                        y: me.y + y
+                    };
+
+                    // 剩余的绘制空间
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+
+                    if (x === 0) {
+                        newScrollPos.x = me.vX;
+                    }
+
+                    if (y === 0) {
+                        newScrollPos.y = me.vY;
+                    }
+                    drawArea = _drawScroll.call(me, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                }
             }
-
-            if (me.vY + canvasHeight > me.image.height) {
-                var d0 = me.image.height - me.vY;
-                var d1 = canvasHeight - d0;
-                ctx.drawImage(me.image, me.vX, me.vY, me.image.width, d0, me.x, me.y, me.image.width, d0);
-                ctx.drawImage(me.image, me.vX, 0, me.image.width, d1, me.x, me.y + d0, me.image.width, d1);
-
-                ctx.drawImage(me.image, 0, 0, me.image.width, d1, me.image.width - me.vX, me.y + d0, me.image.width, d1);
-            }
-
-            ctx.drawImage(me.image, me.vX, me.vY, canvasWidth, me.image.height, me.x, me.y, canvasWidth, me.image.height);
         }
+    };
+
+    /**
+     * 绘制滚动的区域
+     *
+     * @param {Object} ctx 2d 上下文
+     * @param {Object} newPos 新的绘制的起点坐标对象
+     * @param {Object} newArea 新绘制区域的大小对象
+     * @param {Object} newScrollPos 滚动的区域起点的坐标对象
+     * @param {number} imageWidth 图片宽度
+     * @param {number} imageHeight 图片高度
+     *
+     * @return {Object} 待绘制区域的宽高
+     */
+    function _drawScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var me = this;
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+
+        ctx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+
+        return {
+            width: width,
+            height: height
+        };
     }
 
+    /**
+     * 绘制 repeat, repeat-x, repeat-y
+     *
+     * @param {Object} ctx 2d 上下文
+     */
     function _renderRepeatImage(ctx) {
         var me = this;
         ctx.save();
         ctx.fillStyle = ctx.createPattern(me.image, me.repeat);
         ctx.fillRect(me.x, me.y, ctx.canvas.width, ctx.canvas.height);
         ctx.restore();
+
         if (!newImage4Repeat.src) {
-            newImage4Repeat.src = canvas.toDataURL();
+            newImage4Repeat.src = ctx.canvas.toDataURL();
             me.image = newImage4Repeat;
         }
     }

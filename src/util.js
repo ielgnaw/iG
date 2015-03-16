@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var DEG2RAD_OPERAND = Math.PI / 180;
     var RAD2DEG_OPERAND = 180 / Math.PI;
 

@@ -7,6 +7,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var Event = require('./Event');
     var util = require('./util');
     var Stage = require('./Stage');

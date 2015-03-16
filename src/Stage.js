@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var Event = require('./Event');
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
@@ -172,14 +174,14 @@ define(function (require) {
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
-            me.ctx.save();
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                    me.ctx.save();
                     me.displayObjectList[i].render(me.ctx);
+                    me.ctx.restore();
                 }
             }
-            me.ctx.restore();
         },
 
         /**

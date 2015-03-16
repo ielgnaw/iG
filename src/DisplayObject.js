@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var Event = require('./Event');
     var util = require('./util');
 
@@ -140,10 +142,31 @@ define(function (require) {
          * @param {number} x 横坐标
          * @param {number} y 纵坐标
          */
-        setPos: function (x,y) {
+        setPos: function (x, y) {
             var me = this;
             me.x = x || me.x;
             me.y = y || me.y;
+        },
+
+        /**
+         * 设置加速度
+         *
+         * @param {number} x 横向加速度大小
+         * @param {number} y 纵向加速度大小
+         */
+        setAcceleration: function (ax, ay) {
+            var me = this;
+            me.aX = ax || me.aX;
+            me.aY = ay || me.aY;
+        },
+
+        /**
+         * 重置加速度
+         */
+        resetAcceleration: function () {
+            var me = this;
+            me.aX = 0;
+            me.aY = 0;
         },
 
         /**
