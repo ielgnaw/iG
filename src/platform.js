@@ -1,5 +1,5 @@
 /**
- * @file Description
+ * @file 系统环境检测
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
