@@ -577,50 +577,69 @@ define('ig/ig', ['require'], function (require) {
     return exports;
 });define('ig/ImageLoader', [
     'require',
-    './util',
-    './Event'
+    './Event',
+    './util'
 ], function (require) {
     'use strict';
+    var Event = require('./Event');
+    var util = require('./util');
     var arrayProto = Array.prototype;
-    function ImageLoader() {
+    function ImageLoader(opts) {
+        opts = opts || {};
+        Event.apply(this, arguments);
         this.images = {};
-        this.imageUrls = [];
+        var imageUrls = opts.imageUrls || [];
+        Array.isArray(imageUrls) ? this.imageUrls = imageUrls : this.imageUrls = [imageUrls];
         this.imagesLoadedCount = 0;
         this.imagesErrorLoadedCount = 0;
         this.imageIndex = 0;
-        this.imageLoadingProgressCallback = ig.noop;
-        this.imageLoadedCallback = ig.noop;
-        this.imageLoadedErrorCallback = ig.noop;
+        this.allCallback = opts.allCallback || util.noop;
     }
-    ;
-    ImageLoader.prototype.loadImage = function (imageUrl) {
-        var me = this;
-        var img = new Image();
-        img.src = imageUrl;
-        img.addEventListener('load', function (e) {
-            me.imagesLoadedCount++;
-            typeof me.imageLoadedCallback === 'function' && me.imageLoadedCallback.call(me, e);
-        });
-        img.addEventListener('error', function (e) {
-            me.imagesErrorLoadedCount++;
-            typeof me.imageLoadedErrorCallback === 'function' && me.imageLoadedErrorCallback.call(me, e);
-        });
-        me.images[imageUrl] = img;
-    };
-    ImageLoader.prototype.loadImages = function () {
-        var me = this;
-        var imageUrlsLen = me.imageUrls.length;
-        if (me.imageIndex < imageUrlsLen) {
-            me.loadImage(me.imageUrls[me.imageIndex]);
-            me.imageIndex++;
+    ImageLoader.prototype = {
+        constructor: ImageLoader,
+        addImages: function (imageUrls) {
+            var me = this;
+            arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
+        },
+        load: function () {
+            var me = this;
+            var len = me.imageUrls.length;
+            for (var i = 0; i < len; i++) {
+                var imgSrc = me.imageUrls[i];
+                me.images[imgSrc] = new Image();
+                me.images[imgSrc].addEventListener('load', function (e) {
+                    me.imagesLoadedCount++;
+                    me.fire('ImageLoader:imageLoaded', {
+                        data: {
+                            progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
+                            curImg: me.images[imgSrc]
+                        }
+                    });
+                    if (me.imagesLoadedCount >= len) {
+                        me.fire('ImageLoader:allImageLoaded', {
+                            data: {
+                                allCount: len,
+                                imageList: me.imageUrls,
+                                images: me.images
+                            }
+                        });
+                        me.allCallback.call(me);
+                    }
+                });
+                me.images[imgSrc].addEventListener('error', function (e) {
+                    me.imagesErrorLoadedCount++;
+                    me.fire('ImageLoader:imageLoadedError', {
+                        data: {
+                            progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
+                            curImg: me.images[imgSrc]
+                        }
+                    });
+                });
+                me.images[imgSrc].src = imgSrc;
+            }
         }
-        return (me.imagesLoadedCount + me.imagesErrorLoadedCount) / imageUrlsLen * 100;
     };
-    ImageLoader.prototype.addImage = function (imageUrls) {
-        var me = this;
-        arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
-    };
-    require('./util').inherits(ImageLoader, require('./Event'));
+    util.inherits(ImageLoader, Event);
     return ImageLoader;
 });define('ig/Game', [
     'require',

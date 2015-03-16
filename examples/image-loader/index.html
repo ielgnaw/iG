@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi"/>
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <title>横轴视差滚动</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: #ddd;
+            }
+
+            .container {
+                position: relative;
+                width: 600px;
+                height: 400px;
+                margin: 10px auto;
+                background: #fff;
+                border: thin inset rgba(100,150,230,0.5);
+                top: 10px;
+            }
+
+            canvas {
+                /*border: 2px solid #ddd;*/
+            }
+
+            .control-container {
+                position: absolute;
+                top: 100px;
+                left: 50px;
+            }
+
+            .control-container .show-frame {
+                margin-bottom: 15px;
+            }
+
+        </style>
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <div class="control-container">
+            <div class="show-frame">帧数：123</div>
+        </div>
+        <div class="container">
+            <canvas id='canvas' width='600' height='200'></canvas>
+        </div>
+        <script>
+
+            var li = new ig.ImageLoader({
+                allCallback: function () {
+                    console.log('all done');
+                },
+                // imageUrls: [
+                //     './img/1.jpg',
+                //     './img/1.png',
+                //     './img/2.png',
+                //     './img/700*700.jpeg'
+                // ]
+                imageUrls: './img/700*700.jpeg'
+            });
+
+            li.addImages([
+                './img/bg.jpg',
+                './img/bg1.jpg',
+                './img/bg1.png',
+                './img/bg2.jpg',
+                './img/bg2.png',
+                './img/bg3.jpg',
+                './img/bg3.png',
+                './img/bg4.jpg'
+            ]);
+            li.load();
+
+            li.on('ImageLoader:imageLoaded', function (data) {
+                console.log('ImageLoader:imageLoaded', data.data.progress);
+            });
+            li.on('ImageLoader:imageLoadedError', function (data) {
+                console.log('ImageLoader:imageLoadedError', data.data.progress);
+            });
+            li.on('ImageLoader:allImageLoaded', function (data) {
+                console.log('ImageLoader:allImageLoaded', data);
+                console.warn('all done');
+            });
+
+            /*function loadImages(sources, callback) {
+                var images = {};
+                var loadedImages = 0;
+                var numImages = 0;
+                for (var src in sources) {
+                    numImages++;
+                }
+                for (var src in sources) {
+                    images[src] = new Image();
+                    images[src].onload = function () {
+                        if (++loadedImages >= numImages) {
+                            callback(images);
+                        }
+                    };
+                    images[src].src = sources[src];
+                }
+            }
+
+            var sources = {
+                bg1: './img/bg.jpg',
+                bg2: './img/1.png'
+            };
+
+            loadImages(sources, function (images) {
+                console.warn(images);
+            });*/
+        </script>
+    </body>
+</html>
