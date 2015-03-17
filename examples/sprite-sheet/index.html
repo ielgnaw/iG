@@ -58,7 +58,9 @@
                     loadComplete();
                 },
                 imageUrls: [
-                    './img/sprite-sheet3.png'
+                    './img/sprite-sheet3.png',
+                    './img/test1.png',
+                    './img/test2.png'
                 ]
             });
 
@@ -87,7 +89,7 @@
                     canvas: canvas
                 });
 
-                for (var i = 0; i < 30; i++) {
+                for (var i = 0; i < 10; i++) {
                     var obj = new ig.SpriteSheet({
                         image: li.imageList[0],
                         x: ig.util.randomInt(30, 520),
@@ -101,9 +103,66 @@
                         zIndex: i
                     });
                     stage.addDisplayObject(obj);
+
+                    var obj1 = new ig.SpriteSheet({
+                        image: li.imageList[1],
+                        x: ig.util.randomInt(30, 520),
+                        y: ig.util.randomInt(40, 320),
+                        frameStartX: 0,
+                        frameStartY: 0,
+                        total: 7,
+                        frameWidth: 180,
+                        frameHeight: 100,
+                        zIndex: i+1,
+                        offsets: {
+                            0: {
+                                x: 0,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            1: {
+                                x: 20,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            }
+                            ,2: {
+                                x: 25,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            3: {
+                                x: 30,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            4: {
+                                x: 40,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            5: {
+                                x: 50,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            6: {
+                                x: 60,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            }
+                        }
+                    });
+                    stage.addDisplayObject(obj1);
+
                 }
 
-                console.warn(g);
                 g.start();
             }
 
