@@ -71,7 +71,6 @@ define(function (require) {
         // 帧开始的 y 位置的备份
         this.frameStartYBackup = this.frameStartY;
 
-
     }
 
     SpriteSheet.prototype = {
