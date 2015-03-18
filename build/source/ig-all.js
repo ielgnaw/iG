@@ -407,7 +407,7 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     return Event;
-});define('ig/platform', ['require'], function (require) {
+});define('ig/env', ['require'], function (require) {
     'use strict';
     function detect(ua) {
         var os = {};
@@ -562,14 +562,49 @@ define('ig/ig', ['require'], function (require) {
             os: os
         };
     }
-    var platform = detect(navigator.userAgent);
+    function checkAudio(exp) {
+        exp.audioData = !!window.Audio;
+        exp.webAudio = !!(window.AudioContext || window.webkitAudioContext);
+        var audioElement = document.createElement('audio');
+        var result = false;
+        try {
+            if (result = !!audioElement.canPlayType) {
+                if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.ogg = true;
+                }
+                if (audioElement.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, '') || audioElement.canPlayType('audio/opus;').replace(/^no$/, '')) {
+                    exp.opus = true;
+                }
+                if (audioElement.canPlayType('audio/mpeg;').replace(/^no$/, '')) {
+                    exp.mp3 = true;
+                }
+                if (audioElement.canPlayType('audio/wav; codecs="1"').replace(/^no$/, '')) {
+                    exp.wav = true;
+                }
+                if (audioElement.canPlayType('audio/x-m4a;') || audioElement.canPlayType('audio/aac;').replace(/^no$/, '')) {
+                    exp.m4a = true;
+                }
+                if (audioElement.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.webm = true;
+                }
+            }
+        } catch (e) {
+        }
+    }
+    var env = detect(navigator.userAgent);
     var exports = {
-        browser: platform.browser,
-        os: platform.os,
+        browser: env.browser,
+        os: env.os,
         supportOrientation: typeof window.orientation == 'number' && typeof window.onorientationchange == 'object',
-        supportTouch: 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
-        supportGeolocation: navigator.geolocation != null
+        supportTouch: 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch,
+        supportGeolocation: navigator.geolocation != null,
+        isAndroid: env.os.android,
+        isIOS: env.os.ios,
+        isPhone: env.os.phone,
+        isTablet: env.os.tablet,
+        isMobile: env.os.phone || env.os.tablet
     };
+    checkAudio(exports);
     return exports;
 });define('ig/ImageLoader', [
     'require',
@@ -1358,7 +1393,7 @@ else {
     ig[refName] = require(modName);
 }
 
-var modName = 'ig/platform';
+var modName = 'ig/env';
 var refName = 'env';
 var folderName = '';
 

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="format-detection" content="telephone=no">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi"/> -->
+        <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,width=device-width,minimal-ui">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <title>ScreenAdapter</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: #ddd;
+            }
+
+            .container {
+                /*position: relative;*/
+                /*width: 600px;*/
+                /*height: 400px;*/
+                /*margin: 10px auto;*/
+                background: #fff;
+                border: thin inset rgba(100,150,230,0.5);
+                /*top: 10px;*/
+            }
+
+            canvas {
+                /*border: 2px solid #ddd;*/
+            }
+
+            .control-container {
+                position: absolute;
+                top: 100px;
+                left: 50px;
+            }
+
+            .control-container .show-frame {
+                margin-bottom: 15px;
+            }
+
+
+
+            body {
+                margin: 0px;
+                padding: 0px;
+                width: 100%;
+                background-color:black;
+            }
+
+            canvas {
+                image-rendering: -o-crisp-edges;
+                image-rendering: optimize-contrast;
+                -ms-interpolation-mode: nearest-neighbor;
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+                -moz-tap-highlight-color: rgba(0,0,0,0);
+                tap-highlight-color: rgba(0,0,0,0);
+                user-select: none;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+            }
+
+
+        </style>
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+        <script type="text/javascript" src="./viewporter.js"></script>
+        <!-- // <script type="text/javascript" src="./viewporter.native.js"></script> -->
+    </head>
+    <body>
+        <!-- <div class="control-container">
+            <div class="show-frame">帧数：123</div>
+        </div> -->
+        <!-- <div class="container"> -->
+            <div id="viewporter">
+                <!-- <div class="container"> -->
+                    <canvas id='canvas'></canvas>
+                <!-- </div> -->
+            </div>
+        <!-- </div> -->
+        <script>
+
+            var canvasX;
+            var canvasY;
+            var canvasScaleX;
+            var canvasScaleY;
+            var div = document.querySelector('#viewporter');
+            var canvas = document.querySelector('#canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = 383;
+            canvas.height = 550;
+            // canvas.width = 320;
+            // canvas.height = 480;
+            // canvas.width = 414;
+            // canvas.height = 736;
+
+            function resizeCanvas() {
+                // debugger
+                var a = window.innerWidth;
+                var b = window.innerHeight;
+                if (a > 480) {
+                    a -= 1;
+                    b -= 1;
+                }
+                // debugger
+                if (window.innerWidth > window.innerHeight && ig.env.isMobile) {
+                    if (a / canvas.width < b / canvas.height) {
+                        canvas.style.width = a + 'px';
+                        canvas.style.height = a / canvas.width * canvas.height + 'px';
+                        canvasX = 0;
+                        canvasY = (b - a / canvas.width * canvas.height) / 2;
+                        canvasScaleX = canvasScaleY = canvas.width / a;
+                        div.style.marginTop = canvasY + 'px';
+                        div.style.marginLeft = canvasX + 'px'
+                    }
+                    else {
+                        canvas.style.width = b / canvas.height * canvas.width + 'px';
+                        canvas.style.height = b + 'px';
+                        canvasX = (a - b / canvas.height * canvas.width) / 2;
+                        canvasY = 0;
+                        canvasScaleX = canvasScaleY = canvas.height / b;
+                        div.style.marginTop = canvasY + 'px';
+                        div.style.marginLeft = canvasX + 'px';
+                    }
+                }
+                else if (ig.env.isMobile) {
+                    canvasX = canvasY = 0;
+                    canvasScaleX = canvas.width / a;
+                    canvasScaleY = canvas.height / b;
+                    canvas.style.width = a + 'px';
+                    canvas.style.height = b + 'px';
+                    div.style.marginTop = '0px';
+                    div.style.marginLeft = '0px';
+                }
+                else {
+                    if (a / canvas.width < b / canvas.height) {
+                        canvas.style.width = a + 'px';
+                        canvas.style.height = a / canvas.width * canvas.height + 'px';
+                        canvasX = 0;
+                        canvasY = (b - a / canvas.width * canvas.height) / 2;
+                        canvasScaleX = canvasScaleY = canvas.width / a;
+                        div.style.marginTop = canvasY + 'px';
+                        div.style.marginLeft = canvasX + 'px';
+                    }
+                    else {
+                        canvas.style.width = b / canvas.height * canvas.width + 'px';
+                        canvas.style.height = b + 'px';
+                        canvasX = (a - b / canvas.height * canvas.width) / 2;
+                        canvasY = 0;
+                        canvasScaleX = canvasScaleY = canvas.height / b;
+                        div.style.marginTop = canvasY + 'px';
+                        div.style.marginLeft = canvasX + 'px';
+                    }
+                }
+
+                // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
+            }
+
+            var stage;
+            // window.addEventListener('orientationchange', function() {
+            //     resizeCanvas();
+            //     // stage.setSize(canvas.width, canvas.height);
+            // }, false);
+
+            // window.addEventListener('resize', function() {
+            //     alert(1)
+            //     setTimeout(function() {
+            //         resizeCanvas()
+            //     }, 1)
+            // }, false);
+            // resizeCanvas();
+
+            resizeCanvas();
+            window.onresize = function() {
+                setTimeout(function() {
+                    resizeCanvas();
+                }, 1)
+            };
+            window.addEventListener("load", function() {
+                setTimeout(function() {
+                    resizeCanvas();
+                }, 0);
+                window.addEventListener("orientationchange", function() {
+                    resizeCanvas();
+                }, !1);
+
+                var li = new ig.ImageLoader({
+                    allCallback: function () {
+                        loadComplete();
+                    },
+                    source: [
+                        './img/sprite-sheet3.png',
+                        './img/test1.png',
+                        './img/test2.png'
+                    ]
+                });
+
+                li.load();
+
+                li.on('ImageLoader:imageLoaded', function (data) {
+                    console.log('ImageLoader:imageLoaded', data.data.progress);
+                });
+                li.on('ImageLoader:imageLoadedError', function (data) {
+                    console.log('ImageLoader:imageLoadedError', data.data.progress);
+                });
+                li.on('ImageLoader:allImageLoaded', function (data) {
+                });
+
+                function loadComplete() {
+                    var g = new ig.Game();
+                    g.on('Game:afterRender', function (data) {
+                        // console.log('当前帧数：' + data.data.curFrame);
+                    });
+
+                    // ctx.fillStyle = '#fff';
+                    // ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 50, 200, 100);
+                    // debugger
+                    // ctx.fillStyle = '#fff';
+                    // ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 50, 200, 100);
+                    stage = g.createStage({
+                        // width: canvas.width,
+                        // height: canvas.height,
+                        // containerBgColor: 'red',
+                        canvas: canvas
+                    });
+
+                    for (var i = 0; i < 10; i++) {
+                        var obj = new ig.SpriteSheet({
+                            image: li.imageList[0],
+                            x: ig.util.randomInt(30, canvas.width - 50),
+                            y: ig.util.randomInt(40, canvas.height - 50),
+                            frameStartX: 0,
+                            // frameStartY: ig.util.randomInt(1, 10),
+                            frameStartY: 0,
+                            total: 16 + 16 + 9,
+                            frameWidth: 64,
+                            frameHeight: 86,
+                            zIndex: i
+                        });
+                        stage.addDisplayObject(obj);
+
+                        var obj1 = new ig.SpriteSheet({
+                            image: li.imageList[1],
+                            x: ig.util.randomInt(30, canvas.width - 50),
+                            y: ig.util.randomInt(40, canvas.height - 50),
+                            frameStartX: 0,
+                            frameStartY: 0,
+                            total: 7,
+                            frameWidth: 180,
+                            frameHeight: 100,
+                            zIndex: i+1,
+                            offsets: {
+                                0: {
+                                    x: 0,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                },
+                                1: {
+                                    x: 20,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                }
+                                ,2: {
+                                    x: 25,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                },
+                                3: {
+                                    x: 30,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                },
+                                4: {
+                                    x: 40,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                },
+                                5: {
+                                    x: 50,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                },
+                                6: {
+                                    x: 60,
+                                    y: 0,
+                                    width: 0,
+                                    height: 0
+                                }
+                            }
+                        });
+                        stage.addDisplayObject(obj1);
+                    }
+
+                    g.start();
+                }
+            })
+
+        </script>
+    </body>
+</html>

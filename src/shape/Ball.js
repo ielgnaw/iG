@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var util = require('../util');
     var DisplayObject = require('../DisplayObject');
 

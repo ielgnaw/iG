@@ -76,8 +76,25 @@ define(function (require) {
 
     }
 
+    /**
+     * 每一帧图像绘制的横轴偏移量
+     *
+     * @type {number}
+     */
     var offsetX = 0;
+
+    /**
+     * 每一帧图像绘制的纵轴偏移量
+     *
+     * @type {number}
+     */
     var offsetY = 0;
+
+    /**
+     * 每一帧图像绘制的宽度偏移量
+     *
+     * @type {number}
+     */
     var offsetWidth = 0;
     var offsetHeight = 0;
 

@@ -32,7 +32,7 @@ define(function (require) {
         var bb10 = ua.match(/(BB10).*Version\/([\d.]+)/);
         var rimtabletos = ua.match(/(RIM\sTablet\sOS)\s([\d.]+)/);
         var playbook = ua.match(/PlayBook/);
-        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match( /CriOS\/([\d.]+)/);
+        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
         var firefox = ua.match(/Firefox\/([\d.]+)/);
         var ie = ua.match(/MSIE\s([\d.]+)/) || ua.match( /Trident\/[\d](?=[^\?]+).*rv:([0-9.].)/);
 
@@ -204,15 +204,71 @@ define(function (require) {
         };
     }
 
-    var platform = detect(navigator.userAgent);
+    /**
+     * 检测音频支持
+     * from Phaser
+     * developer.mozilla.org/En/Media_formats_supported_by_the_audio_and_video_elements
+     * bit.ly/iphoneoscodecs
+     *
+     * @param {Object} exp 模块导出对象
+     */
+    function checkAudio(exp) {
+        exp.audioData = !!(window.Audio);
+        exp.webAudio = !!(window.AudioContext || window.webkitAudioContext);
+
+        var audioElement = document.createElement('audio');
+        var result = false;
+        try {
+            /* jshint boss:true */
+            if (result = !!audioElement.canPlayType) {
+                if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.ogg = true;
+                }
+
+                if (audioElement.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, '')
+                    || audioElement.canPlayType('audio/opus;').replace(/^no$/, '')
+                ) {
+                    exp.opus = true;
+                }
+
+                if (audioElement.canPlayType('audio/mpeg;').replace(/^no$/, '')) {
+                    exp.mp3 = true;
+                }
+
+                if (audioElement.canPlayType('audio/wav; codecs="1"').replace(/^no$/, '')) {
+                    exp.wav = true;
+                }
+
+                if (audioElement.canPlayType('audio/x-m4a;')
+                    || audioElement.canPlayType('audio/aac;').replace(/^no$/, '')
+                ) {
+                    exp.m4a = true;
+                }
+
+                if (audioElement.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.webm = true;
+                }
+            }
+        }
+        catch (e) { }
+    }
+
+    var env = detect(navigator.userAgent);
 
     var exports = {
-        browser: platform.browser,
-        os: platform.os,
+        browser: env.browser,
+        os: env.os,
         supportOrientation: (typeof window.orientation == 'number' && typeof window.onorientationchange == 'object'),
-        supportTouch: ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch,
-        supportGeolocation: (navigator.geolocation != null)
+        supportTouch: ('ontouchstart' in window) || window.DocumentTouch && document instanceof window.DocumentTouch,
+        supportGeolocation: (navigator.geolocation != null),
+        isAndroid: env.os.android,
+        isIOS: env.os.ios,
+        isPhone: env.os.phone,
+        isTablet: env.os.tablet,
+        isMobile: env.os.phone || env.os.tablet
     };
+
+    checkAudio(exports);
 
     return exports;
 

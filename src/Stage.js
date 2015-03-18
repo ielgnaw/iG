@@ -92,7 +92,6 @@ define(function (require) {
 
             me.container.style.width = me.width + 'px';
             me.container.style.height = me.height + 'px';
-
             me.canvas.width = me.width;
             me.canvas.height = me.height;
 
@@ -107,6 +106,7 @@ define(function (require) {
          * @param {string} color 颜色值 #f00, rgba(255, 0, 0, 1), red
          */
         setContainerBgColor: function (color) {
+            // debugger
             var me = this;
             me.containerBgColor = color || me.containerBgColor;
             me.container.style.backgroundColor = me.containerBgColor;
