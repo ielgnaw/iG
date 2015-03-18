@@ -13,42 +13,46 @@ define(function (require) {
     var arrayProto = Array.prototype;
 
     /**
-     * 图片加载构造器
+     * 图片加载构造器，图片格式为: {id: 'xxxx', src: 'path'} 或 'path'
      *
+     * @param {opts} opts 参数
+     *
+     * @extends {Event}
      * @constructor
      */
     function ImageLoader(opts) {
-        opts = opts || {};
         Event.apply(this, arguments);
 
-        this.images = {};
-        this.imageList = [];
+        opts = opts || {};
 
-        var imageUrls = opts.imageUrls || [];
-        Array.isArray(imageUrls) ? (this.imageUrls = imageUrls) : (this.imageUrls = [imageUrls]);
+        var source = opts.source || [];
+        Array.isArray(source) ? (this.source = source) : (this.source = [source]);
+
+        this.allCallback = opts.allCallback || util.noop;
 
         this.imagesLoadedCount = 0;
         this.imagesErrorLoadedCount = 0;
 
-        this.allCallback = opts.allCallback || util.noop;
+        this.images = {};
+        this.imageList = [];
     }
 
     ImageLoader.prototype = {
         /**
          * 还原构造
          *
-         * @type {[type]}
+         * @type {Function}
          */
         constructor: ImageLoader,
 
         /**
          * 添加图片
          *
-         * @param {Array | string} imageUrls 图片 url
+         * @param {Array | string} source 图片资源
          */
-        addImages: function (imageUrls) {
+        addImages: function (source) {
             var me = this;
-            arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
+            arrayProto.push[Array.isArray(source) ? 'apply' : 'call'](me.source, source);
         },
 
         /**
@@ -56,19 +60,31 @@ define(function (require) {
          */
         load: function () {
             var me = this;
-            var len = me.imageUrls.length;
+            var len = me.source.length;
             for (var i = 0; i < len; i++) {
-                var imgSrc = me.imageUrls[i];
-                me.images[imgSrc] = new Image();
-                me.imageList.push(me.images[imgSrc]);
+                var tmp = me.source[i];
+                var imgId;
+                var imgSrc;
+                // {id: 'idid', src: 'path'}
+                if (util.getType(tmp) === 'object') {
+                    imgId = tmp.id;
+                    imgSrc = tmp.src;
+                }
+                // 'path'
+                else {
+                    imgId = imgSrc = tmp;
+                }
+
+                me.images[imgId] = new Image();
+                me.imageList.push(me.images[imgId]);
 
                 /* jshint loopfunc:true */
-                me.images[imgSrc].addEventListener('load', function (e) {
+                me.images[imgId].addEventListener('load', function (e) {
                     me.imagesLoadedCount++;
                     me.fire('ImageLoader:imageLoaded', {
                         data: {
                             progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgSrc]
+                            curImg: me.images[imgId]
                         }
                     });
 
@@ -76,7 +92,7 @@ define(function (require) {
                         me.fire('ImageLoader:allImageLoaded', {
                             data: {
                                 allCount: len,
-                                imageList: me.imageUrls,
+                                imageList: me.imageList,
                                 images: me.images
                             }
                         });
@@ -84,17 +100,17 @@ define(function (require) {
                     }
                 });
 
-                me.images[imgSrc].addEventListener('error', function (e) {
+                me.images[imgId].addEventListener('error', function (e) {
                     me.imagesErrorLoadedCount++;
                     me.fire('ImageLoader:imageLoadedError', {
                         data: {
                             progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgSrc]
+                            curImg: me.images[imgId]
                         }
                     });
                 });
 
-                me.images[imgSrc].src = imgSrc;
+                me.images[imgId].src = imgSrc;
             }
         }
     };

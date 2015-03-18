@@ -151,6 +151,7 @@ define('ig/ig', ['require'], function (require) {
     'use strict';
     var DEG2RAD_OPERAND = Math.PI / 180;
     var RAD2DEG_OPERAND = 180 / Math.PI;
+    var objectProto = Object.prototype;
     var exports = {};
     exports.noop = function () {
     };
@@ -308,15 +309,10 @@ define('ig/ig', ['require'], function (require) {
         }
         return ret;
     };
-    var nativeBind = Function.prototype.bind;
-    exports.bind = nativeBind ? function (fn) {
-        return nativeBind.apply(fn, [].slice.call(arguments, 1));
-    } : function (fn, context) {
-        var extraArgs = [].slice.call(arguments, 2);
-        return function () {
-            var args = extraArgs.concat([].slice.call(arguments));
-            return fn.apply(context, args);
-        };
+    exports.getType = function (obj) {
+        var objectName = objectProto.toString.call(obj);
+        var match = /\[object (\w+)\]/.exec(objectName);
+        return match[1].toLowerCase();
     };
     return exports;
 });define('ig/Event', ['require'], function (require) {
@@ -585,58 +581,66 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var arrayProto = Array.prototype;
     function ImageLoader(opts) {
-        opts = opts || {};
         Event.apply(this, arguments);
-        this.images = {};
-        this.imageList = [];
-        var imageUrls = opts.imageUrls || [];
-        Array.isArray(imageUrls) ? this.imageUrls = imageUrls : this.imageUrls = [imageUrls];
+        opts = opts || {};
+        var source = opts.source || [];
+        Array.isArray(source) ? this.source = source : this.source = [source];
+        this.allCallback = opts.allCallback || util.noop;
         this.imagesLoadedCount = 0;
         this.imagesErrorLoadedCount = 0;
-        this.allCallback = opts.allCallback || util.noop;
+        this.images = {};
+        this.imageList = [];
     }
     ImageLoader.prototype = {
         constructor: ImageLoader,
-        addImages: function (imageUrls) {
+        addImages: function (source) {
             var me = this;
-            arrayProto.push[Array.isArray(imageUrls) ? 'apply' : 'call'](me.imageUrls, imageUrls);
+            arrayProto.push[Array.isArray(source) ? 'apply' : 'call'](me.source, source);
         },
         load: function () {
             var me = this;
-            var len = me.imageUrls.length;
+            var len = me.source.length;
             for (var i = 0; i < len; i++) {
-                var imgSrc = me.imageUrls[i];
-                me.images[imgSrc] = new Image();
-                me.imageList.push(me.images[imgSrc]);
-                me.images[imgSrc].addEventListener('load', function (e) {
+                var tmp = me.source[i];
+                var imgId;
+                var imgSrc;
+                if (util.getType(tmp) === 'object') {
+                    imgId = tmp.id;
+                    imgSrc = tmp.src;
+                } else {
+                    imgId = imgSrc = tmp;
+                }
+                me.images[imgId] = new Image();
+                me.imageList.push(me.images[imgId]);
+                me.images[imgId].addEventListener('load', function (e) {
                     me.imagesLoadedCount++;
                     me.fire('ImageLoader:imageLoaded', {
                         data: {
                             progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgSrc]
+                            curImg: me.images[imgId]
                         }
                     });
                     if (me.imagesLoadedCount >= len) {
                         me.fire('ImageLoader:allImageLoaded', {
                             data: {
                                 allCount: len,
-                                imageList: me.imageUrls,
+                                imageList: me.imageList,
                                 images: me.images
                             }
                         });
                         me.allCallback.call(me);
                     }
                 });
-                me.images[imgSrc].addEventListener('error', function (e) {
+                me.images[imgId].addEventListener('error', function (e) {
                     me.imagesErrorLoadedCount++;
                     me.fire('ImageLoader:imageLoadedError', {
                         data: {
                             progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgSrc]
+                            curImg: me.images[imgId]
                         }
                     });
                 });
-                me.images[imgSrc].src = imgSrc;
+                me.images[imgId].src = imgSrc;
             }
         }
     };
@@ -1287,6 +1291,7 @@ define('ig/ig', ['require'], function (require) {
     '../util',
     '../DisplayObject'
 ], function (require) {
+    'use strict';
     var util = require('../util');
     var DisplayObject = require('../DisplayObject');
     function Ball(opts) {

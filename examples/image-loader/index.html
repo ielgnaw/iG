@@ -57,17 +57,20 @@
                 allCallback: function () {
                     console.log('all done');
                 },
-                // imageUrls: [
+                // source: [
                 //     './img/1.jpg',
                 //     './img/1.png',
                 //     './img/2.png',
                 //     './img/700*700.jpeg'
                 // ]
-                imageUrls: './img/700*700.jpeg'
+                source: './img/700*700.jpeg'
             });
 
             li.addImages([
-                './img/bg.jpg',
+                {
+                    id: 'test1',
+                    src: './img/bg.jpg'
+                },
                 './img/bg1.jpg',
                 './img/bg1.png',
                 './img/bg2.jpg',
@@ -77,6 +80,8 @@
                 './img/bg4.jpg'
             ]);
             li.load();
+
+            console.log(li);
 
             li.on('ImageLoader:imageLoaded', function (data) {
                 console.log('ImageLoader:imageLoaded', data.data.progress);

@@ -10,6 +10,8 @@ define(function (require) {
     var DEG2RAD_OPERAND = Math.PI / 180;
     var RAD2DEG_OPERAND = 180 / Math.PI;
 
+    var objectProto = Object.prototype;
+
     var exports = {};
 
     /**
@@ -329,31 +331,19 @@ define(function (require) {
         return ret;
     };
 
-    // `bind`的实现特别使用引擎原生的，
-    // 因为自己实现的`bind`很会影响调试时的单步调试，
-    // 跳进一个函数的时候还要经过这个`bind`几步很烦，原生的就不会
-    var nativeBind = Function.prototype.bind;
-
     /**
-     * 固定函数的`this`变量和若干参数
-     * from er/util
+     * 获取对象类型
      *
-     * @param {Function} fn 操作的目标函数
-     * @param {Mixed} context 函数的`this`变量
-     * @param {Mixed...} args 固定的参数
-     * @return {Function} 固定了`this`变量和若干参数后的新函数对象
+     * @param {*} obj 待检测对象
+     *
+     * @return {string} 类型
      */
-    exports.bind = nativeBind
-            ? function (fn) {
-                return nativeBind.apply(fn, [].slice.call(arguments, 1));
-            }
-            : function (fn, context) {
-                var extraArgs = [].slice.call(arguments, 2);
-                return function () {
-                    var args = extraArgs.concat([].slice.call(arguments));
-                    return fn.apply(context, args);
-                };
-            };
+    exports.getType = function (obj) {
+        var objectName = objectProto.toString.call(obj);
+        var match = /\[object (\w+)\]/.exec(objectName);
+
+        return match[1].toLowerCase();
+    };
 
     return exports;
 
