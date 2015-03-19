@@ -165,6 +165,19 @@ define(function (require) {
         },
 
         /**
+         * 改变加速度，和设置加速度的区别是
+         * 设置加速度是直接设置上去，而改变是基于原加速度的基础上来变化
+         *
+         * @param {number} x 横向加速度大小
+         * @param {number} y 纵向加速度大小
+         */
+        // changeAcceleration: function (ax, ay) {
+        //     var me = this;
+        //     me.aX += ax;
+        //     me.aY += ay;
+        // },
+
+        /**
          * 重置加速度
          */
         resetAcceleration: function () {

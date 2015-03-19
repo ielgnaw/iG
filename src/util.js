@@ -240,34 +240,39 @@ define(function (require) {
 
     /**
      * 为 dom 节点添加一个父节点
-     * domWrap(curNode, document.createElement('div'));
-     * domWrap(curNode, '<div style="color:blue;"></div>');
+     * domWrap(curNode, document.createElement('div'), 'newId');
      *
      * @param {HTML.Element} curNode 待添加父节点的节点
-     * @param {HTML.Element | string} newNode 要作为父节点的节点
+     * @param {HTML.Element} newNode 要作为父节点的节点
      *
      * @return {HTML.Element} 原节点
      */
     exports.domWrap = function (curNode, newNode, newNodeId) {
-        var _el = curNode.cloneNode(true);
+        // var _el = curNode.cloneNode(true);
 
-        // newNode = '<div style="color:blue"></div>';
-        if (typeof newNode === 'string') {
-            var tmp = document.createElement('div');
-            tmp.innerHTML = newNode;
-            tmp = tmp.children[0];
-            tmp.appendChild(_el);
-            tmp.id = newNodeId;
-            curNode.parentNode.replaceChild(tmp, curNode);
-        }
-        // newNode = document.createElement('div');
-        else {
-            newNode.id = newNodeId;
-            newNode.appendChild(_el);
-            curNode.parentNode.replaceChild(newNode, curNode);
-        }
+        // // newNode = '<div style="color:blue"></div>';
+        // if (typeof newNode === 'string') {
+        //     var tmp = document.createElement('div');
+        //     tmp.innerHTML = newNode;
+        //     tmp = tmp.children[0];
+        //     tmp.appendChild(_el);
+        //     tmp.id = newNodeId;
+        //     curNode.parentNode.replaceChild(tmp, curNode);
+        // }
+        // // newNode = document.createElement('div');
+        // else {
+        //     newNode.id = newNodeId;
+        //     newNode.appendChild(_el);
+        //     curNode.parentNode.replaceChild(newNode, curNode);
+        // }
 
-        return _el;
+        // return _el;
+
+        curNode.parentNode.insertBefore(newNode, curNode);
+        newNode.appendChild(curNode);
+        newNode.id = newNodeId;
+
+        return curNode;
     };
 
     /**

@@ -259,20 +259,10 @@ define('ig/ig', ['require'], function (require) {
         return Math.random() * (max - min) + min;
     };
     exports.domWrap = function (curNode, newNode, newNodeId) {
-        var _el = curNode.cloneNode(true);
-        if (typeof newNode === 'string') {
-            var tmp = document.createElement('div');
-            tmp.innerHTML = newNode;
-            tmp = tmp.children[0];
-            tmp.appendChild(_el);
-            tmp.id = newNodeId;
-            curNode.parentNode.replaceChild(tmp, curNode);
-        } else {
-            newNode.id = newNodeId;
-            newNode.appendChild(_el);
-            curNode.parentNode.replaceChild(newNode, curNode);
-        }
-        return _el;
+        curNode.parentNode.insertBefore(newNode, curNode);
+        newNode.appendChild(curNode);
+        newNode.id = newNodeId;
+        return curNode;
     };
     exports.windowToCanvas = function (canvas, x, y) {
         var boundRect = canvas.getBoundingClientRect();
@@ -947,7 +937,7 @@ define('ig/ig', ['require'], function (require) {
             }
         }
     }
-    function initStage(canvas) {
+    function initStage(canvas, stage) {
         canvas.width = defaultCanvasWidth;
         canvas.height = defaultCanvasHeight;
         var canvasParent = canvas.parentNode;
@@ -955,7 +945,7 @@ define('ig/ig', ['require'], function (require) {
         window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
             setTimeout(function () {
                 fitScreen(canvas, canvasParent);
-            }, 1);
+            }, 100);
         }, false);
     }
     function Stage(opts) {
@@ -973,7 +963,7 @@ define('ig/ig', ['require'], function (require) {
         if (opts.height) {
             defaultCanvasHeight = opts.height;
         }
-        initStage(this.canvas);
+        initStage(this.canvas, this);
         this.offCanvas = document.createElement('canvas');
         this.offCtx = this.offCanvas.getContext('2d');
         this.offCanvas.width = this.canvas.width;

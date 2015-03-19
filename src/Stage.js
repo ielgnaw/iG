@@ -14,7 +14,18 @@ define(function (require) {
 
     var guid = 0;
 
+    /**
+     * 给 canvas 一个默认的宽度
+     *
+     * @type {number}
+     */
     var defaultCanvasWidth = 383;
+
+    /**
+     * 给 canvas 一个默认的高度
+     *
+     * @type {number}
+     */
     var defaultCanvasHeight = 550;
 
     /**
@@ -97,7 +108,7 @@ define(function (require) {
      *
      * @param {HTML.Element} canvas canvas 节点
      */
-    function initStage(canvas) {
+    function initStage(canvas, stage) {
         canvas.width = defaultCanvasWidth;
         canvas.height = defaultCanvasHeight;
 
@@ -108,9 +119,9 @@ define(function (require) {
         window.addEventListener(
             env.supportOrientation ? 'orientationchange' : 'resize',
             function () {
-                setTimeout(function() {
+                setTimeout(function () {
                     fitScreen(canvas, canvasParent);
-                }, 1);
+                }, 100);
             },
             false
         );
@@ -136,6 +147,7 @@ define(function (require) {
         this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
 
         this.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container');
+
         this.ctx = this.canvas.getContext('2d');
 
         if (opts.width) {
@@ -146,7 +158,7 @@ define(function (require) {
             defaultCanvasHeight = opts.height;
         }
 
-        initStage(this.canvas);
+        initStage(this.canvas, this);
 
         this.offCanvas = document.createElement('canvas');
         this.offCtx = this.offCanvas.getContext('2d');
