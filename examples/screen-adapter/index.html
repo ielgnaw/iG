@@ -29,12 +29,13 @@
                 /*height: 400px;*/
                 /*margin: 10px auto;*/
                 background: #fff;
-                border: thin inset rgba(100,150,230,0.5);
+                /*border: thin inset rgba(100,150,230,0.5);*/
                 /*top: 10px;*/
             }
 
             canvas {
                 /*border: 2px solid #ddd;*/
+                border: thin inset rgba(100,150,230,0.5);
             }
 
             .control-container {
@@ -87,81 +88,81 @@
         <!-- </div> -->
         <script>
 
-            var canvasX;
-            var canvasY;
-            var canvasScaleX;
-            var canvasScaleY;
-            var div = document.querySelector('.container');
-            var canvas = document.querySelector('#canvas');
-            var ctx = canvas.getContext('2d');
-            canvas.width = 383;
-            canvas.height = 550;
+            // var canvasX;
+            // var canvasY;
+            // var canvasScaleX;
+            // var canvasScaleY;
+            // var div = document.querySelector('.container');
+            // var canvas = document.querySelector('#canvas');
+            // var ctx = canvas.getContext('2d');
+            // canvas.width = 383;
+            // canvas.height = 550;
             // canvas.width = 320;
             // canvas.height = 480;
             // canvas.width = 414;
             // canvas.height = 736;
 
-            function resizeCanvas() {
-                // debugger
-                var a = window.innerWidth;
-                var b = window.innerHeight;
-                if (a > 480) {
-                    a -= 1;
-                    b -= 1;
-                }
-                // debugger
-                if (window.innerWidth > window.innerHeight && ig.env.isMobile) {
-                    if (a / canvas.width < b / canvas.height) {
-                        canvas.style.width = a + 'px';
-                        canvas.style.height = a / canvas.width * canvas.height + 'px';
-                        canvasX = 0;
-                        canvasY = (b - a / canvas.width * canvas.height) / 2;
-                        canvasScaleX = canvasScaleY = canvas.width / a;
-                        div.style.marginTop = canvasY + 'px';
-                        div.style.marginLeft = canvasX + 'px'
-                    }
-                    else {
-                        canvas.style.width = b / canvas.height * canvas.width + 'px';
-                        canvas.style.height = b + 'px';
-                        canvasX = (a - b / canvas.height * canvas.width) / 2;
-                        canvasY = 0;
-                        canvasScaleX = canvasScaleY = canvas.height / b;
-                        div.style.marginTop = canvasY + 'px';
-                        div.style.marginLeft = canvasX + 'px';
-                    }
-                }
-                else if (ig.env.isMobile) {
-                    canvasX = canvasY = 0;
-                    canvasScaleX = canvas.width / a;
-                    canvasScaleY = canvas.height / b;
-                    canvas.style.width = a + 'px';
-                    canvas.style.height = b + 'px';
-                    div.style.marginTop = '0px';
-                    div.style.marginLeft = '0px';
-                }
-                else {
-                    if (a / canvas.width < b / canvas.height) {
-                        canvas.style.width = a + 'px';
-                        canvas.style.height = a / canvas.width * canvas.height + 'px';
-                        canvasX = 0;
-                        canvasY = (b - a / canvas.width * canvas.height) / 2;
-                        canvasScaleX = canvasScaleY = canvas.width / a;
-                        div.style.marginTop = canvasY + 'px';
-                        div.style.marginLeft = canvasX + 'px';
-                    }
-                    else {
-                        canvas.style.width = b / canvas.height * canvas.width + 'px';
-                        canvas.style.height = b + 'px';
-                        canvasX = (a - b / canvas.height * canvas.width) / 2;
-                        canvasY = 0;
-                        canvasScaleX = canvasScaleY = canvas.height / b;
-                        div.style.marginTop = canvasY + 'px';
-                        div.style.marginLeft = canvasX + 'px';
-                    }
-                }
+            // function resizeCanvas() {
+            //     // debugger
+            //     var a = window.innerWidth;
+            //     var b = window.innerHeight;
+            //     if (a > 480) {
+            //         a -= 1;
+            //         b -= 1;
+            //     }
+            //     // debugger
+            //     if (window.innerWidth > window.innerHeight && ig.env.isMobile) {
+            //         if (a / canvas.width < b / canvas.height) {
+            //             canvas.style.width = a + 'px';
+            //             canvas.style.height = a / canvas.width * canvas.height + 'px';
+            //             canvasX = 0;
+            //             canvasY = (b - a / canvas.width * canvas.height) / 2;
+            //             canvasScaleX = canvasScaleY = canvas.width / a;
+            //             div.style.marginTop = canvasY + 'px';
+            //             div.style.marginLeft = canvasX + 'px'
+            //         }
+            //         else {
+            //             canvas.style.width = b / canvas.height * canvas.width + 'px';
+            //             canvas.style.height = b + 'px';
+            //             canvasX = (a - b / canvas.height * canvas.width) / 2;
+            //             canvasY = 0;
+            //             canvasScaleX = canvasScaleY = canvas.height / b;
+            //             div.style.marginTop = canvasY + 'px';
+            //             div.style.marginLeft = canvasX + 'px';
+            //         }
+            //     }
+            //     else if (ig.env.isMobile) {
+            //         canvasX = canvasY = 0;
+            //         canvasScaleX = canvas.width / a;
+            //         canvasScaleY = canvas.height / b;
+            //         canvas.style.width = a + 'px';
+            //         canvas.style.height = b + 'px';
+            //         div.style.marginTop = '0px';
+            //         div.style.marginLeft = '0px';
+            //     }
+            //     else {
+            //         if (a / canvas.width < b / canvas.height) {
+            //             canvas.style.width = a + 'px';
+            //             canvas.style.height = a / canvas.width * canvas.height + 'px';
+            //             canvasX = 0;
+            //             canvasY = (b - a / canvas.width * canvas.height) / 2;
+            //             canvasScaleX = canvasScaleY = canvas.width / a;
+            //             div.style.marginTop = canvasY + 'px';
+            //             div.style.marginLeft = canvasX + 'px';
+            //         }
+            //         else {
+            //             canvas.style.width = b / canvas.height * canvas.width + 'px';
+            //             canvas.style.height = b + 'px';
+            //             canvasX = (a - b / canvas.height * canvas.width) / 2;
+            //             canvasY = 0;
+            //             canvasScaleX = canvasScaleY = canvas.height / b;
+            //             div.style.marginTop = canvasY + 'px';
+            //             div.style.marginLeft = canvasX + 'px';
+            //         }
+            //     }
 
-                // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
-            }
+            //     // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
+            // }
 
             var stage;
             // window.addEventListener('orientationchange', function() {
@@ -177,19 +178,20 @@
             // }, false);
             // resizeCanvas();
 
-            resizeCanvas();
-            window.onresize = function() {
-                setTimeout(function() {
-                    resizeCanvas();
-                }, 1)
-            };
-            window.addEventListener("load", function() {
-                setTimeout(function() {
-                    resizeCanvas();
-                }, 0);
-                window.addEventListener("orientationchange", function() {
-                    resizeCanvas();
-                }, !1);
+            // resizeCanvas();
+            // window.onresize = function() {
+            //     setTimeout(function() {
+            //         resizeCanvas();
+            //     }, 1)
+            // };
+
+            // window.addEventListener("load", function() {
+                // setTimeout(function() {
+                //     resizeCanvas();
+                // }, 0);
+                // window.addEventListener("orientationchange", function() {
+                //     resizeCanvas();
+                // }, !1);
 
                 var li = new ig.ImageLoader({
                     allCallback: function () {
@@ -306,7 +308,7 @@
 
                     g.start();
                 }
-            })
+            // })
 
         </script>
     </body>
