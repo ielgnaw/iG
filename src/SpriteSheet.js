@@ -12,13 +12,7 @@ define(function (require) {
 
     var guid = 0;
 
-    /**
-     * 动画延时计数器
-     * window.requestAnimationFrame 速度太快，用这个变量来做延迟
-     *
-     * @type {number}
-     */
-    var ANIMATION_DELAY = 0;
+    // var ANIMATION_DELAY = 0;
 
     /**
      * 精灵表基类
@@ -74,29 +68,47 @@ define(function (require) {
         // 每一帧的偏移量
         this.offsets = opts.offsets;
 
+        /**
+         * 每一帧图像绘制的横轴偏移量
+         * @private
+         *
+         * @type {number}
+         */
+        this._offsetX = 0;
+
+        /**
+         * 每一帧图像绘制的纵轴偏移量
+         * @private
+         *
+         * @type {number}
+         */
+        this._offsetY = 0;
+
+        /**
+         * 每一帧图像绘制的宽度偏移量
+         * @private
+         *
+         * @type {number}
+         */
+        this._offsetWidth = 0;
+
+        /**
+         * 每一帧图像绘制的高度偏移量
+         * @private
+         *
+         * @type {number}
+         */
+        this._offsetHeight = 0;
+
+        /**
+         * 动画延时计数器
+         * window.requestAnimationFrame 速度太快，用这个变量来做延迟
+         * @private
+         *
+         * @type {number}
+         */
+        this._ANIMATION_DELAY = 0;
     }
-
-    /**
-     * 每一帧图像绘制的横轴偏移量
-     *
-     * @type {number}
-     */
-    var offsetX = 0;
-
-    /**
-     * 每一帧图像绘制的纵轴偏移量
-     *
-     * @type {number}
-     */
-    var offsetY = 0;
-
-    /**
-     * 每一帧图像绘制的宽度偏移量
-     *
-     * @type {number}
-     */
-    var offsetWidth = 0;
-    var offsetHeight = 0;
 
     SpriteSheet.prototype = {
         /**
@@ -109,7 +121,7 @@ define(function (require) {
          */
         update: function () {
             var me = this;
-            // if (ANIMATION_DELAY % 7 === 0) {
+            // if (me._ANIMATION_DELAY % 7 === 0) {
             //     me.relativeY = me.frameStartY * me.frameHeight;
             //     me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth;
             //     me.frameIndex++;
@@ -117,24 +129,24 @@ define(function (require) {
             //         me.frameIndex = 0;
             //     }
             // }
-            // ANIMATION_DELAY++;
+            // me._ANIMATION_DELAY++;
 
-            if (ANIMATION_DELAY % 7 === 0) {
+            if (me._ANIMATION_DELAY % 7 === 0) {
 
-                offsetX = 0;
-                offsetY = 0;
-                offsetWidth = 0;
-                offsetHeight = 0;
+                me._offsetX = 0;
+                me._offsetY = 0;
+                me._offsetWidth = 0;
+                me._offsetHeight = 0;
 
                 if (me.offsets && me.offsets[me.frameIndex]) {
-                    offsetX = me.offsets[me.frameIndex].x || 0;
-                    offsetY = me.offsets[me.frameIndex].y || 0;
-                    offsetWidth = me.offsets[me.frameIndex].width || 0;
-                    offsetHeight = me.offsets[me.frameIndex].height || 0;
+                    me._offsetX = me.offsets[me.frameIndex].x || 0;
+                    me._offsetY = me.offsets[me.frameIndex].y || 0;
+                    me._offsetWidth = me.offsets[me.frameIndex].width || 0;
+                    me._offsetHeight = me.offsets[me.frameIndex].height || 0;
                 }
 
-                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + offsetX;
-                me.relativeY = me.frameStartY * me.frameHeight + offsetY;
+                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + me._offsetX;
+                me.relativeY = me.frameStartY * me.frameHeight + me._offsetY;
                 me.frameIndex++;
                 if (me.frameIndex >= me.total) {
                     me.frameIndex = 0;
@@ -148,7 +160,7 @@ define(function (require) {
                     me.frameIndex = 0;
                 }
             }
-            ANIMATION_DELAY++;
+            me._ANIMATION_DELAY++;
         },
 
         /**
@@ -166,11 +178,11 @@ define(function (require) {
             // offCtx.fillRect(-me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight);
 
             offCtx.drawImage(
-                // me.image, me.relativeX + offsetX, me.relativeY + offsetY, me.frameWidth + offsetWidth, me.frameHeight + offsetHeight,
+                // me.image, me.relativeX + me._offsetX, me.relativeY + me._offsetY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
                 // me.image, me.relativeX, me.relativeY, me.frameWidth, me.frameHeight,
-                me.image, me.relativeX, me.relativeY, me.frameWidth + offsetWidth, me.frameHeight + offsetHeight,
+                me.image, me.relativeX, me.relativeY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
                 // -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight
-                -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + offsetWidth, me.frameHeight + offsetHeight
+                -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight
             );
             offCtx.restore();
         }
