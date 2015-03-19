@@ -145,84 +145,7 @@ define('ig/ig', ['require'], function (require) {
     window.cancelAnimationFrame = function () {
         return window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelAnimationFrame || window.mozCancelRequestAnimationFrame || window.msCancelAnimationFrame || window.msCancelRequestAnimationFrame || window.oCancelAnimationFrame || window.oCancelRequestAnimationFrame || window.clearTimeout;
     }();
-    window.addEventListener('DOMContentLoaded', init, false);
     var exports = {};
-    exports.fitScreen = function (canvas, parentContainer) {
-        var canvasX;
-        var canvasY;
-        var canvasScaleX;
-        var canvasScaleY;
-        var innerWidth = window.innerWidth;
-        var innerHeight = window.innerHeight;
-        if (innerWidth > 480) {
-            innerWidth -= 1;
-            innerHeight -= 1;
-        }
-        if (ig.env.isMobile) {
-            if (window.innerWidth > window.innerHeight) {
-                if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                    canvas.style.width = innerWidth + 'px';
-                    canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                    canvasX = 0;
-                    canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                    canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                    parentContainer.style.marginTop = canvasY + 'px';
-                    parentContainer.style.marginLeft = canvasX + 'px';
-                } else {
-                    canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                    canvas.style.height = innerHeight + 'px';
-                    canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                    canvasY = 0;
-                    canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                    parentContainer.style.marginTop = canvasY + 'px';
-                    parentContainer.style.marginLeft = canvasX + 'px';
-                }
-            } else {
-                canvasX = canvasY = 0;
-                canvasScaleX = canvas.width / innerWidth;
-                canvasScaleY = canvas.height / innerHeight;
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerHeight + 'px';
-                parentContainer.style.marginTop = '0px';
-                parentContainer.style.marginLeft = '0px';
-            }
-        } else {
-            if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                canvasX = 0;
-                canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                parentContainer.style.marginTop = canvasY + 'px';
-                parentContainer.style.marginLeft = canvasX + 'px';
-            } else {
-                canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                canvas.style.height = innerHeight + 'px';
-                canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                canvasY = 0;
-                canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                parentContainer.style.marginTop = canvasY + 'px';
-                parentContainer.style.marginLeft = canvasX + 'px';
-            }
-        }
-    };
-    function init() {
-        var canvas = document.querySelector('#canvas');
-        canvas.width = 383;
-        canvas.height = 550;
-        var parentContainer = document.querySelector('.container');
-        setTimeout(function () {
-            exports.fitScreen(canvas, parentContainer);
-        }, 0);
-        window.addEventListener('resize', function () {
-            setTimeout(function () {
-                exports.fitScreen(canvas, parentContainer);
-            }, 1);
-        }, false);
-        window.addEventListener('orientationchange', function () {
-            exports.fitScreen(canvas, parentContainer);
-        }, false);
-    }
     return exports;
 });define('ig/util', ['require'], function (require) {
     'use strict';
@@ -342,8 +265,10 @@ define('ig/ig', ['require'], function (require) {
             tmp.innerHTML = newNode;
             tmp = tmp.children[0];
             tmp.appendChild(_el);
+            tmp.id = 'ig-stage-container';
             curNode.parentNode.replaceChild(tmp, curNode);
         } else {
+            newNode.id = 'ig-stage-container';
             newNode.appendChild(_el);
             curNode.parentNode.replaceChild(newNode, curNode);
         }
@@ -952,36 +877,114 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './Event',
     './util',
+    './env',
     './DisplayObject'
 ], function (require) {
     'use strict';
     var Event = require('./Event');
     var util = require('./util');
+    var env = require('./env');
     var DisplayObject = require('./DisplayObject');
     var guid = 0;
+    var defaultCanvasWidth = 383;
+    var defaultCanvasHeight = 550;
+    function fitScreen(canvas, canvasParent) {
+        var canvasX;
+        var canvasY;
+        var canvasScaleX;
+        var canvasScaleY;
+        var innerWidth = window.innerWidth;
+        var innerHeight = window.innerHeight;
+        if (innerWidth > 480) {
+            innerWidth -= 1;
+            innerHeight -= 1;
+        }
+        if (env.isMobile) {
+            if (window.innerWidth > window.innerHeight) {
+                if (innerWidth / canvas.width < innerHeight / canvas.height) {
+                    canvas.style.width = innerWidth + 'px';
+                    canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
+                    canvasX = 0;
+                    canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
+                    canvasScaleX = canvasScaleY = canvas.width / innerWidth;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                } else {
+                    canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
+                    canvas.style.height = innerHeight + 'px';
+                    canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
+                    canvasY = 0;
+                    canvasScaleX = canvasScaleY = canvas.height / innerHeight;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                }
+            } else {
+                canvasX = canvasY = 0;
+                canvasScaleX = canvas.width / innerWidth;
+                canvasScaleY = canvas.height / innerHeight;
+                canvas.style.width = innerWidth + 'px';
+                canvas.style.height = innerHeight + 'px';
+                canvasParent.style.marginTop = '0px';
+                canvasParent.style.marginLeft = '0px';
+            }
+        } else {
+            if (innerWidth / canvas.width < innerHeight / canvas.height) {
+                canvas.style.width = innerWidth + 'px';
+                canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
+                canvasX = 0;
+                canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
+                canvasScaleX = canvasScaleY = canvas.width / innerWidth;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            } else {
+                canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
+                canvas.style.height = innerHeight + 'px';
+                canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
+                canvasY = 0;
+                canvasScaleX = canvasScaleY = canvas.height / innerHeight;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            }
+        }
+    }
+    function initStage(canvas) {
+        canvas.width = defaultCanvasWidth;
+        canvas.height = defaultCanvasHeight;
+        var canvasParent = canvas.parentNode;
+        fitScreen(canvas, canvasParent);
+        window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
+            setTimeout(function () {
+                fitScreen(canvas, canvasParent);
+            }, 1);
+        }, false);
+    }
     function Stage(opts) {
         Event.apply(this, arguments);
         opts = opts || {};
         if (!opts.canvas) {
             throw new Error('Stage must be require a canvas param');
         }
-        this.canvas = opts.canvas;
+        this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
+        this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
         this.ctx = this.canvas.getContext('2d');
+        if (opts.width) {
+            defaultCanvasWidth = opts.width;
+        }
+        if (opts.height) {
+            defaultCanvasHeight = opts.height;
+        }
+        initStage(this.canvas);
         this.offCanvas = document.createElement('canvas');
         this.offCtx = this.offCanvas.getContext('2d');
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
         this.container = this.canvas.parentNode;
-        this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
-        this.x = opts.x || 0;
-        this.y = opts.y || 0;
-        this.width = opts.width || this.canvas.width;
-        this.canvas.width = this.width;
-        this.offCanvas.width = this.width;
-        this.height = opts.height || this.canvas.height;
-        this.canvas.height = this.height;
-        this.offCanvas.height = this.height;
-        this.containerBgColor = opts.containerBgColor || '#000';
-        this.setSize();
-        this.setContainerBgColor();
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+        this.bgColor = opts.bgColor || '#000';
+        this.setBgColor();
         this.displayObjectList = [];
         this.displayObjects = {};
     }
@@ -991,30 +994,21 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.ctx.clearRect(0, 0, me.width, me.height);
         },
-        setSize: function (width, height) {
+        setBgColor: function (color) {
             var me = this;
-            me.width = width || me.width;
-            me.height = height || me.height;
-            me.canvas.width = me.width;
-            me.canvas.height = me.height;
-            me.offCanvas.width = me.width;
-            me.offCanvas.height = me.height;
+            me.bgColor = color || me.bgColor;
+            me.canvas.style.backgroundColor = me.bgColor;
         },
-        setContainerBgColor: function (color) {
+        setBgImg: function (imgUrl, repeatPattern) {
             var me = this;
-            me.containerBgColor = color || me.containerBgColor;
-            me.container.style.backgroundColor = me.containerBgColor;
-        },
-        setContainerBgImg: function (imgUrl, repeatPattern) {
-            var me = this;
-            me.container.style.backgroundImage = 'url(' + imgUrl + ')';
+            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
             switch (repeatPattern) {
             case 'center':
-                me.container.style.backgroundRepeat = 'no-repeat';
-                me.container.style.backgroundPosition = 'center';
+                me.canvas.style.backgroundRepeat = 'no-repeat';
+                me.canvas.style.backgroundPosition = 'center';
                 break;
             case 'full':
-                me.container.style.backgroundSize = me.width + 'px ' + me.height + 'px';
+                me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                 break;
             }
         },
@@ -1263,7 +1257,7 @@ define('ig/ig', ['require'], function (require) {
         constructor: SpriteSheet,
         update: function () {
             var me = this;
-            if (ANIMATION_DELAY % 7 === 0) {
+            if (ANIMATION_DELAY % 1 === 0) {
                 me._offsetX = 0;
                 me._offsetY = 0;
                 me._offsetWidth = 0;

@@ -1,7 +1,7 @@
 /**
  * @file 视差滚动
  * 实际上是把 canvas 背景作为一个 DisplayObject 来处理
- * 这种情况下 stage.setContainerBgColor 和 stage.setContainerBgImg 是无效的
+ * 这种情况下 stage.setBgColor 和 stage.setBgImg 是无效的
  *
  * @author ielgnaw(wuji0223@gmail.com)
  */

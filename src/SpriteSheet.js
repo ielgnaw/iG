@@ -131,7 +131,7 @@ define(function (require) {
             // }
             // me._ANIMATION_DELAY++;
 
-            if (ANIMATION_DELAY % 7 === 0) {
+            if (ANIMATION_DELAY % 1 === 0) {
 
                 me._offsetX = 0;
                 me._offsetY = 0;

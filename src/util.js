@@ -257,10 +257,12 @@ define(function (require) {
             tmp.innerHTML = newNode;
             tmp = tmp.children[0];
             tmp.appendChild(_el);
+            tmp.id = 'ig-stage-container';
             curNode.parentNode.replaceChild(tmp, curNode);
         }
         // newNode = document.createElement('div');
         else {
+            newNode.id = 'ig-stage-container';
             newNode.appendChild(_el);
             curNode.parentNode.replaceChild(newNode, curNode);
         }

@@ -9,9 +9,112 @@ define(function (require) {
 
     var Event = require('./Event');
     var util = require('./util');
+    var env = require('./env');
     var DisplayObject = require('./DisplayObject');
 
     var guid = 0;
+
+    var defaultCanvasWidth = 383;
+    var defaultCanvasHeight = 550;
+
+    /**
+     * 屏幕适配
+     *
+     * @param {HTML.Element} canvas canvas 节点
+     * @param {HTML.Element} canvasParent canvas 父节点
+     */
+    function fitScreen(canvas, canvasParent) {
+        var canvasX;
+        var canvasY;
+        var canvasScaleX;
+        var canvasScaleY;
+        var innerWidth = window.innerWidth;
+        // var innerWidth = window.innerWidth;
+        var innerHeight = window.innerHeight;
+        // var innerHeight = window.innerHeight;
+        if (innerWidth > 480) {
+            innerWidth -= 1;
+            innerHeight -= 1;
+        }
+
+        if (env.isMobile) {
+            if (window.innerWidth > window.innerHeight) {
+                if (innerWidth / canvas.width < innerHeight / canvas.height) {
+                    canvas.style.width = innerWidth + 'px';
+                    canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
+                    canvasX = 0;
+                    canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
+                    canvasScaleX = canvasScaleY = canvas.width / innerWidth;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                }
+                else {
+                    canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
+                    canvas.style.height = innerHeight + 'px';
+                    canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
+                    canvasY = 0;
+                    canvasScaleX = canvasScaleY = canvas.height / innerHeight;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                }
+            }
+            else {
+                canvasX = canvasY = 0;
+                canvasScaleX = canvas.width / innerWidth;
+                canvasScaleY = canvas.height / innerHeight;
+                canvas.style.width = innerWidth + 'px';
+                canvas.style.height = innerHeight + 'px';
+                canvasParent.style.marginTop = '0px';
+                canvasParent.style.marginLeft = '0px';
+            }
+        }
+        else {
+            if (innerWidth / canvas.width < innerHeight / canvas.height) {
+                canvas.style.width = innerWidth + 'px';
+                canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
+                canvasX = 0;
+                canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
+                canvasScaleX = canvasScaleY = canvas.width / innerWidth;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            }
+            else {
+                canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
+                canvas.style.height = innerHeight + 'px';
+                canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
+                canvasY = 0;
+                canvasScaleX = canvasScaleY = canvas.height / innerHeight;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            }
+        }
+
+        // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
+    }
+
+    /**
+     * 初始化场景，并绑定事件
+     *
+     * @param {HTML.Element} canvas canvas 节点
+     */
+    function initStage(canvas) {
+        canvas.width = defaultCanvasWidth;
+        canvas.height = defaultCanvasHeight;
+
+        var canvasParent = canvas.parentNode;
+
+        fitScreen(canvas, canvasParent);
+
+        window.addEventListener(
+            env.supportOrientation ? 'orientationchange' : 'resize',
+            function () {
+                setTimeout(function() {
+                    fitScreen(canvas, canvasParent);
+                }, 1);
+            },
+            false
+        );
+    }
 
     /**
      * 场景类构造函数
@@ -30,34 +133,40 @@ define(function (require) {
             throw new Error('Stage must be require a canvas param');
         }
 
-        // this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
-        this.canvas = opts.canvas;
-        this.ctx = this.canvas.getContext('2d');
-        this.offCanvas = document.createElement('canvas');
-        this.offCtx = this.offCanvas.getContext('2d');
-
-        this.container = this.canvas.parentNode;
-
         this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
 
-        this.x = opts.x || 0;
-        this.y = opts.y || 0;
+        this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
+        this.ctx = this.canvas.getContext('2d');
 
-        this.width = opts.width || this.canvas.width;
-        this.canvas.width = this.width;
-        this.offCanvas.width = this.width;
+        if (opts.width) {
+            defaultCanvasWidth = opts.width;
+        }
 
-        this.height = opts.height || this.canvas.height;
-        this.canvas.height = this.height;
-        this.offCanvas.height = this.height;
+        if (opts.height) {
+            defaultCanvasHeight = opts.height;
+        }
 
-        this.containerBgColor = opts.containerBgColor || '#000';
+        initStage(this.canvas);
 
-        this.setSize();
-        this.setContainerBgColor();
+        this.offCanvas = document.createElement('canvas');
+        this.offCtx = this.offCanvas.getContext('2d');
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
+        this.container = this.canvas.parentNode;
+
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+
+        this.bgColor = opts.bgColor || '#000';
+
+        // this.setSize();
+        this.setBgColor();
 
         // 当前场景中的所有可显示对象集合
         this.displayObjectList = [];
+
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
     }
@@ -68,6 +177,66 @@ define(function (require) {
          */
         constructor: Stage,
 
+        // /**
+        //  * 设置 canvas 以及 canvas.container 的宽高
+        //  *
+        //  * @param {number} width 宽度
+        //  * @param {number} height 高度
+        //  */
+        // setSize: function (width, height) {
+        //     var me = this;
+
+        //     // width = width || defaultCanvasWidth;
+        //     // height = height || defaultCanvasHeight;
+
+        //     // resetStage(me.canvas, width, height);
+
+        //     // me.width = me.canvas.width;
+        //     // me.height = me.canvas.height;
+
+        //     // me.offCanvas.width = me.canvas.width;
+        //     // me.offCanvas.style.width = me.canvas.style.width;
+        //     // me.offCanvas.height = me.canvas.height;
+        //     // me.offCanvas.style.height = me.canvas.style.height;
+
+        //     initStage(this.canvas);
+
+        //     this.offCanvas.width = this.canvas.width;
+        //     this.offCanvas.style.width = this.canvas.style.width;
+        //     this.offCanvas.height = this.canvas.height;
+        //     this.offCanvas.style.height = this.canvas.style.height;
+        //     this.container = this.canvas.parentNode;
+
+        //     this.width = this.canvas.width;
+        //     // this.canvas.width = this.width;
+        //     // this.offCanvas.width = this.width;
+
+        //     this.height = this.canvas.height;
+
+        // },
+
+        /**
+         * 设置 canvas 以及 canvas.container 的宽高
+         *
+         * @param {number} width 宽度
+         * @param {number} height 高度
+         */
+        // setSize: function (width, height) {
+        //     var me = this;
+        //     me.width = width || me.width;
+        //     me.height = height || me.height;
+
+        //     // me.container.style.width = me.width + 'px';
+        //     // me.container.style.height = me.height + 'px';
+
+        //     me.canvas.width = me.width;
+        //     me.canvas.height = me.height;
+
+        //     // me.offCanvas.width = me.width;
+        //     // me.offCanvas.height = me.height;
+
+        // },
+
         /**
          * 清除
          */
@@ -77,58 +246,36 @@ define(function (require) {
         },
 
         /**
-         * 设置 canvas 以及 canvas.container 的宽高
-         *
-         * @param {number} width 宽度
-         * @param {number} height 高度
-         */
-        setSize: function (width, height) {
-            var me = this;
-            me.width = width || me.width;
-            me.height = height || me.height;
-
-            // me.container.style.width = me.width + 'px';
-            // me.container.style.height = me.height + 'px';
-
-            me.canvas.width = me.width;
-            me.canvas.height = me.height;
-
-            me.offCanvas.width = me.width;
-            me.offCanvas.height = me.height;
-
-        },
-
-        /**
-         * 设置 canvas.container 的背景颜色
+         * 设置 canvas 的背景颜色
          *
          * @param {string} color 颜色值 #f00, rgba(255, 0, 0, 1), red
          */
-        setContainerBgColor: function (color) {
+        setBgColor: function (color) {
             // debugger
             var me = this;
-            me.containerBgColor = color || me.containerBgColor;
-            me.container.style.backgroundColor = me.containerBgColor;
+            me.bgColor = color || me.bgColor;
+            me.canvas.style.backgroundColor = me.bgColor;
         },
 
         /**
-         * 设置 canvas.container 的背景图
+         * 设置 canvas 的背景图
          * 设置背景， repeatPattern: center 居中；full 拉伸；默认平铺
          *
          * @param {string} imgUrl 图片 url
          * @param {string} repeatPattern center: 居中; full: 拉伸; 默认平铺
          */
-        setContainerBgImg: function (imgUrl, repeatPattern) {
+        setBgImg: function (imgUrl, repeatPattern) {
             var me = this;
-            me.container.style.backgroundImage = 'url(' + imgUrl + ')';
+            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
             switch (repeatPattern) {
                 // 居中
                 case 'center':
-                    me.container.style.backgroundRepeat = 'no-repeat';
-                    me.container.style.backgroundPosition = 'center';
+                    me.canvas.style.backgroundRepeat = 'no-repeat';
+                    me.canvas.style.backgroundPosition = 'center';
                     break;
                 // 拉伸
                 case 'full':
-                    me.container.style.backgroundSize = me.width + 'px ' + me.height + 'px';
+                    me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                     break;
             }
         },
