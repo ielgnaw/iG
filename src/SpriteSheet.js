@@ -12,7 +12,13 @@ define(function (require) {
 
     var guid = 0;
 
-    // var ANIMATION_DELAY = 0;
+    /**
+     * 动画延时计数器
+     * window.requestAnimationFrame 无法设置间隔，用这个变量来做延迟
+     *
+     * @type {number}
+     */
+    var ANIMATION_DELAY = 0;
 
     /**
      * 精灵表基类
@@ -100,14 +106,8 @@ define(function (require) {
          */
         this._offsetHeight = 0;
 
-        /**
-         * 动画延时计数器
-         * window.requestAnimationFrame 速度太快，用这个变量来做延迟
-         * @private
-         *
-         * @type {number}
-         */
-        this._ANIMATION_DELAY = 0;
+        // 重置一下，让每个实例的 ANIMATION_DELAY 是自己的
+        ANIMATION_DELAY = 0;
     }
 
     SpriteSheet.prototype = {
@@ -131,7 +131,7 @@ define(function (require) {
             // }
             // me._ANIMATION_DELAY++;
 
-            if (me._ANIMATION_DELAY % 7 === 0) {
+            if (ANIMATION_DELAY % 7 === 0) {
 
                 me._offsetX = 0;
                 me._offsetY = 0;
@@ -160,7 +160,7 @@ define(function (require) {
                     me.frameIndex = 0;
                 }
             }
-            me._ANIMATION_DELAY++;
+            ANIMATION_DELAY++;
         },
 
         /**

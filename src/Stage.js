@@ -35,9 +35,6 @@ define(function (require) {
         this.ctx = this.canvas.getContext('2d');
         this.offCanvas = document.createElement('canvas');
         this.offCtx = this.offCanvas.getContext('2d');
-        // this.backBuffer.width = this.canvas.width;
-        // this.backBuffer.height = this.canvas.height;
-        // this.backBufferContext2D = this.backBuffer.getContext('2d');
 
         this.container = this.canvas.parentNode;
 
@@ -90,8 +87,9 @@ define(function (require) {
             me.width = width || me.width;
             me.height = height || me.height;
 
-            me.container.style.width = me.width + 'px';
-            me.container.style.height = me.height + 'px';
+            // me.container.style.width = me.width + 'px';
+            // me.container.style.height = me.height + 'px';
+
             me.canvas.width = me.width;
             me.canvas.height = me.height;
 

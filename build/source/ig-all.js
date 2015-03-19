@@ -918,8 +918,6 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.width = width || me.width;
             me.height = height || me.height;
-            me.container.style.width = me.width + 'px';
-            me.container.style.height = me.height + 'px';
             me.canvas.width = me.width;
             me.canvas.height = me.height;
             me.offCanvas.width = me.width;
@@ -1178,28 +1176,29 @@ define('ig/ig', ['require'], function (require) {
         this.frameStartY = opts.frameStartY || 0;
         this.frameStartYBackup = this.frameStartY;
         this.offsets = opts.offsets;
+        this._offsetX = 0;
+        this._offsetY = 0;
+        this._offsetWidth = 0;
+        this._offsetHeight = 0;
+        ANIMATION_DELAY = 0;
     }
-    var offsetX = 0;
-    var offsetY = 0;
-    var offsetWidth = 0;
-    var offsetHeight = 0;
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
         update: function () {
             var me = this;
             if (ANIMATION_DELAY % 7 === 0) {
-                offsetX = 0;
-                offsetY = 0;
-                offsetWidth = 0;
-                offsetHeight = 0;
+                me._offsetX = 0;
+                me._offsetY = 0;
+                me._offsetWidth = 0;
+                me._offsetHeight = 0;
                 if (me.offsets && me.offsets[me.frameIndex]) {
-                    offsetX = me.offsets[me.frameIndex].x || 0;
-                    offsetY = me.offsets[me.frameIndex].y || 0;
-                    offsetWidth = me.offsets[me.frameIndex].width || 0;
-                    offsetHeight = me.offsets[me.frameIndex].height || 0;
+                    me._offsetX = me.offsets[me.frameIndex].x || 0;
+                    me._offsetY = me.offsets[me.frameIndex].y || 0;
+                    me._offsetWidth = me.offsets[me.frameIndex].width || 0;
+                    me._offsetHeight = me.offsets[me.frameIndex].height || 0;
                 }
-                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + offsetX;
-                me.relativeY = me.frameStartY * me.frameHeight + offsetY;
+                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + me._offsetX;
+                me.relativeY = me.frameStartY * me.frameHeight + me._offsetY;
                 me.frameIndex++;
                 if (me.frameIndex >= me.total) {
                     me.frameIndex = 0;
@@ -1221,7 +1220,7 @@ define('ig/ig', ['require'], function (require) {
             offCtx.translate(me.x, me.y);
             offCtx.rotate(util.deg2Rad(me.angle));
             offCtx.scale(me.scaleX, me.scaleY);
-            offCtx.drawImage(me.image, me.relativeX, me.relativeY, me.frameWidth + offsetWidth, me.frameHeight + offsetHeight, -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + offsetWidth, me.frameHeight + offsetHeight);
+            offCtx.drawImage(me.image, me.relativeX, me.relativeY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight, -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight);
             offCtx.restore();
         }
     };
