@@ -135,7 +135,7 @@ define(function (require) {
 
         this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
 
-        this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
+        this.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container');
         this.ctx = this.canvas.getContext('2d');
 
         if (opts.width) {

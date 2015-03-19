@@ -248,7 +248,7 @@ define(function (require) {
      *
      * @return {HTML.Element} 原节点
      */
-    exports.domWrap = function (curNode, newNode) {
+    exports.domWrap = function (curNode, newNode, newNodeId) {
         var _el = curNode.cloneNode(true);
 
         // newNode = '<div style="color:blue"></div>';
@@ -257,12 +257,12 @@ define(function (require) {
             tmp.innerHTML = newNode;
             tmp = tmp.children[0];
             tmp.appendChild(_el);
-            tmp.id = 'ig-stage-container';
+            tmp.id = newNodeId;
             curNode.parentNode.replaceChild(tmp, curNode);
         }
         // newNode = document.createElement('div');
         else {
-            newNode.id = 'ig-stage-container';
+            newNode.id = newNodeId;
             newNode.appendChild(_el);
             curNode.parentNode.replaceChild(newNode, curNode);
         }

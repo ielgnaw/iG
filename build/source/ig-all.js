@@ -258,17 +258,17 @@ define('ig/ig', ['require'], function (require) {
     exports.randomFloat = function (min, max) {
         return Math.random() * (max - min) + min;
     };
-    exports.domWrap = function (curNode, newNode) {
+    exports.domWrap = function (curNode, newNode, newNodeId) {
         var _el = curNode.cloneNode(true);
         if (typeof newNode === 'string') {
             var tmp = document.createElement('div');
             tmp.innerHTML = newNode;
             tmp = tmp.children[0];
             tmp.appendChild(_el);
-            tmp.id = 'ig-stage-container';
+            tmp.id = newNodeId;
             curNode.parentNode.replaceChild(tmp, curNode);
         } else {
-            newNode.id = 'ig-stage-container';
+            newNode.id = newNodeId;
             newNode.appendChild(_el);
             curNode.parentNode.replaceChild(newNode, curNode);
         }
@@ -965,7 +965,7 @@ define('ig/ig', ['require'], function (require) {
             throw new Error('Stage must be require a canvas param');
         }
         this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
-        this.canvas = util.domWrap(opts.canvas, document.createElement('div'));
+        this.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container');
         this.ctx = this.canvas.getContext('2d');
         if (opts.width) {
             defaultCanvasWidth = opts.width;
