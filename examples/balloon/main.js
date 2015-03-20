@@ -32,6 +32,10 @@
             {
                 id: 'playBut',
                 src: './img/playBut.png'
+            },
+            {
+                id: 'panel',
+                src: './img/panel.png'
             }
         ]
     });
@@ -52,7 +56,7 @@
         maskerNode.style.display = 'none';
 
         game = new ig.Game();
-
+        // debugger
         stage = game.createStage({
             bgColor: '#fff',
             canvas: canvas
@@ -63,175 +67,81 @@
 
         // 初始化开始屏幕的元素
         initStartScreen();
-
-        // test
-        // var ballCount = 155;
-        // for (var i = 0; i < ballCount; i++) {
-        //     var obj = new ig.Shape.Ball({
-        //         name: i,
-        //         radius: 10
-        //     });
-        //     obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
-        //     obj.vX = ig.util.randomInt(5, 10);
-        //     obj.vY = ig.util.randomInt(5, 10);
-        //     obj.color = ''
-        //         + 'rgba('
-        //         + ig.util.randomInt(0, 255)
-        //         + ','
-        //         + ig.util.randomInt(0, 255)
-        //         + ','
-        //         + ig.util.randomInt(0, 255)
-        //         + ', '
-        //         + ig.util.randomFloat(1, 1)
-        //         + ')';
-        //     stage.addDisplayObject(obj);
-
-        //     // obj.on('DisplayObject:render', function (data) {
-        //     //     console.log('DisplayObject:render', data);
-        //     // });
-        // }
-
         game.start();
-
-        // var g = new ig.Game();
-        // g.on('Game:afterRender', function (data) {
-        //     // console.log('当前帧数：' + data.data.curFrame);
-        // });
-
-        // // ctx.fillStyle = '#fff';
-        // // ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 50, 200, 100);
-        // // debugger
-        // // ctx.fillStyle = '#fff';
-        // // ctx.fillRect(canvas.width / 2 - 100, canvas.height / 2 - 50, 200, 100);
-        // stage = g.createStage({
-        //     // width: 500,
-        //     // height: 300,
-        //     // bgColor: 'green',
-        //     canvas: canvas
-        // });
-
-        // for (var i = 0; i < 1; i++) {
-        //     var obj = new ig.SpriteSheet({
-        //         image: li.imageList[0],
-        //         // x: ig.util.randomInt(30, canvas.width - 50),
-        //         x: canvas.width - 50,
-        //         // y: ig.util.randomInt(40, canvas.height - 50),
-        //         y: canvas.height - 100,
-        //         frameStartX: 0,
-        //         // frameStartY: ig.util.randomInt(1, 10),
-        //         frameStartY: 0,
-        //         total: 16 + 16 + 9,
-        //         frameWidth: 64,
-        //         frameHeight: 86,
-        //         zIndex: i
-        //     });
-        //     stage.addDisplayObject(obj);
-
-        //     var obj1 = new ig.SpriteSheet({
-        //         image: li.imageList[1],
-        //         // x: ig.util.randomInt(30, canvas.width - 50),
-        //         x: canvas.width - 150,
-        //         // y: ig.util.randomInt(40, canvas.height - 50),
-        //         y: canvas.height - 200,
-        //         frameStartX: 0,
-        //         frameStartY: 0,
-        //         total: 7,
-        //         frameWidth: 180,
-        //         frameHeight: 100,
-        //         zIndex: i+1,
-        //         offsets: {
-        //             0: {
-        //                 x: 0,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             },
-        //             1: {
-        //                 x: 20,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             }
-        //             ,2: {
-        //                 x: 25,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             },
-        //             3: {
-        //                 x: 30,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             },
-        //             4: {
-        //                 x: 40,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             },
-        //             5: {
-        //                 x: 50,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             },
-        //             6: {
-        //                 x: 60,
-        //                 y: 0,
-        //                 width: 0,
-        //                 height: 0
-        //             }
-        //         }
-        //     });
-        //     stage.addDisplayObject(obj1);
-        // }
-
-        // setTimeout(function () {
-        //     // stage.setBgImg('./img/sprite-sheet1.png', 'full');
-        //     // console.warn(111);
-        //     // stage.setSize(100, 300);
-        // }, 3000);
-
-        // canvas.addEventListener('click', function() {
-        //     console.warn(1);
-        // }, false);
-
-        // g.start();
     }
+
+    var spring = 0.03;
+    var friction = 0.9;
 
     /**
      * 初始化开始屏幕的元素
      */
     function initStartScreen() {
-        var obj = new ig.SpriteSheet({
+        var playBut = new ig.SpriteSheet({
             image: imageLoader.images.playBut,
-            x: canvas.width / 2, // 绘制的形状的左上角的横坐标
-            y: canvas.height / 2 + 100, // 绘制的形状的左上角的纵坐标
+            // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
+            x: canvas.width,// - 10,
+            y: canvas.height / 2 + 140, // 绘制的形状的左上角的纵坐标
             total: 1,
             frameWidth: 114,
             frameHeight: 115,
             zIndex: 1
         });
 
-        var originalY = obj.y;
-        var range = 5;
+        var originalY = playBut.y;
+        var rangeX = 5;
+
+        var targetX = canvas.width / 2;
 
         // 重写父类的 update
-        obj.update = function () {
+        playBut.update = function () {
             var me = this;
+            var dx = targetX - me.x;
+            var ax = dx * spring;
+            me.setAccelerationX(ax);
+            me.setFrictionX(friction);
 
-            if (originalY - me.y > range) {
+            if (originalY - me.y > rangeX) {
                 me.setAcceleration(0, 0.05);
             }
             else {
                 me.setAcceleration(0, -0.05);
             }
+            // 调用父类 DisplayObject 的 moveStep
+            me.moveStep();
+        };
+
+        stage.addDisplayObject(playBut);
+
+        var targetY = 140;
+        var panel = new ig.SpriteSheet({
+            image: imageLoader.images.panel,
+            // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
+            x: canvas.width / 2,
+            y: -100, // 绘制的形状的左上角的纵坐标
+            total: 1,
+            frameWidth: 380,
+            frameHeight: 400,
+            relativeY: 1600,
+            zIndex: 1
+        });
+
+        var rangeY = 5;
+        var originalPanelY = panel.y;
+
+        // 重写父类的 update
+        panel.update = function () {
+            var me = this;
+            var dy = targetY - me.y;
+            var ay = dy * spring;
+            me.setAccelerationY(ay);
+            me.setFrictionY(friction);
 
             // 调用父类 DisplayObject 的 moveStep
             me.moveStep();
-        }
-        stage.addDisplayObject(obj);
+        };
+
+        stage.addDisplayObject(panel);
     }
 
     /**

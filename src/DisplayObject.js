@@ -36,6 +36,8 @@ define(function (require) {
      * @param {number} opts.vY 纵轴速度，默认 0
      * @param {number} opts.aX 横轴加速度，默认 0
      * @param {number} opts.aY 纵轴加速度，默认 0
+     * @param {number} opts.frictionX 横轴摩擦力，默认 1
+     * @param {number} opts.frictionY 纵轴摩擦力，默认 1
      * @param {boolean} opts.reverseVX 横轴速度相反，为 true 即代表横轴的速度相反，vX = -vX，默认 false
      * @param {boolean} opts.reverseVY 纵轴速度相反，为 true 即代表纵轴的速度相反，vY = -vY，默认 false
      * @param {number} opts.status 当前显示兑现的状态，默认为 1
@@ -108,6 +110,12 @@ define(function (require) {
         // 纵轴加速度，vY += aY
         me.aY = opts.aY || 0;
 
+        // 横轴摩擦力
+        me.frictionX = opts.frictionX || 1;
+
+        // 纵轴摩擦力
+        me.frictionY = opts.frictionY || 1;
+
         // 横轴相反，为 true 即代表横轴的速度相反，vX = -vX
         me.reverseVX = false;
 
@@ -165,6 +173,26 @@ define(function (require) {
         },
 
         /**
+         * 设置横轴加速度
+         *
+         * @param {number} ax 横向加速度大小
+         */
+        setAccelerationX: function (ax) {
+            var me = this;
+            me.aX = ax || me.aX;
+        },
+
+        /**
+         * 设置纵轴加速度
+         *
+         * @param {number} ay 纵向加速度大小
+         */
+        setAccelerationY: function (ay) {
+            var me = this;
+            me.aY = ay || me.aY;
+        },
+
+        /**
          * 改变加速度，和设置加速度的区别是
          * 设置加速度是直接设置上去，而改变是基于原加速度的基础上来变化
          *
@@ -207,10 +235,32 @@ define(function (require) {
         moveStep: function () {
             var me = this;
             me.vX += me.aX;
-            me.vY += me.aY;
-
+            me.vX *= me.frictionX;
             me.x += me.vX;
+
+            me.vY += me.aY;
+            me.vY *= me.frictionY;
             me.y += me.vY;
+        },
+
+        /**
+         * 设置横轴摩擦力
+         *
+         * @param {number} frictionX 横轴摩擦力
+         */
+        setFrictionX: function (frictionX) {
+            var me = this;
+            me.frictionX = frictionX;
+        },
+
+        /**
+         * 设置纵轴摩擦力
+         *
+         * @param {number} frictionY 横轴摩擦力
+         */
+        setFrictionY: function (frictionY) {
+            var me = this;
+            me.frictionY = frictionY;
         },
 
         /**

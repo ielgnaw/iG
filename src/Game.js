@@ -15,6 +15,11 @@ define(function (require) {
 
     var FrameMonitor = require('./FrameMonitor');
 
+    var now;
+    var then = Date.now();
+    var interval;
+    var delta;
+
     /**
      * Game 类
      * 一个游戏实例应该对应一个 FrameMonitor 的实例
@@ -52,6 +57,7 @@ define(function (require) {
             var me = this;
 
             me.curGameFrameMonitor.update(); // 更新帧状态
+            // console.warn(me.curGameFrameMonitor.cur);
             if (!me.paused) {
                 me.requestID = window.requestAnimationFrame(function () {
                     me.render.call(me);
@@ -69,8 +75,22 @@ define(function (require) {
             var curStage = me.getCurrentStage();
 
             if (curStage) {
-                curStage.update();
-                curStage.render();
+                now = Date.now();
+                delta = now - then;
+                if (me.curGameFrameMonitor.cur === 0) {
+                    curStage.update();
+                    curStage.render();
+                }
+                else {
+                    interval = 1000 / me.curGameFrameMonitor.cur;
+
+                    if (delta > interval) {
+                        then = now - (delta % interval);
+                        // console.log(then);
+                        curStage.update();
+                        curStage.render();
+                    }
+                }
             }
 
             me.fire('Game:afterRender', {

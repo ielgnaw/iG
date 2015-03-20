@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <title>ScreenAdapter</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                /*background: #ddd;*/
+            }
+
+            .container {
+                /*position: relative;*/
+                /*width: 600px;*/
+                /*height: 400px;*/
+                /*margin: 10px auto;*/
+                /*background: red;*/
+                /*border: thin inset rgba(100,150,230,0.5);*/
+                /*top: 10px;*/
+            }
+
+            canvas {
+                /*border: 2px solid #ddd;*/
+                /*border: thin inset rgba(100,150,230,0.5);*/
+            }
+
+            .control-container {
+                position: absolute;
+                top: 100px;
+                left: 50px;
+            }
+
+            .control-container .show-frame {
+                margin-bottom: 15px;
+            }
+
+            .masker {
+                position: absolute;
+                z-index: 1000;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: #333;
+                color: #fff;
+                text-shadow: 1px 1px 0px #000;
+                font-size: 2em;
+                text-align: center;
+                /*display: none;*/
+            }
+
+            .masker p {
+                position: absolute;
+                top: 50%;
+                left: 0;
+                width: 100%;
+                margin-top: -2em;
+                padding: 0;
+            }
+
+        </style>
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <canvas id='canvas'></canvas>
+        <script>
+            var canvas = document.querySelector('#canvas');
+            var ctx = canvas.getContext('2d');
+
+            var g = new ig.Game();
+
+            g.on('Game:afterRender', function (data) {
+                // console.log('当前帧数：' + data.data.curFrame);
+            });
+
+            var stage = g.createStage({
+                canvas: canvas
+            });
+
+            var targetX = canvas.width / 2;
+            var spring = 0.03;
+            var friction = 0.9;
+            var vx;
+
+            var ballCount = 1;
+            for (var i = 0; i < ballCount; i++) {
+                var obj = new ig.Shape.Ball({
+                    name: i,
+                    radius: 10,
+                    x: canvas.width - 10,
+                    y: canvas.height / 2
+                });
+                // obj.move(ig.util.randomInt(20, 400), ig.util.randomInt(20, 300));
+                obj.vX = 5;
+                obj.vY = 0;
+                // obj.color = 'red';
+                obj.color = ''
+                    + 'rgba('
+                    + ig.util.randomInt(0, 255)
+                    + ','
+                    + ig.util.randomInt(0, 255)
+                    + ','
+                    + ig.util.randomInt(0, 255)
+                    + ', '
+                    + ig.util.randomFloat(1, 1)
+                    + ')';
+                stage.addDisplayObject(obj);
+
+                obj.update = function () {
+                    var me = this;
+                    var dx = targetX - me.x;
+                    var ax = dx * spring;
+                    me.setAcceleration(ax);
+
+                    me.vX += me.aX;
+                    me.vX *= friction;
+                    me.x += me.vX;
+
+                }
+
+                // obj.update = function () {
+                //     var me = this;
+                //     var dx = targetX - me.x;
+                //     var ax = dx * spring;
+                //     me.vX += ax;
+                //     vx *= friction;
+                //     me.x += vx;
+                //     me.moveStep();
+                // };
+            }
+
+            //     var canvas = document.getElementById('canvas'),
+            //       context = canvas.getContext('2d'),
+            //       ball = new Ball(),
+            //       spring = 0.03,
+            //       friction = 0.95,
+            //       targetX = canvas.width / 2,
+            //       vx = 0;
+
+            //   ball.y = canvas.height / 2;
+
+            //   (function drawFrame () {
+            //     window.requestAnimationFrame(drawFrame, canvas);
+            //     context.clearRect(0, 0, canvas.width, canvas.height);
+
+            //     var dx = targetX - ball.x,
+            //         ax = dx * spring;
+
+            //     vx += ax;
+            //     vx *= friction;
+            //     ball.x += vx;
+            //     ball.draw(context);
+            // }
+
+            g.start();
+        </script>
+    </body>
+</html>

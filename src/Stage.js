@@ -125,6 +125,20 @@ define(function (require) {
             },
             false
         );
+
+        startupDomEvent(canvas);
+    }
+
+    function onTouchEvent(e) {
+        console.warn(e.type, e);
+    }
+
+    function startupDomEvent(canvas) {
+        canvas.addEventListener('touchstart', onTouchEvent, false);
+        canvas.addEventListener('touchend', onTouchEvent, false);
+        canvas.addEventListener('touchcancel', onTouchEvent, false);
+        canvas.addEventListener('touchleave', onTouchEvent, false);
+        canvas.addEventListener('touchmove', onTouchEvent, false);
     }
 
     /**
@@ -181,6 +195,8 @@ define(function (require) {
 
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
+
+
     }
 
     Stage.prototype = {

@@ -178,11 +178,20 @@ define(function (require) {
             // offCtx.fillRect(-me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight);
 
             offCtx.drawImage(
-                // me.image, me.relativeX + me._offsetX, me.relativeY + me._offsetY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
-                // me.image, me.relativeX, me.relativeY, me.frameWidth, me.frameHeight,
-                me.image, me.relativeX, me.relativeY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
+                // me.image,
+                // me.relativeX + me._offsetX, me.relativeY + me._offsetY,
+                // me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
+
+                // me.image,
+                // me.relativeX, me.relativeY,
+                // me.frameWidth, me.frameHeight,
+
+                me.image,
+                me.relativeX, me.relativeY,
+                me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
                 // -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight
-                -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight
+                -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth,
+                me.frameHeight + me._offsetHeight
             );
             offCtx.restore();
         }

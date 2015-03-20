@@ -685,6 +685,10 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var Stage = require('./Stage');
     var FrameMonitor = require('./FrameMonitor');
+    var now;
+    var then = Date.now();
+    var interval;
+    var delta;
     function Game() {
         Event.apply(this, arguments);
         this.paused = false;
@@ -711,8 +715,19 @@ define('ig/ig', ['require'], function (require) {
             });
             var curStage = me.getCurrentStage();
             if (curStage) {
-                curStage.update();
-                curStage.render();
+                now = Date.now();
+                delta = now - then;
+                if (me.curGameFrameMonitor.cur === 0) {
+                    curStage.update();
+                    curStage.render();
+                } else {
+                    interval = 1000 / me.curGameFrameMonitor.cur;
+                    if (delta > interval) {
+                        then = now - delta % interval;
+                        curStage.update();
+                        curStage.render();
+                    }
+                }
             }
             me.fire('Game:afterRender', {
                 data: {
@@ -947,6 +962,17 @@ define('ig/ig', ['require'], function (require) {
                 fitScreen(canvas, canvasParent);
             }, 100);
         }, false);
+        startupDomEvent(canvas);
+    }
+    function onTouchEvent(e) {
+        console.warn(e.type, e);
+    }
+    function startupDomEvent(canvas) {
+        canvas.addEventListener('touchstart', onTouchEvent, false);
+        canvas.addEventListener('touchend', onTouchEvent, false);
+        canvas.addEventListener('touchcancel', onTouchEvent, false);
+        canvas.addEventListener('touchleave', onTouchEvent, false);
+        canvas.addEventListener('touchmove', onTouchEvent, false);
     }
     function Stage(opts) {
         Event.apply(this, arguments);
@@ -1123,6 +1149,8 @@ define('ig/ig', ['require'], function (require) {
         me.vY = opts.vY || 0;
         me.aX = opts.aX || 0;
         me.aY = opts.aY || 0;
+        me.frictionX = opts.frictionX || 1;
+        me.frictionY = opts.frictionY || 1;
         me.reverseVX = false;
         me.reverseVY = false;
         me.status = 1;
@@ -1142,6 +1170,14 @@ define('ig/ig', ['require'], function (require) {
             me.aX = ax || me.aX;
             me.aY = ay || me.aY;
         },
+        setAccelerationX: function (ax) {
+            var me = this;
+            me.aX = ax || me.aX;
+        },
+        setAccelerationY: function (ay) {
+            var me = this;
+            me.aY = ay || me.aY;
+        },
         resetAcceleration: function () {
             var me = this;
             me.aX = 0;
@@ -1155,9 +1191,19 @@ define('ig/ig', ['require'], function (require) {
         moveStep: function () {
             var me = this;
             me.vX += me.aX;
-            me.vY += me.aY;
+            me.vX *= me.frictionX;
             me.x += me.vX;
+            me.vY += me.aY;
+            me.vY *= me.frictionY;
             me.y += me.vY;
+        },
+        setFrictionX: function (frictionX) {
+            var me = this;
+            me.frictionX = frictionX;
+        },
+        setFrictionY: function (frictionY) {
+            var me = this;
+            me.frictionY = frictionY;
         },
         rotate: function (angle) {
             var me = this;

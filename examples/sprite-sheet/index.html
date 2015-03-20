@@ -2,9 +2,15 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
         <meta name="format-detection" content="telephone=no">
-        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi"/>
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi"/> -->
+        <!-- <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,width=device-width,minimal-ui"> -->
         <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
         <meta name="full-screen" content="true"/>
         <meta name="screen-orientation" content="portrait"/>
         <meta name="x5-fullscreen" content="true"/>
@@ -83,8 +89,8 @@
                         + '当前帧数：' + data.data.curFrame
                 });
                 var stage = g.createStage({
-                    width: 600,
-                    height: 400,
+                    // width: 600,
+                    // height: 400,
                     containerBgColor: '#fff',
                     canvas: canvas
                 });
@@ -92,8 +98,8 @@
                 for (var i = 0; i < 10; i++) {
                     var obj = new ig.SpriteSheet({
                         image: li.imageList[0],
-                        x: ig.util.randomInt(30, 520),
-                        y: ig.util.randomInt(40, 320),
+                        x: ig.util.randomInt(30, canvas.width),
+                        y: ig.util.randomInt(40, canvas.height),
                         frameStartX: 0,
                         // frameStartY: ig.util.randomInt(1, 10),
                         frameStartY: 0,
@@ -106,8 +112,8 @@
 
                     var obj1 = new ig.SpriteSheet({
                         image: li.imageList[1],
-                        x: ig.util.randomInt(30, 520),
-                        y: ig.util.randomInt(40, 320),
+                        x: ig.util.randomInt(30, canvas.width),
+                        y: ig.util.randomInt(40, canvas.height),
                         frameStartX: 0,
                         frameStartY: 0,
                         total: 7,
