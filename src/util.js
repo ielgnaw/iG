@@ -156,7 +156,7 @@ define(function (require) {
         }
 
         if (candidateIndex !== -1) {
-            list.splice(list, 1);
+            list.splice(candidateIndex, 1);
         }
     };
 

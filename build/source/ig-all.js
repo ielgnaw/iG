@@ -218,7 +218,7 @@ define('ig/ig', ['require'], function (require) {
             }
         }
         if (candidateIndex !== -1) {
-            list.splice(list, 1);
+            list.splice(candidateIndex, 1);
         }
     };
     exports.parseColor = function (color, toNumber) {
