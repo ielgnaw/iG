@@ -144,8 +144,7 @@
         stage.addDisplayObject(panel1);
 
         // test
-        setTimeout(function () {
-            // debugger
+        canvas.addEventListener('click', function (e) {
             stage.removeDisplayObject(panel1);
 
             var targetY = 140;
@@ -176,7 +175,7 @@
             };
 
             stage.addDisplayObject(panel2);
-        }, 1000);
+        });
     }
 
     /**
