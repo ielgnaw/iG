@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <div id="frame_count"></div>
+        <div id="real-fps"></div>
+        <script>
+            function G(fps) {
+                this.defaultFPS = fps || 30;
+                this.now = 0;
+                this.then = Date.now();
+                this.interval = 1000 / this.defaultFPS;
+                this.delta = 0; // 时间差即每帧的时间间隔
+
+                this.realFpsStart = Date.now();
+                this.realFps = 0;
+                this.realDelta = 0;
+
+                // for demo
+                this.counter = 0;
+                this.first = this.then;
+            }
+
+            G.prototype = {
+                constructor: G,
+                update: function (realFpsCb, renderCb) {
+                    var me = this;
+                    window.requestAnimationFrame(
+                        (function (context) {
+                            return function () {
+                                context.update(realFpsCb, renderCb);
+                            }
+                        })(me)
+                    );
+
+                    if (me.realDelta > 1000) {
+                        me.realFpsStart = Date.now();
+                        me.realDelta = 0;
+
+                        realFpsCb(me.realFps);
+
+                        me.realFps = 0;
+                    }
+                    else {
+                        me.realDelta = Date.now() - me.realFpsStart;
+                        ++me.realFps;
+                    }
+
+                    me.now = Date.now();
+                    me.delta = me.now - me.then; // 时间差即每帧的时间间隔。
+
+                    if (me.delta > me.interval) {
+                        // 仅仅 `then = now` 的判断是不够的，
+                        // 例如设置 fps = 10，意味着每帧必须是 100ms，而现在帧执行时间是 16ms (60 fps)
+                        // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `delta > interval === true`。
+                        // 这会导致降低了FPS， 112 * 10 = 1120ms (不是 1000ms)
+                        // 因此这里 `delta % interval`
+                        me.then = me.now - (me.delta % me.interval);
+                        renderCb(me);
+                    }
+                }
+            };
+
+            var g = new G(60);
+            g.update(
+                function (realFps) {
+                    document.querySelector('#real-fps').innerHTML = realFps;
+                },
+                function (obj) {
+                    var time_el = (obj.then - obj.first)/1000;
+                    document.querySelector('#frame_count').innerHTML = ++obj.counter + 'f / ' + parseInt(time_el) + 's = ' + parseInt(obj.counter/time_el) + 'fps';
+                }
+            );
+
+
+            // var fps = 30;
+            // var now;
+            // var then = Date.now();
+            // var interval = 1000/fps;
+            // var delta;
+
+            // // For this demo
+            // var counter = 0;
+            // var first = then;
+
+            // var second_since = Date.now();
+            // var second = 0;
+            // var second_fps = 0;
+
+            // function draw() {
+
+            //     requestAnimationFrame(draw);
+
+            //     // Calculating REAL FPS
+            //     if (second > 1000) {
+            //         second_since = Date.now();
+            //         second = 0;
+
+            //         document.querySelector('#real-fps').innerHTML = second_fps;
+
+            //         second_fps = 0;
+            //     }
+            //     else {
+            //         second = Date.now() - second_since;
+            //         ++second_fps;
+            //     }
+
+            //     now = Date.now();
+            //     delta = now - then; // 时间差即每帧的时间间隔。
+            //     // console.log(delta);
+
+            //     if (delta > interval) {
+            //         // 仅仅 `then = now` 的判断是不够的，
+            //         // 例如设置 fps = 10，意味着每帧必须是 100ms，而现在帧执行时间是 16ms (60 fps)
+            //         // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `delta > interval === true`。
+            //         // 这会导致降低了FPS， 112 * 10 = 1120ms (不是 1000ms)
+            //         // 因此这里 `delta % interval`
+            //         then = now - (delta % interval);
+
+            //         // ... Code for Drawing the Frame ...
+            //         var time_el = (then - first) / 1000;
+
+            //         document.querySelector('#frame_count').innerHTML = ++counter + 'f / ' + parseInt(time_el) + 's = ' + parseInt(counter/time_el) + 'fps';
+            //     }
+            // }
+            // draw();
+
+        </script>
+    </body>
+</html>
