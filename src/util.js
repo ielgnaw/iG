@@ -20,6 +20,32 @@ define(function (require) {
     exports.noop = function () {};
 
     /**
+     * 对象属性拷贝
+     *
+     * @param {Object} target 目标对象
+     * @param {...Object} source 源对象
+     * @return {Object}
+     */
+    exports.extend = function (target, source) {
+        for (var i = 1, len = arguments.length; i < len; i++) {
+            source = arguments[i];
+
+            if (!source) {
+                continue;
+            }
+
+            for (var key in source) {
+                if (source.hasOwnProperty(key)) {
+                    target[key] = source[key];
+                }
+            }
+
+        }
+
+        return target;
+    };
+
+    /**
      * 为类型构造器建立继承关系
      *
      * @param {Function} subClass 子类构造器
@@ -276,6 +302,20 @@ define(function (require) {
     };
 
     /**
+     * 获取对象类型
+     *
+     * @param {*} obj 待检测对象
+     *
+     * @return {string} 类型
+     */
+    exports.getType = function (obj) {
+        var objectName = objectProto.toString.call(obj);
+        var match = /\[object (\w+)\]/.exec(objectName);
+
+        return match[1].toLowerCase();
+    };
+
+    /**
      * 把页面上的鼠标坐标换成相对于 canvas 的坐标
      *
      * @param {HTML.Element} canvas canvas 元素
@@ -339,17 +379,125 @@ define(function (require) {
     };
 
     /**
-     * 获取对象类型
+     * 相对于元素获取鼠标的位置
      *
-     * @param {*} obj 待检测对象
+     * @param {HTML Element} element 相对的 DOM 元素
      *
-     * @return {string} 类型
+     * @return {Object} 位置信息 {x, y, event}
      */
-    exports.getType = function (obj) {
-        var objectName = objectProto.toString.call(obj);
-        var match = /\[object (\w+)\]/.exec(objectName);
+    exports.captureMouse = function (element) {
+        var ret = {
+            x: 0,
+            y: 0,
+            event: null
+        };
 
-        return match[1].toLowerCase();
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+
+        element.addEventListener(
+            'mousemove',
+            function (event) {
+                var x;
+                var y;
+
+                if (event.pageX || event.pageY) {
+                    x = event.pageX;
+                    y = event.pageY;
+                }
+                else {
+                    x = event.clientX + bodyScrollLeft + docElementScrollLeft;
+                    y = event.clientY + bodyScrollTop + docElementScrollTop;
+                }
+                x -= offsetLeft;
+                y -= offsetTop;
+
+                ret.x = x;
+                ret.y = y;
+                ret.event = event;
+                console.warn(ret);
+            },
+            false
+        );
+
+        return ret;
+    };
+
+    /**
+     * 相对于元素获取 touch 的位置
+     *
+     * @param {HTML Element} element 相对的 DOM 元素
+     *
+     * @return {Object} 位置信息 {x, y, event}
+     */
+    exports.captureTouch = function (element) {
+        var touch = {
+            x: null,
+            y: null,
+            isPressed: false,
+            event: null
+        };
+
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+
+        element.addEventListener(
+            'touchstart',
+            function (event) {
+                touch.isPressed = true;
+                touch.event = event;
+                console.warn(touch, 'touchstart');
+            },
+            false
+        );
+
+        element.addEventListener(
+            'touchend',
+            function (event) {
+                touch.isPressed = false;
+                touch.x = null;
+                touch.y = null;
+                touch.event = event;
+                console.warn(touch, 'touchend');
+            },
+            false
+        );
+
+        element.addEventListener(
+            'touchmove',
+            function (event) {
+                var x;
+                var y;
+                var touchEvent = event.touches[0];
+
+                if (touchEvent.pageX || touchEvent.pageY) {
+                    x = touchEvent.pageX;
+                    y = touchEvent.pageY;
+                }
+                else {
+                    x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
+                    y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
+                }
+                x -= offsetLeft;
+                y -= offsetTop;
+
+                touch.x = x;
+                touch.y = y;
+                touch.event = event;
+                console.log(exports.getMouseCoords(touch.event.target, touchEvent));
+            },
+            false
+        );
+
+        return touch;
     };
 
     return exports;

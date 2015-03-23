@@ -155,6 +155,20 @@ define('ig/ig', ['require'], function (require) {
     var exports = {};
     exports.noop = function () {
     };
+    exports.extend = function (target, source) {
+        for (var i = 1, len = arguments.length; i < len; i++) {
+            source = arguments[i];
+            if (!source) {
+                continue;
+            }
+            for (var key in source) {
+                if (source.hasOwnProperty(key)) {
+                    target[key] = source[key];
+                }
+            }
+        }
+        return target;
+    };
     exports.inherits = function (subClass, superClass) {
         var Empty = function () {
         };
@@ -264,6 +278,11 @@ define('ig/ig', ['require'], function (require) {
         newNode.id = newNodeId;
         return curNode;
     };
+    exports.getType = function (obj) {
+        var objectName = objectProto.toString.call(obj);
+        var match = /\[object (\w+)\]/.exec(objectName);
+        return match[1].toLowerCase();
+    };
     exports.windowToCanvas = function (canvas, x, y) {
         var boundRect = canvas.getBoundingClientRect();
         var width = canvas.width;
@@ -301,10 +320,81 @@ define('ig/ig', ['require'], function (require) {
         }
         return ret;
     };
-    exports.getType = function (obj) {
-        var objectName = objectProto.toString.call(obj);
-        var match = /\[object (\w+)\]/.exec(objectName);
-        return match[1].toLowerCase();
+    exports.captureMouse = function (element) {
+        var ret = {
+            x: 0,
+            y: 0,
+            event: null
+        };
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+        element.addEventListener('mousemove', function (event) {
+            var x;
+            var y;
+            if (event.pageX || event.pageY) {
+                x = event.pageX;
+                y = event.pageY;
+            } else {
+                x = event.clientX + bodyScrollLeft + docElementScrollLeft;
+                y = event.clientY + bodyScrollTop + docElementScrollTop;
+            }
+            x -= offsetLeft;
+            y -= offsetTop;
+            ret.x = x;
+            ret.y = y;
+            ret.event = event;
+            console.warn(ret);
+        }, false);
+        return ret;
+    };
+    exports.captureTouch = function (element) {
+        var touch = {
+            x: null,
+            y: null,
+            isPressed: false,
+            event: null
+        };
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+        element.addEventListener('touchstart', function (event) {
+            touch.isPressed = true;
+            touch.event = event;
+            console.warn(touch, 'touchstart');
+        }, false);
+        element.addEventListener('touchend', function (event) {
+            touch.isPressed = false;
+            touch.x = null;
+            touch.y = null;
+            touch.event = event;
+            console.warn(touch, 'touchend');
+        }, false);
+        element.addEventListener('touchmove', function (event) {
+            var x;
+            var y;
+            var touchEvent = event.touches[0];
+            if (touchEvent.pageX || touchEvent.pageY) {
+                x = touchEvent.pageX;
+                y = touchEvent.pageY;
+            } else {
+                x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
+                y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
+            }
+            x -= offsetLeft;
+            y -= offsetTop;
+            touch.x = x;
+            touch.y = y;
+            touch.event = event;
+            console.log(exports.getMouseCoords(touch.event.target, touchEvent));
+        }, false);
+        return touch;
     };
     return exports;
 });define('ig/Event', ['require'], function (require) {
@@ -962,7 +1052,6 @@ define('ig/ig', ['require'], function (require) {
                 fitScreen(canvas, canvasParent);
             }, 100);
         }, false);
-        startupDomEvent(canvas);
     }
     function onTouchEvent(e) {
         console.warn(e.type, e);
@@ -974,6 +1063,56 @@ define('ig/ig', ['require'], function (require) {
         canvas.addEventListener('touchleave', onTouchEvent, false);
         canvas.addEventListener('touchmove', onTouchEvent, false);
     }
+    function captureTouch(element) {
+        var me = this;
+        var touch = {
+            x: null,
+            y: null,
+            isPressed: false,
+            event: null
+        };
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+        element.addEventListener('touchstart', function (event) {
+            touch.isPressed = true;
+            touch.event = event;
+            console.warn(touch, 'touchstart');
+        }, false);
+        element.addEventListener('touchend', function (event) {
+            touch.isPressed = false;
+            touch.x = null;
+            touch.y = null;
+            touch.event = event;
+            console.warn(touch, 'touchend');
+        }, false);
+        element.addEventListener('touchmove', function (event) {
+            var x;
+            var y;
+            var touchEvent = event.touches[0];
+            if (touchEvent.pageX || touchEvent.pageY) {
+                x = touchEvent.pageX;
+                y = touchEvent.pageY;
+            } else {
+                x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
+                y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
+            }
+            x -= offsetLeft;
+            y -= offsetTop;
+            touch.x = x;
+            touch.y = y;
+            touch.event = event;
+            var len = me.displayObjectList.length;
+            for (var i = 0; i < len; i++) {
+                me.displayObjectList[i].isMouseIn(util.getMouseCoords(touch.event.target, touchEvent));
+            }
+        }, false);
+        return touch;
+    }
+    ;
     function Stage(opts) {
         Event.apply(this, arguments);
         opts = opts || {};
@@ -1090,14 +1229,14 @@ define('ig/ig', ['require'], function (require) {
         },
         addDisplayObject: function (displayObj) {
             var me = this;
-            if (!me.getDisplayObjectByName(displayObj.name)) {
+            if (displayObj && !me.getDisplayObjectByName(displayObj.name)) {
                 displayObj.stageOwner = me;
                 me.displayObjectList.push(displayObj);
                 me.displayObjects[displayObj.name] = displayObj;
             }
         },
         removeDisplayObject: function (displayObj) {
-            this.removeDisplayObjectByName(displayObj.name);
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
         },
         removeDisplayObjectByName: function (name) {
             var me = this;
@@ -1226,13 +1365,13 @@ define('ig/ig', ['require'], function (require) {
             var maxY = me.y + me.width < other.y + other.width ? me.y + me.width : other.y + other.width;
             return minX <= maxX && minY <= maxY;
         },
-        isMouseIn: function () {
+        isMouseIn: function (pos) {
             var me = this;
-            var x = window.aaa.x;
-            var y = window.aaa.y;
+            var x = pos.x;
+            var y = pos.y;
             var stage = me.stageOwner;
-            var stageX = stage.x;
-            var stageY = stage.y;
+            var stageX = stage.x || 0;
+            var stageY = stage.y || 0;
             var hw = 0;
             var hh = 0;
             if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius) {

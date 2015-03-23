@@ -51,6 +51,8 @@
 
     var game;
     var stage;
+    var panel1;
+    var playBut;
 
     function loadComplete() {
         maskerNode.style.display = 'none';
@@ -70,14 +72,108 @@
         game.start();
     }
 
+    /**
+     * 弹力
+     *
+     * @type {number}
+     */
     var spring = 0.03;
+
+    /**
+     * 摩擦力
+     *
+     * @type {number}
+     */
     var friction = 0.9;
 
     /**
      * 初始化开始屏幕的元素
      */
     function initStartScreen() {
-        var playBut = new ig.SpriteSheet({
+        renderPlayBut();
+        renderPanel1();
+        // debugger
+        // ig.util.captureTouch(canvas);
+
+        // test
+        // canvas.addEventListener('click', function (e) {
+        //     stage.removeDisplayObject(panel1);
+
+        //     var targetY = 140;
+        //     var panel2 = new ig.SpriteSheet({
+        //         image: imageLoader.images.panel,
+        //         // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
+        //         x: canvas.width / 2,
+        //         y: canvas.height, // 绘制的形状的左上角的纵坐标
+        //         total: 1,
+        //         frameWidth: 380,
+        //         frameHeight: 400,
+        //         zIndex: 1
+        //     });
+
+        //     var rangeY = 5;
+        //     var originalPanelY = panel2.y;
+
+        //     // 重写父类的 update
+        //     panel2.update = function () {
+        //         var me = this;
+        //         var dy = targetY - me.y;
+        //         var ay = dy * spring;
+        //         me.setAccelerationY(ay);
+        //         me.setFrictionY(friction);
+
+        //         // 调用父类 DisplayObject 的 moveStep
+        //         me.moveStep();
+        //     };
+
+        //     stage.addDisplayObject(panel2);
+
+        //     renderPlayBut();
+        // });
+    }
+
+    /**
+     * 渲染 panel1
+     */
+    function renderPanel1() {
+        stage.removeDisplayObject(panel1);
+        panel1 = new ig.SpriteSheet({
+            image: imageLoader.images.panel,
+            // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
+            x: canvas.width / 2,
+            y: canvas.height, // 绘制的形状的左上角的纵坐标
+            total: 1,
+            frameWidth: 380,
+            frameHeight: 400,
+            relativeY: 1600,
+            zIndex: 1
+        });
+
+        var rangeY = 5;
+        var originalPanelY = panel1.y;
+        var targetY = 140;
+
+        // 重写父类的 update
+        panel1.update = function () {
+            var me = this;
+            var dy = targetY - me.y;
+            var ay = dy * spring;
+            me.setAccelerationY(ay);
+            me.setFrictionY(friction);
+
+            // 调用父类 DisplayObject 的 moveStep
+            me.moveStep();
+        };
+
+        stage.addDisplayObject(panel1);
+    }
+
+    /**
+     * 渲染 playBut
+     */
+    function renderPlayBut() {
+        stage.removeDisplayObject(playBut);
+        playBut = new ig.SpriteSheet({
             image: imageLoader.images.playBut,
             // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
             x: canvas.width,// - 10,
@@ -112,70 +208,6 @@
         };
 
         stage.addDisplayObject(playBut);
-
-        var targetY = 140;
-        var panel1 = new ig.SpriteSheet({
-            image: imageLoader.images.panel,
-            // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
-            x: canvas.width / 2,
-            y: canvas.height, // 绘制的形状的左上角的纵坐标
-            total: 1,
-            frameWidth: 380,
-            frameHeight: 400,
-            relativeY: 1600,
-            zIndex: 1
-        });
-
-        var rangeY = 5;
-        var originalPanelY = panel1.y;
-
-        // 重写父类的 update
-        panel1.update = function () {
-            var me = this;
-            var dy = targetY - me.y;
-            var ay = dy * spring;
-            me.setAccelerationY(ay);
-            me.setFrictionY(friction);
-
-            // 调用父类 DisplayObject 的 moveStep
-            me.moveStep();
-        };
-
-        stage.addDisplayObject(panel1);
-
-        // test
-        canvas.addEventListener('click', function (e) {
-            stage.removeDisplayObject(panel1);
-
-            var targetY = 140;
-            var panel2 = new ig.SpriteSheet({
-                image: imageLoader.images.panel,
-                // x: canvas.width / 2, // 绘制的形状的左上角的横坐标
-                x: canvas.width / 2,
-                y: canvas.height, // 绘制的形状的左上角的纵坐标
-                total: 1,
-                frameWidth: 380,
-                frameHeight: 400,
-                zIndex: 1
-            });
-
-            var rangeY = 5;
-            var originalPanelY = panel2.y;
-
-            // 重写父类的 update
-            panel2.update = function () {
-                var me = this;
-                var dy = targetY - me.y;
-                var ay = dy * spring;
-                me.setAccelerationY(ay);
-                me.setFrictionY(friction);
-
-                // 调用父类 DisplayObject 的 moveStep
-                me.moveStep();
-            };
-
-            stage.addDisplayObject(panel2);
-        });
     }
 
     /**

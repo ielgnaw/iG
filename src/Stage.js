@@ -126,7 +126,7 @@ define(function (require) {
             false
         );
 
-        startupDomEvent(canvas);
+        // startupDomEvent(canvas);
     }
 
     function onTouchEvent(e) {
@@ -140,6 +140,87 @@ define(function (require) {
         canvas.addEventListener('touchleave', onTouchEvent, false);
         canvas.addEventListener('touchmove', onTouchEvent, false);
     }
+
+    /**
+     * 相对于元素获取 touch 的位置
+     *
+     * @param {HTML Element} element 相对的 DOM 元素
+     *
+     * @return {Object} 位置信息 {x, y, event}
+     */
+    function captureTouch(element) {
+        var me = this;
+        var touch = {
+            x: null,
+            y: null,
+            isPressed: false,
+            event: null
+        };
+
+        var bodyScrollLeft = document.body.scrollLeft;
+        var docElementScrollLeft = document.documentElement.scrollLeft;
+        var bodyScrollTop = document.body.scrollTop;
+        var docElementScrollTop = document.documentElement.scrollTop;
+        var offsetLeft = element.offsetLeft;
+        var offsetTop = element.offsetTop;
+
+        element.addEventListener(
+            'touchstart',
+            function (event) {
+                touch.isPressed = true;
+                touch.event = event;
+                console.warn(touch, 'touchstart');
+            },
+            false
+        );
+
+        element.addEventListener(
+            'touchend',
+            function (event) {
+                touch.isPressed = false;
+                touch.x = null;
+                touch.y = null;
+                touch.event = event;
+                console.warn(touch, 'touchend');
+            },
+            false
+        );
+
+        element.addEventListener(
+            'touchmove',
+            function (event) {
+                var x;
+                var y;
+                var touchEvent = event.touches[0];
+
+                if (touchEvent.pageX || touchEvent.pageY) {
+                    x = touchEvent.pageX;
+                    y = touchEvent.pageY;
+                }
+                else {
+                    x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
+                    y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
+                }
+                x -= offsetLeft;
+                y -= offsetTop;
+
+                touch.x = x;
+                touch.y = y;
+                touch.event = event;
+
+                var len = me.displayObjectList.length;
+                // console.log(util.getMouseCoords(touch.event.target, touchEvent));
+                for (var i = 0; i < len; i++) {
+                    // if (me.displayObjectList[i] instanceof ig.Shape.Ball) {
+                        me.displayObjectList[i].isMouseIn(util.getMouseCoords(touch.event.target, touchEvent));
+                    // }
+                }
+            },
+            false
+        );
+
+        return touch;
+    };
 
     /**
      * 场景类构造函数
@@ -196,6 +277,8 @@ define(function (require) {
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
 
+        // console.warn(this.canvas);
+        // captureTouch.call(this, this.canvas);
 
     }
 
@@ -427,7 +510,7 @@ define(function (require) {
          */
         addDisplayObject: function (displayObj) {
             var me = this;
-            if (!me.getDisplayObjectByName(displayObj.name)) {
+            if (displayObj && !me.getDisplayObjectByName(displayObj.name)) {
                 displayObj.stageOwner = me;
                 me.displayObjectList.push(displayObj);
                 me.displayObjects[displayObj.name] = displayObj;
@@ -440,7 +523,7 @@ define(function (require) {
          * @param {Object} displayObj displayObject 对象
          */
         removeDisplayObject: function (displayObj) {
-            this.removeDisplayObjectByName(displayObj.name);
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
         },
 
         /**

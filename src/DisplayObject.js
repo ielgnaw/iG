@@ -331,16 +331,17 @@ define(function (require) {
             return minX <= maxX && minY <= maxY;
         },
 
-        //判断鼠标当前坐标是否在当前渲染对象区域中
-        isMouseIn: function () {
+        // 判断鼠标当前坐标是否在当前渲染对象区域中
+        isMouseIn: function (pos) {
             var me = this;
-            var x = window.aaa.x;
-            var y = window.aaa.y;
+            var x = pos.x;
+            var y = pos.y;
             var stage = me.stageOwner;
-            var stageX = stage.x;
-            var stageY = stage.y;
+            var stageX = stage.x || 0;
+            var stageY = stage.y || 0;
             var hw = 0;
             var hh = 0;
+            // debugger
             if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius
                     && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius
             ) {
