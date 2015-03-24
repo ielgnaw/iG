@@ -417,6 +417,7 @@ define('ig/ig', ['require'], function (require) {
                 handler[guidKey] = +new Date();
             }
             pool.push(handler);
+            return this;
         },
         un: function (type, handler) {
             if (!this._events) {
@@ -435,6 +436,7 @@ define('ig/ig', ['require'], function (require) {
                     }
                 }
             }
+            return this;
         },
         fire: function (type, event) {
             if (arguments.length === 1 && typeof type === 'object') {
@@ -767,87 +769,95 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './Event',
     './util',
-    './Stage',
-    './FrameMonitor'
+    './Stage'
 ], function (require) {
     'use strict';
     var Event = require('./Event');
     var util = require('./util');
     var Stage = require('./Stage');
-    var FrameMonitor = require('./FrameMonitor');
+    var guid = 0;
+    var defaultFPS = 60;
     var now;
-    var then = Date.now();
+    var startTime;
     var interval;
     var delta;
-    function Game() {
+    var realFpsStart;
+    var realFps;
+    var realDelta;
+    function Game(opts) {
+        opts = opts || {};
         Event.apply(this, arguments);
+        this.name = opts.name === null || opts.name === void 0 ? 'ig_game_' + guid++ : opts.name;
         this.paused = false;
-        this.curGameFrameMonitor = new FrameMonitor();
         this.stageStack = [];
         this.stages = {};
+        defaultFPS = opts.fps || 60;
     }
     Game.prototype = {
         constructor: Game,
-        render: function () {
+        start: function (startCallback) {
             var me = this;
-            me.curGameFrameMonitor.update();
-            if (!me.paused) {
-                me.requestID = window.requestAnimationFrame(function () {
-                    me.render.call(me);
-                });
-            }
-            me.fire('Game:beforeRender', {
+            me.paused = false;
+            startTime = Date.now();
+            now = 0;
+            interval = 1000 / defaultFPS;
+            delta = 0;
+            realFpsStart = Date.now();
+            realFps = 0;
+            realDelta = 0;
+            me.requestID = window.requestAnimationFrame(function () {
+                me.render.call(me);
+            });
+            util.getType(startCallback) === 'function' && startCallback.call(me, {
                 data: {
-                    curFrame: me.curGameFrameMonitor.cur,
-                    maxFrame: me.curGameFrameMonitor.max,
-                    minFrame: me.curGameFrameMonitor.min
+                    startTime: startTime,
+                    interval: interval
                 }
             });
-            var curStage = me.getCurrentStage();
-            if (curStage) {
+            return me;
+        },
+        render: function () {
+            var me = this;
+            me.requestID = window.requestAnimationFrame(function (context) {
+                return function () {
+                    context.render.call(context);
+                };
+            }(me));
+            if (!me.paused) {
                 now = Date.now();
-                delta = now - then;
-                if (me.curGameFrameMonitor.cur === 0) {
-                    curStage.update();
-                    curStage.render();
-                } else {
-                    interval = 1000 / me.curGameFrameMonitor.cur;
-                    if (delta > interval) {
-                        then = now - delta % interval;
+                delta = now - startTime;
+                if (delta > interval) {
+                    startTime = now - delta % interval;
+                    me.fire('beforeGameRender', { data: { startTime: startTime } });
+                    var curStage = me.getCurrentStage();
+                    if (curStage) {
                         curStage.update();
                         curStage.render();
                     }
+                    me.fire('afterGameRender', { data: { startTime: startTime } });
+                }
+                if (realDelta > 1000) {
+                    realFpsStart = Date.now();
+                    realDelta = 0;
+                    me.fire('gameFPS', { data: { fps: realFps } });
+                    realFps = 0;
+                } else {
+                    realDelta = Date.now() - realFpsStart;
+                    ++realFps;
                 }
             }
-            me.fire('Game:afterRender', {
-                data: {
-                    curFrame: me.curGameFrameMonitor.cur,
-                    maxFrame: me.curGameFrameMonitor.max,
-                    minFrame: me.curGameFrameMonitor.min
-                }
-            });
-        },
-        start: function () {
-            var me = this;
-            me.paused = false;
-            me.curGameFrameMonitor.reset();
-            me.requestID = window.requestAnimationFrame(function () {
-                me.curGameFrameMonitor.start();
-                me.render.call(me);
-            });
         },
         pause: function () {
             this.paused = true;
+            return this;
         },
         resume: function () {
-            var me = this;
-            me.paused = false;
-            me.requestID = window.requestAnimationFrame(function () {
-                me.render.call(me);
-            });
+            this.paused = false;
+            return this;
         },
         stop: function () {
             window.cancelAnimationFrame(this.requestID);
+            return this;
         },
         getStageStack: function () {
             return this.stageStack;
@@ -936,6 +946,7 @@ define('ig/ig', ['require'], function (require) {
         this.expendPerFrame = 0;
         this.startTimePerSecond = 0;
         this.totalPerSecond = 0;
+        this.totalSeconds = 0;
     }
     FrameMonitor.prototype = {
         constructor: FrameMonitor,
@@ -950,21 +961,22 @@ define('ig/ig', ['require'], function (require) {
             me.totalPerSecond = 0;
         },
         start: function () {
-            this.curTime = this.startTimePerSecond = +new Date();
+            this.curTime = this.startTimePerSecond = Date.now();
         },
         update: function () {
-            var cTime = +new Date();
-            if (cTime - this.startTimePerSecond >= 1000) {
+            var now = Date.now();
+            if (now - this.startTimePerSecond >= 1000) {
                 this.cur = this.totalPerSecond;
                 this.max = this.cur > this.max ? this.cur : this.max;
                 this.min = this.cur < this.min ? this.cur : this.min;
                 this.totalPerSecond = 0;
-                this.startTimePerSecond = cTime;
+                this.startTimePerSecond = now;
+                this.totalSeconds++;
+                this.expendPerFrame = now - this.curTime;
+                this.curTime = now;
             } else {
                 ++this.totalPerSecond;
             }
-            this.expendPerFrame = cTime - this.curTime;
-            this.curTime = cTime;
         }
     };
     return FrameMonitor;

@@ -44,6 +44,8 @@ define(function (require) {
                 handler[guidKey] = +new Date();
             }
             pool.push(handler);
+
+            return this;
         },
 
         /**
@@ -76,6 +78,8 @@ define(function (require) {
                     }
                 }
             }
+
+            return this;
         },
 
         /**

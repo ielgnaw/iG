@@ -5,75 +5,60 @@
         <script type="text/javascript" src="../../build/source/ig-all.js"></script>
     </head>
     <body>
-        <div id="frame_count"></div>
+        <div id="frame-count"></div>
         <div id="real-fps"></div>
+        <br>
+        <br>
+        <br>
+        <br>
+        <div id="frame-count2"></div>
+        <div id="real-fps2"></div>
         <script>
-            function G(fps) {
-                this.defaultFPS = fps || 30;
-                this.now = 0;
-                this.then = Date.now();
-                this.interval = 1000 / this.defaultFPS;
-                this.delta = 0; // 时间差即每帧的时间间隔
+            var counter1;
+            var first1;
+            var g = new ig.Game();
+            g.start(function (data) {
+                counter1 = 0;
+                first1 = data.data.startTime;
+            }).on('gameFPS', function (data) {
+                document.querySelector('#real-fps').innerHTML = 'realFps: '+ data.data.fps;
+            }).on('afterGameRender', function (data) {
+                var timeEl = (data.data.startTime - first1) / 1000;
+                document.querySelector('#frame-count').innerHTML =
+                    ++counter1 + 'f / ' + parseInt(timeEl) + 's = ' + parseInt(counter1/timeEl) + 'fps';
+            });
 
-                this.realFpsStart = Date.now();
-                this.realFps = 0;
-                this.realDelta = 0;
+            console.warn(g);
+            console.warn(ig);
 
-                // for demo
-                this.counter = 0;
-                this.first = this.then;
-            }
+            // setTimeout(function () {
+            //     var counter2;
+            //     var first2;
+            //     var g2 = new ig.Game();
+            //     g2.start(function (data) {
+            //         console.warn(1);
+            //         counter2 = 0;
+            //         first2 = data.data.startTime;
+            //     }).on('gameFPS', function (data) {
+            //         document.querySelector('#real-fps2').innerHTML = 'realFps2: '+ data.data.fps;
+            //     }).on('afterGameRender', function (data) {
+            //         var timeEl2 = (data.data.startTime - first2) / 1000;
+            //         document.querySelector('#frame-count2').innerHTML =
+            //             ++counter2 + 'f / ' + parseInt(timeEl2) + 's = ' + parseInt(counter2/timeEl2) + 'fps';
+            //     });
+            // }, 1000);
 
-            G.prototype = {
-                constructor: G,
-                update: function (realFpsCb, renderCb) {
-                    var me = this;
-                    window.requestAnimationFrame(
-                        (function (context) {
-                            return function () {
-                                context.update(realFpsCb, renderCb);
-                            }
-                        })(me)
-                    );
+            // console.warn(g, g2);
 
-                    if (me.realDelta > 1000) {
-                        me.realFpsStart = Date.now();
-                        me.realDelta = 0;
-
-                        realFpsCb(me.realFps);
-
-                        me.realFps = 0;
-                    }
-                    else {
-                        me.realDelta = Date.now() - me.realFpsStart;
-                        ++me.realFps;
-                    }
-
-                    me.now = Date.now();
-                    me.delta = me.now - me.then; // 时间差即每帧的时间间隔。
-
-                    if (me.delta > me.interval) {
-                        // 仅仅 `then = now` 的判断是不够的，
-                        // 例如设置 fps = 10，意味着每帧必须是 100ms，而现在帧执行时间是 16ms (60 fps)
-                        // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `delta > interval === true`。
-                        // 这会导致降低了FPS， 112 * 10 = 1120ms (不是 1000ms)
-                        // 因此这里 `delta % interval`
-                        me.then = me.now - (me.delta % me.interval);
-                        renderCb(me);
-                    }
-                }
-            };
-
-            var g = new G(60);
-            g.update(
-                function (realFps) {
-                    document.querySelector('#real-fps').innerHTML = realFps;
-                },
-                function (obj) {
-                    var time_el = (obj.then - obj.first)/1000;
-                    document.querySelector('#frame_count').innerHTML = ++obj.counter + 'f / ' + parseInt(time_el) + 's = ' + parseInt(obj.counter/time_el) + 'fps';
-                }
-            );
+            // setTimeout(function () {
+            //     g.stop();
+            //     setTimeout(function () {
+            //         g.start(function (data) {
+            //             counter = 0;
+            //             first = data.data.startTime;
+            //         });
+            //     }, 2000);
+            // }, 3000)
 
 
             // var fps = 30;
@@ -123,7 +108,7 @@
             //         // ... Code for Drawing the Frame ...
             //         var time_el = (then - first) / 1000;
 
-            //         document.querySelector('#frame_count').innerHTML = ++counter + 'f / ' + parseInt(time_el) + 's = ' + parseInt(counter/time_el) + 'fps';
+            //         document.querySelector('#frame-count').innerHTML = ++counter + 'f / ' + parseInt(time_el) + 's = ' + parseInt(counter/time_el) + 'fps';
             //     }
             // }
             // draw();
