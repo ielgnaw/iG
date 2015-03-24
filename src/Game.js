@@ -13,17 +13,17 @@ define(function (require) {
     var util = require('./util');
     var Stage = require('./Stage');
 
-    var guid = 0;
+    var _guid = 0;
 
-    var defaultFPS = 60;
-    var now;
-    var startTime;
-    var interval;
-    var delta; // 时间差即每帧的时间间隔
+    var _defaultFPS = 60;
+    var _now;
+    var _startTime;
+    var _interval;
+    var _delta; // 时间差即每帧的时间间隔
 
-    var realFpsStart;
-    var realFps;
-    var realDelta;
+    var _realFpsStart;
+    var _realFps;
+    var _realDelta;
 
     /**
      * Game 类，一个游戏应该对这个游戏中的场景进行管理
@@ -35,7 +35,7 @@ define(function (require) {
 
         Event.apply(this, arguments);
 
-        this.name = (opts.name === null || opts.name === void 0) ? 'ig_game_' + (guid++) : opts.name;
+        this.name = (opts.name === null || opts.name === void 0) ? 'ig_game_' + (_guid++) : opts.name;
 
         // 暂停
         this.paused = false;
@@ -46,7 +46,7 @@ define(function (require) {
         // 当前游戏实例中的所有场景，对象，方便读取
         this.stages = {};
 
-        defaultFPS = opts.fps || 60;
+        _defaultFPS = opts.fps || 60;
     }
 
     Game.prototype = {
@@ -66,14 +66,14 @@ define(function (require) {
             var me = this;
             me.paused = false;
 
-            startTime = Date.now();
-            now = 0;
-            interval = 1000 / defaultFPS;
-            delta = 0;
+            _startTime = Date.now();
+            _now = 0;
+            _interval = 1000 / _defaultFPS;
+            _delta = 0;
 
-            realFpsStart = Date.now();
-            realFps = 0;
-            realDelta = 0;
+            _realFpsStart = Date.now();
+            _realFps = 0;
+            _realDelta = 0;
 
             me.requestID = window.requestAnimationFrame(function () {
                 me.render.call(me);
@@ -81,8 +81,8 @@ define(function (require) {
 
             util.getType(startCallback) === 'function' && startCallback.call(me, {
                 data: {
-                    startTime: startTime,
-                    interval: interval
+                    startTime: _startTime,
+                    interval: _interval
                 }
             });
 
@@ -106,20 +106,20 @@ define(function (require) {
 
             if (!me.paused) {
 
-                now = Date.now();
-                delta = now - startTime; // 时间差即每帧的时间间隔
+                _now = Date.now();
+                _delta = _now - _startTime; // 时间差即每帧的时间间隔
 
-                if (delta > interval) {
-                    // 仅仅 `startTime = now` 的判断是不够的，
+                if (_delta > _interval) {
+                    // 仅仅 `_startTime = _now` 的判断是不够的，
                     // 例如设置 fps = 10，意味着每帧必须是 100ms，而现在帧执行时间是 16ms (60 fps)
-                    // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `delta > interval === true`。
+                    // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `_delta > _interval === true`。
                     // 这会导致降低了FPS， 112 * 10 = 1120ms (不是 1000ms)
-                    // 因此这里 `delta % interval`
-                    startTime = now - (delta % interval);
+                    // 因此这里 `_delta % _interval`
+                    _startTime = _now - (_delta % _interval);
 
                     me.fire('beforeGameRender', {
                         data: {
-                            startTime: startTime
+                            startTime: _startTime
                         }
                     });
 
@@ -132,25 +132,25 @@ define(function (require) {
 
                     me.fire('afterGameRender', {
                         data: {
-                            startTime: startTime
+                            startTime: _startTime
                         }
                     });
                 }
 
-                if (realDelta > 1000) {
-                    realFpsStart = Date.now();
-                    realDelta = 0;
+                if (_realDelta > 1000) {
+                    _realFpsStart = Date.now();
+                    _realDelta = 0;
                     me.fire('gameFPS', {
                         data: {
-                            fps: realFps
+                            fps: _realFps
                         }
                     });
 
-                    realFps = 0;
+                    _realFps = 0;
                 }
                 else {
-                    realDelta = Date.now() - realFpsStart;
-                    ++realFps;
+                    _realDelta = Date.now() - _realFpsStart;
+                    ++_realFps;
                 }
             }
         },

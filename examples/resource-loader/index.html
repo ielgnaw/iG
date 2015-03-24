@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <script>
+            ig.resourceLoader.load(
+                [
+                    './img/1.jpg',
+                    {
+                        id: 'bg',
+                        src: './img/bg.jpg'
+                    },
+                    {
+                        id: 'testData',
+                        src: './data/test.json'
+                    }
+                ],
+                function () {
+                    console.log('all done');
+                },
+                {
+                    processCallback: function () {
+                        console.warn('process', arguments);
+                    }
+                }
+            );
+
+            // ig.resourceLoader.loadImage('a', './img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)});
+            ig.resourceLoader.loadImage('./img/bg4.jpg');
+        </script>
+    </body>
+</html>

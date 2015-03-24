@@ -13,7 +13,8 @@ exports.modules = {
         {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
         {name: 'ig/SpriteSheet', refName: 'SpriteSheet'}, // window.ig.SpriteSheet
         {name: 'ig/ParallaxScroll', refName: 'ParallaxScroll'}, // window.ig.ParallaxScroll
-        {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'} // window.ig.Shape.Ball
+        {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'}, // window.ig.Shape.Ball
+        {name: 'ig/resourceLoader', refName: 'resourceLoader'} // window.ig.resourceLoader
     ]
 };
 

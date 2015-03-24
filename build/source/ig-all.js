@@ -775,43 +775,43 @@ define('ig/ig', ['require'], function (require) {
     var Event = require('./Event');
     var util = require('./util');
     var Stage = require('./Stage');
-    var guid = 0;
-    var defaultFPS = 60;
-    var now;
-    var startTime;
-    var interval;
-    var delta;
-    var realFpsStart;
-    var realFps;
-    var realDelta;
+    var _guid = 0;
+    var _defaultFPS = 60;
+    var _now;
+    var _startTime;
+    var _interval;
+    var _delta;
+    var _realFpsStart;
+    var _realFps;
+    var _realDelta;
     function Game(opts) {
         opts = opts || {};
         Event.apply(this, arguments);
-        this.name = opts.name === null || opts.name === void 0 ? 'ig_game_' + guid++ : opts.name;
+        this.name = opts.name === null || opts.name === void 0 ? 'ig_game_' + _guid++ : opts.name;
         this.paused = false;
         this.stageStack = [];
         this.stages = {};
-        defaultFPS = opts.fps || 60;
+        _defaultFPS = opts.fps || 60;
     }
     Game.prototype = {
         constructor: Game,
         start: function (startCallback) {
             var me = this;
             me.paused = false;
-            startTime = Date.now();
-            now = 0;
-            interval = 1000 / defaultFPS;
-            delta = 0;
-            realFpsStart = Date.now();
-            realFps = 0;
-            realDelta = 0;
+            _startTime = Date.now();
+            _now = 0;
+            _interval = 1000 / _defaultFPS;
+            _delta = 0;
+            _realFpsStart = Date.now();
+            _realFps = 0;
+            _realDelta = 0;
             me.requestID = window.requestAnimationFrame(function () {
                 me.render.call(me);
             });
             util.getType(startCallback) === 'function' && startCallback.call(me, {
                 data: {
-                    startTime: startTime,
-                    interval: interval
+                    startTime: _startTime,
+                    interval: _interval
                 }
             });
             return me;
@@ -824,26 +824,26 @@ define('ig/ig', ['require'], function (require) {
                 };
             }(me));
             if (!me.paused) {
-                now = Date.now();
-                delta = now - startTime;
-                if (delta > interval) {
-                    startTime = now - delta % interval;
-                    me.fire('beforeGameRender', { data: { startTime: startTime } });
+                _now = Date.now();
+                _delta = _now - _startTime;
+                if (_delta > _interval) {
+                    _startTime = _now - _delta % _interval;
+                    me.fire('beforeGameRender', { data: { startTime: _startTime } });
                     var curStage = me.getCurrentStage();
                     if (curStage) {
                         curStage.update();
                         curStage.render();
                     }
-                    me.fire('afterGameRender', { data: { startTime: startTime } });
+                    me.fire('afterGameRender', { data: { startTime: _startTime } });
                 }
-                if (realDelta > 1000) {
-                    realFpsStart = Date.now();
-                    realDelta = 0;
-                    me.fire('gameFPS', { data: { fps: realFps } });
-                    realFps = 0;
+                if (_realDelta > 1000) {
+                    _realFpsStart = Date.now();
+                    _realDelta = 0;
+                    me.fire('gameFPS', { data: { fps: _realFps } });
+                    _realFps = 0;
                 } else {
-                    realDelta = Date.now() - realFpsStart;
-                    ++realFps;
+                    _realDelta = Date.now() - _realFpsStart;
+                    ++_realFps;
                 }
             }
         },
@@ -1620,6 +1620,157 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Ball, DisplayObject);
     return Ball;
+});define('ig/resourceLoader', [
+    'require',
+    './ig',
+    './util'
+], function (require) {
+    var ig = require('./ig');
+    var util = require('./util');
+    var defaultResourceTypes = {
+        png: 'Image',
+        jpg: 'Image',
+        gif: 'Image',
+        jpeg: 'Image',
+        ogg: 'Audio',
+        wav: 'Audio',
+        m4a: 'Audio',
+        mp3: 'Audio'
+    };
+    function getFileExt(fileName) {
+        var segments = fileName.split('.');
+        return segments[segments.length - 1].toLowerCase();
+    }
+    ig.resources = {};
+    var exports = {};
+    exports.loadOther = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var fileExt = getFileExt(_src);
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    if (fileExt === 'json') {
+                        _callback(_id, JSON.parse(req.responseText));
+                    } else {
+                        _callback(_id, req.responseText);
+                    }
+                } else {
+                    _errorCallback(_src);
+                }
+            }
+        };
+        req.open('GET', _src, true);
+        req.send(null);
+    };
+    exports.loadImage = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var img = new Image();
+        img.addEventListener('load', function (e) {
+            _callback(_id, img);
+        });
+        img.addEventListener('error', function (e) {
+            _errorCallback(_src);
+        });
+        img.src = _src;
+    };
+    exports.load = function (resource, callback, opts) {
+        var me = this;
+        opts = opts || {};
+        if (!Array.isArray(resource)) {
+            resource = [resource];
+        }
+        var loadError = false;
+        var errorCallback = function (item) {
+            loadError = true;
+            (opts.errorCallback || function (errItem) {
+                throw 'Loading Error: ' + errItem;
+            }).call(me, item);
+        };
+        var processCallback = opts.processCallback || util.noop;
+        var totalCount = resource.length;
+        var remainingCount = totalCount;
+        var loadOneCallback = function (id, obj) {
+            if (loadError) {
+                return;
+            }
+            if (!ig.resources[id]) {
+                ig.resources[id] = obj;
+            }
+            remainingCount--;
+            processCallback(totalCount - remainingCount, totalCount);
+            if (remainingCount === 0 && callback) {
+                callback.apply(me);
+            }
+        };
+        var customResourceTypes = opts.customResourceTypes || {};
+        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+        for (var i = 0; i < totalCount; i++) {
+            var curResource = resource[i];
+            var resourceId;
+            var resourceSrc;
+            if (util.getType(curResource) === 'object') {
+                resourceId = curResource.id;
+                resourceSrc = curResource.src;
+            } else {
+                resourceId = resourceSrc = curResource;
+            }
+            var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+            if (!invokeMethod) {
+                invokeMethod = me.loadOther;
+            }
+            invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
+        }
+    };
+    return exports;
 });
 var ig = require('ig');
 
@@ -1757,6 +1908,19 @@ else {
 var modName = 'ig/Shape/Ball';
 var refName = 'Ball';
 var folderName = 'Shape';
+
+if (folderName) {
+    var tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    ig[refName] = require(modName);
+}
+
+var modName = 'ig/resourceLoader';
+var refName = 'resourceLoader';
+var folderName = '';
 
 if (folderName) {
     var tmp = {};
