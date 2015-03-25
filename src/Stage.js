@@ -13,202 +13,126 @@ define(function (require) {
     var env = require('./env');
     var DisplayObject = require('./DisplayObject');
 
+    /**
+     * 作为 repeat 时的新图片
+     *
+     * @type {Image}
+     */
+    var newImage4ParallaxRepeat = new Image();
+
     var guid = 0;
 
     /**
-     * 给 canvas 一个默认的宽度
+     * 绘制 repeat, repeat-x, repeat-y
      *
-     * @type {number}
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
      */
-    var defaultCanvasWidth = 383;
-
-    /**
-     * 给 canvas 一个默认的高度
-     *
-     * @type {number}
-     */
-    var defaultCanvasHeight = 550;
-
-    /**
-     * 屏幕适配
-     *
-     * @param {HTML.Element} canvas canvas 节点
-     * @param {HTML.Element} canvasParent canvas 父节点
-     */
-    function fitScreen(canvas, canvasParent) {
-        var canvasX;
-        var canvasY;
-        var canvasScaleX;
-        var canvasScaleY;
-        var innerWidth = window.innerWidth;
-        // var innerWidth = window.innerWidth;
-        var innerHeight = window.innerHeight;
-        // var innerHeight = window.innerHeight;
-        if (innerWidth > 480) {
-            innerWidth -= 1;
-            innerHeight -= 1;
-        }
-
-        if (env.isMobile) {
-            if (window.innerWidth > window.innerHeight) {
-                if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                    canvas.style.width = innerWidth + 'px';
-                    canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                    canvasX = 0;
-                    canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                    canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                }
-                else {
-                    canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                    canvas.style.height = innerHeight + 'px';
-                    canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                    canvasY = 0;
-                    canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                }
-            }
-            else {
-                canvasX = canvasY = 0;
-                canvasScaleX = canvas.width / innerWidth;
-                canvasScaleY = canvas.height / innerHeight;
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerHeight + 'px';
-                canvasParent.style.marginTop = '0px';
-                canvasParent.style.marginLeft = '0px';
-            }
-        }
-        else {
-            if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                canvasX = 0;
-                canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            }
-            else {
-                canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                canvas.style.height = innerHeight + 'px';
-                canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                canvasY = 0;
-                canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            }
-        }
-
-        // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
-    }
-
-    /**
-     * 初始化场景，并绑定事件
-     *
-     * @param {HTML.Element} canvas canvas 节点
-     */
-    function initStage(canvas, stage) {
-        canvas.width = defaultCanvasWidth;
-        canvas.height = defaultCanvasHeight;
-
-        var canvasParent = canvas.parentNode;
-
-        fitScreen(canvas, canvasParent);
-
-        window.addEventListener(
-            env.supportOrientation ? 'orientationchange' : 'resize',
-            function () {
-                setTimeout(function () {
-                    fitScreen(canvas, canvasParent);
-                }, 100);
-            },
-            false
-        );
-        // startupDomEvent(canvas);
-    }
-
-    /**
-     * 相对于元素获取 touch 的位置
-     *
-     * @param {HTML Element} element 相对的 DOM 元素
-     *
-     * @return {Object} 位置信息 {x, y, event}
-     */
-    function captureTouch(element) {
+    function renderParallaxRepeatImage(offCtx) {
         var me = this;
-        var touch = {
-            x: null,
-            y: null,
-            isPressed: false,
-            event: null
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(me.image, me.repeat);
+        offCtx.fillRect(me.x, me.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
+
+        if (!newImage4ParallaxRepeat.src) {
+            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            me.image = newImage4ParallaxRepeat;
+        }
+    }
+
+     /**
+     * 绘制视差滚动滚动的区域
+     *
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
+     * @param {Object} newPos 新的绘制的起点坐标对象
+     * @param {Object} newArea 新绘制区域的大小对象
+     * @param {Object} newScrollPos 滚动的区域起点的坐标对象
+     * @param {number} imageWidth 图片宽度
+     * @param {number} imageHeight 图片高度
+     *
+     * @return {Object} 待绘制区域的宽高
+     */
+    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var me = this;
+
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+
+        offCtx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+
+        return {
+            width: width,
+            height: height
         };
+    }
 
-        var bodyScrollLeft = document.body.scrollLeft;
-        var docElementScrollLeft = document.documentElement.scrollLeft;
-        var bodyScrollTop = document.body.scrollTop;
-        var docElementScrollTop = document.documentElement.scrollTop;
-        var offsetLeft = element.offsetLeft;
-        var offsetTop = element.offsetTop;
+    /**
+     * 渲染视差滚动
+     */
+    function renderParallax() {
+        var me = this;
+        var parallax = me.parallax;
+        if (parallax) {
+            var offCtx = me.offCtx;
+            if (parallax.repeat !== 'no-repeat') {
+                renderParallaxRepeatImage.call(parallax, offCtx);
+            }
 
-        element.addEventListener(
-            'touchstart',
-            function (event) {
-                touch.isPressed = true;
-                touch.event = event;
-                console.warn(touch, 'touchstart');
-            },
-            false
-        );
+            var imageWidth = parallax.image.width;
+            var imageHeight = parallax.image.height;
 
-        element.addEventListener(
-            'touchend',
-            function (event) {
-                touch.isPressed = false;
-                touch.x = null;
-                touch.y = null;
-                touch.event = event;
-                console.warn(touch, 'touchend');
-            },
-            false
-        );
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
 
-        element.addEventListener(
-            'touchmove',
-            function (event) {
-                var x;
-                var y;
-                var touchEvent = event.touches[0];
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    // 从左上角开始画下一个块
+                    var newPos = {
+                        x: parallax.x + x,
+                        y: parallax.y + y
+                    };
 
-                if (touchEvent.pageX || touchEvent.pageY) {
-                    x = touchEvent.pageX;
-                    y = touchEvent.pageY;
+                    // 剩余的绘制空间
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+
+                    if (x === 0) {
+                        newScrollPos.x = parallax.vX;
+                    }
+
+                    if (y === 0) {
+                        newScrollPos.y = parallax.vY;
+                    }
+                    drawArea = renderParallaxScroll.call(parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
                 }
-                else {
-                    x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
-                    y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
-                }
-                x -= offsetLeft;
-                y -= offsetTop;
+            }
+        }
+    }
 
-                touch.x = x;
-                touch.y = y;
-                touch.event = event;
-
-                var len = me.displayObjectList.length;
-                // console.log(util.getMouseCoords(touch.event.target, touchEvent));
-                for (var i = 0; i < len; i++) {
-                    // if (me.displayObjectList[i] instanceof ig.Shape.Ball) {
-                        me.displayObjectList[i].isMouseIn(util.getMouseCoords(touch.event.target, touchEvent));
-                    // }
-                }
-            },
-            false
-        );
-
-        return touch;
-    };
+    /**
+     * 更新视差滚动
+     */
+    function updateParallax() {
+        var me = this;
+        var parallax = me.parallax;
+        if (parallax) {
+            parallax.vX = (parallax.vX + parallax.aX) % parallax.image.width;
+            parallax.vY = (parallax.vY + parallax.aY) % parallax.image.height;
+        }
+    }
 
     /**
      * 场景类构造函数
@@ -223,46 +147,7 @@ define(function (require) {
 
         opts = opts || {};
 
-        if (!opts.canvas) {
-            throw new Error('Stage must be require a canvas param');
-        }
-
         this.name = (opts.name === null || opts.name === undefined) ? 'ig_stage_' + (guid++) : opts.name;
-
-        this.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container');
-
-        this.ctx = this.canvas.getContext('2d');
-
-        if (opts.width) {
-            defaultCanvasWidth = opts.width;
-        }
-
-        if (opts.height) {
-            defaultCanvasHeight = opts.height;
-        }
-
-        initStage(this.canvas, this);
-
-        this.offCanvas = document.createElement('canvas');
-        this.offCtx = this.offCanvas.getContext('2d');
-        this.offCanvas.width = this.canvas.width;
-        this.offCanvas.style.width = this.canvas.style.width;
-        this.offCanvas.height = this.canvas.height;
-        this.offCanvas.style.height = this.canvas.style.height;
-        this.container = this.canvas.parentNode;
-
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-
-        this.bgColor = opts.bgColor || '#000';
-        this.bgImgUrl = opts.bgImgUrl;
-
-        if (this.bgImgUrl) {
-            this.setBgImg(this.bgImgUrl);
-        }
-        else {
-            this.setBgColor();
-        }
 
         // 当前场景中的所有可显示对象集合
         this.displayObjectList = [];
@@ -270,7 +155,10 @@ define(function (require) {
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
 
-        ig.mainElem = this.canvas;
+        this.canvas = opts.canvas;
+        this.ctx = opts.canvas.getContext('2d');
+        this.offCanvas = opts.offCanvas;
+        this.offCtx = opts.offCanvas.getContext('2d');
 
         // console.warn(this.canvas);
         // captureTouch.call(this, this.canvas);
@@ -355,48 +243,6 @@ define(function (require) {
         },
 
         /**
-         * 设置 canvas 的背景颜色
-         *
-         * @param {string} color 颜色值 #f00, rgba(255, 0, 0, 1), red
-         *
-         * @return {Object} Stage 实例
-         */
-        setBgColor: function (color) {
-            // debugger
-            var me = this;
-            me.bgColor = color || me.bgColor;
-            me.canvas.style.backgroundColor = me.bgColor;
-            return me;
-        },
-
-        /**
-         * 设置 canvas 的背景图
-         * 设置背景， repeatPattern: center 居中；full 拉伸；默认平铺
-         *
-         * @param {string} imgUrl 图片 url
-         * @param {string} repeatPattern center: 居中; full: 拉伸; 默认平铺
-         *
-         * @return {Object} Stage 实例
-         */
-        setBgImg: function (imgUrl, repeatPattern) {
-            var me = this;
-            me.bgImgUrl = imgUrl;
-            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-            switch (repeatPattern) {
-                // 居中
-                case 'center':
-                    me.canvas.style.backgroundRepeat = 'no-repeat';
-                    me.canvas.style.backgroundPosition = 'center';
-                    break;
-                // 拉伸
-                case 'full':
-                    me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
-                    break;
-            }
-            return me;
-        },
-
-        /**
          * 清除场景
          *
          * @return {Object} Stage 实例
@@ -412,10 +258,98 @@ define(function (require) {
         },
 
         /**
+         * 设置场景的背景颜色
+         *
+         * @param {string} color 颜色值 #f00, rgba(255, 0, 0, 1), red
+         *
+         * @return {Object} Stage 实例
+         */
+        setBgColor: function (color) {
+            var me = this;
+            color = color || '#fff';
+            me.canvas.style.backgroundColor = color;
+            return me;
+        },
+
+        /**
+         * 设置场景的背景图
+         * 设置背景， repeatPattern: center 居中；full 拉伸；默认平铺
+         *
+         * @param {string} imgUrl 图片 url
+         * @param {string} repeatPattern center: 居中; full: 拉伸; 默认平铺
+         *
+         * @return {Object} Stage 实例
+         */
+        setBgImg: function (img, repeatPattern) {
+            var me = this;
+
+            var imgUrl;
+
+            if (util.getType(img) === 'htmlimageelement') {
+                imgUrl = img.src;
+            }
+            else if (util.getType(img) === 'string') {
+                imgUrl = img;
+            }
+
+            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+            switch (repeatPattern) {
+                // 居中
+                case 'center':
+                    me.canvas.style.backgroundRepeat = 'no-repeat';
+                    me.canvas.style.backgroundPosition = 'center';
+                    break;
+                // 拉伸
+                case 'full':
+                    me.canvas.style.backgroundSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
+                    break;
+            }
+            return me;
+        },
+
+        /**
+         * 设置视差滚动
+         *
+         * @param {Object} opts 配置项
+         * @param {HTMLImageElement} opts.image 图片
+         * @param {string} opts.repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
+         */
+        setParallaxScroll: function (opts) {
+            var me = this;
+            opts = opts || {};
+
+            if (!opts.image) {
+                throw new Error('ParallaxScroll must be require a image param');
+            }
+
+            opts.repeat = (opts.repeat && ['repeat', 'repeat-x', 'repeat-y'].indexOf(opts.repeat) !== -1)
+                ? opts.repeat : 'no-repeat';
+
+            // 视差滚动的场景才会有这个属性
+            me.parallax = util.extend(
+                {},
+                {
+                    x: 0, // 横坐标
+                    y: 0, // 纵坐标
+                    vX: 0, // 横轴速度，x += vX
+                    vY: 0, // 纵轴速度，y += vY
+                    aX: 0, // 横轴加速度，vX += aX
+                    aY: 0 // 纵轴加速度，vY += aY
+                },
+                opts
+            );
+
+            console.warn(me);
+        },
+
+        /**
          * 场景的更新，需要更新场景里面的所有精灵
          */
         update: function () {
             var me = this;
+            // console.warn(1);
+            updateParallax.call(me);
+
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
@@ -437,7 +371,24 @@ define(function (require) {
             me.fire('beforeStageRender');
 
             this.sortDisplayObject();
-            this.renderDisplayObject();
+            // this.renderDisplayObject();
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+
+            me.offCtx.save();
+            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
+
+            renderParallax.call(me);
+            for (var i = 0; i < len; i++) {
+                displayObjectStatus = me.displayObjectList[i].status;
+                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                    me.displayObjectList[i].render(me.offCtx);
+                }
+            }
+
+            me.offCtx.restore();
+            me.ctx.drawImage(me.offCanvas, 0, 0);
 
             me.fire('afterStageRender');
         },

@@ -692,12 +692,14 @@ define('ig/ig', ['require'], function (require) {
     return exports;
 });define('ig/Game', [
     'require',
+    './ig',
     './Event',
     './util',
     './env',
     './Stage'
 ], function (require) {
     'use strict';
+    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -711,6 +713,7 @@ define('ig/ig', ['require'], function (require) {
     var _realFpsStart;
     var _realFps;
     var _realDelta;
+    var _totalFrameCounter;
     function fitScreen() {
         var me = this;
         var winWidth = window.innerWidth;
@@ -718,18 +721,34 @@ define('ig/ig', ['require'], function (require) {
         var winRatio = winWidth / winHeight;
         var gameRatio = me.canvas.width / me.canvas.height;
         var scaleRatio = gameRatio < winRatio ? winHeight / me.canvas.height : winWidth / me.canvas.width;
-        var scaledW = me.canvas.width * scaleRatio;
-        var scaledH = me.canvas.height * scaleRatio;
-        me.canvas.style.width = scaledW + 'px';
-        me.canvas.style.height = scaledH + 'px';
+        var scaleWidth = me.canvas.width * scaleRatio;
+        var scaleHeight = me.canvas.height * scaleRatio;
+        me.canvas.style.width = scaleWidth + 'px';
+        me.canvas.style.height = scaleHeight + 'px';
         if (me.canvas.parentNode) {
-            me.canvas.parentNode.style.width = scaledW + 'px';
-            me.canvas.parentNode.style.height = scaledH + 'px';
+            me.canvas.parentNode.style.width = scaleWidth + 'px';
+            me.canvas.parentNode.style.height = scaleHeight + 'px';
         }
-        if (gameRatio > winRatio) {
-            var topPos = (winHeight - scaledH) / 2;
+        if (gameRatio >= winRatio) {
+            var topPos = (winHeight - scaleHeight) / 2;
             me.canvas.style.top = topPos + 'px';
         }
+        me.width = me.canvas.width;
+        me.cssWidth = me.canvas.style.width;
+        me.height = me.canvas.height;
+        me.cssHeight = me.canvas.style.height;
+        setOffCanvas.call(me);
+    }
+    function setOffCanvas() {
+        var me = this;
+        if (!me.offCanvas) {
+            me.offCanvas = document.createElement('canvas');
+            me.offCtx = me.offCanvas.getContext('2d');
+        }
+        me.offCanvas.width = me.canvas.width;
+        me.offCanvas.style.width = me.canvas.style.width;
+        me.offCanvas.height = me.canvas.height;
+        me.offCanvas.style.height = me.canvas.style.height;
     }
     function Game(opts) {
         opts = opts || {};
@@ -748,7 +767,6 @@ define('ig/ig', ['require'], function (require) {
                 throw new Error('Game init must be require a canvas param');
             }
             me.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container' + _guid);
-            me.ctx = me.canvas.getContext('2d');
             me.canvas.width = opts.width || 320;
             me.canvas.height = opts.height || 480;
             var width = parseInt(me.canvas.width, 10);
@@ -776,11 +794,17 @@ define('ig/ig', ['require'], function (require) {
                 width = Math.min(window.innerWidth, maxWidth);
                 height = Math.min(window.innerHeight, maxHeight);
             }
+            me.ctx = me.canvas.getContext('2d');
             me.canvas.style.height = height + 'px';
             me.canvas.style.width = width + 'px';
             me.canvas.width = width;
             me.canvas.height = height;
             me.canvas.style.position = 'relative';
+            me.width = me.canvas.width;
+            me.cssWidth = me.canvas.style.width;
+            me.height = me.canvas.height;
+            me.cssHeight = me.canvas.style.height;
+            setOffCanvas.call(me);
             var canvasParent = me.canvas.parentNode;
             canvasParent.style.width = width + 'px';
             canvasParent.style.margin = '0 auto';
@@ -805,6 +829,7 @@ define('ig/ig', ['require'], function (require) {
             _realFpsStart = Date.now();
             _realFps = 0;
             _realDelta = 0;
+            _totalFrameCounter = 0;
             me.requestID = window.requestAnimationFrame(function () {
                 me.render.call(me);
             });
@@ -827,19 +852,35 @@ define('ig/ig', ['require'], function (require) {
                 _now = Date.now();
                 _delta = _now - _startTime;
                 if (_delta > _interval) {
+                    _totalFrameCounter++;
                     _startTime = _now - _delta % _interval;
-                    me.fire('beforeGameRender', { data: { startTime: _startTime } });
+                    me.fire('beforeGameRender', {
+                        data: {
+                            startTime: _startTime,
+                            totalFrameCounter: _totalFrameCounter
+                        }
+                    });
                     var curStage = me.getCurrentStage();
                     if (curStage) {
                         curStage.update();
                         curStage.render();
                     }
-                    me.fire('afterGameRender', { data: { startTime: _startTime } });
+                    me.fire('afterGameRender', {
+                        data: {
+                            startTime: _startTime,
+                            totalFrameCounter: _totalFrameCounter
+                        }
+                    });
                 }
                 if (_realDelta > 1000) {
                     _realFpsStart = Date.now();
                     _realDelta = 0;
-                    me.fire('gameFPS', { data: { fps: _realFps } });
+                    me.fire('gameFPS', {
+                        data: {
+                            fps: _realFps,
+                            totalFrameCounter: _totalFrameCounter
+                        }
+                    });
                     _realFps = 0;
                 } else {
                     _realDelta = Date.now() - _realFpsStart;
@@ -866,6 +907,12 @@ define('ig/ig', ['require'], function (require) {
             return this.stages[name];
         },
         createStage: function (stageOpts) {
+            var me = this;
+            stageOpts = util.extend({}, {
+                canvas: me.canvas,
+                offCanvas: me.offCanvas,
+                game: me
+            }, stageOpts);
             var stage = new Stage(stageOpts);
             this.pushStage(stage);
             return stage;
@@ -891,7 +938,7 @@ define('ig/ig', ['require'], function (require) {
         sortStageIndex: function () {
             var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
-                stageStack[i].container.style.zIndex = i;
+                stageStack[i].zIndex = i;
             }
         },
         removeStageByName: function (name) {
@@ -919,7 +966,7 @@ define('ig/ig', ['require'], function (require) {
             }
         },
         getStageIndex: function (stage) {
-            return stage.container.style.zIndex;
+            return stage.zIndex;
         },
         getCurrentStage: function () {
             var me = this;
@@ -950,191 +997,96 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var env = require('./env');
     var DisplayObject = require('./DisplayObject');
+    var newImage4ParallaxRepeat = new Image();
     var guid = 0;
-    var defaultCanvasWidth = 383;
-    var defaultCanvasHeight = 550;
-    function fitScreen(canvas, canvasParent) {
-        var canvasX;
-        var canvasY;
-        var canvasScaleX;
-        var canvasScaleY;
-        var innerWidth = window.innerWidth;
-        var innerHeight = window.innerHeight;
-        if (innerWidth > 480) {
-            innerWidth -= 1;
-            innerHeight -= 1;
-        }
-        if (env.isMobile) {
-            if (window.innerWidth > window.innerHeight) {
-                if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                    canvas.style.width = innerWidth + 'px';
-                    canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                    canvasX = 0;
-                    canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                    canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                } else {
-                    canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                    canvas.style.height = innerHeight + 'px';
-                    canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                    canvasY = 0;
-                    canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                }
-            } else {
-                canvasX = canvasY = 0;
-                canvasScaleX = canvas.width / innerWidth;
-                canvasScaleY = canvas.height / innerHeight;
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerHeight + 'px';
-                canvasParent.style.marginTop = '0px';
-                canvasParent.style.marginLeft = '0px';
-            }
-        } else {
-            if (innerWidth / canvas.width < innerHeight / canvas.height) {
-                canvas.style.width = innerWidth + 'px';
-                canvas.style.height = innerWidth / canvas.width * canvas.height + 'px';
-                canvasX = 0;
-                canvasY = (innerHeight - innerWidth / canvas.width * canvas.height) / 2;
-                canvasScaleX = canvasScaleY = canvas.width / innerWidth;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            } else {
-                canvas.style.width = innerHeight / canvas.height * canvas.width + 'px';
-                canvas.style.height = innerHeight + 'px';
-                canvasX = (innerWidth - innerHeight / canvas.height * canvas.width) / 2;
-                canvasY = 0;
-                canvasScaleX = canvasScaleY = canvas.height / innerHeight;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            }
-        }
-    }
-    function initStage(canvas, stage) {
-        canvas.width = defaultCanvasWidth;
-        canvas.height = defaultCanvasHeight;
-        var canvasParent = canvas.parentNode;
-        fitScreen(canvas, canvasParent);
-        window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
-            setTimeout(function () {
-                fitScreen(canvas, canvasParent);
-            }, 100);
-        }, false);
-    }
-    function captureTouch(element) {
+    function renderParallaxRepeatImage(offCtx) {
         var me = this;
-        var touch = {
-            x: null,
-            y: null,
-            isPressed: false,
-            event: null
-        };
-        var bodyScrollLeft = document.body.scrollLeft;
-        var docElementScrollLeft = document.documentElement.scrollLeft;
-        var bodyScrollTop = document.body.scrollTop;
-        var docElementScrollTop = document.documentElement.scrollTop;
-        var offsetLeft = element.offsetLeft;
-        var offsetTop = element.offsetTop;
-        element.addEventListener('touchstart', function (event) {
-            touch.isPressed = true;
-            touch.event = event;
-            console.warn(touch, 'touchstart');
-        }, false);
-        element.addEventListener('touchend', function (event) {
-            touch.isPressed = false;
-            touch.x = null;
-            touch.y = null;
-            touch.event = event;
-            console.warn(touch, 'touchend');
-        }, false);
-        element.addEventListener('touchmove', function (event) {
-            var x;
-            var y;
-            var touchEvent = event.touches[0];
-            if (touchEvent.pageX || touchEvent.pageY) {
-                x = touchEvent.pageX;
-                y = touchEvent.pageY;
-            } else {
-                x = touchEvent.clientX + bodyScrollLeft + docElementScrollLeft;
-                y = touchEvent.clientY + bodyScrollTop + docElementScrollTop;
-            }
-            x -= offsetLeft;
-            y -= offsetTop;
-            touch.x = x;
-            touch.y = y;
-            touch.event = event;
-            var len = me.displayObjectList.length;
-            for (var i = 0; i < len; i++) {
-                me.displayObjectList[i].isMouseIn(util.getMouseCoords(touch.event.target, touchEvent));
-            }
-        }, false);
-        return touch;
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(me.image, me.repeat);
+        offCtx.fillRect(me.x, me.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
+        if (!newImage4ParallaxRepeat.src) {
+            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            me.image = newImage4ParallaxRepeat;
+        }
     }
-    ;
+    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var me = this;
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+        offCtx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
+        return {
+            width: width,
+            height: height
+        };
+    }
+    function renderParallax() {
+        var me = this;
+        var parallax = me.parallax;
+        if (parallax) {
+            var offCtx = me.offCtx;
+            if (parallax.repeat !== 'no-repeat') {
+                renderParallaxRepeatImage.call(parallax, offCtx);
+            }
+            var imageWidth = parallax.image.width;
+            var imageHeight = parallax.image.height;
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    var newPos = {
+                        x: parallax.x + x,
+                        y: parallax.y + y
+                    };
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+                    if (x === 0) {
+                        newScrollPos.x = parallax.vX;
+                    }
+                    if (y === 0) {
+                        newScrollPos.y = parallax.vY;
+                    }
+                    drawArea = renderParallaxScroll.call(parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                }
+            }
+        }
+    }
+    function updateParallax() {
+        var me = this;
+        var parallax = me.parallax;
+        if (parallax) {
+            parallax.vX = (parallax.vX + parallax.aX) % parallax.image.width;
+            parallax.vY = (parallax.vY + parallax.aY) % parallax.image.height;
+        }
+    }
     function Stage(opts) {
         Event.apply(this, arguments);
         opts = opts || {};
-        if (!opts.canvas) {
-            throw new Error('Stage must be require a canvas param');
-        }
         this.name = opts.name === null || opts.name === undefined ? 'ig_stage_' + guid++ : opts.name;
-        this.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container');
-        this.ctx = this.canvas.getContext('2d');
-        if (opts.width) {
-            defaultCanvasWidth = opts.width;
-        }
-        if (opts.height) {
-            defaultCanvasHeight = opts.height;
-        }
-        initStage(this.canvas, this);
-        this.offCanvas = document.createElement('canvas');
-        this.offCtx = this.offCanvas.getContext('2d');
-        this.offCanvas.width = this.canvas.width;
-        this.offCanvas.style.width = this.canvas.style.width;
-        this.offCanvas.height = this.canvas.height;
-        this.offCanvas.style.height = this.canvas.style.height;
-        this.container = this.canvas.parentNode;
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-        this.bgColor = opts.bgColor || '#000';
-        this.bgImgUrl = opts.bgImgUrl;
-        if (this.bgImgUrl) {
-            this.setBgImg(this.bgImgUrl);
-        } else {
-            this.setBgColor();
-        }
         this.displayObjectList = [];
         this.displayObjects = {};
-        ig.mainElem = this.canvas;
+        this.canvas = opts.canvas;
+        this.ctx = opts.canvas.getContext('2d');
+        this.offCanvas = opts.offCanvas;
+        this.offCtx = opts.offCanvas.getContext('2d');
     }
     Stage.prototype = {
         constructor: Stage,
         clear: function () {
             var me = this;
             me.ctx.clearRect(0, 0, me.width, me.height);
-            return me;
-        },
-        setBgColor: function (color) {
-            var me = this;
-            me.bgColor = color || me.bgColor;
-            me.canvas.style.backgroundColor = me.bgColor;
-            return me;
-        },
-        setBgImg: function (imgUrl, repeatPattern) {
-            var me = this;
-            me.bgImgUrl = imgUrl;
-            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-            switch (repeatPattern) {
-            case 'center':
-                me.canvas.style.backgroundRepeat = 'no-repeat';
-                me.canvas.style.backgroundPosition = 'center';
-                break;
-            case 'full':
-                me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
-                break;
-            }
             return me;
         },
         clean: function () {
@@ -1146,8 +1098,56 @@ define('ig/ig', ['require'], function (require) {
             me.offCanvas = me.offCtx = null;
             return me;
         },
+        setBgColor: function (color) {
+            var me = this;
+            color = color || '#fff';
+            me.canvas.style.backgroundColor = color;
+            return me;
+        },
+        setBgImg: function (img, repeatPattern) {
+            var me = this;
+            var imgUrl;
+            if (util.getType(img) === 'htmlimageelement') {
+                imgUrl = img.src;
+            } else if (util.getType(img) === 'string') {
+                imgUrl = img;
+            }
+            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+            switch (repeatPattern) {
+            case 'center':
+                me.canvas.style.backgroundRepeat = 'no-repeat';
+                me.canvas.style.backgroundPosition = 'center';
+                break;
+            case 'full':
+                me.canvas.style.backgroundSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
+                break;
+            }
+            return me;
+        },
+        setParallaxScroll: function (opts) {
+            var me = this;
+            opts = opts || {};
+            if (!opts.image) {
+                throw new Error('ParallaxScroll must be require a image param');
+            }
+            opts.repeat = opts.repeat && [
+                'repeat',
+                'repeat-x',
+                'repeat-y'
+            ].indexOf(opts.repeat) !== -1 ? opts.repeat : 'no-repeat';
+            me.parallax = util.extend({}, {
+                x: 0,
+                y: 0,
+                vX: 0,
+                vY: 0,
+                aX: 0,
+                aY: 0
+            }, opts);
+            console.warn(me);
+        },
         update: function () {
             var me = this;
+            updateParallax.call(me);
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
@@ -1163,7 +1163,20 @@ define('ig/ig', ['require'], function (require) {
             me.clear();
             me.fire('beforeStageRender');
             this.sortDisplayObject();
-            this.renderDisplayObject();
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+            me.offCtx.save();
+            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
+            renderParallax.call(me);
+            for (var i = 0; i < len; i++) {
+                displayObjectStatus = me.displayObjectList[i].status;
+                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                    me.displayObjectList[i].render(me.offCtx);
+                }
+            }
+            me.offCtx.restore();
+            me.ctx.drawImage(me.offCanvas, 0, 0);
             me.fire('afterStageRender');
         },
         renderDisplayObject: function () {
@@ -1801,7 +1814,7 @@ else {
 }
 
 var modName = 'ig/Stage';
-var refName = 'Stage';
+var refName = '';
 var folderName = '';
 
 var tmp;

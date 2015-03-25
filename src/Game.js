@@ -9,6 +9,7 @@ define(function (require) {
 
     'use strict';
 
+    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -26,97 +27,7 @@ define(function (require) {
     var _realFps;
     var _realDelta;
 
-    /**
-     * 给 canvas 一个默认的宽度
-     *
-     * @type {number}
-     */
-    // var defaultCanvasWidth = 383;
-
-    /**
-     * 给 canvas 一个默认的高度
-     *
-     * @type {number}
-     */
-    // var defaultCanvasHeight = 550;
-
-    /**
-     * 屏幕适配
-     *
-     * @param {HTML.Element} canvasParent canvas 父节点
-     */
-    /*function fitScreen(canvasParent) {
-        var me = this;
-        var canvasX;
-        var canvasY;
-        var canvasScaleX;
-        var canvasScaleY;
-        var innerWidth = window.innerWidth;
-        var innerHeight = window.innerHeight;
-
-        if (env.isMobile) {
-            if (window.innerWidth > window.innerHeight) {
-                if (innerWidth / me.canvas.width < innerHeight / me.canvas.height) {
-                    me.canvas.style.width = innerWidth + 'px';
-                    me.canvas.style.height = innerWidth / me.canvas.width * me.canvas.height + 'px';
-                    canvasX = 0;
-                    canvasY = (innerHeight - innerWidth / me.canvas.width * me.canvas.height) / 2;
-                    canvasScaleX = canvasScaleY = me.canvas.width / innerWidth;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                }
-                else {
-                    me.canvas.style.width = innerHeight / me.canvas.height * me.canvas.width + 'px';
-                    me.canvas.style.height = innerHeight + 'px';
-                    canvasX = (innerWidth - innerHeight / me.canvas.height * me.canvas.width) / 2;
-                    canvasY = 0;
-                    canvasScaleX = canvasScaleY = me.canvas.height / innerHeight;
-                    canvasParent.style.marginTop = canvasY + 'px';
-                    canvasParent.style.marginLeft = canvasX + 'px';
-                }
-            }
-            else {
-                canvasX = canvasY = 0;
-                canvasScaleX = me.canvas.width / innerWidth;
-                canvasScaleY = me.canvas.height / innerHeight;
-                me.canvas.style.width = innerWidth + 'px';
-                me.canvas.style.height = innerHeight + 'px';
-                canvasParent.style.marginTop = '0px';
-                canvasParent.style.marginLeft = '0px';
-            }
-        }
-        else {
-            if (innerWidth / me.canvas.width < innerHeight / me.canvas.height) {
-                me.canvas.style.width = innerWidth + 'px';
-                me.canvas.style.height = innerWidth / me.canvas.width * me.canvas.height + 'px';
-                canvasX = 0;
-                canvasY = (innerHeight - innerWidth / me.canvas.width * me.canvas.height) / 2;
-                canvasScaleX = canvasScaleY = me.canvas.width / innerWidth;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            }
-            else {
-                me.canvas.style.width = innerHeight / me.canvas.height * me.canvas.width + 'px';
-                me.canvas.style.height = innerHeight + 'px';
-                canvasX = (innerWidth - innerHeight / me.canvas.height * me.canvas.width) / 2;
-                canvasY = 0;
-                canvasScaleX = canvasScaleY = me.canvas.height / innerHeight;
-                canvasParent.style.marginTop = canvasY + 'px';
-                canvasParent.style.marginLeft = canvasX + 'px';
-            }
-        }
-        me.ctx = me.canvas.getContext('2d');
-
-        if (!me.offCanvas) {
-            me.offCanvas = document.createElement('canvas');
-        }
-        me.offCanvas.width = me.canvas.width;
-        me.offCanvas.style.width = me.canvas.style.width;
-        me.offCanvas.height = me.canvas.height;
-        me.offCanvas.style.height = me.canvas.style.height;
-        me.offCtx = me.offCanvas.getContext('2d');
-        // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
-    }*/
+    var _totalFrameCounter; // 帧数的计数器
 
     /**
      * 屏幕适配
@@ -128,21 +39,45 @@ define(function (require) {
         var winRatio = winWidth / winHeight;
         var gameRatio = me.canvas.width / me.canvas.height;
         var scaleRatio = gameRatio < winRatio ? winHeight / me.canvas.height : winWidth / me.canvas.width;
-        var scaledW = me.canvas.width * scaleRatio;
-        var scaledH = me.canvas.height * scaleRatio;
+        var scaleWidth = me.canvas.width * scaleRatio;
+        var scaleHeight = me.canvas.height * scaleRatio;
 
-        me.canvas.style.width = scaledW + 'px';
-        me.canvas.style.height = scaledH + 'px';
+        me.canvas.style.width = scaleWidth + 'px';
+        me.canvas.style.height = scaleHeight + 'px';
 
         if (me.canvas.parentNode) {
-            me.canvas.parentNode.style.width = scaledW + 'px';
-            me.canvas.parentNode.style.height = scaledH + 'px';
+            me.canvas.parentNode.style.width = scaleWidth + 'px';
+            me.canvas.parentNode.style.height = scaleHeight + 'px';
         }
 
-        if (gameRatio > winRatio) {
-            var topPos = (winHeight - scaledH) / 2;
+        if (gameRatio >= winRatio) {
+            var topPos = (winHeight - scaleHeight) / 2;
             me.canvas.style.top = topPos + 'px';
         }
+
+        me.width = me.canvas.width;
+        me.cssWidth = me.canvas.style.width;
+
+        me.height = me.canvas.height;
+        me.cssHeight = me.canvas.style.height;
+
+        setOffCanvas.call(me);
+    }
+
+    /**
+     * 设置离屏 canvas
+     */
+    function setOffCanvas() {
+        var me = this;
+        if (!me.offCanvas) {
+            me.offCanvas = document.createElement('canvas');
+            me.offCtx = me.offCanvas.getContext('2d');
+        }
+
+        me.offCanvas.width = me.canvas.width;
+        me.offCanvas.style.width = me.canvas.style.width;
+        me.offCanvas.height = me.canvas.height;
+        me.offCanvas.style.height = me.canvas.style.height;
     }
 
     /**
@@ -200,7 +135,6 @@ define(function (require) {
             }
 
             me.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container' + _guid);
-            me.ctx = me.canvas.getContext('2d');
             me.canvas.width = opts.width || 320;
             me.canvas.height = opts.height || 480;
 
@@ -239,11 +173,20 @@ define(function (require) {
                 height = Math.min(window.innerHeight, maxHeight);
             }
 
+            me.ctx = me.canvas.getContext('2d');
             me.canvas.style.height = height + 'px';
             me.canvas.style.width = width + 'px';
             me.canvas.width = width;
             me.canvas.height = height;
             me.canvas.style.position = 'relative';
+
+            me.width = me.canvas.width;
+            me.cssWidth = me.canvas.style.width;
+
+            me.height = me.canvas.height;
+            me.cssHeight = me.canvas.style.height;
+
+            setOffCanvas.call(me);
 
             var canvasParent = me.canvas.parentNode;
             canvasParent.style.width = width + 'px';
@@ -325,6 +268,8 @@ define(function (require) {
             _realFps = 0;
             _realDelta = 0;
 
+            _totalFrameCounter = 0;
+
             me.requestID = window.requestAnimationFrame(function () {
                 me.render.call(me);
             });
@@ -360,6 +305,9 @@ define(function (require) {
                 _delta = _now - _startTime; // 时间差即每帧的时间间隔
 
                 if (_delta > _interval) {
+                    // 总帧数的计数器，这里设置这个是为了后续场景精灵等 render 的时候作为 interval 来使用
+                    _totalFrameCounter++;
+
                     // 仅仅 `_startTime = _now` 的判断是不够的，
                     // 例如设置 fps = 10，意味着每帧必须是 100ms，而现在帧执行时间是 16ms (60 fps)
                     // 所以需要循环 7 次 (16 * 7 = 112ms) 才能满足 `_delta > _interval === true`。
@@ -369,9 +317,11 @@ define(function (require) {
 
                     me.fire('beforeGameRender', {
                         data: {
-                            startTime: _startTime
+                            startTime: _startTime,
+                            totalFrameCounter: _totalFrameCounter
                         }
                     });
+                    // console.warn(me.requestID);
 
                     var curStage = me.getCurrentStage();
 
@@ -382,7 +332,8 @@ define(function (require) {
 
                     me.fire('afterGameRender', {
                         data: {
-                            startTime: _startTime
+                            startTime: _startTime,
+                            totalFrameCounter: _totalFrameCounter
                         }
                     });
                 }
@@ -392,7 +343,8 @@ define(function (require) {
                     _realDelta = 0;
                     me.fire('gameFPS', {
                         data: {
-                            fps: _realFps
+                            fps: _realFps,
+                            totalFrameCounter: _totalFrameCounter
                         }
                     });
 
@@ -461,6 +413,18 @@ define(function (require) {
          * @return {Object} 创建的场景对象
          */
         createStage: function (stageOpts) {
+            var me = this;
+
+            stageOpts = util.extend(
+                {},
+                {
+                    canvas: me.canvas,
+                    offCanvas: me.offCanvas,
+                    game: me
+                },
+                stageOpts
+            );
+
             var stage = new Stage(stageOpts);
             this.pushStage(stage);
             return stage;
@@ -500,7 +464,7 @@ define(function (require) {
         sortStageIndex: function () {
             var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
-                stageStack[i].container.style.zIndex = i;
+                stageStack[i].zIndex = i;
             }
         },
 
@@ -552,7 +516,7 @@ define(function (require) {
          * @return {number} zIndex
          */
         getStageIndex: function (stage) {
-            return stage.container.style.zIndex;
+            return stage.zIndex;
         },
 
         /**

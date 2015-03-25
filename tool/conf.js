@@ -8,7 +8,7 @@ exports.modules = {
         {name: 'ig/env', refName: 'env'},  // window.ig.env
         // {name: 'ig/ImageLoader', refName: 'ImageLoader'}, // window.ig.ImageLoader
         {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
-        {name: 'ig/Stage', refName: 'Stage'}, // window.ig.FrameMonitor
+        {name: 'ig/Stage'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
         {name: 'ig/SpriteSheet', refName: 'SpriteSheet'}, // window.ig.SpriteSheet
         {name: 'ig/ParallaxScroll', refName: 'ParallaxScroll'}, // window.ig.ParallaxScroll
