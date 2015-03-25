@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    // TODO: load Audio/WebAudio
+
     var ig = require('./ig');
     var util = require('./util');
 
@@ -44,13 +46,6 @@ define(function (require) {
     ig.resources = {};
 
     /**
-     * 模块到处对象
-     *
-     * @type {Object}
-     */
-    var exports = {};
-
-    /**
      * 加载其他资源
      *
      * @param {string} id 图片 id
@@ -58,7 +53,7 @@ define(function (require) {
      * @param {Function} callback 加载成功回调
      * @param {Function} errorCallback 加载失败回调
      */
-    exports.loadOther = function (id, src, callback, errorCallback) {
+    ig.loadOther = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -117,7 +112,7 @@ define(function (require) {
      * @param {Function} callback 加载成功回调
      * @param {Function} errorCallback 加载失败回调
      */
-    exports.loadImage = function (id, src, callback, errorCallback) {
+    ig.loadImage = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -156,16 +151,15 @@ define(function (require) {
     };
 
     /**
-     * 加载资源
+     * 加载资源，资源格式为: {id: 'xxxx', src: 'path'} 或 'path'
      *
      * @param {Array | string} resource 资源
      * @param {Function} callback 全部加载完成回调
      * @param {Object} opts 参数配置
      * @param {Function} opts.processCallback 加载每一项完成的回调
-     * @param {Objecy} opts.customResourceTypes 自定义的资源配置，opts.customResourceTypes = {'bmp': 'Image'}
-     *
+     * @param {Object} opts.customResourceTypes 自定义的资源配置，opts.customResourceTypes = {'bmp': 'Image'}
      */
-    exports.load = function (resource, callback, opts) {
+    ig.loadResource = function (resource, callback, opts) {
         var me = this;
         opts = opts || {};
 
@@ -200,7 +194,7 @@ define(function (require) {
             processCallback(totalCount - remainingCount, totalCount);
 
             if (remainingCount === 0 && callback) {
-                callback.apply(me);
+                callback.call(me, ig.resources);
             }
         };
 
@@ -227,11 +221,6 @@ define(function (require) {
             invokeMethod(
                 resourceId, resourceSrc, loadOneCallback, errorCallback
             );
-
         }
-
     };
-
-    return exports;
-
 });

@@ -6,7 +6,7 @@
     </head>
     <body>
         <script>
-            ig.resourceLoader.load(
+            ig.loadResource(
                 [
                     './img/1.jpg',
                     {
@@ -14,8 +14,12 @@
                         src: './img/bg.jpg'
                     },
                     {
-                        id: 'testData',
+                        id: 'jsonData',
                         src: './data/test.json'
+                    },
+                    {
+                        id: 'textData',
+                        src: './data/text.text'
                     }
                 ],
                 function () {
@@ -28,11 +32,14 @@
                 }
             );
 
-            // ig.resourceLoader.loadImage('a', './img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
-            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
-            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
-            // ig.resourceLoader.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)});
-            ig.resourceLoader.loadImage('./img/bg4.jpg');
+            // ig.loadImage('a', './img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)}, function () {console.log('errorCallback', arguments)});
+            // ig.loadImage('./img/bg4.jpg', function () {console.log('callback', arguments)});
+            ig.loadImage('./img/bg4.jpg');
+
+            var g = new ig.Game();
+            console.warn(g);
         </script>
     </body>
 </html>

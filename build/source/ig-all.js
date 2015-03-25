@@ -690,90 +690,17 @@ define('ig/ig', ['require'], function (require) {
     };
     checkAudio(exports);
     return exports;
-});define('ig/ImageLoader', [
-    'require',
-    './Event',
-    './util'
-], function (require) {
-    'use strict';
-    var Event = require('./Event');
-    var util = require('./util');
-    var arrayProto = Array.prototype;
-    function ImageLoader(opts) {
-        Event.apply(this, arguments);
-        opts = opts || {};
-        var source = opts.source || [];
-        Array.isArray(source) ? this.source = source : this.source = [source];
-        this.allCallback = opts.allCallback || util.noop;
-        this.imagesLoadedCount = 0;
-        this.imagesErrorLoadedCount = 0;
-        this.images = {};
-        this.imageList = [];
-    }
-    ImageLoader.prototype = {
-        constructor: ImageLoader,
-        addImages: function (source) {
-            var me = this;
-            arrayProto.push[Array.isArray(source) ? 'apply' : 'call'](me.source, source);
-        },
-        load: function () {
-            var me = this;
-            var len = me.source.length;
-            for (var i = 0; i < len; i++) {
-                var tmp = me.source[i];
-                var imgId;
-                var imgSrc;
-                if (util.getType(tmp) === 'object') {
-                    imgId = tmp.id;
-                    imgSrc = tmp.src;
-                } else {
-                    imgId = imgSrc = tmp;
-                }
-                me.images[imgId] = new Image();
-                me.imageList.push(me.images[imgId]);
-                me.images[imgId].addEventListener('load', function (e) {
-                    me.imagesLoadedCount++;
-                    me.fire('ImageLoader:imageLoaded', {
-                        data: {
-                            progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgId]
-                        }
-                    });
-                    if (me.imagesLoadedCount >= len) {
-                        me.fire('ImageLoader:allImageLoaded', {
-                            data: {
-                                allCount: len,
-                                imageList: me.imageList,
-                                images: me.images
-                            }
-                        });
-                        me.allCallback.call(me);
-                    }
-                });
-                me.images[imgId].addEventListener('error', function (e) {
-                    me.imagesErrorLoadedCount++;
-                    me.fire('ImageLoader:imageLoadedError', {
-                        data: {
-                            progress: (me.imagesLoadedCount + me.imagesErrorLoadedCount) / len * 100,
-                            curImg: me.images[imgId]
-                        }
-                    });
-                });
-                me.images[imgId].src = imgSrc;
-            }
-        }
-    };
-    util.inherits(ImageLoader, Event);
-    return ImageLoader;
 });define('ig/Game', [
     'require',
     './Event',
     './util',
+    './env',
     './Stage'
 ], function (require) {
     'use strict';
     var Event = require('./Event');
     var util = require('./util');
+    var env = require('./env');
     var Stage = require('./Stage');
     var _guid = 0;
     var _defaultFPS = 60;
@@ -784,6 +711,26 @@ define('ig/ig', ['require'], function (require) {
     var _realFpsStart;
     var _realFps;
     var _realDelta;
+    function fitScreen() {
+        var me = this;
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var winRatio = winWidth / winHeight;
+        var gameRatio = me.canvas.width / me.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / me.canvas.height : winWidth / me.canvas.width;
+        var scaledW = me.canvas.width * scaleRatio;
+        var scaledH = me.canvas.height * scaleRatio;
+        me.canvas.style.width = scaledW + 'px';
+        me.canvas.style.height = scaledH + 'px';
+        if (me.canvas.parentNode) {
+            me.canvas.parentNode.style.width = scaledW + 'px';
+            me.canvas.parentNode.style.height = scaledH + 'px';
+        }
+        if (gameRatio > winRatio) {
+            var topPos = (winHeight - scaledH) / 2;
+            me.canvas.style.top = topPos + 'px';
+        }
+    }
     function Game(opts) {
         opts = opts || {};
         Event.apply(this, arguments);
@@ -795,6 +742,59 @@ define('ig/ig', ['require'], function (require) {
     }
     Game.prototype = {
         constructor: Game,
+        init: function (opts) {
+            var me = this;
+            if (!opts.canvas) {
+                throw new Error('Game init must be require a canvas param');
+            }
+            me.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container' + _guid);
+            me.ctx = me.canvas.getContext('2d');
+            me.canvas.width = opts.width || 320;
+            me.canvas.height = opts.height || 480;
+            var width = parseInt(me.canvas.width, 10);
+            var height = parseInt(me.canvas.height, 10);
+            var maxWidth = opts.maxWidth || 5000;
+            var maxHeight = opts.maxHeight || 5000;
+            if (opts.maximize) {
+                document.body.style.padding = 0;
+                document.body.style.margin = 0;
+                var pageScroll;
+                var pageScrollType = util.getType(opts.pageScroll);
+                if (pageScrollType === 'number') {
+                    pageScroll = opts.pageScroll;
+                } else if (pageScrollType === 'boolean') {
+                    pageScroll = 17;
+                } else {
+                    pageScroll = 0;
+                }
+                width = opts.width || Math.min(window.innerWidth, maxWidth) - pageScroll;
+                height = opts.height || Math.min(window.innerHeight - 5, maxHeight);
+            }
+            if (env.supportTouch) {
+                me.canvas.style.height = height * 2 + 'px';
+                window.scrollTo(0, 1);
+                width = Math.min(window.innerWidth, maxWidth);
+                height = Math.min(window.innerHeight, maxHeight);
+            }
+            me.canvas.style.height = height + 'px';
+            me.canvas.style.width = width + 'px';
+            me.canvas.width = width;
+            me.canvas.height = height;
+            me.canvas.style.position = 'relative';
+            var canvasParent = me.canvas.parentNode;
+            canvasParent.style.width = width + 'px';
+            canvasParent.style.margin = '0 auto';
+            canvasParent.style.position = 'relative';
+            window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
+                setTimeout(function () {
+                    window.scrollTo(0, 1);
+                    if (opts.scaleFit) {
+                        fitScreen.call(me);
+                    }
+                }, 0);
+            }, false);
+            return me;
+        },
         start: function (startCallback) {
             var me = this;
             me.paused = false;
@@ -936,58 +936,16 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Game, Event);
     return Game;
-});define('ig/FrameMonitor', ['require'], function (require) {
-    'use strict';
-    function FrameMonitor() {
-        this.max = 0;
-        this.min = 9999;
-        this.cur = 0;
-        this.curTime = 0;
-        this.expendPerFrame = 0;
-        this.startTimePerSecond = 0;
-        this.totalPerSecond = 0;
-        this.totalSeconds = 0;
-    }
-    FrameMonitor.prototype = {
-        constructor: FrameMonitor,
-        reset: function () {
-            var me = this;
-            me.max = 0;
-            me.min = 9999;
-            me.cur = 0;
-            me.curTime = 0;
-            me.expendPerFrame = 0;
-            me.startTimePerSecond = 0;
-            me.totalPerSecond = 0;
-        },
-        start: function () {
-            this.curTime = this.startTimePerSecond = Date.now();
-        },
-        update: function () {
-            var now = Date.now();
-            if (now - this.startTimePerSecond >= 1000) {
-                this.cur = this.totalPerSecond;
-                this.max = this.cur > this.max ? this.cur : this.max;
-                this.min = this.cur < this.min ? this.cur : this.min;
-                this.totalPerSecond = 0;
-                this.startTimePerSecond = now;
-                this.totalSeconds++;
-                this.expendPerFrame = now - this.curTime;
-                this.curTime = now;
-            } else {
-                ++this.totalPerSecond;
-            }
-        }
-    };
-    return FrameMonitor;
 });define('ig/Stage', [
     'require',
+    './ig',
     './Event',
     './util',
     './env',
     './DisplayObject'
 ], function (require) {
     'use strict';
+    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -1065,16 +1023,6 @@ define('ig/ig', ['require'], function (require) {
             }, 100);
         }, false);
     }
-    function onTouchEvent(e) {
-        console.warn(e.type, e);
-    }
-    function startupDomEvent(canvas) {
-        canvas.addEventListener('touchstart', onTouchEvent, false);
-        canvas.addEventListener('touchend', onTouchEvent, false);
-        canvas.addEventListener('touchcancel', onTouchEvent, false);
-        canvas.addEventListener('touchleave', onTouchEvent, false);
-        canvas.addEventListener('touchmove', onTouchEvent, false);
-    }
     function captureTouch(element) {
         var me = this;
         var touch = {
@@ -1151,23 +1099,32 @@ define('ig/ig', ['require'], function (require) {
         this.width = this.canvas.width;
         this.height = this.canvas.height;
         this.bgColor = opts.bgColor || '#000';
-        this.setBgColor();
+        this.bgImgUrl = opts.bgImgUrl;
+        if (this.bgImgUrl) {
+            this.setBgImg(this.bgImgUrl);
+        } else {
+            this.setBgColor();
+        }
         this.displayObjectList = [];
         this.displayObjects = {};
+        ig.mainElem = this.canvas;
     }
     Stage.prototype = {
         constructor: Stage,
         clear: function () {
             var me = this;
             me.ctx.clearRect(0, 0, me.width, me.height);
+            return me;
         },
         setBgColor: function (color) {
             var me = this;
             me.bgColor = color || me.bgColor;
             me.canvas.style.backgroundColor = me.bgColor;
+            return me;
         },
         setBgImg: function (imgUrl, repeatPattern) {
             var me = this;
+            me.bgImgUrl = imgUrl;
             me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
             switch (repeatPattern) {
             case 'center':
@@ -1178,6 +1135,7 @@ define('ig/ig', ['require'], function (require) {
                 me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                 break;
             }
+            return me;
         },
         clean: function () {
             var me = this;
@@ -1186,6 +1144,7 @@ define('ig/ig', ['require'], function (require) {
             me.container = null;
             me.canvas = me.ctx = null;
             me.offCanvas = me.offCtx = null;
+            return me;
         },
         update: function () {
             var me = this;
@@ -1202,10 +1161,10 @@ define('ig/ig', ['require'], function (require) {
         render: function () {
             var me = this;
             me.clear();
-            me.fire('Stage:beforeRender', { data: {} });
+            me.fire('beforeStageRender');
             this.sortDisplayObject();
             this.renderDisplayObject();
-            me.fire('Stage:afterRender', { data: {} });
+            me.fire('afterStageRender');
         },
         renderDisplayObject: function () {
             var me = this;
@@ -1642,8 +1601,7 @@ define('ig/ig', ['require'], function (require) {
         return segments[segments.length - 1].toLowerCase();
     }
     ig.resources = {};
-    var exports = {};
-    exports.loadOther = function (id, src, callback, errorCallback) {
+    ig.loadOther = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -1687,7 +1645,7 @@ define('ig/ig', ['require'], function (require) {
         req.open('GET', _src, true);
         req.send(null);
     };
-    exports.loadImage = function (id, src, callback, errorCallback) {
+    ig.loadImage = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -1722,7 +1680,7 @@ define('ig/ig', ['require'], function (require) {
         });
         img.src = _src;
     };
-    exports.load = function (resource, callback, opts) {
+    ig.loadResource = function (resource, callback, opts) {
         var me = this;
         opts = opts || {};
         if (!Array.isArray(resource)) {
@@ -1748,7 +1706,7 @@ define('ig/ig', ['require'], function (require) {
             remainingCount--;
             processCallback(totalCount - remainingCount, totalCount);
             if (remainingCount === 0 && callback) {
-                callback.apply(me);
+                callback.call(me, ig.resources);
             }
         };
         var customResourceTypes = opts.customResourceTypes || {};
@@ -1770,7 +1728,6 @@ define('ig/ig', ['require'], function (require) {
             invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
         }
     };
-    return exports;
 });
 var ig = require('ig');
 
@@ -1779,156 +1736,170 @@ var modName = 'ig/util';
 var refName = 'util';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/Event';
 var refName = 'Event';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/env';
 var refName = 'env';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
-}
-
-var modName = 'ig/ImageLoader';
-var refName = 'ImageLoader';
-var folderName = '';
-
-if (folderName) {
-    var tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
-}
-else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/Game';
 var refName = 'Game';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
-}
-
-var modName = 'ig/FrameMonitor';
-var refName = 'FrameMonitor';
-var folderName = '';
-
-if (folderName) {
-    var tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
-}
-else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/Stage';
 var refName = 'Stage';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/DisplayObject';
 var refName = 'DisplayObject';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/SpriteSheet';
 var refName = 'SpriteSheet';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/ParallaxScroll';
 var refName = 'ParallaxScroll';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/Shape/Ball';
 var refName = 'Ball';
 var folderName = 'Shape';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 var modName = 'ig/resourceLoader';
-var refName = 'resourceLoader';
+var refName = '';
 var folderName = '';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 
 

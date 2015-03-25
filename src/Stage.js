@@ -7,6 +7,7 @@ define(function (require) {
 
     'use strict';
 
+    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -125,20 +126,7 @@ define(function (require) {
             },
             false
         );
-
         // startupDomEvent(canvas);
-    }
-
-    function onTouchEvent(e) {
-        console.warn(e.type, e);
-    }
-
-    function startupDomEvent(canvas) {
-        canvas.addEventListener('touchstart', onTouchEvent, false);
-        canvas.addEventListener('touchend', onTouchEvent, false);
-        canvas.addEventListener('touchcancel', onTouchEvent, false);
-        canvas.addEventListener('touchleave', onTouchEvent, false);
-        canvas.addEventListener('touchmove', onTouchEvent, false);
     }
 
     /**
@@ -267,15 +255,22 @@ define(function (require) {
         this.height = this.canvas.height;
 
         this.bgColor = opts.bgColor || '#000';
+        this.bgImgUrl = opts.bgImgUrl;
 
-        // this.setSize();
-        this.setBgColor();
+        if (this.bgImgUrl) {
+            this.setBgImg(this.bgImgUrl);
+        }
+        else {
+            this.setBgColor();
+        }
 
         // 当前场景中的所有可显示对象集合
         this.displayObjectList = [];
 
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
+
+        ig.mainElem = this.canvas;
 
         // console.warn(this.canvas);
         // captureTouch.call(this, this.canvas);
@@ -350,22 +345,28 @@ define(function (require) {
 
         /**
          * 清除
+         *
+         * @return {Object} Stage 实例
          */
         clear: function () {
             var me = this;
             me.ctx.clearRect(0, 0, me.width, me.height);
+            return me;
         },
 
         /**
          * 设置 canvas 的背景颜色
          *
          * @param {string} color 颜色值 #f00, rgba(255, 0, 0, 1), red
+         *
+         * @return {Object} Stage 实例
          */
         setBgColor: function (color) {
             // debugger
             var me = this;
             me.bgColor = color || me.bgColor;
             me.canvas.style.backgroundColor = me.bgColor;
+            return me;
         },
 
         /**
@@ -374,9 +375,12 @@ define(function (require) {
          *
          * @param {string} imgUrl 图片 url
          * @param {string} repeatPattern center: 居中; full: 拉伸; 默认平铺
+         *
+         * @return {Object} Stage 实例
          */
         setBgImg: function (imgUrl, repeatPattern) {
             var me = this;
+            me.bgImgUrl = imgUrl;
             me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
             switch (repeatPattern) {
                 // 居中
@@ -389,10 +393,13 @@ define(function (require) {
                     me.canvas.style.backgroundSize = me.width + 'px ' + me.height + 'px';
                     break;
             }
+            return me;
         },
 
         /**
          * 清除场景
+         *
+         * @return {Object} Stage 实例
          */
         clean: function () {
             var me = this;
@@ -401,6 +408,7 @@ define(function (require) {
             me.container = null;
             me.canvas = me.ctx = null;
             me.offCanvas = me.offCtx = null;
+            return me;
         },
 
         /**
@@ -426,18 +434,12 @@ define(function (require) {
             var me = this;
             me.clear();
 
-            me.fire('Stage:beforeRender', {
-                data: {
-                }
-            });
+            me.fire('beforeStageRender');
 
             this.sortDisplayObject();
             this.renderDisplayObject();
 
-            me.fire('Stage:afterRender', {
-                data: {
-                }
-            });
+            me.fire('afterStageRender');
         },
 
         /**

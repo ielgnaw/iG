@@ -6,13 +6,17 @@ var modName = '${mod.name}';
 var refName = '${mod.refName}';
 var folderName = '${mod.folder}';
 
+var tmp;
 if (folderName) {
-    var tmp = {};
+    tmp = {};
     tmp[refName] = require(modName);
     ig[folderName] = tmp;
 }
 else {
-    ig[refName] = require(modName);
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
 }
 /** /for */
 

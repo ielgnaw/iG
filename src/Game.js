@@ -11,6 +11,7 @@ define(function (require) {
 
     var Event = require('./Event');
     var util = require('./util');
+    var env = require('./env');
     var Stage = require('./Stage');
 
     var _guid = 0;
@@ -24,6 +25,125 @@ define(function (require) {
     var _realFpsStart;
     var _realFps;
     var _realDelta;
+
+    /**
+     * 给 canvas 一个默认的宽度
+     *
+     * @type {number}
+     */
+    // var defaultCanvasWidth = 383;
+
+    /**
+     * 给 canvas 一个默认的高度
+     *
+     * @type {number}
+     */
+    // var defaultCanvasHeight = 550;
+
+    /**
+     * 屏幕适配
+     *
+     * @param {HTML.Element} canvasParent canvas 父节点
+     */
+    /*function fitScreen(canvasParent) {
+        var me = this;
+        var canvasX;
+        var canvasY;
+        var canvasScaleX;
+        var canvasScaleY;
+        var innerWidth = window.innerWidth;
+        var innerHeight = window.innerHeight;
+
+        if (env.isMobile) {
+            if (window.innerWidth > window.innerHeight) {
+                if (innerWidth / me.canvas.width < innerHeight / me.canvas.height) {
+                    me.canvas.style.width = innerWidth + 'px';
+                    me.canvas.style.height = innerWidth / me.canvas.width * me.canvas.height + 'px';
+                    canvasX = 0;
+                    canvasY = (innerHeight - innerWidth / me.canvas.width * me.canvas.height) / 2;
+                    canvasScaleX = canvasScaleY = me.canvas.width / innerWidth;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                }
+                else {
+                    me.canvas.style.width = innerHeight / me.canvas.height * me.canvas.width + 'px';
+                    me.canvas.style.height = innerHeight + 'px';
+                    canvasX = (innerWidth - innerHeight / me.canvas.height * me.canvas.width) / 2;
+                    canvasY = 0;
+                    canvasScaleX = canvasScaleY = me.canvas.height / innerHeight;
+                    canvasParent.style.marginTop = canvasY + 'px';
+                    canvasParent.style.marginLeft = canvasX + 'px';
+                }
+            }
+            else {
+                canvasX = canvasY = 0;
+                canvasScaleX = me.canvas.width / innerWidth;
+                canvasScaleY = me.canvas.height / innerHeight;
+                me.canvas.style.width = innerWidth + 'px';
+                me.canvas.style.height = innerHeight + 'px';
+                canvasParent.style.marginTop = '0px';
+                canvasParent.style.marginLeft = '0px';
+            }
+        }
+        else {
+            if (innerWidth / me.canvas.width < innerHeight / me.canvas.height) {
+                me.canvas.style.width = innerWidth + 'px';
+                me.canvas.style.height = innerWidth / me.canvas.width * me.canvas.height + 'px';
+                canvasX = 0;
+                canvasY = (innerHeight - innerWidth / me.canvas.width * me.canvas.height) / 2;
+                canvasScaleX = canvasScaleY = me.canvas.width / innerWidth;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            }
+            else {
+                me.canvas.style.width = innerHeight / me.canvas.height * me.canvas.width + 'px';
+                me.canvas.style.height = innerHeight + 'px';
+                canvasX = (innerWidth - innerHeight / me.canvas.height * me.canvas.width) / 2;
+                canvasY = 0;
+                canvasScaleX = canvasScaleY = me.canvas.height / innerHeight;
+                canvasParent.style.marginTop = canvasY + 'px';
+                canvasParent.style.marginLeft = canvasX + 'px';
+            }
+        }
+        me.ctx = me.canvas.getContext('2d');
+
+        if (!me.offCanvas) {
+            me.offCanvas = document.createElement('canvas');
+        }
+        me.offCanvas.width = me.canvas.width;
+        me.offCanvas.style.width = me.canvas.style.width;
+        me.offCanvas.height = me.canvas.height;
+        me.offCanvas.style.height = me.canvas.style.height;
+        me.offCtx = me.offCanvas.getContext('2d');
+        // console.log(canvasX, canvasY, canvasScaleX, canvasScaleY);
+    }*/
+
+    /**
+     * 屏幕适配
+     */
+    function fitScreen() {
+        var me = this;
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var winRatio = winWidth / winHeight;
+        var gameRatio = me.canvas.width / me.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / me.canvas.height : winWidth / me.canvas.width;
+        var scaledW = me.canvas.width * scaleRatio;
+        var scaledH = me.canvas.height * scaleRatio;
+
+        me.canvas.style.width = scaledW + 'px';
+        me.canvas.style.height = scaledH + 'px';
+
+        if (me.canvas.parentNode) {
+            me.canvas.parentNode.style.width = scaledW + 'px';
+            me.canvas.parentNode.style.height = scaledH + 'px';
+        }
+
+        if (gameRatio > winRatio) {
+            var topPos = (winHeight - scaledH) / 2;
+            me.canvas.style.top = topPos + 'px';
+        }
+    }
 
     /**
      * Game 类，一个游戏应该对这个游戏中的场景进行管理
@@ -54,6 +174,136 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: Game,
+
+        /**
+         * 初始化游戏，主要设置游戏画布的尺寸
+         * 全屏通常只用设置 opts.maximize = true
+         * 如果需要屏幕大小变化自动适应则设置 opts.scaleFit = true
+         *
+         * @param {Object} opts 参数配置
+         * @param {boolean} opts.maximize 最大化
+         * @param {boolean} opts.scaleFit 缩放自适应
+         * @param {number} opts.width canvas 宽度
+         * @param {number} opts.height canvas 高度
+         * @param {number} opts.maxWidth canvas 最大宽度，主要和 window.innerWidth 比较
+         * @param {number} opts.maxHeight canvas 最大高度，主要和 window.innerHeight 比较
+         * @param {number | boolean} opts.pageScroll 给页面竖向滚动条留下的宽度,当 maximize = true 时生效
+         *                          pageScroll = true 时，值为 17 ；pageScroll = number 时，值为 number
+         *
+         * @return {Object} Game 实例
+         */
+        init: function (opts) {
+            var me = this;
+
+            if (!opts.canvas) {
+                throw new Error('Game init must be require a canvas param');
+            }
+
+            me.canvas = util.domWrap(opts.canvas, document.createElement('div'), 'ig-stage-container' + _guid);
+            me.ctx = me.canvas.getContext('2d');
+            me.canvas.width = opts.width || 320;
+            me.canvas.height = opts.height || 480;
+
+            var width = parseInt(me.canvas.width, 10);
+            var height = parseInt(me.canvas.height, 10);
+
+            var maxWidth = opts.maxWidth || 5000;
+            var maxHeight = opts.maxHeight || 5000;
+
+            if (opts.maximize) {
+                document.body.style.padding = 0;
+                document.body.style.margin = 0;
+
+                var pageScroll;
+                var pageScrollType = util.getType(opts.pageScroll);
+
+                if (pageScrollType === 'number') {
+                    pageScroll = opts.pageScroll;
+                }
+                else if (pageScrollType === 'boolean') {
+                    pageScroll = 17;
+                }
+                else {
+                    pageScroll = 0;
+                }
+
+                width = opts.width || Math.min(window.innerWidth, maxWidth) - pageScroll;
+                height = opts.height || Math.min(window.innerHeight - 5, maxHeight);
+            }
+
+            if (env.supportTouch) {
+                me.canvas.style.height = (height * 2) + 'px';
+                window.scrollTo(0, 1);
+
+                width = Math.min(window.innerWidth, maxWidth);
+                height = Math.min(window.innerHeight, maxHeight);
+            }
+
+            me.canvas.style.height = height + 'px';
+            me.canvas.style.width = width + 'px';
+            me.canvas.width = width;
+            me.canvas.height = height;
+            me.canvas.style.position = 'relative';
+
+            var canvasParent = me.canvas.parentNode;
+            canvasParent.style.width = width + 'px';
+            canvasParent.style.margin = '0 auto';
+            canvasParent.style.position = 'relative';
+
+            // 是否需要在页面加载时候执行 fitScreen ?
+            // if (opts.scaleFit) {
+            //     fitScreen.call(me);
+            // }
+
+            window.addEventListener(
+                env.supportOrientation ? 'orientationchange' : 'resize',
+                function () {
+                    setTimeout(function () {
+                        window.scrollTo(0, 1);
+                        if (opts.scaleFit) {
+                            fitScreen.call(me);
+                        }
+                    }, 0);
+                },
+                false
+            );
+
+            return me;
+
+            // if (opts.maximize) {
+            //     document.body.style.padding = 0;
+            //     document.body.style.margin = 0;
+            // }
+
+            // if (env.supportTouch) {
+            //     window.scrollTo(0, 1);
+            // }
+            // // debugger
+            // if (opts.width) {
+            //     defaultCanvasWidth = opts.width;
+            // }
+
+            // if (opts.height) {
+            //     defaultCanvasHeight = opts.height;
+            // }
+
+            // me.canvas.width = defaultCanvasWidth;
+            // me.canvas.height = defaultCanvasHeight;
+
+            // me.container = me.canvas.parentNode;
+
+            // fitScreen.call(me, me.container);
+
+            // window.addEventListener(
+            //     env.supportOrientation ? 'orientationchange' : 'resize',
+            //     function () {
+            //         setTimeout(function () {
+            //             fitScreen.call(me, me.container);
+            //         }, 100);
+            //     },
+            //     false
+            // );
+        },
 
         /**
          * 游戏开始
@@ -326,7 +576,6 @@ define(function (require) {
             me.stages = {};
             me.stageStack = [];
         }
-
     };
 
     util.inherits(Game, Event);
