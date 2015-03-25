@@ -69,6 +69,8 @@
                 function (resource) {
                     game.createStage({
                         name: 'bg'
+                    // }).setBgImg(resource.bg.src, 'full');
+                    // }).setBgColor('green');
                     }).setParallaxScroll({
                         image: resource.bg
                         // , aX: 1
@@ -86,12 +88,86 @@
                         , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
                     });
 
+                    game.createStage({
+                        name: 'bg1'
+                    // }).setBgColor('red');
+                    }).setBgImg(resource.bg1, 'full');
+                    // }).setParallaxScroll({
+                    //     image: resource.bg1
+                    //     // , aX: 1
+                    //     // , aY: 1
+                    //     , anims: [
+                    //         {
+                    //             aX: 1
+                    //             , aY: 1
+                    //         },
+                    //         {
+                    //             aX: -1
+                    //             , aY: 1
+                    //         }
+                    //     ]
+                    //     , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
+                    // });
+
+                    game.createStage({
+                        name: 'bg2'
+                    // }).setBgColor('green');
+                    // }).setBgImg(resource.bg2, 'full');
+                    }).setParallaxScroll({
+                        image: resource.bg2
+                        // , aX: 1
+                        // , aY: 1
+                        , anims: [
+                            {
+                                aX: 1
+                                , aY: 1
+                            },
+                            {
+                                aX: -1
+                                , aY: 1
+                            }
+                        ]
+                        , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
+                    });
+
+                    game.createStage({
+                        name: 'bg3'
+                    }).setBgColor('green');
+                    // }).setBgImg(resource.bg2, 'full');
+                    // }).setParallaxScroll({
+                    //     image: resource.bg2
+                    //     // , aX: 1
+                    //     // , aY: 1
+                    //     , anims: [
+                    //         {
+                    //             aX: 1
+                    //             , aY: 1
+                    //         },
+                    //         {
+                    //             aX: -1
+                    //             , aY: 1
+                    //         }
+                    //     ]
+                    //     , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
+                    // });
+
                     game.start('bg', function () {
                         console.log('startCallback');
                     })
                     .on('gameFPS', function (data) {
                         document.querySelector('#fps').innerHTML = 'fps: '+ data.data.fps;
                     })
+
+                    setTimeout(function () {
+                        // game.swapStage(0, 1);
+                        game.changeStage('bg1');
+                        setTimeout(function () {
+                            game.changeStage('bg2');
+                            setTimeout(function () {
+                                game.changeStage('bg3');
+                            }, 3000);
+                        }, 3000);
+                    }, 3000);
                 },
                 {
                     processCallback: function () {

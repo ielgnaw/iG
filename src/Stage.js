@@ -7,10 +7,8 @@ define(function (require) {
 
     'use strict';
 
-    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
-    var env = require('./env');
     var DisplayObject = require('./DisplayObject');
 
     /**
@@ -116,21 +114,53 @@ define(function (require) {
                     if (y === 0) {
                         newScrollPos.y = parallax.vY;
                     }
-                    drawArea = renderParallaxScroll.call(parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                    drawArea = renderParallaxScroll.call(
+                        parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight
+                    );
                 }
             }
         }
     }
 
-    /**
-     * 更新视差滚动
-     */
-    function updateParallax() {
+     /**
+      * 更新视差滚动
+      *
+      * @param {number} totalFrameCounter 游戏的总帧数记录器
+      */
+    function updateParallax(totalFrameCounter) {
         var me = this;
         var parallax = me.parallax;
         if (parallax) {
-            parallax.vX = (parallax.vX + parallax.aX) % parallax.image.width;
-            parallax.vY = (parallax.vY + parallax.aY) % parallax.image.height;
+
+            if (parallax.anims && util.getType(parallax.anims) === 'array') {
+                parallax.animInterval = parallax.animInterval || 10000;
+                if (!parallax.curAnim) {
+                    parallax.curAnim = parallax.anims[0];
+                }
+
+                if (totalFrameCounter % parallax.animInterval === 0) {
+                    if (parallax.time === void 0) {
+                        parallax.time = 0;
+                    }
+
+                    parallax.time++;
+
+                    if (parallax.time === parallax.anims.length) {
+                        parallax.time = 0;
+                    }
+
+                    parallax.curAnim = parallax.anims[parallax.time];
+                }
+            }
+            else {
+                parallax.curAnim = {
+                    aX: parallax.aX,
+                    aY: parallax.aY
+                };
+            }
+
+            parallax.vX = (parallax.vX + parallax.curAnim.aX) % parallax.image.width;
+            parallax.vY = (parallax.vY + parallax.curAnim.aY) % parallax.image.height;
         }
     }
 
@@ -238,7 +268,7 @@ define(function (require) {
          */
         clear: function () {
             var me = this;
-            me.ctx.clearRect(0, 0, me.width, me.height);
+            me.offCtx.clearRect(0, 0, me.width, me.height);
             return me;
         },
 
@@ -247,15 +277,15 @@ define(function (require) {
          *
          * @return {Object} Stage 实例
          */
-        clean: function () {
-            var me = this;
-            me.container.removeChild(me.canvas);
-            me.container.parentNode.removeChild(me.container);
-            me.container = null;
-            me.canvas = me.ctx = null;
-            me.offCanvas = me.offCtx = null;
-            return me;
-        },
+        // clean: function () {
+        //     var me = this;
+        //     me.container.removeChild(me.canvas);
+        //     me.container.parentNode.removeChild(me.container);
+        //     me.container = null;
+        //     me.canvas = me.ctx = null;
+        //     me.offCanvas = me.offCtx = null;
+        //     return me;
+        // },
 
         /**
          * 设置场景的背景颜色
@@ -266,8 +296,13 @@ define(function (require) {
          */
         setBgColor: function (color) {
             var me = this;
-            color = color || '#fff';
-            me.canvas.style.backgroundColor = color;
+            me.bgColor = color;
+            // me.canvas.style.backgroundColor = color;
+            // me.canvas.style.backgroundColor = color;
+            // me.ctx.save();
+            // me.ctx.fillStyle = color;
+            // me.ctx.fillRect(0, 0, me.canvas.height, me.canvas.width);
+            // me.ctx.restore();
             return me;
         },
 
@@ -291,19 +326,38 @@ define(function (require) {
             else if (util.getType(img) === 'string') {
                 imgUrl = img;
             }
+            // console.warn(me.canvas.style.backgroundRepeat);
+            // console.warn(me.canvas.style.backgroundPosition);
+            // console.warn(me.canvas.style.backgroundSize);
 
-            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+            var bgUrl = 'url(' + imgUrl + ')';
+            var bgRepeat = '';
+            var bgPos = '';
+            var bgSize = '';
+
+            // me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
             switch (repeatPattern) {
                 // 居中
                 case 'center':
-                    me.canvas.style.backgroundRepeat = 'no-repeat';
-                    me.canvas.style.backgroundPosition = 'center';
+                    bgRepeat = 'no-repeat';
+                    bgPos = 'center';
+                    // me.canvas.style.backgroundRepeat = 'no-repeat';
+                    // me.canvas.style.backgroundPosition = 'center';
                     break;
                 // 拉伸
                 case 'full':
-                    me.canvas.style.backgroundSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
+                    bgSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
+                    // me.canvas.style.backgroundSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
                     break;
             }
+
+            me.bgImg = {
+                bgUrl: bgUrl,
+                bgRepeat: bgRepeat,
+                bgPos: bgPos,
+                bgSize: bgSize
+            };
+
             return me;
         },
 
@@ -313,6 +367,12 @@ define(function (require) {
          * @param {Object} opts 配置项
          * @param {HTMLImageElement} opts.image 图片
          * @param {string} opts.repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
+         * @param {number} opts.animInterval opts.anims 的循环间隔，
+         *                                   这个间隔不是指的时间间隔，当 totalFrameCounter % opts.animInterval === 0 时触发
+         * @param {Array} opts.anims 动画组，如果设置了次属性，那么会根据这个属性里面的值来切换动画
+         *                           例如: opts.anims = [{aX: 1, aY: 1}, {aX: -1, aY: -1}]，那么首先会执行 opts.anims[0] 的变化，
+         *                           在 totalFrameCounter % animInterval === 0 后，会执行 opts.anims[1] ，如此循环
+         *                           如果 opts.animInterval 没有设置，则取默认值 10000
          */
         setParallaxScroll: function (opts) {
             var me = this;
@@ -338,17 +398,17 @@ define(function (require) {
                 },
                 opts
             );
-
-            console.warn(me);
         },
 
         /**
          * 场景的更新，需要更新场景里面的所有精灵
+         *
+         * @param {number} totalFrameCounter 游戏的总帧数计数器
          */
-        update: function () {
+        update: function (totalFrameCounter) {
             var me = this;
-            // console.warn(1);
-            updateParallax.call(me);
+
+            updateParallax.call(me, totalFrameCounter);
 
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
@@ -370,14 +430,32 @@ define(function (require) {
 
             me.fire('beforeStageRender');
 
-            this.sortDisplayObject();
-            // this.renderDisplayObject();
+            me.sortDisplayObject();
+            // me.renderDisplayObject();
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
 
             me.offCtx.save();
             me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
+            // console.warn(me.bgColor);
+
+            if (me.bgColor) {
+                me.canvas.style.backgroundColor = me.bgColor;
+            }
+            else {
+                me.canvas.style.backgroundColor = '';
+            }
+
+            if (me.bgImg) {
+                me.canvas.style.backgroundImage = me.bgImg.bgUrl;
+                me.canvas.style.backgroundRepeat = me.bgImg.bgRepeat;
+                me.canvas.style.backgroundPosition = me.bgImg.bgPos;
+                me.canvas.style.backgroundSize = me.bgImg.bgSize;
+            }
+            else {
+                me.canvas.style.backgroundImage = '';
+            }
 
             renderParallax.call(me);
             for (var i = 0; i < len; i++) {

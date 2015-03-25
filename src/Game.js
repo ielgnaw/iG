@@ -9,7 +9,6 @@ define(function (require) {
 
     'use strict';
 
-    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -255,7 +254,7 @@ define(function (require) {
          *
          * @return {Object} Game 实例
          */
-        start: function (startCallback) {
+        start: function (startStageName, startCallback) {
             var me = this;
             me.paused = false;
 
@@ -270,11 +269,46 @@ define(function (require) {
 
             _totalFrameCounter = 0;
 
+            var __startStageName = '';
+            var __startCallback = util.noop;
+
+            var argLength = arguments.length;
+            switch (argLength) {
+                case 1:
+                    if (util.getType(arguments[0]) === 'function') {
+                        __startCallback = arguments[0];
+                    }
+                    else {
+                        __startStageName = arguments[0];
+                        __startCallback = util.noop;
+                    }
+                    break;
+                case 2:
+                    __startStageName = arguments[0];
+                    __startCallback = arguments[1];
+                    break;
+                default:
+            }
+
+            // 存在启动的 stage，那么游戏开始时就要用这个 stage 启动
+            // 需要把这个 stage 移动到 stageStack 的第 0 个，因为 render 的是获取场景是通过 getCurrentStage 来获取的
+            if (__startStageName) {
+                var stageStack = me.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === __startStageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                me.swapStage(candidateIndex, 0);
+            }
+
             me.requestID = window.requestAnimationFrame(function () {
-                me.render.call(me);
+                me.render.call(me, __startStageName);
             });
 
-            util.getType(startCallback) === 'function' && startCallback.call(me, {
+            util.getType(__startCallback) === 'function' && __startCallback.call(me, {
                 data: {
                     startTime: _startTime,
                     interval: _interval
@@ -321,12 +355,11 @@ define(function (require) {
                             totalFrameCounter: _totalFrameCounter
                         }
                     });
-                    // console.warn(me.requestID);
 
                     var curStage = me.getCurrentStage();
 
                     if (curStage) {
-                        curStage.update();
+                        curStage.update(_totalFrameCounter);
                         curStage.render();
                     }
 
@@ -452,7 +485,7 @@ define(function (require) {
             var me = this;
             var stage = me.stageStack.pop();
             if (stage) {
-                stage.clean();
+                // stage.clean();
                 delete me.stages[stage.name];
                 me.sortStageIndex();
             }
@@ -463,8 +496,9 @@ define(function (require) {
          */
         sortStageIndex: function () {
             var stageStack = this.stageStack;
-            for (var i = 0, len = stageStack.length; i < len; i++) {
-                stageStack[i].zIndex = i;
+            // for (var i = 0, len = stageStack.length; i < len; i++) {
+            for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
+                stageStack[i].zIndex = j;
             }
         },
 
@@ -478,13 +512,33 @@ define(function (require) {
             var me = this;
             var st = me.getStageByName(name);
             if (st) {
-                st.clean();
+                // st.clean();
                 delete me.stages[st.name];
                 var stageStack = me.stageStack;
                 util.removeArrByCondition(stageStack, function (s) {
                     return s.name === name;
                 });
                 me.sortStageIndex();
+            }
+        },
+
+        /**
+         * 根据名字切换场景
+         *
+         * @param {string} stageName 场景名字
+         */
+        changeStage: function (stageName) {
+            var me = this;
+            if (stageName) {
+                var stageStack = me.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === stageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                me.swapStage(candidateIndex, 0);
             }
         },
 
@@ -506,6 +560,9 @@ define(function (require) {
                 stageStack[to] = sc;
                 me.sortStageIndex();
             }
+
+            // 变换场景时，需要清除 me.canvas
+            me.ctx.clearRect(0, 0, me.canvas.width, me.canvas.height);
         },
 
         /**
@@ -526,7 +583,8 @@ define(function (require) {
          */
         getCurrentStage: function () {
             var me = this;
-            return me.stageStack[me.stageStack.length - 1];
+            // return me.stageStack[me.stageStack.length - 1];
+            return me.stageStack[0];
         },
 
         /**

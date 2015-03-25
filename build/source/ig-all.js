@@ -692,14 +692,12 @@ define('ig/ig', ['require'], function (require) {
     return exports;
 });define('ig/Game', [
     'require',
-    './ig',
     './Event',
     './util',
     './env',
     './Stage'
 ], function (require) {
     'use strict';
-    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
@@ -819,7 +817,7 @@ define('ig/ig', ['require'], function (require) {
             }, false);
             return me;
         },
-        start: function (startCallback) {
+        start: function (startStageName, startCallback) {
             var me = this;
             me.paused = false;
             _startTime = Date.now();
@@ -830,10 +828,39 @@ define('ig/ig', ['require'], function (require) {
             _realFps = 0;
             _realDelta = 0;
             _totalFrameCounter = 0;
+            var __startStageName = '';
+            var __startCallback = util.noop;
+            var argLength = arguments.length;
+            switch (argLength) {
+            case 1:
+                if (util.getType(arguments[0]) === 'function') {
+                    __startCallback = arguments[0];
+                } else {
+                    __startStageName = arguments[0];
+                    __startCallback = util.noop;
+                }
+                break;
+            case 2:
+                __startStageName = arguments[0];
+                __startCallback = arguments[1];
+                break;
+            default:
+            }
+            if (__startStageName) {
+                var stageStack = me.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === __startStageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                me.swapStage(candidateIndex, 0);
+            }
             me.requestID = window.requestAnimationFrame(function () {
-                me.render.call(me);
+                me.render.call(me, __startStageName);
             });
-            util.getType(startCallback) === 'function' && startCallback.call(me, {
+            util.getType(__startCallback) === 'function' && __startCallback.call(me, {
                 data: {
                     startTime: _startTime,
                     interval: _interval
@@ -862,7 +889,7 @@ define('ig/ig', ['require'], function (require) {
                     });
                     var curStage = me.getCurrentStage();
                     if (curStage) {
-                        curStage.update();
+                        curStage.update(_totalFrameCounter);
                         curStage.render();
                     }
                     me.fire('afterGameRender', {
@@ -930,28 +957,40 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             var stage = me.stageStack.pop();
             if (stage) {
-                stage.clean();
                 delete me.stages[stage.name];
                 me.sortStageIndex();
             }
         },
         sortStageIndex: function () {
             var stageStack = this.stageStack;
-            for (var i = 0, len = stageStack.length; i < len; i++) {
-                stageStack[i].zIndex = i;
+            for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
+                stageStack[i].zIndex = j;
             }
         },
         removeStageByName: function (name) {
             var me = this;
             var st = me.getStageByName(name);
             if (st) {
-                st.clean();
                 delete me.stages[st.name];
                 var stageStack = me.stageStack;
                 util.removeArrByCondition(stageStack, function (s) {
                     return s.name === name;
                 });
                 me.sortStageIndex();
+            }
+        },
+        changeStage: function (stageName) {
+            var me = this;
+            if (stageName) {
+                var stageStack = me.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === stageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                me.swapStage(candidateIndex, 0);
             }
         },
         swapStage: function (from, to) {
@@ -964,13 +1003,14 @@ define('ig/ig', ['require'], function (require) {
                 stageStack[to] = sc;
                 me.sortStageIndex();
             }
+            me.ctx.clearRect(0, 0, me.canvas.width, me.canvas.height);
         },
         getStageIndex: function (stage) {
             return stage.zIndex;
         },
         getCurrentStage: function () {
             var me = this;
-            return me.stageStack[me.stageStack.length - 1];
+            return me.stageStack[0];
         },
         clearAllStage: function () {
             var me = this;
@@ -985,17 +1025,13 @@ define('ig/ig', ['require'], function (require) {
     return Game;
 });define('ig/Stage', [
     'require',
-    './ig',
     './Event',
     './util',
-    './env',
     './DisplayObject'
 ], function (require) {
     'use strict';
-    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
-    var env = require('./env');
     var DisplayObject = require('./DisplayObject');
     var newImage4ParallaxRepeat = new Image();
     var guid = 0;
@@ -1063,12 +1099,33 @@ define('ig/ig', ['require'], function (require) {
             }
         }
     }
-    function updateParallax() {
+    function updateParallax(totalFrameCounter) {
         var me = this;
         var parallax = me.parallax;
         if (parallax) {
-            parallax.vX = (parallax.vX + parallax.aX) % parallax.image.width;
-            parallax.vY = (parallax.vY + parallax.aY) % parallax.image.height;
+            if (parallax.anims && util.getType(parallax.anims) === 'array') {
+                parallax.animInterval = parallax.animInterval || 10000;
+                if (!parallax.curAnim) {
+                    parallax.curAnim = parallax.anims[0];
+                }
+                if (totalFrameCounter % parallax.animInterval === 0) {
+                    if (parallax.time === void 0) {
+                        parallax.time = 0;
+                    }
+                    parallax.time++;
+                    if (parallax.time === parallax.anims.length) {
+                        parallax.time = 0;
+                    }
+                    parallax.curAnim = parallax.anims[parallax.time];
+                }
+            } else {
+                parallax.curAnim = {
+                    aX: parallax.aX,
+                    aY: parallax.aY
+                };
+            }
+            parallax.vX = (parallax.vX + parallax.curAnim.aX) % parallax.image.width;
+            parallax.vY = (parallax.vY + parallax.curAnim.aY) % parallax.image.height;
         }
     }
     function Stage(opts) {
@@ -1086,22 +1143,12 @@ define('ig/ig', ['require'], function (require) {
         constructor: Stage,
         clear: function () {
             var me = this;
-            me.ctx.clearRect(0, 0, me.width, me.height);
-            return me;
-        },
-        clean: function () {
-            var me = this;
-            me.container.removeChild(me.canvas);
-            me.container.parentNode.removeChild(me.container);
-            me.container = null;
-            me.canvas = me.ctx = null;
-            me.offCanvas = me.offCtx = null;
+            me.offCtx.clearRect(0, 0, me.width, me.height);
             return me;
         },
         setBgColor: function (color) {
             var me = this;
-            color = color || '#fff';
-            me.canvas.style.backgroundColor = color;
+            me.bgColor = color;
             return me;
         },
         setBgImg: function (img, repeatPattern) {
@@ -1112,16 +1159,25 @@ define('ig/ig', ['require'], function (require) {
             } else if (util.getType(img) === 'string') {
                 imgUrl = img;
             }
-            me.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+            var bgUrl = 'url(' + imgUrl + ')';
+            var bgRepeat = '';
+            var bgPos = '';
+            var bgSize = '';
             switch (repeatPattern) {
             case 'center':
-                me.canvas.style.backgroundRepeat = 'no-repeat';
-                me.canvas.style.backgroundPosition = 'center';
+                bgRepeat = 'no-repeat';
+                bgPos = 'center';
                 break;
             case 'full':
-                me.canvas.style.backgroundSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
+                bgSize = me.cssWidth + 'px ' + me.cssHeight + 'px';
                 break;
             }
+            me.bgImg = {
+                bgUrl: bgUrl,
+                bgRepeat: bgRepeat,
+                bgPos: bgPos,
+                bgSize: bgSize
+            };
             return me;
         },
         setParallaxScroll: function (opts) {
@@ -1143,11 +1199,10 @@ define('ig/ig', ['require'], function (require) {
                 aX: 0,
                 aY: 0
             }, opts);
-            console.warn(me);
         },
-        update: function () {
+        update: function (totalFrameCounter) {
             var me = this;
-            updateParallax.call(me);
+            updateParallax.call(me, totalFrameCounter);
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
@@ -1162,12 +1217,25 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.clear();
             me.fire('beforeStageRender');
-            this.sortDisplayObject();
+            me.sortDisplayObject();
             var displayObjectList = me.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             me.offCtx.save();
             me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
+            if (me.bgColor) {
+                me.canvas.style.backgroundColor = me.bgColor;
+            } else {
+                me.canvas.style.backgroundColor = '';
+            }
+            if (me.bgImg) {
+                me.canvas.style.backgroundImage = me.bgImg.bgUrl;
+                me.canvas.style.backgroundRepeat = me.bgImg.bgRepeat;
+                me.canvas.style.backgroundPosition = me.bgImg.bgPos;
+                me.canvas.style.backgroundSize = me.bgImg.bgSize;
+            } else {
+                me.canvas.style.backgroundImage = '';
+            }
             renderParallax.call(me);
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
