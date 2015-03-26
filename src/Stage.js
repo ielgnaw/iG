@@ -189,6 +189,10 @@ define(function (require) {
         this.ctx = opts.canvas.getContext('2d');
         this.offCanvas = opts.offCanvas;
         this.offCtx = opts.offCanvas.getContext('2d');
+        this.width = opts.game.width;
+        this.height = opts.game.height;
+        this.cssWidth = opts.game.cssWidth;
+        this.cssHeight = opts.game.cssHeight;
 
         // console.warn(this.canvas);
         // captureTouch.call(this, this.canvas);

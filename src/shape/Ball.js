@@ -32,6 +32,7 @@ define(function (require) {
             var me = this;
             var w = me.stageOwner.width;
             var h = me.stageOwner.height;
+
             if (me.x < me.radius || me.x > w - me.radius) {
                 me.vX = -me.vX;
             };
@@ -39,18 +40,44 @@ define(function (require) {
                 me.vY = -me.vY;
             }
             me.moveStep();
+
+            me.bBox.x = me.x;
+            me.bBox.y = me.y;
         },
-        render: function(ctx) {
+        render: function (ctx) {
+            ctx.save();
             ctx.beginPath();
             ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.strokeStyle = 'white';
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.stroke();
-            Ball.superClass.render.apply(this, arguments);
+            ctx.fill();
+            ctx.restore();
+            // console.warn(this.bBox);
+            this.bBox.color = 'red';
+            this.checkCollide();
+
+            this.bBox.show(ctx);
+        },
+        setBBox: function (bBox) {
+           this.bBox = bBox;
+        },
+        checkCollide:function () {
+            var me = this;
+            var displayObjectList = me.stageOwner.displayObjectList;
+            var length = displayObjectList.length;
+            for (var i = 0; i < length; i++) {
+                if (me.name !== displayObjectList[i].name
+                    && me.bBox.isCollide(displayObjectList[i].bBox)
+                    && me.bBox.color !== 'yellow'
+                ) {
+                    console.warn(1);
+                    me.bBox.color = 'yellow';
+                    displayObjectList[i].bBox.color = 'yellow';
+                }
+                // else {
+                //     me.bBox.color = me.color;
+                //     displayObjectList[i].bBox.color = me.color;
+                // }
+            }
         }
     }
 

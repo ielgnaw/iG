@@ -1138,6 +1138,10 @@ define('ig/ig', ['require'], function (require) {
         this.ctx = opts.canvas.getContext('2d');
         this.offCanvas = opts.offCanvas;
         this.offCtx = opts.offCanvas.getContext('2d');
+        this.width = opts.game.width;
+        this.height = opts.game.height;
+        this.cssWidth = opts.game.cssWidth;
+        this.cssHeight = opts.game.cssHeight;
     }
     Stage.prototype = {
         constructor: Stage,
@@ -1524,100 +1528,6 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(SpriteSheet, DisplayObject);
     return SpriteSheet;
-});define('ig/ParallaxScroll', [
-    'require',
-    './util',
-    './DisplayObject'
-], function (require) {
-    'use strict';
-    var util = require('./util');
-    var DisplayObject = require('./DisplayObject');
-    var guid = 0;
-    var newImage4Repeat = new Image();
-    function ParallaxScroll(opts) {
-        opts = opts || {};
-        if (!opts.image) {
-            throw new Error('ParallaxScroll must be require a image param');
-        }
-        DisplayObject.apply(this, arguments);
-        this.name = opts.name === null || opts.name === undefined ? 'ig_parallaxscroll_' + guid++ : opts.name;
-        this.image = opts.image;
-        this.repeat = opts.repeat && [
-            'repeat',
-            'repeat-x',
-            'repeat-y'
-        ].indexOf(opts.repeat) !== -1 ? opts.repeat : 'no-repeat';
-    }
-    ParallaxScroll.prototype = {
-        constructor: ParallaxScroll,
-        update: function () {
-            var me = this;
-            me.vX = (me.vX + me.aX) % me.image.width;
-            me.vY = (me.vY + me.aY) % me.image.height;
-        },
-        render: function (offCtx) {
-            var me = this;
-            if (me.repeat !== 'no-repeat') {
-                _renderRepeatImage.call(me, offCtx);
-            }
-            var imageWidth = me.image.width;
-            var imageHeight = me.image.height;
-            var drawArea = {
-                width: 0,
-                height: 0
-            };
-            for (var y = 0; y < imageHeight; y += drawArea.height) {
-                for (var x = 0; x < imageWidth; x += drawArea.width) {
-                    var newPos = {
-                        x: me.x + x,
-                        y: me.y + y
-                    };
-                    var newArea = {
-                        width: imageWidth - x,
-                        height: imageHeight - y
-                    };
-                    var newScrollPos = {
-                        x: 0,
-                        y: 0
-                    };
-                    if (x === 0) {
-                        newScrollPos.x = me.vX;
-                    }
-                    if (y === 0) {
-                        newScrollPos.y = me.vY;
-                    }
-                    drawArea = _drawScroll.call(me, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
-                }
-            }
-        }
-    };
-    function _drawScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
-        var me = this;
-        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
-        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
-        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
-        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
-        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
-        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
-        offCtx.drawImage(me.image, left, top, width, height, newPos.x, newPos.y, width, height);
-        return {
-            width: width,
-            height: height
-        };
-    }
-    function _renderRepeatImage(offCtx) {
-        var me = this;
-        offCtx.save();
-        offCtx.fillStyle = offCtx.createPattern(me.image, me.repeat);
-        offCtx.fillRect(me.x, me.y, offCtx.canvas.width, offCtx.canvas.height);
-        offCtx.restore();
-        if (!newImage4Repeat.src) {
-            newImage4Repeat.src = offCtx.canvas.toDataURL();
-            me.image = newImage4Repeat;
-        }
-    }
-    util.inherits(ParallaxScroll, DisplayObject);
-    return ParallaxScroll;
 });define('ig/Shape/Ball', [
     'require',
     '../util',
@@ -1644,18 +1554,34 @@ define('ig/ig', ['require'], function (require) {
                 me.vY = -me.vY;
             }
             me.moveStep();
+            me.bBox.x = me.x;
+            me.bBox.y = me.y;
         },
         render: function (ctx) {
+            ctx.save();
             ctx.beginPath();
             ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, this.radius - 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.strokeStyle = 'white';
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.stroke();
-            Ball.superClass.render.apply(this, arguments);
+            ctx.fill();
+            ctx.restore();
+            this.bBox.color = 'red';
+            this.checkCollide();
+            this.bBox.show(ctx);
+        },
+        setBBox: function (bBox) {
+            this.bBox = bBox;
+        },
+        checkCollide: function () {
+            var me = this;
+            var displayObjectList = me.stageOwner.displayObjectList;
+            var length = displayObjectList.length;
+            for (var i = 0; i < length; i++) {
+                if (me.name !== displayObjectList[i].name && me.bBox.isCollide(displayObjectList[i].bBox) && me.bBox.color !== 'yellow') {
+                    console.warn(1);
+                    me.bBox.color = 'yellow';
+                    displayObjectList[i].bBox.color = 'yellow';
+                }
+            }
         }
     };
     util.inherits(Ball, DisplayObject);
@@ -1917,23 +1843,6 @@ else {
 
 var modName = 'ig/SpriteSheet';
 var refName = 'SpriteSheet';
-var folderName = '';
-
-var tmp;
-if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
-}
-else {
-    tmp = require(modName);
-    if (refName) {
-        ig[refName] = tmp;
-    }
-}
-
-var modName = 'ig/ParallaxScroll';
-var refName = 'ParallaxScroll';
 var folderName = '';
 
 var tmp;
