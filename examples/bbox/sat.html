@@ -334,7 +334,7 @@
                     this.a = null;
                     this.b = null;
                     this.overlapN = new Vector(); // 重叠方向的单位向量
-                    this.overlapV = new Vector(); // Subtract this from a's position to extract it from b
+                    this.overlapV = new Vector(); // 重叠的面积即重叠的大小
                     this.clear();
                 };
                 SAT.Response = Response;
@@ -347,7 +347,7 @@
                 Response.prototype.clear = function () {
                     this.aInB = true; // a 完全在 b 里面
                     this.bInA = true; // b 完全在 a 里面
-                    this.overlap = Number.MAX_VALUE; // 重叠的数量（overlapV 的幅度），如果 a 和 b 相交就是 0
+                    this.overlap = Number.MAX_VALUE; // 两个对象相交的面积（this.overlapV 的值），如果两个对象刚刚碰到那么就是 0
                     return this;
                 };
 
@@ -867,10 +867,10 @@
             ]);
 
             var polygon1 = new P(new V(300, 100), [
-                new V(5, 5),
-                new V(100, 50),
-                new V(50, 100),
-                new V(10, 90)
+                new V(5, 5)
+                // , new V(100, 50)
+                // , new V(50, 100)
+                , new V(10, 90)
             ]);
 
             console.warn(polygon1);

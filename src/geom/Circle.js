@@ -1,0 +1,73 @@
+/**
+ * @file 圆形
+ * @author ielgnaw(wuji0223@gmail.com)
+ */
+
+define(function (require) {
+
+    'use strict';
+
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    var collision = require('../collision');
+    var Vector = require('./Vector');
+
+    var abs = Math.abs;
+    var sqrt = Math.sqrt;
+
+    /**
+     * Circle 基类
+     *
+     * @extends DisplayObject
+     * @constructor
+     *
+     * @param {Object} opts 参数 x, y, radius
+     */
+    function Circle(opts) {
+        DisplayObject.apply(this, arguments);
+    }
+
+    Circle.prototype = {
+        /**
+         * 还原 constructor
+         */
+        constructor: Circle,
+
+        /**
+         * 是否和另一个圆形相交
+         *
+         * @param {Circle} otherCircle 另一个圆形
+         * @param {boolean} isShowCollideResponse 是否需要碰撞的响应
+         *
+         * @return {boolean} 是否相交
+         */
+        intersects: function (otherCircle, isShowCollideResponse) {
+            return collision.checkCircleCircle(this, otherCircle, isShowCollideResponse);
+        },
+
+        /**
+         * 某个点是否和圆形相交
+         *
+         * @param {number} x 点的横坐标
+         * @param {number} y 点的纵坐标
+         *
+         * @return {boolean} 是否相交
+         */
+        hitTestPoint: function (x, y) {
+            var dx = abs(x - this.x);
+            var dy = abs(y - this.y);
+
+            var dz = sqrt(dx * dx + dy * dy);
+            if (dz <= this.radius) {
+                return true;
+            }
+
+            return false;
+        }
+    };
+
+    util.inherits(Circle, DisplayObject);
+
+    return Circle;
+
+});

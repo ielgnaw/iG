@@ -1528,64 +1528,6 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(SpriteSheet, DisplayObject);
     return SpriteSheet;
-});define('ig/Shape/Ball', [
-    'require',
-    '../util',
-    '../DisplayObject'
-], function (require) {
-    'use strict';
-    var util = require('../util');
-    var DisplayObject = require('../DisplayObject');
-    function Ball(opts) {
-        var me = this;
-        DisplayObject.apply(me, arguments);
-    }
-    Ball.prototype = {
-        constructor: Ball,
-        update: function () {
-            var me = this;
-            var w = me.stageOwner.width;
-            var h = me.stageOwner.height;
-            if (me.x < me.radius || me.x > w - me.radius) {
-                me.vX = -me.vX;
-            }
-            ;
-            if (me.y < me.radius || me.y > h - me.radius) {
-                me.vY = -me.vY;
-            }
-            me.moveStep();
-            me.bBox.x = me.x;
-            me.bBox.y = me.y;
-        },
-        render: function (ctx) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            this.bBox.color = 'red';
-            this.checkCollide();
-            this.bBox.show(ctx);
-        },
-        setBBox: function (bBox) {
-            this.bBox = bBox;
-        },
-        checkCollide: function () {
-            var me = this;
-            var displayObjectList = me.stageOwner.displayObjectList;
-            var length = displayObjectList.length;
-            for (var i = 0; i < length; i++) {
-                if (me.name !== displayObjectList[i].name && me.bBox.isCollide(displayObjectList[i].bBox) && me.bBox.color !== 'yellow') {
-                    console.warn(1);
-                    me.bBox.color = 'yellow';
-                    displayObjectList[i].bBox.color = 'yellow';
-                }
-            }
-        }
-    };
-    util.inherits(Ball, DisplayObject);
-    return Ball;
 });define('ig/resourceLoader', [
     'require',
     './ig',
@@ -1735,6 +1677,253 @@ define('ig/ig', ['require'], function (require) {
             invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
         }
     };
+});define('ig/Shape/Ball', [
+    'require',
+    '../util',
+    '../DisplayObject'
+], function (require) {
+    'use strict';
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    function Ball(opts) {
+        var me = this;
+        DisplayObject.apply(me, arguments);
+    }
+    Ball.prototype = {
+        constructor: Ball,
+        update: function () {
+            var me = this;
+            var w = me.stageOwner.width;
+            var h = me.stageOwner.height;
+            if (me.x < me.radius || me.x > w - me.radius) {
+                me.vX = -me.vX;
+            }
+            ;
+            if (me.y < me.radius || me.y > h - me.radius) {
+                me.vY = -me.vY;
+            }
+            me.moveStep();
+            me.bBox.x = me.x;
+            me.bBox.y = me.y;
+        },
+        render: function (ctx) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.fillStyle = this.color;
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            this.bBox.color = 'red';
+            this.checkCollide();
+            this.bBox.show(ctx);
+        },
+        setBBox: function (bBox) {
+            this.bBox = bBox;
+        },
+        checkCollide: function () {
+            var me = this;
+            var displayObjectList = me.stageOwner.displayObjectList;
+            var length = displayObjectList.length;
+            for (var i = 0; i < length; i++) {
+                if (me.name !== displayObjectList[i].name && me.bBox.isCollide(displayObjectList[i].bBox) && me.bBox.color !== 'yellow') {
+                    console.warn(1);
+                    me.bBox.color = 'yellow';
+                    displayObjectList[i].bBox.color = 'yellow';
+                }
+            }
+        }
+    };
+    util.inherits(Ball, DisplayObject);
+    return Ball;
+});define('ig/geom/Vector', ['require'], function (require) {
+    var sqrt = Math.sqrt;
+    var cos = Math.cos;
+    var sin = Math.sin;
+    function Vector(x, y) {
+        this.x = x || 0;
+        this.y = y || x || 0;
+    }
+    Vector.prototype = {
+        constructor: Vector,
+        copy: function (other) {
+            this.x = other.x;
+            this.y = other.y;
+            return this;
+        },
+        rotate: function (angle) {
+            var x = this.x;
+            var y = this.y;
+            var cosValue = cos(angle);
+            var sinValue = sin(angle);
+            this.x = x * cosValue - y * sinValue;
+            this.y = x * sinValue + y * cosValue;
+            return this;
+        },
+        perp: function () {
+            var x = this.x;
+            this.x = this.y;
+            this.y = -x;
+            return this;
+        },
+        reverse: function () {
+            this.x = -this.x;
+            this.y = -this.y;
+            return this;
+        },
+        normalize: function () {
+            var len = this.len();
+            if (len > 0) {
+                this.x /= len;
+                this.y /= len;
+            }
+            return this;
+        },
+        add: function (other) {
+            this.x += other.x;
+            this.y += other.y;
+            return this;
+        },
+        sub: function (other) {
+            this.x -= other.x;
+            this.y -= other.y;
+            return this;
+        },
+        scale: function (x, y) {
+            this.x *= x;
+            this.y *= y || x;
+            return this;
+        },
+        project: function (other) {
+            var amt = this.dot(other) / other.len2();
+            this.x = amt * other.x;
+            this.y = amt * other.y;
+            return this;
+        },
+        projectN: function (other) {
+            var amt = this.dot(other);
+            this.x = amt * other.x;
+            this.y = amt * other.y;
+            return this;
+        },
+        reflect: function (axis) {
+            var x = this.x;
+            var y = this.y;
+            this.project(axis).scale(2);
+            this.x -= x;
+            this.y -= y;
+            return this;
+        },
+        reflectN: function (axis) {
+            var x = this.x;
+            var y = this.y;
+            this.projectN(axis).scale(2);
+            this.x -= x;
+            this.y -= y;
+            return this;
+        },
+        dot: function (other) {
+            return this.x * other.x + this.y * other.y;
+        },
+        len2: function () {
+            return this.dot(this);
+        },
+        len: function () {
+            return sqrt(this.len2());
+        }
+    };
+    return Vector;
+});define('ig/geom/Circle', [
+    'require',
+    '../util',
+    '../DisplayObject',
+    '../collision',
+    './Vector'
+], function (require) {
+    'use strict';
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    var collision = require('../collision');
+    var Vector = require('./Vector');
+    var abs = Math.abs;
+    var sqrt = Math.sqrt;
+    function Circle(opts) {
+        DisplayObject.apply(this, arguments);
+    }
+    Circle.prototype = {
+        constructor: Circle,
+        intersects: function (otherCircle, isShowCollideResponse) {
+            return collision.checkCircleCircle(this, otherCircle, isShowCollideResponse);
+        },
+        hitTestPoint: function (x, y) {
+            var dx = abs(x - this.x);
+            var dy = abs(y - this.y);
+            var dz = sqrt(dx * dx + dy * dy);
+            if (dz <= this.radius) {
+                return true;
+            }
+            return false;
+        }
+    };
+    util.inherits(Circle, DisplayObject);
+    return Circle;
+});define('ig/collision', [
+    'require',
+    './geom/Vector'
+], function (require) {
+    'use strict';
+    var Vector = require('./geom/Vector');
+    var sqrt = Math.sqrt;
+    var pow = Math.pow;
+    var vectorPool = [];
+    for (var i = 0; i < 10; i++) {
+        vectorPool.push(new Vector());
+    }
+    var arrPool = [];
+    for (var i = 0; i < 5; i++) {
+        arrPool.push([]);
+    }
+    function CollideResponse() {
+        this.first = null;
+        this.second = null;
+        this.overlapN = new Vector();
+        this.overlapV = new Vector();
+        this.reset();
+    }
+    CollideResponse.prototype = {
+        constructor: CollideResponse,
+        reset: function () {
+            this.firstInSecond = true;
+            this.secondInFirst = true;
+            this.overlap = Number.MAX_VALUE;
+            return this;
+        }
+    };
+    var collideResponse = new CollideResponse();
+    var exports = {};
+    exports.checkCircleCircle = function (firstCircle, secondCircle, isShowCollideResponse) {
+        var differenceV = vectorPool.pop().copy(new Vector(secondCircle.x, secondCircle.y)).sub(new Vector(firstCircle.x, firstCircle.y));
+        var totalRadius = firstCircle.radius + secondCircle.radius;
+        var totalRadiusPow = pow(totalRadius, 2);
+        var distancePow = differenceV.len2();
+        if (distancePow > totalRadiusPow) {
+            vectorPool.push(differenceV);
+            return false;
+        }
+        if (isShowCollideResponse) {
+            collideResponse.clear();
+            var dist = sqrt(distancePow);
+            collideResponse.firstCircle = firstCircle;
+            collideResponse.secondCircle = secondCircle;
+            collideResponse.overlap = totalRadius - dist;
+            collideResponse.overlapN.copy(differenceV.normalize());
+            collideResponse.overlapV.copy(differenceV).scale(collideResponse.overlap);
+            collideResponse.aInB = firstCircle.radius <= secondCircle.radius && dist <= secondCircle.radius - firstCircle.radius;
+            collideResponse.bInA = secondCircle.radius <= firstCircle.radius && dist <= firstCircle.radius - secondCircle.radius;
+        }
+        vectorPool.push(differenceV);
+        return true;
+    };
+    return exports;
 });
 var ig = require('ig');
 
@@ -1858,6 +2047,40 @@ else {
     }
 }
 
+var modName = 'ig/resourceLoader';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Stage';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
 var modName = 'ig/Shape/Ball';
 var refName = 'Ball';
 var folderName = 'Shape';
@@ -1875,7 +2098,41 @@ else {
     }
 }
 
-var modName = 'ig/resourceLoader';
+var modName = 'ig/geom/Vector';
+var refName = 'Vector';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/geom/Circle';
+var refName = 'Circle';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    tmp = {};
+    tmp[refName] = require(modName);
+    ig[folderName] = tmp;
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/collision';
 var refName = '';
 var folderName = '';
 

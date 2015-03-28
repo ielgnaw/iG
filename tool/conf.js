@@ -11,8 +11,15 @@ exports.modules = {
         {name: 'ig/Stage'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
         {name: 'ig/SpriteSheet', refName: 'SpriteSheet'}, // window.ig.SpriteSheet
+        {name: 'ig/resourceLoader'},
+        {name: 'ig/Stage'},
+
         {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'}, // window.ig.Shape.Ball
-        {name: 'ig/resourceLoader'}
+
+        // 这里有问题
+        {name: 'ig/geom/Vector', refName: 'Vector', folder: 'geom'}, // window.ig.geom.circle
+        {name: 'ig/geom/Circle', refName: 'Circle', folder: 'geom'}, // window.ig.geom.Circle
+        {name: 'ig/collision'}
     ]
 };
 
