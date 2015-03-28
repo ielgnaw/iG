@@ -94,8 +94,9 @@ window.onload = function () {
                 x: 150,
                 y: 50,
                 radius: 25
-                , vX: -1
-                , vY: 0
+                , vX: -5
+                , vY: 2
+                , debug: true
             });
 
             circle2.update = function () {
@@ -110,7 +111,11 @@ window.onload = function () {
                 }
                 this.moveStep();
 
-                console.warn(this.intersects(circle));
+                var collideResponse = this.intersects(circle, true);
+                if (collideResponse) {
+                    this.vX -= collideResponse.overlapV.x;
+                    this.vY -= collideResponse.overlapV.y;
+                }
 
                 // if (this.hitTestPoint(85, 50)) {
                     // console.warn('p');
@@ -124,6 +129,8 @@ window.onload = function () {
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.restore();
+
+                this.debugRender(ctx);
             }
 
 

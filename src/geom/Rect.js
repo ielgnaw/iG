@@ -1,5 +1,5 @@
 /**
- * @file 矩形，四个角均为直角的四边形
+ * @file 矩形，这里的矩形指的是四个角均为直角的四边形
  * @author ielgnaw(wuji0223@gmail.com)
  */
 

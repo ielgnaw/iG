@@ -135,7 +135,7 @@ define(function (require) {
 
         // 当前这个 DisplayObject 实例是否开启 debug 模式
         // 开始 debug 模式即绘制这个 DisplayObject 实例的时候会带上边框
-        me.debug = false;
+        me.debug = !!opts.debug || false;
 
         // 初始化的时候设置位置
         me.setPos(me.x, me.y);

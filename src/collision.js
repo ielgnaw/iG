@@ -74,19 +74,20 @@ define(function (require) {
         var differenceV = vectorPool.pop().copy(
             new Vector(secondCircle.x, secondCircle.y)
         ).sub(new Vector(firstCircle.x, firstCircle.y));
+
         var totalRadius = firstCircle.radius + secondCircle.radius;
         var totalRadiusPow = pow(totalRadius, 2);
         var distancePow = differenceV.len2();
 
+        // 没有相交
         if (distancePow > totalRadiusPow) {
-            // 没有相交
             vectorPool.push(differenceV);
             return false;
         }
 
         // 相交
         if (isShowCollideResponse) {
-            collideResponse.clear();
+            collideResponse.reset();
             var dist = sqrt(distancePow);
             collideResponse.firstCircle = firstCircle;
             collideResponse.secondCircle = secondCircle;
@@ -97,10 +98,10 @@ define(function (require) {
                                 && dist <= secondCircle.radius - firstCircle.radius;
             collideResponse.bInA = secondCircle.radius <= firstCircle.radius
                                 && dist <= firstCircle.radius - secondCircle.radius;
-        }
 
-        vectorPool.push(differenceV);
-        return true;
+            vectorPool.push(differenceV);
+            return collideResponse;
+        }
     };
 
     return exports;

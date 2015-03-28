@@ -1350,7 +1350,7 @@ define('ig/ig', ['require'], function (require) {
         me.reverseVY = false;
         me.status = 1;
         me.customProp = opts.customProp || {};
-        me.debug = false;
+        me.debug = !!opts.debug || false;
         me.setPos(me.x, me.y);
     }
     DisplayObject.prototype = {
@@ -1862,6 +1862,14 @@ define('ig/ig', ['require'], function (require) {
                 return true;
             }
             return false;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+                offCtx.restore();
+            }
         }
     };
     util.inherits(Circle, DisplayObject);
@@ -1910,7 +1918,7 @@ define('ig/ig', ['require'], function (require) {
             return false;
         }
         if (isShowCollideResponse) {
-            collideResponse.clear();
+            collideResponse.reset();
             var dist = sqrt(distancePow);
             collideResponse.firstCircle = firstCircle;
             collideResponse.secondCircle = secondCircle;
@@ -1919,9 +1927,9 @@ define('ig/ig', ['require'], function (require) {
             collideResponse.overlapV.copy(differenceV).scale(collideResponse.overlap);
             collideResponse.aInB = firstCircle.radius <= secondCircle.radius && dist <= secondCircle.radius - firstCircle.radius;
             collideResponse.bInA = secondCircle.radius <= firstCircle.radius && dist <= firstCircle.radius - secondCircle.radius;
+            vectorPool.push(differenceV);
+            return collideResponse;
         }
-        vectorPool.push(differenceV);
-        return true;
     };
     return exports;
 });

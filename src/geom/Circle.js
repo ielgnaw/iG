@@ -63,6 +63,25 @@ define(function (require) {
             }
 
             return false;
+        },
+
+        /**
+         * debug 时渲染边界盒
+         *
+         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         */
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(
+                    this.x - this.radius,
+                    this.y - this.radius,
+                    this.radius * 2,
+                    this.radius * 2
+                );
+                offCtx.restore();
+            }
         }
     };
 
