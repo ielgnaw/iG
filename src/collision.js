@@ -75,9 +75,12 @@ define(function (require) {
             new Vector(secondCircle.x, secondCircle.y)
         ).sub(new Vector(firstCircle.x, firstCircle.y));
 
-        var totalRadius = firstCircle.radius + secondCircle.radius;
+        // console.warn(firstCircle.scaleX);
+
+        var totalRadius = firstCircle.radius * firstCircle.scaleX + secondCircle.radius * secondCircle.scaleX;
         var totalRadiusPow = pow(totalRadius, 2);
         var distancePow = differenceV.len2();
+        // console.warn(distancePow);
 
         // 没有相交
         if (distancePow > totalRadiusPow) {
@@ -89,14 +92,14 @@ define(function (require) {
         if (isShowCollideResponse) {
             collideResponse.reset();
             var dist = sqrt(distancePow);
-            collideResponse.firstCircle = firstCircle;
-            collideResponse.secondCircle = secondCircle;
+            collideResponse.first = firstCircle;
+            collideResponse.second = secondCircle;
             collideResponse.overlap = totalRadius - dist;
             collideResponse.overlapN.copy(differenceV.normalize());
             collideResponse.overlapV.copy(differenceV).scale(collideResponse.overlap);
-            collideResponse.aInB = firstCircle.radius <= secondCircle.radius
+            collideResponse.firstInSecond = firstCircle.radius <= secondCircle.radius
                                 && dist <= secondCircle.radius - firstCircle.radius;
-            collideResponse.bInA = secondCircle.radius <= firstCircle.radius
+            collideResponse.secondInFirst = secondCircle.radius <= firstCircle.radius
                                 && dist <= firstCircle.radius - secondCircle.radius;
 
             vectorPool.push(differenceV);
