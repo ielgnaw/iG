@@ -17,15 +17,15 @@ window.onload = function () {
         // , pageScroll: true
         // , width: 200
         // , height: 200
-        // , maxHeight: 100
-        // , maxWidth: 100
+        // , maxWidth: 700
+        // , maxHeight: 900
     });
 
     ig.loadResource(
         [
             {
                 id: 'bg',
-                src: './img/bg.jpg'
+                src: './img/bg5.jpg'
             },
             {
                 id: 'bg1',

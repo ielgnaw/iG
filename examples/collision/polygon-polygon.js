@@ -14,13 +14,18 @@ window.onload = function () {
         canvas: canvas
         , maximize: true
         , scaleFit: true
+        // , pageScroll: true
+        // , width: 200
+        // , height: 200
+        // , maxWidth: 700
+        // , maxHeight: 700
     });
 
     ig.loadResource(
         [
             {
                 id: 'bg',
-                src: './img/bg.jpg'
+                src: './img/bg5.jpg'
             },
             {
                 id: 'bg1',
@@ -48,99 +53,8 @@ window.onload = function () {
                     }
                 ]
                 , animInterval: 1000
+                // ,repeat: 'repeat'
             });
-
-            // var polygon1 = new ig.geom.Polygon({
-            //     x: 100,
-            //     y: 200,
-            //     points: [
-            //         {
-            //             x: 30,
-            //             y: 30
-            //         },
-            //         {
-            //             x: 40,
-            //             y: 30
-            //         },
-            //         {
-            //             x: 120,
-            //             y: 100
-            //         },
-            //         {
-            //             x: 50,
-            //             y: 100
-            //         }
-            //     ]
-            //     , vX: 5 // util.randomInt(-5, 5)
-            //     , vY: -5 // util.randomInt(-5, 5)
-            //     , fillStyle: '#' + ((1 << 24) * Math.random() | 0).toString(16)
-            //     , debug: true
-            //     , angle: 30
-            // });
-
-            // polygon1.update = function () {
-            //     var w = this.stageOwner.width;
-            //     var h = this.stageOwner.height;
-
-            //     this.getBounds();
-            //     // console.warn(this.bounds.width, this.bounds.x, w);
-            //     // console.warn(this.angle);
-            //     if (this.bounds.x <= 0 || this.bounds.x + this.bounds.width >= w) {
-            //         this.vX = -this.vX;
-            //     }
-            //     if (this.bounds.y <= 0 || this.bounds.y + this.bounds.height >= h) {
-            //         this.vY = -this.vY;
-            //     }
-
-            //     this.moveStep();
-
-            //     var displayObjectList = this.stageOwner.displayObjectList;
-            //     for (var i = 0, len = displayObjectList.length; i < len; i++) {
-            //         if (displayObjectList[i] instanceof ig.geom.Polygon
-            //             && this.name !== displayObjectList[i].name
-            //         ) {
-            //             var collideResponse = this.intersects(displayObjectList[i], true);
-            //             if (collideResponse) {
-            //                 this.vX -= collideResponse.overlapV.x;// / 10;
-            //                 this.vY -= collideResponse.overlapV.y;// / 10;
-
-            //                 // 减速
-            //                 if (Math.abs(this.vX) >= 20) {
-            //                     this.frictionX = .5;
-            //                 }
-            //                 else {
-            //                     this.frictionX = 1;
-            //                 }
-            //                 if (Math.abs(this.vY) >= 20) {
-            //                     this.frictionY = .5;
-            //                 }
-            //                 else {
-            //                     this.frictionY = 1;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // };
-
-            // polygon1.render = function (ctx) {
-            //     var points = this.points;
-            //     var i = points.length;
-
-            //     ctx.save();
-            //     ctx.fillStyle = this.fillStyle || '#000';
-            //     ctx.translate(this.x, this.y);
-            //     // ctx.rotate(util.deg2Rad(this.angle));
-            //     ctx.beginPath();
-            //     ctx.moveTo(points[0].x, points[0].y);
-            //     while (i--) {
-            //         ctx.lineTo(points[i].x, points[i].y);
-            //     }
-            //     ctx.closePath();
-            //     ctx.fill();
-            //     ctx.translate(-this.x, -this.y);
-            //     this.debugRender(ctx);
-            //     ctx.restore();
-            // }
 
             var count = 5;
             for (var i = 0; i < count; i++) {
@@ -161,8 +75,8 @@ window.onload = function () {
                     y: Math.floor(util.randomFloat(point2.y + 10, point3.y + 10))
                 };
                 var polygon = new ig.geom.Polygon({
-                    x: Math.floor(util.randomFloat(200, canvas.width - 200)),
-                    y: Math.floor(util.randomFloat(200, canvas.height - 200)),
+                    x: Math.floor(util.randomFloat(300, canvas.width - 300)),
+                    y: Math.floor(util.randomFloat(300, canvas.height - 300)),
                     points: [point1, point2, point3, point4]
                     , vX: 5 // util.randomFloat(-5, 5)
                     , vY: -5 // util.randomFloat(-5, 5)

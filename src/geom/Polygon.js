@@ -12,9 +12,6 @@ define(function (require) {
     var collision = require('../collision');
     var Vector = require('./Vector');
 
-    var abs = Math.abs;
-    var sqrt = Math.sqrt;
-
     /**
      * Polygon 基类
      *
@@ -31,7 +28,6 @@ define(function (require) {
 
         // 最大最小顶点法来获取边界盒
         this.getBounds();
-
     }
 
     Polygon.prototype = {
@@ -118,6 +114,18 @@ define(function (require) {
         },
 
         /**
+         * 是否和另一个圆形相交
+         *
+         * @param {Polygon} otherCircle 另一个圆形
+         * @param {boolean} isShowCollideResponse 是否需要碰撞的响应
+         *
+         * @return {boolean} 是否相交
+         */
+        intersectsCircle: function (otherCircle, isShowCollideResponse) {
+            return collision.checkPolygonCircle(this, otherCircle, isShowCollideResponse);
+        },
+
+        /**
          * 是否和另一个矩形相交
          *
          * @param {Rect} otherCRect 另一个矩形
@@ -125,9 +133,9 @@ define(function (require) {
          *
          * @return {boolean} 是否相交
          */
-        intersectsCircle: function (otherCRect, isShowCollideResponse) {
-            return collision.checkPolygonPolygon(this, otherCRect, isShowCollideResponse);
-        },
+        // intersectsCircle: function (otherCRect, isShowCollideResponse) {
+        //     return collision.checkPolygonPolygon(this, otherCRect, isShowCollideResponse);
+        // },
 
         /**
          * 某个点是否和圆形相交
@@ -137,17 +145,17 @@ define(function (require) {
          *
          * @return {boolean} 是否相交
          */
-        hitTestPoint: function (x, y) {
-            var dx = abs(x - this.x);
-            var dy = abs(y - this.y);
+        // hitTestPoint: function (x, y) {
+        //     var dx = abs(x - this.x);
+        //     var dy = abs(y - this.y);
 
-            var dz = sqrt(dx * dx + dy * dy);
-            if (dz <= this.radius) {
-                return true;
-            }
+        //     var dz = sqrt(dx * dx + dy * dy);
+        //     if (dz <= this.radius) {
+        //         return true;
+        //     }
 
-            return false;
-        },
+        //     return false;
+        // },
 
         /**
          * debug 时渲染边界盒，多边形使用最大最小顶点法来渲染边界盒

@@ -1695,14 +1695,12 @@ define('ig/ig', ['require'], function (require) {
     'require',
     '../util',
     '../DisplayObject',
-    '../collision',
-    './Vector'
+    '../collision'
 ], function (require) {
     'use strict';
     var util = require('../util');
     var DisplayObject = require('../DisplayObject');
     var collision = require('../collision');
-    var Vector = require('./Vector');
     var abs = Math.abs;
     var sqrt = Math.sqrt;
     function Circle(opts) {
@@ -1713,8 +1711,8 @@ define('ig/ig', ['require'], function (require) {
         intersects: function (otherCircle, isShowCollideResponse) {
             return collision.checkCircleCircle(this, otherCircle, isShowCollideResponse);
         },
-        intersectsRect: function (otherCRect, isShowCollideResponse) {
-            return collision.checkCircleCircle(this, otherCRect, isShowCollideResponse);
+        intersectsPolygon: function (otherPolygon, isShowCollideResponse) {
+            return collision.checkCirclePolygon(this, otherPolygon, isShowCollideResponse);
         },
         hitTestPoint: function (x, y) {
             var dx = abs(x - this.x);
@@ -1845,8 +1843,6 @@ define('ig/ig', ['require'], function (require) {
     var DisplayObject = require('../DisplayObject');
     var collision = require('../collision');
     var Vector = require('./Vector');
-    var abs = Math.abs;
-    var sqrt = Math.sqrt;
     function Polygon(opts) {
         DisplayObject.apply(this, arguments);
         this.points = opts.points || [];
@@ -1906,17 +1902,8 @@ define('ig/ig', ['require'], function (require) {
         intersects: function (otherPolygon, isShowCollideResponse) {
             return collision.checkPolygonPolygon(this, otherPolygon, isShowCollideResponse);
         },
-        intersectsCircle: function (otherCRect, isShowCollideResponse) {
-            return collision.checkPolygonPolygon(this, otherCRect, isShowCollideResponse);
-        },
-        hitTestPoint: function (x, y) {
-            var dx = abs(x - this.x);
-            var dy = abs(y - this.y);
-            var dz = sqrt(dx * dx + dy * dy);
-            if (dz <= this.radius) {
-                return true;
-            }
-            return false;
+        intersectsCircle: function (otherCircle, isShowCollideResponse) {
+            return collision.checkPolygonCircle(this, otherCircle, isShowCollideResponse);
         },
         debugRender: function (offCtx) {
             if (this.debug) {
@@ -1939,6 +1926,9 @@ define('ig/ig', ['require'], function (require) {
     var sqrt = Math.sqrt;
     var pow = Math.pow;
     var abs = Math.abs;
+    var LEFT_VORNOI_REGION = -1;
+    var MIDDLE_VORNOI_REGION = 0;
+    var RIGHT_VORNOI_REGION = 1;
     var vectorPool = [];
     for (var i = 0; i < 10; i++) {
         vectorPool.push(new Vector());
@@ -1969,15 +1959,16 @@ define('ig/ig', ['require'], function (require) {
         var i = points.length;
         while (i--) {
             var dot = new Vector(points[i].x, points[i].y).dot(normal);
-            if (dot < min)
+            if (dot < min) {
                 min = dot;
-            if (dot > max)
+            }
+            if (dot > max) {
                 max = dot;
+            }
         }
         result[0] = min;
         result[1] = max;
     }
-    ;
     function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
         var rangeA = arrPool.pop();
         var rangeB = arrPool.pop();
@@ -2030,6 +2021,17 @@ define('ig/ig', ['require'], function (require) {
         arrPool.push(rangeB);
         return false;
     }
+    function vornoiRegion(line, point) {
+        var len2 = line.len2();
+        var dp = point.dot(line);
+        if (dp < 0) {
+            return LEFT_VORNOI_REGION;
+        }
+        if (dp > len2) {
+            return RIGHT_VORNOI_REGION;
+        }
+        return MIDDLE_VORNOI_REGION;
+    }
     var collideResponse = new CollideResponse();
     var exports = {};
     exports.checkCircleCircle = function (firstCircle, secondCircle, isShowCollideResponse) {
@@ -2056,10 +2058,10 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     exports.checkPolygonPolygon = function (firstPolygon, secondPolygon, isShowCollideResponse) {
-        var aPoints = firstPolygon.points;
-        var aLen = aPoints.length;
-        var bPoints = secondPolygon.points;
-        var bLen = bPoints.length;
+        var firstPoints = firstPolygon.points;
+        var firstLen = firstPoints.length;
+        var secondPoints = secondPolygon.points;
+        var secondLen = secondPoints.length;
         var firstPos = {
             x: firstPolygon.x,
             y: firstPolygon.y
@@ -2072,13 +2074,13 @@ define('ig/ig', ['require'], function (require) {
         if (isShowCollideResponse) {
             response = collideResponse.reset();
         }
-        while (aLen--) {
-            if (isSeparatingAxis(firstPos, secondPos, aPoints, bPoints, firstPolygon.normals[aLen], response)) {
+        while (firstLen--) {
+            if (isSeparatingAxis(firstPos, secondPos, firstPoints, secondPoints, firstPolygon.normals[firstLen], response)) {
                 return false;
             }
         }
-        while (bLen--) {
-            if (isSeparatingAxis(firstPos, secondPos, aPoints, bPoints, secondPolygon.normals[bLen], response)) {
+        while (secondLen--) {
+            if (isSeparatingAxis(firstPos, secondPos, firstPoints, secondPoints, secondPolygon.normals[secondLen], response)) {
                 return false;
             }
         }
@@ -2088,6 +2090,111 @@ define('ig/ig', ['require'], function (require) {
             response.overlapV.copy(response.overlapN).scale(response.overlap);
         }
         return response;
+    };
+    exports.checkPolygonCircle = function (polygon, circle, isShowCollideResponse) {
+        var circlePos = vectorPool.pop().copy(new Vector(circle.x, circle.y)).sub(new Vector(polygon.x, polygon.y));
+        var radius = circle.radius;
+        var radius2 = radius * radius;
+        var points = polygon.points;
+        var len = points.length;
+        var edge = vectorPool.pop();
+        var point = vectorPool.pop();
+        var response = null;
+        if (isShowCollideResponse) {
+            response = collideResponse.reset();
+        }
+        for (var i = 0; i < len; i++) {
+            var next = i === len - 1 ? 0 : i + 1;
+            var prev = i === 0 ? len - 1 : i - 1;
+            var overlap = 0;
+            var overlapN = null;
+            edge.copy(polygon.edges[i]);
+            point.copy(circlePos).sub(points[i]);
+            if (response && point.len2() > radius2) {
+                response.firstInSecond = false;
+            }
+            var region = vornoiRegion(edge, point);
+            if (region === LEFT_VORNOI_REGION) {
+                edge.copy(polygon.edges[prev]);
+                var point2 = vectorPool.pop().copy(circlePos).sub(points[prev]);
+                region = vornoiRegion(edge, point2);
+                if (region === RIGHT_VORNOI_REGION) {
+                    var dist = point.len();
+                    if (dist > radius) {
+                        vectorPool.push(circlePos);
+                        vectorPool.push(edge);
+                        vectorPool.push(point);
+                        vectorPool.push(point2);
+                        return false;
+                    } else if (response) {
+                        response.secondInFirst = false;
+                        overlapN = point.normalize();
+                        overlap = radius - dist;
+                    }
+                }
+                vectorPool.push(point2);
+            } else if (region === RIGHT_VORNOI_REGION) {
+                edge.copy(polygon.edges[next]);
+                point.copy(circlePos).sub(points[next]);
+                region = vornoiRegion(edge, point);
+                if (region === LEFT_VORNOI_REGION) {
+                    var dist = point.len();
+                    if (dist > radius) {
+                        vectorPool.push(circlePos);
+                        vectorPool.push(edge);
+                        vectorPool.push(point);
+                        return false;
+                    } else if (response) {
+                        response.secondInFirst = false;
+                        overlapN = point.normalize();
+                        overlap = radius - dist;
+                    }
+                }
+            } else {
+                var normal = edge.perp().normalize();
+                var dist = point.dot(normal);
+                var distAbs = abs(dist);
+                if (dist > 0 && distAbs > radius) {
+                    vectorPool.push(circlePos);
+                    vectorPool.push(normal);
+                    vectorPool.push(point);
+                    return false;
+                } else if (response) {
+                    overlapN = normal;
+                    overlap = radius - dist;
+                    if (dist >= 0 || overlap < 2 * radius) {
+                        response.secondInFirst = false;
+                    }
+                }
+            }
+            if (overlapN && response && abs(overlap) < abs(response.overlap)) {
+                response.overlap = overlap;
+                response.overlapN.copy(overlapN);
+            }
+        }
+        if (response) {
+            response.a = polygon;
+            response.b = circle;
+            response.overlapV.copy(response.overlapN).scale(response.overlap);
+        }
+        vectorPool.push(circlePos);
+        vectorPool.push(edge);
+        vectorPool.push(point);
+        return response;
+    };
+    exports.checkCirclePolygon = function (circle, polygon, isShowCollideResponse) {
+        var result = exports.checkPolygonCircle(polygon, circle, isShowCollideResponse);
+        if (result) {
+            var first = result.first;
+            var firstInSecond = result.firstInSecond;
+            result.overlapN.reverse();
+            result.overlapV.reverse();
+            result.first = result.second;
+            result.second = first;
+            result.firstInSecond = result.secondInFirst;
+            result.secondInFirst = firstInSecond;
+        }
+        return result;
     };
     return exports;
 });

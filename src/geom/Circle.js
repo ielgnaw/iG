@@ -10,7 +10,6 @@ define(function (require) {
     var util = require('../util');
     var DisplayObject = require('../DisplayObject');
     var collision = require('../collision');
-    var Vector = require('./Vector');
 
     var abs = Math.abs;
     var sqrt = Math.sqrt;
@@ -46,6 +45,18 @@ define(function (require) {
         },
 
         /**
+         * 是否和另一个多边形相交
+         *
+         * @param {Polygon} otherPolygon 另一个多边形
+         * @param {boolean} isShowCollideResponse 是否需要碰撞的响应
+         *
+         * @return {boolean} 是否相交
+         */
+        intersectsPolygon: function (otherPolygon, isShowCollideResponse) {
+            return collision.checkCirclePolygon(this, otherPolygon, isShowCollideResponse);
+        },
+
+        /**
          * 是否和另一个矩形相交
          *
          * @param {Rect} otherCRect 另一个矩形
@@ -53,9 +64,9 @@ define(function (require) {
          *
          * @return {boolean} 是否相交
          */
-        intersectsRect: function (otherCRect, isShowCollideResponse) {
-            return collision.checkCircleCircle(this, otherCRect, isShowCollideResponse);
-        },
+        // intersectsRect: function (otherCRect, isShowCollideResponse) {
+        //     return collision.checkCircleCircle(this, otherCRect, isShowCollideResponse);
+        // },
 
         /**
          * 某个点是否和圆形相交
