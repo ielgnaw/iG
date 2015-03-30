@@ -409,7 +409,7 @@ define(function (require) {
          *
          * @param {number} totalFrameCounter 游戏的总帧数计数器
          */
-        update: function (totalFrameCounter) {
+        update: function (totalFrameCounter, dt) {
             var me = this;
 
             updateParallax.call(me, totalFrameCounter);
@@ -420,7 +420,7 @@ define(function (require) {
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 2) {
-                    this.displayObjectList[i].update();
+                    this.displayObjectList[i].update(dt);
                 }
             }
         },

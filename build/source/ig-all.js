@@ -889,7 +889,7 @@ define('ig/ig', ['require'], function (require) {
                     });
                     var curStage = me.getCurrentStage();
                     if (curStage) {
-                        curStage.update(_totalFrameCounter);
+                        curStage.update(_totalFrameCounter, _delta);
                         curStage.render();
                     }
                     me.fire('afterGameRender', {
@@ -1204,7 +1204,7 @@ define('ig/ig', ['require'], function (require) {
                 aY: 0
             }, opts);
         },
-        update: function (totalFrameCounter) {
+        update: function (totalFrameCounter, dt) {
             var me = this;
             updateParallax.call(me, totalFrameCounter);
             var displayObjectList = me.displayObjectList;
@@ -1213,7 +1213,7 @@ define('ig/ig', ['require'], function (require) {
             for (var i = 0; i < len; i++) {
                 displayObjectStatus = me.displayObjectList[i].status;
                 if (displayObjectStatus === 1 || displayObjectStatus === 2) {
-                    this.displayObjectList[i].update();
+                    this.displayObjectList[i].update(dt);
                 }
             }
         },
@@ -1322,89 +1322,78 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var guid = 0;
     function DisplayObject(opts) {
-        var me = this;
         opts = opts || {};
-        Event.apply(me, arguments);
-        me.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + guid++ : opts.name;
-        me.stageOwner = null;
-        me.x = opts.x || 0;
-        me.y = opts.y || 0;
-        me.width = opts.width || 0;
-        me.height = opts.height || 0;
-        me.radius = opts.radius || 0;
-        me.scaleX = opts.scaleX || 1;
-        me.scaleY = opts.scaleY || 1;
-        me.angle = opts.angle || 0;
-        me.alpha = opts.alpha || 1;
-        me.zIndex = opts.zIndex || 0;
-        me.fillStyle = opts.fillStyle || null;
-        me.strokeStyle = opts.strokeStyle || null;
-        me.image = opts.image || null;
-        me.vX = opts.vX || 0;
-        me.vY = opts.vY || 0;
-        me.aX = opts.aX || 0;
-        me.aY = opts.aY || 0;
-        me.frictionX = opts.frictionX || 1;
-        me.frictionY = opts.frictionY || 1;
-        me.reverseVX = false;
-        me.reverseVY = false;
-        me.status = 1;
-        me.customProp = opts.customProp || {};
-        me.debug = !!opts.debug || false;
-        me.setPos(me.x, me.y);
+        Event.apply(this, arguments);
+        this.name = opts.name === null || opts.name === undefined ? 'ig_displayobject_' + guid++ : opts.name;
+        this.stageOwner = null;
+        this.x = opts.x || 0;
+        this.y = opts.y || 0;
+        this.width = opts.width || 0;
+        this.height = opts.height || 0;
+        this.radius = opts.radius || 0;
+        this.scaleX = opts.scaleX || 1;
+        this.scaleY = opts.scaleY || 1;
+        this.angle = opts.angle || 0;
+        this.alpha = opts.alpha || 1;
+        this.zIndex = opts.zIndex || 0;
+        this.fillStyle = opts.fillStyle || null;
+        this.strokeStyle = opts.strokeStyle || null;
+        this.image = opts.image || null;
+        this.vX = opts.vX || 0;
+        this.vY = opts.vY || 0;
+        this.aX = opts.aX || 0;
+        this.aY = opts.aY || 0;
+        this.frictionX = opts.frictionX || 1;
+        this.frictionY = opts.frictionY || 1;
+        this.reverseVX = false;
+        this.reverseVY = false;
+        this.status = 1;
+        this.customProp = opts.customProp || {};
+        this.debug = !!opts.debug || false;
+        this.setPos(this.x, this.y);
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
         setPos: function (x, y) {
-            var me = this;
-            me.x = x || me.x;
-            me.y = y || me.y;
+            this.x = x || this.x;
+            this.y = y || this.y;
         },
         setAcceleration: function (ax, ay) {
-            var me = this;
-            me.aX = ax || me.aX;
-            me.aY = ay || me.aY;
+            this.aX = ax || this.aX;
+            this.aY = ay || this.aY;
         },
         setAccelerationX: function (ax) {
-            var me = this;
-            me.aX = ax || me.aX;
+            this.aX = ax || this.aX;
         },
         setAccelerationY: function (ay) {
-            var me = this;
-            me.aY = ay || me.aY;
+            this.aY = ay || this.aY;
         },
         resetAcceleration: function () {
-            var me = this;
-            me.aX = 0;
-            me.aY = 0;
+            this.aX = 0;
+            this.aY = 0;
         },
         move: function (x, y) {
-            var me = this;
-            me.x += x;
-            me.y += y;
+            this.x += x;
+            this.y += y;
         },
         moveStep: function () {
-            var me = this;
-            me.vX += me.aX;
-            me.vX *= me.frictionX;
-            me.x += me.vX;
-            me.vY += me.aY;
-            me.vY *= me.frictionY;
-            me.y += me.vY;
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
         },
         setFrictionX: function (frictionX) {
-            var me = this;
-            me.frictionX = frictionX;
+            this.frictionX = frictionX;
         },
         setFrictionY: function (frictionY) {
-            var me = this;
-            me.frictionY = frictionY;
+            this.frictionY = frictionY;
         },
         rotate: function (angle) {
-            var me = this;
-            var offCtx = me.stageOwner.offCtx;
+            var offCtx = this.stageOwner.offCtx;
             offCtx.save();
-            offCtx.rotate(util.deg2Rad(me.angle));
+            offCtx.rotate(util.deg2Rad(angle || this.angle));
             offCtx.restore();
         },
         update: function () {
@@ -1412,41 +1401,8 @@ define('ig/ig', ['require'], function (require) {
         },
         render: function (offCtx) {
             return true;
-        },
-        isHit: function (other) {
-            var me = this;
-            var minX = me.x > other.x ? me.x : other.x;
-            var maxX = me.x + me.width < other.x + other.width ? me.x + me.width : other.x + other.width;
-            var minY = me.y > other.y ? me.y : other.y;
-            var maxY = me.y + me.width < other.y + other.width ? me.y + me.width : other.y + other.width;
-            return minX <= maxX && minY <= maxY;
-        },
-        isMouseIn: function (pos) {
-            var me = this;
-            var x = pos.x;
-            var y = pos.y;
-            var stage = me.stageOwner;
-            var stageX = stage.x || 0;
-            var stageY = stage.y || 0;
-            var hw = 0;
-            var hh = 0;
-            if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius) {
-                console.warn('你碰到我了');
-            }
         }
     };
-    function _drawDebugRect(offCtx) {
-        var me = this;
-        offCtx.save();
-        offCtx.beginPath();
-        offCtx.lineWidth = 1;
-        offCtx.strokeStyle = '#fff';
-        offCtx.globalAlpha = 0.8;
-        offCtx.rect(me.x, me.y, me.width, me.height);
-        offCtx.closePath();
-        offCtx.stroke();
-        offCtx.restore();
-    }
     util.inherits(DisplayObject, Event);
     return DisplayObject;
 });define('ig/SpriteSheet', [
@@ -1735,6 +1691,51 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Ball, DisplayObject);
     return Ball;
+});define('ig/geom/Circle', [
+    'require',
+    '../util',
+    '../DisplayObject',
+    '../collision',
+    './Vector'
+], function (require) {
+    'use strict';
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    var collision = require('../collision');
+    var Vector = require('./Vector');
+    var abs = Math.abs;
+    var sqrt = Math.sqrt;
+    function Circle(opts) {
+        DisplayObject.apply(this, arguments);
+    }
+    Circle.prototype = {
+        constructor: Circle,
+        intersects: function (otherCircle, isShowCollideResponse) {
+            return collision.checkCircleCircle(this, otherCircle, isShowCollideResponse);
+        },
+        intersectsRect: function (otherCRect, isShowCollideResponse) {
+            return collision.checkCircleCircle(this, otherCRect, isShowCollideResponse);
+        },
+        hitTestPoint: function (x, y) {
+            var dx = abs(x - this.x);
+            var dy = abs(y - this.y);
+            var dz = sqrt(dx * dx + dy * dy);
+            if (dz <= this.radius) {
+                return true;
+            }
+            return false;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+                offCtx.restore();
+            }
+        }
+    };
+    util.inherits(Circle, DisplayObject);
+    return Circle;
 });define('ig/geom/Vector', ['require'], function (require) {
     var sqrt = Math.sqrt;
     var cos = Math.cos;
@@ -1832,7 +1833,7 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     return Vector;
-});define('ig/geom/Circle', [
+});define('ig/geom/Polygon', [
     'require',
     '../util',
     '../DisplayObject',
@@ -1846,13 +1847,67 @@ define('ig/ig', ['require'], function (require) {
     var Vector = require('./Vector');
     var abs = Math.abs;
     var sqrt = Math.sqrt;
-    function Circle(opts) {
+    function Polygon(opts) {
         DisplayObject.apply(this, arguments);
+        this.points = opts.points || [];
+        this.recalc();
+        this.getBounds();
     }
-    Circle.prototype = {
-        constructor: Circle,
-        intersects: function (otherCircle, isShowCollideResponse) {
-            return collision.checkCircleCircle(this, otherCircle, isShowCollideResponse);
+    Polygon.prototype = {
+        constructor: Polygon,
+        recalc: function () {
+            var points = this.points;
+            var len = points.length;
+            this.edges = [];
+            this.normals = [];
+            for (var i = 0; i < len; i++) {
+                var p1 = points[i];
+                var p2 = i < len - 1 ? points[i + 1] : points[0];
+                var e = new Vector().copy(p2).sub(p1);
+                var n = new Vector().copy(e).perp().normalize();
+                this.edges.push(e);
+                this.normals.push(n);
+            }
+            return this;
+        },
+        getBounds: function () {
+            var points = this.points;
+            var startX = this.x;
+            var startY = this.y;
+            var points = this.points;
+            var startX = this.x;
+            var startY = this.y;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.bounds = {
+                x: minX + startX,
+                y: minY + startY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        },
+        intersects: function (otherPolygon, isShowCollideResponse) {
+            return collision.checkPolygonPolygon(this, otherPolygon, isShowCollideResponse);
+        },
+        intersectsCircle: function (otherCRect, isShowCollideResponse) {
+            return collision.checkPolygonPolygon(this, otherCRect, isShowCollideResponse);
         },
         hitTestPoint: function (x, y) {
             var dx = abs(x - this.x);
@@ -1865,15 +1920,16 @@ define('ig/ig', ['require'], function (require) {
         },
         debugRender: function (offCtx) {
             if (this.debug) {
+                this.getBounds();
                 offCtx.save();
                 offCtx.strokeStyle = 'black';
-                offCtx.strokeRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 offCtx.restore();
             }
         }
     };
-    util.inherits(Circle, DisplayObject);
-    return Circle;
+    util.inherits(Polygon, DisplayObject);
+    return Polygon;
 });define('ig/collision', [
     'require',
     './geom/Vector'
@@ -1882,6 +1938,7 @@ define('ig/ig', ['require'], function (require) {
     var Vector = require('./geom/Vector');
     var sqrt = Math.sqrt;
     var pow = Math.pow;
+    var abs = Math.abs;
     var vectorPool = [];
     for (var i = 0; i < 10; i++) {
         vectorPool.push(new Vector());
@@ -1906,6 +1963,73 @@ define('ig/ig', ['require'], function (require) {
             return this;
         }
     };
+    function flattenPointsOn(points, normal, result) {
+        var min = Number.MAX_VALUE;
+        var max = -Number.MAX_VALUE;
+        var i = points.length;
+        while (i--) {
+            var dot = new Vector(points[i].x, points[i].y).dot(normal);
+            if (dot < min)
+                min = dot;
+            if (dot > max)
+                max = dot;
+        }
+        result[0] = min;
+        result[1] = max;
+    }
+    ;
+    function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
+        var rangeA = arrPool.pop();
+        var rangeB = arrPool.pop();
+        var offsetV = vectorPool.pop().copy(bPos).sub(aPos);
+        var projectedOffset = offsetV.dot(axis);
+        flattenPointsOn(aPoints, axis, rangeA);
+        flattenPointsOn(bPoints, axis, rangeB);
+        rangeB[0] += projectedOffset;
+        rangeB[1] += projectedOffset;
+        if (rangeA[0] > rangeB[1] || rangeB[0] > rangeA[1]) {
+            vectorPool.push(offsetV);
+            arrPool.push(rangeA);
+            arrPool.push(rangeB);
+            return true;
+        }
+        if (response) {
+            var overlap = 0;
+            if (rangeA[0] < rangeB[0]) {
+                response.firstInSecond = false;
+                if (rangeA[1] < rangeB[1]) {
+                    overlap = rangeA[1] - rangeB[0];
+                    response.secondInFirst = false;
+                } else {
+                    var option1 = rangeA[1] - rangeB[0];
+                    var option2 = rangeB[1] - rangeA[0];
+                    overlap = option1 < option2 ? option1 : -option2;
+                }
+            } else {
+                response.secondInFirst = false;
+                if (rangeA[1] > rangeB[1]) {
+                    overlap = rangeA[0] - rangeB[1];
+                    response.firstInSecond = false;
+                } else {
+                    var option1 = rangeA[1] - rangeB[0];
+                    var option2 = rangeB[1] - rangeA[0];
+                    overlap = option1 < option2 ? option1 : -option2;
+                }
+            }
+            var absOverlap = abs(overlap);
+            if (absOverlap < response.overlap) {
+                response.overlap = absOverlap;
+                response.overlapN.copy(axis);
+                if (overlap < 0) {
+                    response.overlapN.reverse();
+                }
+            }
+        }
+        vectorPool.push(offsetV);
+        arrPool.push(rangeA);
+        arrPool.push(rangeB);
+        return false;
+    }
     var collideResponse = new CollideResponse();
     var exports = {};
     exports.checkCircleCircle = function (firstCircle, secondCircle, isShowCollideResponse) {
@@ -1931,6 +2055,40 @@ define('ig/ig', ['require'], function (require) {
             return collideResponse;
         }
     };
+    exports.checkPolygonPolygon = function (firstPolygon, secondPolygon, isShowCollideResponse) {
+        var aPoints = firstPolygon.points;
+        var aLen = aPoints.length;
+        var bPoints = secondPolygon.points;
+        var bLen = bPoints.length;
+        var firstPos = {
+            x: firstPolygon.x,
+            y: firstPolygon.y
+        };
+        var secondPos = {
+            x: secondPolygon.x,
+            y: secondPolygon.y
+        };
+        var response = null;
+        if (isShowCollideResponse) {
+            response = collideResponse.reset();
+        }
+        while (aLen--) {
+            if (isSeparatingAxis(firstPos, secondPos, aPoints, bPoints, firstPolygon.normals[aLen], response)) {
+                return false;
+            }
+        }
+        while (bLen--) {
+            if (isSeparatingAxis(firstPos, secondPos, aPoints, bPoints, secondPolygon.normals[bLen], response)) {
+                return false;
+            }
+        }
+        if (response) {
+            response.first = firstPolygon;
+            response.second = secondPolygon;
+            response.overlapV.copy(response.overlapN).scale(response.overlap);
+        }
+        return response;
+    };
     return exports;
 });
 var ig = require('ig');
@@ -1942,9 +2100,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -1959,9 +2122,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -1976,9 +2144,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -1993,9 +2166,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2010,9 +2188,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2027,9 +2210,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2044,9 +2232,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2061,9 +2254,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2078,9 +2276,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2095,26 +2298,14 @@ var folderName = 'Shape';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
-}
-else {
-    tmp = require(modName);
-    if (refName) {
-        ig[refName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
     }
-}
-
-var modName = 'ig/geom/Vector';
-var refName = 'Vector';
-var folderName = 'geom';
-
-var tmp;
-if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2129,9 +2320,58 @@ var folderName = 'geom';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/geom/Vector';
+var refName = 'Vector';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/geom/Polygon';
+var refName = 'Polygon';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);
@@ -2146,9 +2386,14 @@ var folderName = '';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);

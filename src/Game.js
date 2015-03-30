@@ -359,7 +359,7 @@ define(function (require) {
                     var curStage = me.getCurrentStage();
 
                     if (curStage) {
-                        curStage.update(_totalFrameCounter);
+                        curStage.update(_totalFrameCounter, _delta);
                         curStage.render();
                     }
 

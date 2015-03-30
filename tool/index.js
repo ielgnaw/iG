@@ -81,6 +81,8 @@ exports.packAsAll = function () {
         result += analyse.getAnalysed(mod).builtCode;
     });
 
+    // console.warn(modules.parts);
+
     // write file by wrapped code
     var wrapEnd = etpl.compile(wrapEndTpl)({
         parts: modules.parts

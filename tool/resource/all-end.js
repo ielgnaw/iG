@@ -8,9 +8,14 @@ var folderName = '${mod.folder}';
 
 var tmp;
 if (folderName) {
-    tmp = {};
-    tmp[refName] = require(modName);
-    ig[folderName] = tmp;
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
 }
 else {
     tmp = require(modName);

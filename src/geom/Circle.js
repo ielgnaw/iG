@@ -46,6 +46,18 @@ define(function (require) {
         },
 
         /**
+         * 是否和另一个矩形相交
+         *
+         * @param {Rect} otherCRect 另一个矩形
+         * @param {boolean} isShowCollideResponse 是否需要碰撞的响应
+         *
+         * @return {boolean} 是否相交
+         */
+        intersectsRect: function (otherCRect, isShowCollideResponse) {
+            return collision.checkCircleCircle(this, otherCRect, isShowCollideResponse);
+        },
+
+        /**
          * 某个点是否和圆形相交
          *
          * @param {number} x 点的横坐标

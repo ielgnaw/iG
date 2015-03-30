@@ -1024,8 +1024,45 @@
                 // pointer.pos.x += Math.floor(Math.random() * 5 + 1);
                 // pointer.pos.y += Math.floor(Math.random() * 2 + 1);
 
+                ctx.save();
                 ctx.fillStyle = 'black';
+
+                var points = polygon.points;
+                var startX = polygon.pos.x;
+                var startY = polygon.pos.y;
+
+                var minX = Number.MAX_VALUE;
+                var maxX = Number.MIN_VALUE;
+                var minY = Number.MAX_VALUE;
+                var maxY = Number.MIN_VALUE;
+
+                for (var i = 0, len = points.length; i < len; i++) {
+                    if (points[i].x < minX) {
+                        minX = points[i].x;
+                    }
+                    if (points[i].x > maxX) {
+                        maxX = points[i].x;
+                    }
+                    if (points[i].y < minY) {
+                        minY = points[i].y;
+                    }
+                    if (points[i].y > maxY) {
+                        maxY = points[i].y;
+                    }
+                }
+                // console.log(
+                //     minX + startX,
+                //     minY + startY,
+                //     maxX - minX,
+                //     maxY - minY
+                // );
+
+
+                // ctx.translate(polygon.pos.x, polygon.pos.y);
+                // ctx.translate((maxX - minX)/2, (maxY - minY) / 2);
+                // ctx.rotate(Math.PI / 180 * 45);
                 polygon.draw(ctx);
+                ctx.restore();
                 polygon.drawBounds(ctx);
 
                 polygon1.draw(ctx);

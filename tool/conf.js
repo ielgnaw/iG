@@ -3,10 +3,10 @@ exports.modules = {
     main: {name: 'ig/ig'},
     parts: [
         // refName 指要挂载到 window.ig 这个全局空间上的名字
+        // 如果无 refName 配置，意味着该模板只是 ig 内部调用的，不会被挂载在 window 上
         {name: 'ig/util', refName: 'util'},     // window.ig.util
         {name: 'ig/Event', refName: 'Event'},   // window.ig.Event
         {name: 'ig/env', refName: 'env'},  // window.ig.env
-        // {name: 'ig/ImageLoader', refName: 'ImageLoader'}, // window.ig.ImageLoader
         {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
         {name: 'ig/Stage'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
@@ -16,9 +16,9 @@ exports.modules = {
 
         {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'}, // window.ig.Shape.Ball
 
-        // 这里有问题
-        {name: 'ig/geom/Vector', refName: 'Vector', folder: 'geom'}, // window.ig.geom.circle
         {name: 'ig/geom/Circle', refName: 'Circle', folder: 'geom'}, // window.ig.geom.Circle
+        {name: 'ig/geom/Vector', refName: 'Vector', folder: 'geom'}, // window.ig.geom.Vector
+        {name: 'ig/geom/Polygon', refName: 'Polygon', folder: 'geom'}, // window.ig.geom.Polygon
         {name: 'ig/collision'}
     ]
 };
