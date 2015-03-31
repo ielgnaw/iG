@@ -2525,6 +2525,10 @@ define('ig/ig', ['require'], function (require) {
             throw new Error('Bitmap must be require a image param');
         }
         DisplayObject.apply(this, arguments);
+        this.sX = opts.sX || 0;
+        this.sY = opts.sY || 0;
+        this.sWidth = opts.sWidth || 0;
+        this.sHeight = opts.sHeight || 0;
         this.width = opts.width || this.image.width || 0;
         this.height = opts.height || this.image.height || 0;
         if (opts.points && opts.points.length && util.getType(opts.points) === 'array') {
@@ -2540,7 +2544,7 @@ define('ig/ig', ['require'], function (require) {
         render: function (offCtx) {
             polygon.getBounds(this);
             offCtx.save();
-            offCtx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            offCtx.drawImage(this.image, this.sX, this.sY, this.sWidth || this.width, this.sHeight || this.height, this.x, this.y, this.width, this.height);
             this.debugRender(offCtx);
             offCtx.restore();
             return this;

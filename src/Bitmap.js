@@ -29,6 +29,13 @@ define(function (require) {
 
         DisplayObject.apply(this, arguments);
 
+        // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+        // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
+        this.sX = opts.sX || 0;
+        this.sY = opts.sY || 0;
+        this.sWidth = opts.sWidth || 0;
+        this.sHeight = opts.sHeight || 0;
+
         this.width = opts.width || this.image.width || 0;
         this.height = opts.height || this.image.height || 0;
 
@@ -59,10 +66,10 @@ define(function (require) {
          */
         render: function (offCtx) {
             polygon.getBounds(this);
-
             offCtx.save();
             offCtx.drawImage(
                 this.image,
+                this.sX, this.sY, this.sWidth || this.width, this.sHeight || this.height,
                 this.x, this.y, this.width, this.height
             );
             this.debugRender(offCtx);
