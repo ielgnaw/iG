@@ -132,9 +132,24 @@ define(function (require) {
         // 自定义的属性
         this.customProp = opts.customProp || {};
 
+        // 是否允许鼠标以及 touch 事件
+        this.mouseEnable = !!opts.mouseEnable || false;
+
         // 当前这个 DisplayObject 实例是否开启 debug 模式
         // 开始 debug 模式即绘制这个 DisplayObject 实例的时候会带上边框
         this.debug = !!opts.debug || false;
+
+        // 对应 mousedown 和 touchstart 事件
+        // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+        this.captureFunc = opts.captureFunc || util.noop;
+
+        // 对应 mousemove 和 touchmove 事件
+        // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+        this.moveFunc = opts.moveFunc || util.noop;
+
+        // 对应 mouseup 和 touchend 事件
+        // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+        this.releaseFunc = opts.releaseFunc || util.noop;
 
         // 初始化的时候设置位置
         this.setPos(this.x, this.y);
@@ -146,6 +161,45 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: DisplayObject,
+
+        /**
+         * 设置 captureFunc，对应 mousedown 和 touchstart 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+
+        /**
+         * 设置 moveFunc，对应 mousemove 和 touchmove 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+
+        /**
+         * 设置 releaseFunc，对应 mouseup 和 touchend 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
 
         /**
          * 设置位置

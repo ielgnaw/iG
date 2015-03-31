@@ -119,16 +119,18 @@ window.onload = function () {
 
                     ctx.save();
                     ctx.fillStyle = this.fillStyle || '#000';
-                    ctx.translate(this.x, this.y);
-                    // ctx.rotate(util.deg2Rad(this.angle));
-                    ctx.beginPath();
-                    ctx.moveTo(points[0].x, points[0].y);
-                    while (i--) {
-                        ctx.lineTo(points[i].x, points[i].y);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.translate(-this.x, -this.y);
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    // ctx.fillStyle = this.fillStyle || '#000';
+                    // ctx.translate(this.x, this.y);
+                    // // ctx.rotate(util.deg2Rad(this.angle));
+                    // ctx.beginPath();
+                    // ctx.moveTo(points[0].x, points[0].y);
+                    // while (i--) {
+                    //     ctx.lineTo(points[i].x, points[i].y);
+                    // }
+                    // ctx.closePath();
+                    // ctx.fill();
+                    // ctx.translate(-this.x, -this.y);
                     this.debugRender(ctx);
                     ctx.restore();
                 }

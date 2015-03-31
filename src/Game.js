@@ -67,16 +67,15 @@ define(function (require) {
      * 设置离屏 canvas
      */
     function setOffCanvas() {
-        var me = this;
-        if (!me.offCanvas) {
-            me.offCanvas = document.createElement('canvas');
-            me.offCtx = me.offCanvas.getContext('2d');
+        if (!this.offCanvas) {
+            this.offCanvas = document.createElement('canvas');
+            this.offCtx = this.offCanvas.getContext('2d');
         }
 
-        me.offCanvas.width = me.canvas.width;
-        me.offCanvas.style.width = me.canvas.style.width;
-        me.offCanvas.height = me.canvas.height;
-        me.offCanvas.style.height = me.canvas.style.height;
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
     }
 
     /**
@@ -193,9 +192,9 @@ define(function (require) {
             canvasParent.style.position = 'relative';
 
             // 是否需要在页面加载时候执行 fitScreen ?
-            // if (opts.scaleFit) {
-            //     fitScreen.call(me);
-            // }
+            if (opts.scaleFit) {
+                fitScreen.call(me);
+            }
 
             window.addEventListener(
                 env.supportOrientation ? 'orientationchange' : 'resize',

@@ -10,6 +10,7 @@ define(function (require) {
     var Event = require('./Event');
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var domEvt = require('./domEvt');
 
     /**
      * 作为 repeat 时的新图片
@@ -194,9 +195,8 @@ define(function (require) {
         this.cssWidth = opts.game.cssWidth;
         this.cssHeight = opts.game.cssHeight;
 
-        // console.warn(this.canvas);
-        // captureTouch.call(this, this.canvas);
-
+        // 初始化 mouse 和 touch 事件
+        this.initMouseEvent();
     }
 
     Stage.prototype = {
@@ -205,65 +205,31 @@ define(function (require) {
          */
         constructor: Stage,
 
-        // /**
-        //  * 设置 canvas 以及 canvas.container 的宽高
-        //  *
-        //  * @param {number} width 宽度
-        //  * @param {number} height 高度
-        //  */
-        // setSize: function (width, height) {
-        //     var me = this;
-
-        //     // width = width || defaultCanvasWidth;
-        //     // height = height || defaultCanvasHeight;
-
-        //     // resetStage(me.canvas, width, height);
-
-        //     // me.width = me.canvas.width;
-        //     // me.height = me.canvas.height;
-
-        //     // me.offCanvas.width = me.canvas.width;
-        //     // me.offCanvas.style.width = me.canvas.style.width;
-        //     // me.offCanvas.height = me.canvas.height;
-        //     // me.offCanvas.style.height = me.canvas.style.height;
-
-        //     initStage(this.canvas);
-
-        //     this.offCanvas.width = this.canvas.width;
-        //     this.offCanvas.style.width = this.canvas.style.width;
-        //     this.offCanvas.height = this.canvas.height;
-        //     this.offCanvas.style.height = this.canvas.style.height;
-        //     this.container = this.canvas.parentNode;
-
-        //     this.width = this.canvas.width;
-        //     // this.canvas.width = this.width;
-        //     // this.offCanvas.width = this.width;
-
-        //     this.height = this.canvas.height;
-
-        // },
+        /**
+         * 初始化 mouse 和 touch 事件
+         *
+         * @return {Object} Stage 实例
+         */
+        initMouseEvent: function () {
+            domEvt.initMouse(this);
+            this.bindMouseEvent();
+        },
 
         /**
-         * 设置 canvas 以及 canvas.container 的宽高
+         * 绑定 mouse 和 touch 事件
          *
-         * @param {number} width 宽度
-         * @param {number} height 高度
+         * @return {Object} Stage 实例
          */
-        // setSize: function (width, height) {
-        //     var me = this;
-        //     me.width = width || me.width;
-        //     me.height = height || me.height;
-
-        //     // me.container.style.width = me.width + 'px';
-        //     // me.container.style.height = me.height + 'px';
-
-        //     me.canvas.width = me.width;
-        //     me.canvas.height = me.height;
-
-        //     // me.offCanvas.width = me.width;
-        //     // me.offCanvas.height = me.height;
-
-        // },
+        bindMouseEvent: function () {
+            var me = this;
+            domEvt.events.forEach(function (name, i) {
+                var invokeMethod = domEvt.fireEvt[name];
+                if (invokeMethod) {
+                    me.on(name, invokeMethod);
+                }
+            });
+            return me;
+        },
 
         /**
          * 清除
@@ -377,6 +343,8 @@ define(function (require) {
          *                           例如: opts.anims = [{aX: 1, aY: 1}, {aX: -1, aY: -1}]，那么首先会执行 opts.anims[0] 的变化，
          *                           在 totalFrameCounter % animInterval === 0 后，会执行 opts.anims[1] ，如此循环
          *                           如果 opts.animInterval 没有设置，则取默认值 10000
+         *
+         * @return {Object} Stage 实例
          */
         setParallaxScroll: function (opts) {
             var me = this;
@@ -402,6 +370,7 @@ define(function (require) {
                 },
                 opts
             );
+            return this;
         },
 
         /**

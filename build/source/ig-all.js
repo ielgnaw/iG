@@ -283,15 +283,6 @@ define('ig/ig', ['require'], function (require) {
         var match = /\[object (\w+)\]/.exec(objectName);
         return match[1].toLowerCase();
     };
-    exports.windowToCanvas = function (canvas, x, y) {
-        var boundRect = canvas.getBoundingClientRect();
-        var width = canvas.width;
-        var height = canvas.height;
-        return {
-            x: Math.round(x - boundRect.left * (width / boundRect.width)),
-            y: Math.round(y - boundRect.top * (height / boundRect.height))
-        };
-    };
     exports.getMouseCoords = function (canvas, event) {
         var boundRect = canvas.getBoundingClientRect();
         var top = boundRect.top;
@@ -395,6 +386,18 @@ define('ig/ig', ['require'], function (require) {
             console.log(exports.getMouseCoords(touch.event.target, touchEvent));
         }, false);
         return touch;
+    };
+    exports.getElementOffset = function (element) {
+        var x = element.offsetLeft;
+        var y = element.offsetTop;
+        while ((element = element.offsetParent) && element != document.body && element != document) {
+            x += element.offsetLeft;
+            y += element.offsetTop;
+        }
+        return {
+            x: x,
+            y: y
+        };
     };
     return exports;
 });define('ig/Event', ['require'], function (require) {
@@ -738,15 +741,14 @@ define('ig/ig', ['require'], function (require) {
         setOffCanvas.call(me);
     }
     function setOffCanvas() {
-        var me = this;
-        if (!me.offCanvas) {
-            me.offCanvas = document.createElement('canvas');
-            me.offCtx = me.offCanvas.getContext('2d');
+        if (!this.offCanvas) {
+            this.offCanvas = document.createElement('canvas');
+            this.offCtx = this.offCanvas.getContext('2d');
         }
-        me.offCanvas.width = me.canvas.width;
-        me.offCanvas.style.width = me.canvas.style.width;
-        me.offCanvas.height = me.canvas.height;
-        me.offCanvas.style.height = me.canvas.style.height;
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
     }
     function Game(opts) {
         opts = opts || {};
@@ -807,6 +809,9 @@ define('ig/ig', ['require'], function (require) {
             canvasParent.style.width = width + 'px';
             canvasParent.style.margin = '0 auto';
             canvasParent.style.position = 'relative';
+            if (opts.scaleFit) {
+                fitScreen.call(me);
+            }
             window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
                 setTimeout(function () {
                     window.scrollTo(0, 1);
@@ -1027,12 +1032,14 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './Event',
     './util',
-    './DisplayObject'
+    './DisplayObject',
+    './domEvt'
 ], function (require) {
     'use strict';
     var Event = require('./Event');
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var domEvt = require('./domEvt');
     var newImage4ParallaxRepeat = new Image();
     var guid = 0;
     function renderParallaxRepeatImage(offCtx) {
@@ -1142,9 +1149,24 @@ define('ig/ig', ['require'], function (require) {
         this.height = opts.game.height;
         this.cssWidth = opts.game.cssWidth;
         this.cssHeight = opts.game.cssHeight;
+        this.initMouseEvent();
     }
     Stage.prototype = {
         constructor: Stage,
+        initMouseEvent: function () {
+            domEvt.initMouse(this);
+            this.bindMouseEvent();
+        },
+        bindMouseEvent: function () {
+            var me = this;
+            domEvt.events.forEach(function (name, i) {
+                var invokeMethod = domEvt.fireEvt[name];
+                if (invokeMethod) {
+                    me.on(name, invokeMethod);
+                }
+            });
+            return me;
+        },
         clear: function () {
             var me = this;
             me.offCtx.clearRect(0, 0, me.width, me.height);
@@ -1203,6 +1225,7 @@ define('ig/ig', ['require'], function (require) {
                 aX: 0,
                 aY: 0
             }, opts);
+            return this;
         },
         update: function (totalFrameCounter, dt) {
             var me = this;
@@ -1349,11 +1372,27 @@ define('ig/ig', ['require'], function (require) {
         this.reverseVY = false;
         this.status = 1;
         this.customProp = opts.customProp || {};
+        this.mouseEnable = !!opts.mouseEnable || false;
         this.debug = !!opts.debug || false;
+        this.captureFunc = opts.captureFunc || util.noop;
+        this.moveFunc = opts.moveFunc || util.noop;
+        this.releaseFunc = opts.releaseFunc || util.noop;
         this.setPos(this.x, this.y);
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
         setPos: function (x, y) {
             this.x = x || this.x;
             this.y = y || this.y;
@@ -1833,90 +1872,92 @@ define('ig/ig', ['require'], function (require) {
     return Vector;
 });define('ig/geom/Polygon', [
     'require',
-    '../util',
-    '../DisplayObject',
     '../collision',
     './Vector'
 ], function (require) {
     'use strict';
-    var util = require('../util');
-    var DisplayObject = require('../DisplayObject');
     var collision = require('../collision');
     var Vector = require('./Vector');
-    function Polygon(opts) {
-        DisplayObject.apply(this, arguments);
-        this.points = opts.points || [];
-        this.recalc();
-        this.getBounds();
-    }
-    Polygon.prototype = {
-        constructor: Polygon,
-        recalc: function () {
-            var points = this.points;
-            var len = points.length;
-            this.edges = [];
-            this.normals = [];
-            for (var i = 0; i < len; i++) {
-                var p1 = points[i];
-                var p2 = i < len - 1 ? points[i + 1] : points[0];
-                var e = new Vector().copy(p2).sub(p1);
-                var n = new Vector().copy(e).perp().normalize();
-                this.edges.push(e);
-                this.normals.push(n);
+    var polygon = {};
+    polygon.recalc = function (obj) {
+        var points = obj.points;
+        var len = points.length;
+        obj.edges = [];
+        obj.normals = [];
+        for (var i = 0; i < len; i++) {
+            var p1 = points[i];
+            var p2 = i < len - 1 ? points[i + 1] : points[0];
+            var e = new Vector().copy(p2).sub(p1);
+            var n = new Vector().copy(e).perp().normalize();
+            obj.edges.push(e);
+            obj.normals.push(n);
+        }
+        return obj;
+    };
+    polygon.toPolygon = function (obj) {
+        var w = obj.width;
+        var h = obj.height;
+        obj.points = [
+            {
+                x: 0,
+                y: 0
+            },
+            {
+                x: w,
+                y: 0
+            },
+            {
+                x: w,
+                y: h
+            },
+            {
+                x: 0,
+                y: h
             }
-            return this;
-        },
-        getBounds: function () {
-            var points = this.points;
-            var startX = this.x;
-            var startY = this.y;
-            var points = this.points;
-            var startX = this.x;
-            var startY = this.y;
-            var minX = Number.MAX_VALUE;
-            var maxX = Number.MIN_VALUE;
-            var minY = Number.MAX_VALUE;
-            var maxY = Number.MIN_VALUE;
-            for (var i = 0, len = points.length; i < len; i++) {
-                if (points[i].x < minX) {
-                    minX = points[i].x;
-                }
-                if (points[i].x > maxX) {
-                    maxX = points[i].x;
-                }
-                if (points[i].y < minY) {
-                    minY = points[i].y;
-                }
-                if (points[i].y > maxY) {
-                    maxY = points[i].y;
-                }
+        ];
+        polygon.recalc(obj);
+        return obj;
+    };
+    polygon.getBounds = function (obj) {
+        var points = obj.points;
+        var startX = obj.x;
+        var startY = obj.y;
+        var points = obj.points;
+        var startX = obj.x;
+        var startY = obj.y;
+        var minX = Number.MAX_VALUE;
+        var maxX = Number.MIN_VALUE;
+        var minY = Number.MAX_VALUE;
+        var maxY = Number.MIN_VALUE;
+        for (var i = 0, len = points.length; i < len; i++) {
+            if (points[i].x < minX) {
+                minX = points[i].x;
             }
-            this.bounds = {
-                x: minX + startX,
-                y: minY + startY,
-                width: maxX - minX,
-                height: maxY - minY
-            };
-            return this;
-        },
-        intersects: function (otherPolygon, isShowCollideResponse) {
-            return collision.checkPolygonPolygon(this, otherPolygon, isShowCollideResponse);
-        },
-        intersectsCircle: function (otherCircle, isShowCollideResponse) {
-            return collision.checkPolygonCircle(this, otherCircle, isShowCollideResponse);
-        },
-        debugRender: function (offCtx) {
-            if (this.debug) {
-                this.getBounds();
-                offCtx.save();
-                offCtx.strokeStyle = 'black';
-                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                offCtx.restore();
+            if (points[i].x > maxX) {
+                maxX = points[i].x;
+            }
+            if (points[i].y < minY) {
+                minY = points[i].y;
+            }
+            if (points[i].y > maxY) {
+                maxY = points[i].y;
             }
         }
+        obj.bounds = {
+            x: minX + startX,
+            y: minY + startY,
+            width: maxX - minX,
+            height: maxY - minY
+        };
+        return obj;
     };
-    util.inherits(Polygon, DisplayObject);
-    return Polygon;
+    polygon.intersects = function (firstPolygon, secondPolygon, isShowCollideResponse) {
+        return collision.checkPolygonPolygon(firstPolygon, secondPolygon, isShowCollideResponse);
+    };
+    polygon.intersectsCircle = function (polygon, otherCircle, isShowCollideResponse) {
+        return collision.checkPolygonCircle(polygon, otherCircle, isShowCollideResponse);
+    };
+    return polygon;
 });define('ig/geom/Rect', [
     'require',
     '../util',
@@ -2274,6 +2315,250 @@ define('ig/ig', ['require'], function (require) {
         return result;
     };
     return exports;
+});define('ig/geom/polygon', [
+    'require',
+    '../collision',
+    './Vector'
+], function (require) {
+    'use strict';
+    var collision = require('../collision');
+    var Vector = require('./Vector');
+    var polygon = {};
+    polygon.recalc = function (obj) {
+        var points = obj.points;
+        var len = points.length;
+        obj.edges = [];
+        obj.normals = [];
+        for (var i = 0; i < len; i++) {
+            var p1 = points[i];
+            var p2 = i < len - 1 ? points[i + 1] : points[0];
+            var e = new Vector().copy(p2).sub(p1);
+            var n = new Vector().copy(e).perp().normalize();
+            obj.edges.push(e);
+            obj.normals.push(n);
+        }
+        return obj;
+    };
+    polygon.toPolygon = function (obj) {
+        var w = obj.width;
+        var h = obj.height;
+        obj.points = [
+            {
+                x: 0,
+                y: 0
+            },
+            {
+                x: w,
+                y: 0
+            },
+            {
+                x: w,
+                y: h
+            },
+            {
+                x: 0,
+                y: h
+            }
+        ];
+        polygon.recalc(obj);
+        return obj;
+    };
+    polygon.getBounds = function (obj) {
+        var points = obj.points;
+        var startX = obj.x;
+        var startY = obj.y;
+        var points = obj.points;
+        var startX = obj.x;
+        var startY = obj.y;
+        var minX = Number.MAX_VALUE;
+        var maxX = Number.MIN_VALUE;
+        var minY = Number.MAX_VALUE;
+        var maxY = Number.MIN_VALUE;
+        for (var i = 0, len = points.length; i < len; i++) {
+            if (points[i].x < minX) {
+                minX = points[i].x;
+            }
+            if (points[i].x > maxX) {
+                maxX = points[i].x;
+            }
+            if (points[i].y < minY) {
+                minY = points[i].y;
+            }
+            if (points[i].y > maxY) {
+                maxY = points[i].y;
+            }
+        }
+        obj.bounds = {
+            x: minX + startX,
+            y: minY + startY,
+            width: maxX - minX,
+            height: maxY - minY
+        };
+        return obj;
+    };
+    polygon.intersects = function (firstPolygon, secondPolygon, isShowCollideResponse) {
+        return collision.checkPolygonPolygon(firstPolygon, secondPolygon, isShowCollideResponse);
+    };
+    polygon.intersectsCircle = function (polygon, otherCircle, isShowCollideResponse) {
+        return collision.checkPolygonCircle(polygon, otherCircle, isShowCollideResponse);
+    };
+    return polygon;
+});define('ig/domEvt', [
+    'require',
+    './util',
+    './env',
+    './Event'
+], function (require) {
+    var util = require('./util');
+    var env = require('./env');
+    var Event = require('./Event');
+    var TOUCH_EVENTS = [
+        'touchstart',
+        'touchmove',
+        'touchend'
+    ];
+    var MOUSE_EVENTS = [
+        'mousedown',
+        'mousemove',
+        'mouseup'
+    ];
+    var exports = {};
+    exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
+    exports.fireEvt = {};
+    exports.fireEvt['touchstart'] = exports.fireEvt['touchstart'] = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+                e.data.curStage = target;
+                curDisplayObject.isCapture = true;
+                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+            }
+        }
+        return target;
+    };
+    exports.fireEvt['touchmove'] = exports.fireEvt['mousemove'] = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
+                e.data.curStage = target;
+                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
+            }
+        }
+        return target;
+    };
+    exports.fireEvt['touchend'] = exports.fireEvt['mouseup'] = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            curDisplayObject.isCapture = false;
+        }
+        return target;
+    };
+    exports.initMouse = function (stage) {
+        this.stage = stage;
+        this.element = stage.canvas;
+        this.x = 0;
+        this.y = 0;
+        this.isDown = false;
+        var offset = util.getElementOffset(this.element);
+        this.offsetX = offset.x;
+        this.offsetY = offset.y;
+        this.addEvent();
+        return this;
+    };
+    exports.refreshMouse = function (stage) {
+        console.warn('refreshMouse');
+        this.stage = stage;
+        this.element = stage.canvas;
+        this.x = 0;
+        this.y = 0;
+        this.isDown = false;
+        var offset = util.getElementOffset(this.element);
+        this.offsetX = offset.x;
+        this.offsetY = offset.y;
+        return this;
+    };
+    exports.addEvent = function () {
+        var me = this;
+        var elem = me.element;
+        me.events.forEach(function (name, i) {
+            elem.addEventListener(name, function (e) {
+                e.preventDefault();
+                if (i == 0) {
+                    me.isDown = true;
+                } else if (i == 2) {
+                    me.isDown = false;
+                }
+                var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
+                var y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+                me.x = x - me.offsetX;
+                me.y = y - me.offsetY;
+                me.stage.fire(name, {
+                    data: {
+                        x: me.x,
+                        y: me.y,
+                        isDown: me.isDown
+                    }
+                });
+            });
+        });
+    };
+    return exports;
+});define('ig/Bitmap', [
+    'require',
+    './util',
+    './DisplayObject',
+    './geom/polygon'
+], function (require) {
+    'use strict';
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var polygon = require('./geom/polygon');
+    function Bitmap(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('Bitmap must be require a image param');
+        }
+        DisplayObject.apply(this, arguments);
+        this.width = opts.width || this.image.width || 0;
+        this.height = opts.height || this.image.height || 0;
+        if (opts.points && opts.points.length && util.getType(opts.points) === 'array') {
+            this.points = opts.points;
+        } else {
+            polygon.toPolygon(this);
+        }
+        polygon.recalc(this);
+        polygon.getBounds(this);
+    }
+    Bitmap.prototype = {
+        constructor: Bitmap,
+        render: function (offCtx) {
+            polygon.getBounds(this);
+            offCtx.save();
+            offCtx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            this.debugRender(offCtx);
+            offCtx.restore();
+            return this;
+        },
+        hitTestPoint: function (x, y) {
+            return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
+        }
+    };
+    util.inherits(Bitmap, DisplayObject);
+    return Bitmap;
 });
 var ig = require('ig');
 
@@ -2588,6 +2873,72 @@ else {
 
 var modName = 'ig/collision';
 var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/geom/polygon';
+var refName = '';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/domEvt';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Bitmap';
+var refName = 'Bitmap';
 var folderName = '';
 
 var tmp;

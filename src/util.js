@@ -316,25 +316,6 @@ define(function (require) {
     };
 
     /**
-     * 把页面上的鼠标坐标换成相对于 canvas 的坐标
-     *
-     * @param {HTML.Element} canvas canvas 元素
-     * @param {number} x 相对于页面的横坐标
-     * @param {number} y 相对于页面的纵坐标
-     *
-     * @return {Object} 相对于 canvas 的坐标对象
-     */
-    exports.windowToCanvas = function (canvas, x, y) {
-        var boundRect = canvas.getBoundingClientRect();
-        var width = canvas.width;
-        var height = canvas.height;
-        return {
-            x: Math.round(x - boundRect.left * (width / boundRect.width)),
-            y: Math.round(y - boundRect.top * (height / boundRect.height))
-        };
-    };
-
-    /**
      * 获取鼠标相对于 canvas 的坐标
      * http://stackoverflow.com/a/27204937/2747251
      *
@@ -498,6 +479,26 @@ define(function (require) {
         );
 
         return touch;
+    };
+
+    /**
+     * 获取节点的偏移
+     *
+     * @param {HTML.Element} element dom 节点
+     *
+     * @return {Object} 偏移量
+     */
+    exports.getElementOffset = function (element) {
+        var x = element.offsetLeft;
+        var y = element.offsetTop;
+        while ((element = element.offsetParent) && element != document.body && element != document) {
+            x += element.offsetLeft;
+            y += element.offsetTop;
+        }
+        return {
+            x: x,
+            y: y
+        };
     };
 
     return exports;

@@ -20,7 +20,11 @@ exports.modules = {
         {name: 'ig/geom/Vector', refName: 'Vector', folder: 'geom'}, // window.ig.geom.Vector
         {name: 'ig/geom/Polygon', refName: 'Polygon', folder: 'geom'}, // window.ig.geom.Polygon
         {name: 'ig/geom/Rect', refName: 'Rect', folder: 'geom'}, // window.ig.geom.Rect
-        {name: 'ig/collision'}
+        {name: 'ig/collision'},
+
+        {name: 'ig/geom/polygon', folder: 'geom'},
+        {name: 'ig/domEvt'},
+        {name: 'ig/Bitmap', refName: 'Bitmap'}
     ]
 };
 
