@@ -208,8 +208,8 @@ define(function (require) {
          * @param {number} y 纵坐标
          */
         setPos: function (x, y) {
-            this.x = x || this.x;
-            this.y = y || this.y;
+            this.x = x || 0;
+            this.y = y || x || 0;
         },
 
         /**

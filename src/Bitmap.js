@@ -57,6 +57,10 @@ define(function (require) {
          */
         constructor: Bitmap,
 
+        setSY: function (sy) {
+            this.sY = sy;
+        },
+
         /**
          * 渲染当前 Bitmap 实例
          *

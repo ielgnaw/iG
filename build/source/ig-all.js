@@ -1394,8 +1394,8 @@ define('ig/ig', ['require'], function (require) {
             return this;
         },
         setPos: function (x, y) {
-            this.x = x || this.x;
-            this.y = y || this.y;
+            this.x = x || 0;
+            this.y = y || x || 0;
         },
         setAcceleration: function (ax, ay) {
             this.aX = ax || this.aX;
@@ -2541,6 +2541,9 @@ define('ig/ig', ['require'], function (require) {
     }
     Bitmap.prototype = {
         constructor: Bitmap,
+        setSY: function (sy) {
+            this.sY = sy;
+        },
         render: function (offCtx) {
             polygon.getBounds(this);
             offCtx.save();
