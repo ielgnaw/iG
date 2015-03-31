@@ -56,7 +56,7 @@ window.onload = function () {
                 // ,repeat: 'repeat'
             });
 
-            var count = 3;
+            var count = 5;
             for (var i = 0; i < count; i++) {
                 var point1 = {
                     x: Math.floor(util.randomFloat(30, 100)),
@@ -176,7 +176,7 @@ window.onload = function () {
                 stage.addDisplayObject(polygon);
             }
 
-            var circleCount = 3;
+            var circleCount = 5;
             for (var c = 0; c < circleCount; c++) {
                 var circle = new ig.geom.Circle({
                     x: util.randomInt(50, canvas.width - 80),

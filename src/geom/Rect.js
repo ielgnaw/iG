@@ -9,6 +9,9 @@ define(function (require) {
 
     var util = require('../util');
     var DisplayObject = require('../DisplayObject');
+    var collision = require('../collision');
+    var Polygon = require('./Polygon');
+    var Vector = require('./Vector');
 
     /**
      * Rect 基类
@@ -20,6 +23,8 @@ define(function (require) {
      */
     function Rect(opts) {
         DisplayObject.apply(this, arguments);
+
+        this.toPolygon();
     }
 
     Rect.prototype = {
@@ -29,15 +34,52 @@ define(function (require) {
         constructor: Rect,
 
         /**
+         * 转换成 polygon
+         *
+         * @return {Polygon} 创建出来的多边形
+         */
+        toPolygon: function () {
+            var w = this.width;
+            var h = this.height;
+            var polygon = new Polygon(
+                {
+                    x: this.x,
+                    y: this.y,
+                    points: [
+                        {
+                            x: 0,
+                            y: 0
+                        },
+                        {
+                            x: w,
+                            y: 0
+                        },
+                        {
+                            x: w,
+                            y: h
+                        },
+                        {
+                            x: 0,
+                            y: h
+                        }
+                    ]
+                }
+            );
+            this.edges = polygon.edges;
+            this.points = polygon.points;
+            this.normals = polygon.normals;
+            return this;
+        },
+
+        /**
          * 是否和另一个矩形相交
          *
          * @param {Rect} otherRect 另一个矩形
          *
          * @return {boolean} 是否相交
          */
-        intersects: function (otherRect) {
-            return otherRect.x <= this.x + this.width && this.x <= otherRect.x + otherRect.width
-                    && otherRect.y <= this.y + this.height && this.y <= otherRect.y + otherRect.height;
+        intersects: function (otherRect, isShowCollideResponse) {
+            return collision.checkPolygonPolygon(this, otherRect, isShowCollideResponse);
         },
 
         /**
@@ -51,6 +93,47 @@ define(function (require) {
         hitTestPoint: function (x, y) {
             return x >= this.x && x <= this.x + this.width
                     && y >= this.y && y <= this.y + this.height;
+        },
+
+        /**
+         * 最大最小顶点法来获取边界盒
+         *
+         * @return {Polygon} Polygon 实例
+         */
+        getBounds: function () {
+            // console.warn(this);
+            // debugger
+            this.bounds = {
+                x: this.x,
+                y: this.y,
+                width: this.width,
+                height: this.height
+            };
+
+            return this;
+        },
+
+        /**
+         * debug 时渲染边界盒，多边形使用最大最小顶点法来渲染边界盒
+         *
+         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         */
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                this.getBounds();
+
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+
+                offCtx.strokeRect(
+                    this.bounds.x,
+                    this.bounds.y,
+                    this.bounds.width,
+                    this.bounds.height
+                );
+
+                offCtx.restore();
+            }
         }
     };
 

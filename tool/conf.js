@@ -19,6 +19,7 @@ exports.modules = {
         {name: 'ig/geom/Circle', refName: 'Circle', folder: 'geom'}, // window.ig.geom.Circle
         {name: 'ig/geom/Vector', refName: 'Vector', folder: 'geom'}, // window.ig.geom.Vector
         {name: 'ig/geom/Polygon', refName: 'Polygon', folder: 'geom'}, // window.ig.geom.Polygon
+        {name: 'ig/geom/Rect', refName: 'Rect', folder: 'geom'}, // window.ig.geom.Rect
         {name: 'ig/collision'}
     ]
 };

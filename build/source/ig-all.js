@@ -1917,6 +1917,83 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Polygon, DisplayObject);
     return Polygon;
+});define('ig/geom/Rect', [
+    'require',
+    '../util',
+    '../DisplayObject',
+    '../collision',
+    './Polygon',
+    './Vector'
+], function (require) {
+    'use strict';
+    var util = require('../util');
+    var DisplayObject = require('../DisplayObject');
+    var collision = require('../collision');
+    var Polygon = require('./Polygon');
+    var Vector = require('./Vector');
+    function Rect(opts) {
+        DisplayObject.apply(this, arguments);
+        this.toPolygon();
+    }
+    Rect.prototype = {
+        constructor: Rect,
+        toPolygon: function () {
+            var w = this.width;
+            var h = this.height;
+            var polygon = new Polygon({
+                x: this.x,
+                y: this.y,
+                points: [
+                    {
+                        x: 0,
+                        y: 0
+                    },
+                    {
+                        x: w,
+                        y: 0
+                    },
+                    {
+                        x: w,
+                        y: h
+                    },
+                    {
+                        x: 0,
+                        y: h
+                    }
+                ]
+            });
+            this.edges = polygon.edges;
+            this.points = polygon.points;
+            this.normals = polygon.normals;
+            return this;
+        },
+        intersects: function (otherRect, isShowCollideResponse) {
+            return collision.checkPolygonPolygon(this, otherRect, isShowCollideResponse);
+        },
+        hitTestPoint: function (x, y) {
+            return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+        },
+        getBounds: function () {
+            this.bounds = {
+                x: this.x,
+                y: this.y,
+                width: this.width,
+                height: this.height
+            };
+            return this;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                this.getBounds();
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
+        }
+    };
+    util.inherits(Rect, DisplayObject);
+    return Rect;
 });define('ig/collision', [
     'require',
     './geom/Vector'
@@ -2467,6 +2544,28 @@ else {
 
 var modName = 'ig/geom/Polygon';
 var refName = 'Polygon';
+var folderName = 'geom';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/geom/Rect';
+var refName = 'Rect';
 var folderName = 'geom';
 
 var tmp;
