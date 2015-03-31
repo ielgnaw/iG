@@ -80,8 +80,8 @@ define(function (require) {
          * @return {boolean} 是否相交
          */
         hitTestPoint: function (x, y) {
-            return x >= this.x && x <= this.x + this.width
-                    && y >= this.y && y <= this.y + this.height;
+            return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width
+                    && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
         },
 
         /**

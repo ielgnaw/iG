@@ -31,7 +31,7 @@ define(function (require) {
      *
      * @return {Object} Stage 实例
      */
-    exports.fireEvt['touchstart'] = exports.fireEvt['touchstart'] = function (e) {
+    exports.fireEvt['touchstart'] = exports.fireEvt['mousedown'] = function (e) {
         var target = e.target;
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {

@@ -2425,7 +2425,7 @@ define('ig/ig', ['require'], function (require) {
     var exports = {};
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
     exports.fireEvt = {};
-    exports.fireEvt['touchstart'] = exports.fireEvt['touchstart'] = function (e) {
+    exports.fireEvt['touchstart'] = exports.fireEvt['mousedown'] = function (e) {
         var target = e.target;
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
@@ -2546,7 +2546,7 @@ define('ig/ig', ['require'], function (require) {
             return this;
         },
         hitTestPoint: function (x, y) {
-            return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
+            return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
         },
         debugRender: function (offCtx) {
             if (this.debug) {
