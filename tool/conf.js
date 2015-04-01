@@ -24,7 +24,8 @@ exports.modules = {
 
         {name: 'ig/geom/polygon', folder: 'geom'},
         {name: 'ig/domEvt'},
-        {name: 'ig/Bitmap', refName: 'Bitmap'}
+        {name: 'ig/Bitmap', refName: 'Bitmap'},
+        {name: 'ig/easing', refName: 'easing'},
     ]
 };
 
