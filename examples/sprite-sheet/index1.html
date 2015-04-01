@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="format-detection" content="telephone=no">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, target-densitydpi=device-dpi"/> -->
+        <!-- <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,width=device-width,minimal-ui"> -->
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <title>SpriteSheet</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background: #ddd;
+            }
+
+            .container {
+                position: relative;
+                width: 600px;
+                height: 400px;
+                margin: 10px auto;
+                background: #fff;
+                border: thin inset rgba(100,150,230,0.5);
+                top: 10px;
+            }
+
+            canvas {
+                /*border: 2px solid #ddd;*/
+            }
+
+            .control-container {
+                position: absolute;
+                top: 100px;
+                left: 50px;
+            }
+
+            .control-container .show-frame {
+                margin-bottom: 15px;
+            }
+
+        </style>
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <div class="control-container">
+            <div class="show-frame">帧数：123</div>
+        </div>
+        <div class="container">
+            <canvas id='canvas' width='600' height='200'></canvas>
+        </div>
+        <script>
+
+            var li = new ig.ImageLoader({
+                allCallback: function () {
+                    loadComplete();
+                },
+                source: [
+                    './img/sprite-sheet3.png',
+                    './img/test1.png',
+                    './img/test2.png'
+                ]
+            });
+
+            li.load();
+
+            li.on('ImageLoader:imageLoaded', function (data) {
+                console.log('ImageLoader:imageLoaded', data.data.progress);
+            });
+            li.on('ImageLoader:imageLoadedError', function (data) {
+                console.log('ImageLoader:imageLoadedError', data.data.progress);
+            });
+            li.on('ImageLoader:allImageLoaded', function (data) {
+            });
+
+            function loadComplete() {
+                var showFrameNode = document.querySelector('.show-frame');
+                var g = new ig.Game();
+                g.on('Game:afterRender', function (data) {
+                    showFrameNode.innerHTML = ''
+                        + '当前帧数：' + data.data.curFrame
+                });
+                var stage = g.createStage({
+                    // width: 600,
+                    // height: 400,
+                    containerBgColor: '#fff',
+                    canvas: canvas
+                });
+
+                for (var i = 0; i < 10; i++) {
+                    var obj = new ig.SpriteSheet({
+                        image: li.imageList[0],
+                        x: ig.util.randomInt(30, canvas.width),
+                        y: ig.util.randomInt(40, canvas.height),
+                        frameStartX: 0,
+                        // frameStartY: ig.util.randomInt(1, 10),
+                        frameStartY: 0,
+                        total: 16 + 16 + 9,
+                        frameWidth: 64,
+                        frameHeight: 86,
+                        zIndex: i
+                    });
+                    stage.addDisplayObject(obj);
+
+                    var obj1 = new ig.SpriteSheet({
+                        image: li.imageList[1],
+                        x: ig.util.randomInt(30, canvas.width),
+                        y: ig.util.randomInt(40, canvas.height),
+                        frameStartX: 0,
+                        frameStartY: 0,
+                        total: 7,
+                        frameWidth: 180,
+                        frameHeight: 100,
+                        zIndex: i+1,
+                        offsets: {
+                            0: {
+                                x: 0,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            1: {
+                                x: 20,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            }
+                            ,2: {
+                                x: 25,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            3: {
+                                x: 30,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            4: {
+                                x: 40,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            5: {
+                                x: 50,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            },
+                            6: {
+                                x: 60,
+                                y: 0,
+                                width: 0,
+                                height: 0
+                            }
+                        }
+                    });
+                    stage.addDisplayObject(obj1);
+
+                }
+
+                g.start();
+            }
+
+
+        </script>
+    </body>
+</html>

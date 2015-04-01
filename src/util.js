@@ -249,7 +249,7 @@ define(function (require) {
      * @return {number} min 到 max 之间的随机整数
      */
     exports.randomInt = function (min, max) {
-        return Math.floor(Math.random() * max + min);
+        return Math.floor(Math.random() * (max - min + 1) + min);
     };
 
     /**

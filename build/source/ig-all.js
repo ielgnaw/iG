@@ -267,7 +267,7 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     exports.randomInt = function (min, max) {
-        return Math.floor(Math.random() * max + min);
+        return Math.floor(Math.random() * (max - min + 1) + min);
     };
     exports.randomFloat = function (min, max) {
         return Math.random() * (max - min) + min;
@@ -1453,7 +1453,6 @@ define('ig/ig', ['require'], function (require) {
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
     var guid = 0;
-    var ANIMATION_DELAY = 0;
     function SpriteSheet(opts) {
         opts = opts || {};
         if (!opts.image) {
@@ -1477,13 +1476,16 @@ define('ig/ig', ['require'], function (require) {
         this._offsetY = 0;
         this._offsetWidth = 0;
         this._offsetHeight = 0;
-        ANIMATION_DELAY = 0;
+        this.ticksPerFrame = opts.ticksPerFrame || 0;
+        this.tickCount = 0;
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
-        update: function () {
+        update: function (dt) {
             var me = this;
-            if (ANIMATION_DELAY % 1 === 0) {
+            this.tickCount++;
+            if (this.tickCount > this.ticksPerFrame) {
+                this.tickCount = 0;
                 me._offsetX = 0;
                 me._offsetY = 0;
                 me._offsetWidth = 0;
@@ -1508,7 +1510,6 @@ define('ig/ig', ['require'], function (require) {
                     me.frameIndex = 0;
                 }
             }
-            ANIMATION_DELAY++;
         },
         render: function (offCtx) {
             var me = this;
@@ -2761,6 +2762,168 @@ define('ig/ig', ['require'], function (require) {
         }
     };
     return easing;
+});define('ig/Animation', [
+    'require',
+    './util',
+    './Event',
+    './easing'
+], function (require) {
+    'use strict';
+    var util = require('./util');
+    var Event = require('./Event');
+    var easing = require('./easing');
+    var _defaultFPS = 60;
+    function Animation(opts) {
+        opts = opts || {};
+        Event.apply(this, arguments);
+        this.p = util.extend({
+            source: {},
+            target: {},
+            range: null,
+            tween: easing.linear,
+            repeat: false,
+            duration: 1000,
+            fps: _defaultFPS
+        }, opts);
+        this.setup();
+        this.repeatCount = 0;
+        this._then = Date.now();
+        this._now;
+        this._delta;
+        this._interval = 1000 / this.p.fps;
+    }
+    Animation.prototype = {
+        constructor: Animation,
+        setup: function () {
+            this.running = false;
+            this.curFrame = 0;
+            this.initState = {};
+            this.frames = Math.ceil(this.p.duration * this.p.fps / 1000);
+            var source = this.p.source;
+            var target = this.p.target;
+            var range = this.p.range;
+            if (range) {
+                for (var i in range) {
+                    this.initState[i] = {
+                        from: parseFloat(source[i] - range[i]),
+                        to: parseFloat(source[i] + range[i])
+                    };
+                }
+            } else {
+                for (var i in target) {
+                    this.initState[i] = {
+                        from: parseFloat(source[i]),
+                        to: parseFloat(target[i])
+                    };
+                }
+            }
+            return this;
+        },
+        swapFromTo: function () {
+            var newInitState = {};
+            for (var i in this.initState) {
+                newInitState[i] = {
+                    from: this.initState[i].to,
+                    to: this.initState[i].from
+                };
+            }
+            this.curFrame = 0;
+            this.initState = newInitState;
+            return this;
+        },
+        repeat: function () {
+            this.repeatCount++;
+            this.swapFromTo();
+            this.fire('repeat', {
+                data: {
+                    source: this.p.source,
+                    instance: this,
+                    repeatCount: this.repeatCount
+                }
+            });
+            this.play();
+            return this;
+        },
+        play: function () {
+            this.running = true;
+            if (this.timer) {
+                this.stop();
+            }
+            this.step();
+            return this;
+        },
+        stop: function () {
+            window.cancelAnimationFrame(this.timer);
+            return this;
+        },
+        next: function () {
+            this.stop();
+            this.curFrame++;
+            this.curFrame = this.curFrame > this.frames ? this.frames : this.curFrame;
+            this.step.call(this);
+            return this;
+        },
+        prev: function () {
+            this.stop();
+            this.curFrame--;
+            this.curFrame = this.curFrame < 0 ? 0 : this.curFrame;
+            this.step.call(this);
+            return this;
+        },
+        gotoAndPlay: function (frame) {
+            this.stop();
+            this.curFrame = frame;
+            this.play.call(this);
+            return this;
+        },
+        gotoAndStop: function (frame) {
+            this.stop();
+            this.curFrame = frame;
+            this.step.call(this);
+            return this;
+        },
+        step: function () {
+            var me = this;
+            me.timer = window.requestAnimationFrame(function (context) {
+                return function () {
+                    me.step.call(me);
+                };
+            }(me));
+            me._now = Date.now();
+            me._delta = me._now - me._then;
+            if (me._delta > me._interval) {
+                me._then = me._now - me._delta % me._interval;
+                var ds;
+                for (var i in me.initState) {
+                    ds = me.p.tween(me.curFrame, me.initState[i].from, me.initState[i].to - me.initState[i].from, me.frames).toFixed(2);
+                    me.p.source[i] = parseFloat(ds);
+                }
+                me.curFrame++;
+                if (this.curFrame >= this.frames) {
+                    if (me.p.repeat) {
+                        me.repeat.call(me);
+                    } else {
+                        if (me.p.range && !me.p.rangeExec) {
+                            me.p.rangeExec = true;
+                            me.swapFromTo();
+                        } else {
+                            me.stop();
+                            me.running = false;
+                            me.fire('complete', {
+                                data: {
+                                    source: me.p.source,
+                                    instance: me
+                                }
+                            });
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+    };
+    util.inherits(Animation, Event);
+    return Animation;
 });
 var ig = require('ig');
 
@@ -3163,6 +3326,28 @@ else {
 
 var modName = 'ig/easing';
 var refName = 'easing';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Animation';
+var refName = 'Animation';
 var folderName = '';
 
 var tmp;

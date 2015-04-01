@@ -140,8 +140,8 @@ window.onload = function () {
 
                for (var i = stepx + 0.5; i < ctx.canvas.width; i += stepx) {
                   ctx.beginPath();
-                  ctx.moveTo(i, 0);
-                  ctx.lineTo(i, ctx.canvas.height);
+                  ctx.moveTo(i, 105);
+                  ctx.lineTo(i, ctx.canvas.height - 35);
                   ctx.stroke();
                }
 
@@ -160,7 +160,7 @@ window.onload = function () {
                 document.querySelector('#fps').innerHTML = 'fps: '+ data.data.fps;
             }).on('afterGameRender', function (data) {
                 drawGrid(stage.ctx, 'red', (canvas.width) / 6, (canvas.height) / 7);
-            })
+            });
         }
     );
 };

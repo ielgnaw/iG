@@ -26,6 +26,7 @@ exports.modules = {
         {name: 'ig/domEvt'},
         {name: 'ig/Bitmap', refName: 'Bitmap'},
         {name: 'ig/easing', refName: 'easing'},
+        {name: 'ig/Animation', refName: 'Animation'}
     ]
 };
 

@@ -13,14 +13,6 @@ define(function (require) {
     var guid = 0;
 
     /**
-     * 动画延时计数器
-     * window.requestAnimationFrame 无法设置间隔，用这个变量来做延迟
-     *
-     * @type {number}
-     */
-    var ANIMATION_DELAY = 0;
-
-    /**
      * 精灵表基类
      *
      * @constructor
@@ -106,8 +98,13 @@ define(function (require) {
          */
         this._offsetHeight = 0;
 
-        // 重置一下，让每个实例的 ANIMATION_DELAY 是自己的
-        ANIMATION_DELAY = 0;
+        // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
+        // 所以这是这个值来控制精灵切换的速度，
+        // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
+        this.ticksPerFrame = opts.ticksPerFrame || 0;
+
+        // 辅助 ticksPerFrame 计数的
+        this.tickCount = 0;
     }
 
     SpriteSheet.prototype = {
@@ -119,8 +116,9 @@ define(function (require) {
         /**
          * 动画帧更新
          */
-        update: function () {
+        update: function (dt) {
             var me = this;
+            // console.warn(dt / 1000);
             // if (me._ANIMATION_DELAY % 7 === 0) {
             //     me.relativeY = me.frameStartY * me.frameHeight;
             //     me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth;
@@ -131,8 +129,10 @@ define(function (require) {
             // }
             // me._ANIMATION_DELAY++;
 
-            if (ANIMATION_DELAY % 1 === 0) {
+            this.tickCount++;
 
+            if (this.tickCount > this.ticksPerFrame) {
+                this.tickCount = 0;
                 me._offsetX = 0;
                 me._offsetY = 0;
                 me._offsetWidth = 0;
@@ -160,7 +160,6 @@ define(function (require) {
                     me.frameIndex = 0;
                 }
             }
-            ANIMATION_DELAY++;
         },
 
         /**
