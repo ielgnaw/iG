@@ -1,23 +1,23 @@
 {
     "red": {
-        "sx": 0,
-        "sy": 2,
+        "sX": 0,
+        "sY": 2,
         "cols": 16,
-        "rows": 2,
-        "total": 20,
-        "tilew": 64,
-        "tileh": 86,
+        "rows": 4,
+        "total": 61,
+        "tileW": 64,
+        "tileH": 86,
         "offsetX": 0,
         "offsetY": 0
     },
     "orange": {
-        "sx": 258,
-        "sy": 0,
+        "sX": 256,
+        "sY": 86,
         "cols": 16,
-        "rows": 2,
-        "total": 20,
-        "tilew": 64,
-        "tileh": 86,
+        "rows": 5,
+        "total": 61,
+        "tileW": 64,
+        "tileH": 86,
         "offsetX": 0,
         "offsetY": 0
     }

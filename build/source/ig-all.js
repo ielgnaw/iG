@@ -1452,6 +1452,7 @@ define('ig/ig', ['require'], function (require) {
     'use strict';
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var floor = Math.floor;
     var guid = 0;
     function SpriteSheet(opts) {
         opts = opts || {};
@@ -1459,66 +1460,57 @@ define('ig/ig', ['require'], function (require) {
             throw new Error('SpriteSheet must be require a image param');
         }
         DisplayObject.apply(this, arguments);
-        this.name = opts.name === null || opts.name === undefined ? 'ig_spritesheet_' + guid++ : opts.name;
-        this.relativeX = opts.relativeX || 0;
-        this.relativeY = opts.relativeY || 0;
-        this.frameWidth = opts.frameWidth || 32;
-        this.frameHeight = opts.frameHeight || 32;
-        this.total = opts.total || 1;
-        this.totalBackup = this.total;
+        this.p = util.extend({
+            name: 'ig_spritesheet_' + guid++,
+            total: 1,
+            x: 0,
+            y: 0,
+            sX: 0,
+            sY: 0,
+            cols: 0,
+            rows: 0,
+            ticksPerFrame: 0
+        }, opts);
+        this.tickUpdateCount = 0;
         this.frameIndex = 0;
-        this.frameStartX = opts.frameStartX || 0;
-        this.frameStartXBackup = this.frameStartX;
-        this.frameStartY = opts.frameStartY || 0;
-        this.frameStartYBackup = this.frameStartY;
-        this.offsets = opts.offsets;
-        this._offsetX = 0;
-        this._offsetY = 0;
-        this._offsetWidth = 0;
-        this._offsetHeight = 0;
-        this.ticksPerFrame = opts.ticksPerFrame || 0;
-        this.tickCount = 0;
+        this.originalSX = this.p.sX;
+        this.originalTotal = this.p.total;
+        this.realCols = floor(this.p.cols - this.p.sX / this.p.tileW);
+        console.warn(this);
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
         update: function (dt) {
-            var me = this;
-            this.tickCount++;
-            if (this.tickCount > this.ticksPerFrame) {
-                this.tickCount = 0;
-                me._offsetX = 0;
-                me._offsetY = 0;
-                me._offsetWidth = 0;
-                me._offsetHeight = 0;
-                if (me.offsets && me.offsets[me.frameIndex]) {
-                    me._offsetX = me.offsets[me.frameIndex].x || 0;
-                    me._offsetY = me.offsets[me.frameIndex].y || 0;
-                    me._offsetWidth = me.offsets[me.frameIndex].width || 0;
-                    me._offsetHeight = me.offsets[me.frameIndex].height || 0;
+            this.tickUpdateCount++;
+            if (this.tickUpdateCount > this.p.ticksPerFrame) {
+                this.tickUpdateCount = 0;
+                if (this.frameIndex < this.p.total - 1) {
+                    this.frameIndex++;
+                } else {
+                    this.frameIndex = 0;
+                    this.p.total = this.originalTotal;
+                    this.p.sX = this.originalSX;
+                    this.realCols = floor(this.p.cols - this.originalSX / this.p.tileW);
+                    this.p.sY -= (this.p.rows - 1) * this.p.tileH;
                 }
-                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + me._offsetX;
-                me.relativeY = me.frameStartY * me.frameHeight + me._offsetY;
-                me.frameIndex++;
-                if (me.frameIndex >= me.total) {
-                    me.frameIndex = 0;
-                    me.frameStartY = me.frameStartYBackup;
-                    me.total = me.totalBackup;
-                }
-                if (me.frameIndex * me.frameWidth >= me.image.width) {
-                    me.frameStartY++;
-                    me.total = me.total - me.frameIndex;
-                    me.frameIndex = 0;
+                if (this.frameIndex === this.realCols) {
+                    this.p.total -= this.realCols;
+                    this.frameIndex = 0;
+                    this.p.sY += this.p.tileH;
+                    this.p.sX = 0;
+                    this.realCols = this.p.cols;
                 }
             }
         },
         render: function (offCtx) {
-            var me = this;
             offCtx.save();
-            offCtx.globalAlpha = me.alpha;
-            offCtx.translate(me.x, me.y);
-            offCtx.rotate(util.deg2Rad(me.angle));
-            offCtx.scale(me.scaleX, me.scaleY);
-            offCtx.drawImage(me.image, me.relativeX, me.relativeY, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight, -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight);
+            offCtx.globalAlpha = this.alpha;
+            offCtx.translate(this.x, this.y);
+            offCtx.rotate(util.deg2Rad(this.angle));
+            offCtx.scale(this.scaleX, this.scaleY);
+            offCtx.translate(-this.x, -this.y);
+            var p = this.p;
+            offCtx.drawImage(p.image, this.frameIndex * p.tileW + p.sX, p.sY, p.tileW, p.tileH, p.x, p.y, p.tileW, p.tileH);
             offCtx.restore();
         }
     };

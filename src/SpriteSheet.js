@@ -10,6 +10,8 @@ define(function (require) {
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
 
+    var floor = Math.floor;
+
     var guid = 0;
 
     /**
@@ -28,83 +30,55 @@ define(function (require) {
 
         DisplayObject.apply(this, arguments);
 
-        this.name = (opts.name === null || opts.name === undefined) ? 'ig_spritesheet_' + (guid++) : opts.name;
+        this.p = util.extend({
+            name: 'ig_spritesheet_' + (guid++),
 
-        // 每一帧动画相对于原始图像的裁切 x 位置
-        this.relativeX = opts.relativeX || 0;
+            // 一组动画中的所有帧数
+            total: 1,
 
-        // 每一帧动画相对于原始图像的裁切 y 位置
-        this.relativeY = opts.relativeY || 0;
+            // 横坐标
+            x: 0,
 
-        // 每一帧动画的宽度
-        this.frameWidth = opts.frameWidth || 32;
+            // 纵坐标
+            y: 0,
 
-        // 每一帧动画的高度
-        this.frameHeight = opts.frameHeight || 32;
+            // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            // 这两个参数对应 drawImage 的 sx, sy
+            sX: 0,
+            sY: 0,
 
-        // 一组动画中的所有帧数
-        this.total = opts.total || 1;
+            // 列数，如果精灵在当前行不是从第 0 列开始的，这个列数也还是指的所有的列数
+            // 例如 sprite-sheet3.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
+            cols: 0,
 
-        // 一组动画中的所有帧数的备份
-        this.totalBackup = this.total;
+            // 行数
+            // 例如 sprite-sheet3.png 气球图，红球的行数数是 2，桔球的行数是 2
+            rows: 0,
 
-        // 当前播放的帧的索引
+            // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
+            // 所以这是这个值来控制精灵切换的速度，
+            // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
+            ticksPerFrame: 0
+        }, opts);
+
+        // 帧更新的计数器，辅助 ticksPerFrame 计数的
+        this.tickUpdateCount = 0;
+
+        // 动画帧的索引
         this.frameIndex = 0;
 
-        // 帧开始的 x 位置
-        this.frameStartX = opts.frameStartX || 0;
+        // this.p.sX 的备份，精灵表换行时，sX 从 0 开始
+        this.originalSX = this.p.sX;
 
-        // 帧开始的 x 位置的备份
-        this.frameStartXBackup = this.frameStartX;
+        // this.p.total 的备份，所有精灵表动画跑完后还原到最初状态使用
+        this.originalTotal = this.p.total;
 
-        // 帧开始的 y 位置
-        this.frameStartY = opts.frameStartY || 0;
+        // 剩下的列数
+        // 例如气球图的第二行桔色球，是从第五个球开始的，sX 设置为前四个球的宽度
+        // 那么桔色球这行真实的列数是 12，但是换行后，就是整个的列数 16 了
+        this.realCols = floor(this.p.cols - this.p.sX / this.p.tileW);
 
-        // 帧开始的 y 位置的备份
-        this.frameStartYBackup = this.frameStartY;
-
-        // 每一帧的偏移量
-        this.offsets = opts.offsets;
-
-        /**
-         * 每一帧图像绘制的横轴偏移量
-         * @private
-         *
-         * @type {number}
-         */
-        this._offsetX = 0;
-
-        /**
-         * 每一帧图像绘制的纵轴偏移量
-         * @private
-         *
-         * @type {number}
-         */
-        this._offsetY = 0;
-
-        /**
-         * 每一帧图像绘制的宽度偏移量
-         * @private
-         *
-         * @type {number}
-         */
-        this._offsetWidth = 0;
-
-        /**
-         * 每一帧图像绘制的高度偏移量
-         * @private
-         *
-         * @type {number}
-         */
-        this._offsetHeight = 0;
-
-        // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
-        // 所以这是这个值来控制精灵切换的速度，
-        // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
-        this.ticksPerFrame = opts.ticksPerFrame || 0;
-
-        // 辅助 ticksPerFrame 计数的
-        this.tickCount = 0;
+        console.warn(this);
     }
 
     SpriteSheet.prototype = {
@@ -117,81 +91,80 @@ define(function (require) {
          * 动画帧更新
          */
         update: function (dt) {
-            var me = this;
-            // console.warn(dt / 1000);
-            // if (me._ANIMATION_DELAY % 7 === 0) {
-            //     me.relativeY = me.frameStartY * me.frameHeight;
-            //     me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth;
-            //     me.frameIndex++;
-            //     if (me.frameIndex >= me.total) {
-            //         me.frameIndex = 0;
-            //     }
-            // }
-            // me._ANIMATION_DELAY++;
+            this.tickUpdateCount++;
 
-            this.tickCount++;
+            if (this.tickUpdateCount > this.p.ticksPerFrame) {
+                this.tickUpdateCount = 0;
 
-            if (this.tickCount > this.ticksPerFrame) {
-                this.tickCount = 0;
-                me._offsetX = 0;
-                me._offsetY = 0;
-                me._offsetWidth = 0;
-                me._offsetHeight = 0;
+                if (this.frameIndex < this.p.total - 1) {
+                    this.frameIndex++;
+                }
+                else {
+                    // 还原 frameIndex
+                    this.frameIndex = 0;
 
-                if (me.offsets && me.offsets[me.frameIndex]) {
-                    me._offsetX = me.offsets[me.frameIndex].x || 0;
-                    me._offsetY = me.offsets[me.frameIndex].y || 0;
-                    me._offsetWidth = me.offsets[me.frameIndex].width || 0;
-                    me._offsetHeight = me.offsets[me.frameIndex].height || 0;
+                    // 从头开始，要把帧的总数还原
+                    this.p.total = this.originalTotal;
+
+                    // 还原 sX
+                    this.p.sX = this.originalSX;
+
+                    // 还原 realCols
+                    this.realCols = floor(this.p.cols - this.originalSX / this.p.tileW);
+
+                    // 还原 sY
+                    this.p.sY -= (this.p.rows - 1) * this.p.tileH;
                 }
 
-                me.relativeX = me.frameStartX * me.frameWidth + me.frameIndex * me.frameWidth + me._offsetX;
-                me.relativeY = me.frameStartY * me.frameHeight + me._offsetY;
-                me.frameIndex++;
-                if (me.frameIndex >= me.total) {
-                    me.frameIndex = 0;
-                    me.frameStartY = me.frameStartYBackup;
-                    me.total = me.totalBackup;
-                }
+                // 换行了
+                if (this.frameIndex === this.realCols) {
 
-                if (me.frameIndex * me.frameWidth >= me.image.width) {
-                    me.frameStartY++;
-                    me.total = me.total - me.frameIndex;
-                    me.frameIndex = 0;
+                    // 换行后剩下的帧的总数
+                    this.p.total -= this.realCols;
+
+                    this.frameIndex = 0;
+
+                    // 换行后 sY 要增加一行的高度
+                    this.p.sY += this.p.tileH;
+
+                    // 换行后 sX 从 0 开始
+                    this.p.sX = 0;
+
+                    this.realCols = this.p.cols;
                 }
             }
+
         },
 
         /**
          * 动画帧渲染
          */
         render: function (offCtx) {
-            var me = this;
             offCtx.save();
-            offCtx.globalAlpha = me.alpha;
-            offCtx.translate(me.x, me.y);
-            offCtx.rotate(util.deg2Rad(me.angle));
-            offCtx.scale(me.scaleX, me.scaleY);
+
+            offCtx.globalAlpha = this.alpha;
+            offCtx.translate(this.x, this.y);
+            offCtx.rotate(util.deg2Rad(this.angle));
+            offCtx.scale(this.scaleX, this.scaleY);
+            offCtx.translate(-this.x, -this.y);
+
+            var p = this.p;
+            // console.warn(p.sY);
+            offCtx.drawImage(
+                p.image,
+                this.frameIndex * p.tileW + p.sX,
+                p.sY,
+                p.tileW,
+                p.tileH,
+                p.x,
+                p.y,
+                p.tileW,
+                p.tileH
+            );
 
             // test
-            // offCtx.fillRect(-me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight);
+            // offCtx.fillRect(100, 0, 100, 100);
 
-            offCtx.drawImage(
-                // me.image,
-                // me.relativeX + me._offsetX, me.relativeY + me._offsetY,
-                // me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
-
-                // me.image,
-                // me.relativeX, me.relativeY,
-                // me.frameWidth, me.frameHeight,
-
-                me.image,
-                me.relativeX, me.relativeY,
-                me.frameWidth + me._offsetWidth, me.frameHeight + me._offsetHeight,
-                // -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth, me.frameHeight
-                -me.frameWidth / 2, -me.frameHeight / 2, me.frameWidth + me._offsetWidth,
-                me.frameHeight + me._offsetHeight
-            );
             offCtx.restore();
         }
 

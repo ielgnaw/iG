@@ -61,25 +61,28 @@ window.onload = function () {
             var spritesData = resource.spritesData;
             // 红色气球
             var red = spritesData.red;
-            console.warn(red);
+            var orange = spritesData.orange;
 
             var obj = new ig.SpriteSheet({
+                name: 0,
                 image: resource.ss3,
                 x: stage.width / 2,
                 y: stage.height / 2,
                 // frameStartX: 0,
-                frameStartX: red.sx,
+                sX: red.sX,
                 // frameStartY: ig.util.randomInt(1, 10),
                 // frameStartY: 0,
-                frameStartY: red.sy,
+                sY: red.sY,
                 // total: 16 + 16 + 9,
                 total: red.total,
                 // frameWidth: 64,
-                frameWidth: red.tilew,
+                tileW: red.tileW,
                 // frameHeight: 86,
-                frameHeight: red.tileh,
+                tileH: red.tileH,
+                cols: red.cols,
+                rows: red.rows,
                 zIndex: 1,
-                ticksPerFrame: 10
+                ticksPerFrame: 2
             });
             stage.addDisplayObject(obj);
 
