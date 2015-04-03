@@ -1476,7 +1476,6 @@ define('ig/ig', ['require'], function (require) {
         this.originalSX = this.p.sX;
         this.originalTotal = this.p.total;
         this.realCols = floor(this.p.cols - this.p.sX / this.p.tileW);
-        console.warn(this);
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,

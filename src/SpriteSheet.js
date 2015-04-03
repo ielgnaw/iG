@@ -51,7 +51,7 @@ define(function (require) {
             // 例如 sprite-sheet3.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
             cols: 0,
 
-            // 行数
+            // 行数，当前这组精灵所占的行数
             // 例如 sprite-sheet3.png 气球图，红球的行数数是 2，桔球的行数是 2
             rows: 0,
 
@@ -77,8 +77,6 @@ define(function (require) {
         // 例如气球图的第二行桔色球，是从第五个球开始的，sX 设置为前四个球的宽度
         // 那么桔色球这行真实的列数是 12，但是换行后，就是整个的列数 16 了
         this.realCols = floor(this.p.cols - this.p.sX / this.p.tileW);
-
-        console.warn(this);
     }
 
     SpriteSheet.prototype = {

@@ -20,5 +20,16 @@
         "tileH": 86,
         "offsetX": 0,
         "offsetY": 0
+    },
+    "smallBoom": {
+        "sX": 576,
+        "sY": 602,
+        "cols": 16,
+        "rows": 1,
+        "total": 3,
+        "tileW": 64,
+        "tileH": 86,
+        "offsetX": 0,
+        "offsetY": 0
     }
 }

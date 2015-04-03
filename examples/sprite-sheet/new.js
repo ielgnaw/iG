@@ -59,11 +59,10 @@ window.onload = function () {
             });
 
             var spritesData = resource.spritesData;
+
             // 红色气球
             var red = spritesData.red;
-            var orange = spritesData.orange;
-
-            var obj = new ig.SpriteSheet({
+            var red = new ig.SpriteSheet({
                 name: 0,
                 image: resource.ss3,
                 x: stage.width / 2,
@@ -82,9 +81,57 @@ window.onload = function () {
                 cols: red.cols,
                 rows: red.rows,
                 zIndex: 1,
-                ticksPerFrame: 2
+                ticksPerFrame: 10
             });
-            stage.addDisplayObject(obj);
+            stage.addDisplayObject(red);
+
+            var orange = spritesData.orange;
+            var orange = new ig.SpriteSheet({
+                name: 1,
+                image: resource.ss3,
+                x: 100,
+                y: 100,
+                // frameStartX: 0,
+                sX: orange.sX,
+                // frameStartY: ig.util.randomInt(1, 10),
+                // frameStartY: 0,
+                sY: orange.sY,
+                // total: 16 + 16 + 9,
+                total: orange.total,
+                // frameWidth: 64,
+                tileW: orange.tileW,
+                // frameHeight: 86,
+                tileH: orange.tileH,
+                cols: orange.cols,
+                rows: orange.rows,
+                zIndex: 1,
+                ticksPerFrame:1
+            });
+            stage.addDisplayObject(orange);
+
+            var smallBoom = spritesData.smallBoom;
+            var smallBoom = new ig.SpriteSheet({
+                name: 2,
+                image: resource.ss3,
+                x: 210,
+                y: 210,
+                // frameStartX: 0,
+                sX: smallBoom.sX,
+                // frameStartY: ig.util.randomInt(1, 10),
+                // frameStartY: 0,
+                sY: smallBoom.sY,
+                // total: 16 + 16 + 9,
+                total: smallBoom.total,
+                // frameWidth: 64,
+                tileW: smallBoom.tileW,
+                // frameHeight: 86,
+                tileH: smallBoom.tileH,
+                cols: smallBoom.cols,
+                rows: smallBoom.rows,
+                zIndex: 1,
+                ticksPerFrame: 5
+            });
+            stage.addDisplayObject(smallBoom);
 
             game.start('bg', function () {
                 console.log('startCallback');
