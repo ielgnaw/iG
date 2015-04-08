@@ -1238,15 +1238,17 @@ define('ig/ig', ['require'], function (require) {
             return this;
         },
         update: function (totalFrameCounter, dt) {
-            var me = this;
-            updateParallax.call(me, totalFrameCounter);
-            var displayObjectList = me.displayObjectList;
+            updateParallax.call(this, totalFrameCounter);
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
-                    this.displayObjectList[i].update(dt);
+                var curDisplay = this.displayObjectList[i];
+                if (curDisplay) {
+                    displayObjectStatus = curDisplay.status;
+                    if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                        curDisplay.update(dt);
+                    }
                 }
             }
         },
@@ -1254,10 +1256,6 @@ define('ig/ig', ['require'], function (require) {
             var me = this;
             me.clear();
             me.fire('beforeStageRender');
-            me.sortDisplayObject();
-            var displayObjectList = me.displayObjectList;
-            var len = displayObjectList.length;
-            var displayObjectStatus;
             me.offCtx.save();
             me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
             if (me.bgColor) {
@@ -1274,31 +1272,24 @@ define('ig/ig', ['require'], function (require) {
                 me.canvas.style.backgroundImage = '';
             }
             renderParallax.call(me);
+            me.sortDisplayObject();
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
             for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.displayObjectList[i].render(me.offCtx);
+                var curDisplay = this.displayObjectList[i];
+                if (curDisplay) {
+                    displayObjectStatus = curDisplay.status;
+                    if (displayObjectStatus === 5) {
+                        this.removeDisplayObject(curDisplay);
+                    } else if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                        curDisplay.render(me.offCtx);
+                    }
                 }
             }
             me.offCtx.restore();
             me.ctx.drawImage(me.offCanvas, 0, 0);
             me.fire('afterStageRender');
-        },
-        renderDisplayObject: function () {
-            var me = this;
-            var displayObjectList = me.displayObjectList;
-            var len = displayObjectList.length;
-            var displayObjectStatus;
-            me.offCtx.save();
-            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
-            for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.displayObjectList[i].render(me.offCtx);
-                }
-            }
-            me.offCtx.restore();
-            me.ctx.drawImage(me.offCanvas, 0, 0);
         },
         sortDisplayObject: function () {
             this.displayObjectList.sort(function (o1, o2) {
@@ -1391,6 +1382,10 @@ define('ig/ig', ['require'], function (require) {
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
+        changeStatus: function (status) {
+            this.status = status || this.status;
+            return this;
+        },
         setCaptureFunc: function (func) {
             this.captureFunc = func || util.noop;
             return this;
@@ -1458,12 +1453,14 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './util',
     './DisplayObject',
-    './geom/polygon'
+    './geom/polygon',
+    './collision'
 ], function (require) {
     'use strict';
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
     var polygon = require('./geom/polygon');
+    var collision = require('./collision');
     var floor = Math.floor;
     var guid = 0;
     function SpriteSheet(opts) {
@@ -1485,7 +1482,8 @@ define('ig/ig', ['require'], function (require) {
             tileH: 0,
             offsetX: 0,
             offsetY: 0,
-            ticksPerFrame: 0
+            ticksPerFrame: 0,
+            isOnce: false
         }, opts);
         this.tickUpdateCount = 0;
         this.frameIndex = 0;
@@ -1494,9 +1492,14 @@ define('ig/ig', ['require'], function (require) {
         this.realCols = floor(this.cols - this.sX / this.tileW);
         this.width = this.tileW;
         this.height = this.tileH;
-        polygon.toPolygon(this);
+        if (opts.points && opts.points.length && util.getType(opts.points) === 'array') {
+            this.points = opts.points;
+        } else {
+            polygon.toPolygon(this);
+        }
         polygon.recalc(this);
         polygon.getBounds(this);
+        return this;
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
@@ -1513,7 +1516,8 @@ define('ig/ig', ['require'], function (require) {
                 tileH: 0,
                 offsetX: 0,
                 offsetY: 0,
-                ticksPerFrame: this.ticksPerFrame
+                ticksPerFrame: this.ticksPerFrame,
+                isOnce: false
             }, prop);
             this.tickUpdateCount = 0;
             this.frameIndex = 0;
@@ -1539,6 +1543,9 @@ define('ig/ig', ['require'], function (require) {
                     this.sX = this.originalSX;
                     this.realCols = floor(this.cols - this.originalSX / this.tileW);
                     this.sY -= (this.rows - 1) * this.tileH;
+                    if (this.isOnce) {
+                        this.status = 5;
+                    }
                 }
                 if (this.frameIndex === this.realCols) {
                     this.total -= this.realCols;
@@ -1558,19 +1565,32 @@ define('ig/ig', ['require'], function (require) {
             offCtx.rotate(util.deg2Rad(this.angle));
             offCtx.scale(this.scaleX, this.scaleY);
             offCtx.translate(-this.x, -this.y);
-            offCtx.drawImage(this.image, this.frameIndex * this.tileW + this.sX, this.sY, this.tileW, this.tileH, this.x, this.y, this.tileW, this.tileH);
+            offCtx.drawImage(this.image, this.frameIndex * this.tileW + this.sX, this.sY, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
             this.debugRender(offCtx);
             offCtx.restore();
             return this;
         },
         hitTestPoint: function (x, y) {
-            return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
+            return collision.checkPointPolygon({
+                x: x,
+                y: y
+            }, this);
         },
         debugRender: function (offCtx) {
             if (this.debug) {
                 offCtx.save();
                 offCtx.strokeStyle = 'black';
-                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                var points = this.points;
+                var i = points.length;
+                offCtx.translate(this.x, this.y);
+                offCtx.beginPath();
+                offCtx.moveTo(points[0].x, points[0].y);
+                while (i--) {
+                    offCtx.lineTo(points[i].x, points[i].y);
+                }
+                offCtx.closePath();
+                offCtx.stroke();
+                offCtx.translate(-this.x, -this.y);
                 offCtx.restore();
             }
         }
@@ -2008,8 +2028,8 @@ define('ig/ig', ['require'], function (require) {
     polygon.intersects = function (firstPolygon, secondPolygon, isShowCollideResponse) {
         return collision.checkPolygonPolygon(firstPolygon, secondPolygon, isShowCollideResponse);
     };
-    polygon.intersectsCircle = function (polygon, otherCircle, isShowCollideResponse) {
-        return collision.checkPolygonCircle(polygon, otherCircle, isShowCollideResponse);
+    polygon.intersectsCircle = function (firstPolygon, otherCircle, isShowCollideResponse) {
+        return collision.checkPolygonCircle(firstPolygon, otherCircle, isShowCollideResponse);
     };
     return polygon;
 });define('ig/geom/Rect', [
@@ -2368,6 +2388,30 @@ define('ig/ig', ['require'], function (require) {
         }
         return result;
     };
+    exports.checkPointPolygon = function (point, polygon) {
+        var polygonPoints = polygon.points;
+        var len = polygonPoints.length;
+        var flag = false;
+        for (var i = 0, j = len - 1; i < len; j = i, i++) {
+            var sx = polygonPoints[i].x + polygon.x;
+            var sy = polygonPoints[i].y + polygon.y;
+            var tx = polygonPoints[j].x + polygon.x;
+            var ty = polygonPoints[j].y + polygon.y;
+            if (sx === point.x && sy === point.y || tx === point.x && ty === point.y) {
+                return true;
+            }
+            if (sy < point.y && ty >= point.y || sy >= point.y && ty < point.y) {
+                var x = sx + (point.y - sy) * (tx - sx) / (ty - sy);
+                if (x === point.x) {
+                    return true;
+                }
+                if (x > point.x) {
+                    flag = !flag;
+                }
+            }
+        }
+        return flag;
+    };
     return exports;
 });define('ig/geom/polygon', [
     'require',
@@ -2453,8 +2497,8 @@ define('ig/ig', ['require'], function (require) {
     polygon.intersects = function (firstPolygon, secondPolygon, isShowCollideResponse) {
         return collision.checkPolygonPolygon(firstPolygon, secondPolygon, isShowCollideResponse);
     };
-    polygon.intersectsCircle = function (polygon, otherCircle, isShowCollideResponse) {
-        return collision.checkPolygonCircle(polygon, otherCircle, isShowCollideResponse);
+    polygon.intersectsCircle = function (firstPolygon, otherCircle, isShowCollideResponse) {
+        return collision.checkPolygonCircle(firstPolygon, otherCircle, isShowCollideResponse);
     };
     return polygon;
 });define('ig/domEvt', [

@@ -379,35 +379,31 @@ define(function (require) {
          * @param {number} totalFrameCounter 游戏的总帧数计数器
          */
         update: function (totalFrameCounter, dt) {
-            var me = this;
+            updateParallax.call(this, totalFrameCounter);
 
-            updateParallax.call(me, totalFrameCounter);
-
-            var displayObjectList = me.displayObjectList;
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 2) {
-                    this.displayObjectList[i].update(dt);
+                var curDisplay = this.displayObjectList[i];
+                if (curDisplay) {
+                    displayObjectStatus = curDisplay.status;
+                    if (displayObjectStatus === 1 || displayObjectStatus === 2) {
+                        curDisplay.update(dt);
+                    }
                 }
             }
         },
 
         /**
          * 场景的渲染，需要渲染场景里面的所有精灵
+         * 在 render 的时候销毁 status = 5 的 displayObject
          */
         render: function () {
             var me = this;
             me.clear();
 
             me.fire('beforeStageRender');
-
-            me.sortDisplayObject();
-            // me.renderDisplayObject();
-            var displayObjectList = me.displayObjectList;
-            var len = displayObjectList.length;
-            var displayObjectStatus;
 
             me.offCtx.save();
             me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
@@ -431,10 +427,22 @@ define(function (require) {
             }
 
             renderParallax.call(me);
+
+            me.sortDisplayObject();
+            var displayObjectList = me.displayObjectList;
+            var len = displayObjectList.length;
+            var displayObjectStatus;
+
             for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.displayObjectList[i].render(me.offCtx);
+                var curDisplay = this.displayObjectList[i];
+                if (curDisplay) {
+                    displayObjectStatus = curDisplay.status;
+                    if (displayObjectStatus === 5) {
+                        this.removeDisplayObject(curDisplay);
+                    }
+                    else if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+                        curDisplay.render(me.offCtx);
+                    }
                 }
             }
 
@@ -447,23 +455,23 @@ define(function (require) {
         /**
          * 渲染场景中的 displayObject
          */
-        renderDisplayObject: function () {
-            var me = this;
-            var displayObjectList = me.displayObjectList;
-            var len = displayObjectList.length;
-            var displayObjectStatus;
+        // renderDisplayObject: function () {
+        //     var me = this;
+        //     var displayObjectList = me.displayObjectList;
+        //     var len = displayObjectList.length;
+        //     var displayObjectStatus;
 
-            me.offCtx.save();
-            me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
-            for (var i = 0; i < len; i++) {
-                displayObjectStatus = me.displayObjectList[i].status;
-                if (displayObjectStatus === 1 || displayObjectStatus === 3) {
-                    me.displayObjectList[i].render(me.offCtx);
-                }
-            }
-            me.offCtx.restore();
-            me.ctx.drawImage(me.offCanvas, 0, 0);
-        },
+        //     me.offCtx.save();
+        //     me.offCtx.clearRect(0, 0, me.offCanvas.width, me.offCanvas.height);
+        //     for (var i = 0; i < len; i++) {
+        //         displayObjectStatus = me.displayObjectList[i].status;
+        //         if (displayObjectStatus === 1 || displayObjectStatus === 3) {
+        //             me.displayObjectList[i].render(me.offCtx);
+        //         }
+        //     }
+        //     me.offCtx.restore();
+        //     me.ctx.drawImage(me.offCanvas, 0, 0);
+        // },
 
         /**
          * 排序场景中的 displayObject

@@ -10,6 +10,7 @@ define(function (require) {
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
     var polygon = require('./geom/polygon');
+    var collision = require('./collision');
 
     var floor = Math.floor;
 
@@ -21,6 +22,8 @@ define(function (require) {
      * @constructor
      *
      * @param {Object} opts 参数
+     *
+     * @return {Object} 当前 SpriteSheet 实例
      */
     function SpriteSheet(opts) {
         opts = opts || {};
@@ -71,7 +74,10 @@ define(function (require) {
             // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
             // 所以这是这个值来控制精灵切换的速度，
             // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
-            ticksPerFrame: 0
+            ticksPerFrame: 0,
+
+            // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
+            isOnce: false
 
         }, opts);
 
@@ -95,9 +101,17 @@ define(function (require) {
         this.width = this.tileW;
         this.height = this.tileH;
 
-        polygon.toPolygon(this);
+        if (opts.points && opts.points.length && util.getType(opts.points) === 'array') {
+            this.points = opts.points;
+        }
+        else {
+            polygon.toPolygon(this);
+        }
+
         polygon.recalc(this);
         polygon.getBounds(this);
+
+        return this;
     }
 
     SpriteSheet.prototype = {
@@ -152,7 +166,10 @@ define(function (require) {
                 // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
                 // 所以这是这个值来控制精灵切换的速度，
                 // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
-                ticksPerFrame: this.ticksPerFrame
+                ticksPerFrame: this.ticksPerFrame,
+
+                // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
+                isOnce: false
             }, prop);
 
             // 帧更新的计数器，辅助 ticksPerFrame 计数的
@@ -211,6 +228,10 @@ define(function (require) {
 
                     // 还原 sY
                     this.sY -= (this.rows - 1) * this.tileH;
+
+                    if (this.isOnce) {
+                        this.status = 5;
+                    }
                 }
 
                 // 换行了
@@ -255,8 +276,8 @@ define(function (require) {
                 this.sY,
                 this.tileW,
                 this.tileH,
-                this.x,
-                this.y,
+                this.x + this.offsetX,
+                this.y + this.offsetY,
                 this.tileW,
                 this.tileH
             );
@@ -279,8 +300,9 @@ define(function (require) {
          * @return {boolean} 是否相交
          */
         hitTestPoint: function (x, y) {
-            return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width
-                    && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
+            return collision.checkPointPolygon({x: x, y: y}, this);
+            // return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width
+                    // && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
         },
 
         /**
@@ -293,13 +315,25 @@ define(function (require) {
             if (this.debug) {
                 offCtx.save();
                 offCtx.strokeStyle = 'black';
+                var points = this.points;
+                var i = points.length;
 
-                offCtx.strokeRect(
-                    this.bounds.x,
-                    this.bounds.y,
-                    this.bounds.width,
-                    this.bounds.height
-                );
+                offCtx.translate(this.x, this.y);
+                offCtx.beginPath();
+                offCtx.moveTo(points[0].x, points[0].y);
+                while (i--) {
+                    offCtx.lineTo(points[i].x, points[i].y);
+                }
+                offCtx.closePath();
+                offCtx.stroke();
+                offCtx.translate(-this.x, -this.y);
+
+                // offCtx.strokeRect(
+                //     this.bounds.x,
+                //     this.bounds.y,
+                //     this.bounds.width,
+                //     this.bounds.height
+                // );
 
                 offCtx.restore();
             }

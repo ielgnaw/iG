@@ -136,8 +136,8 @@ define(function (require) {
      *
      * @return {boolean} 是否相交
      */
-    polygon.intersectsCircle = function (polygon, otherCircle, isShowCollideResponse) {
-        return collision.checkPolygonCircle(polygon, otherCircle, isShowCollideResponse);
+    polygon.intersectsCircle = function (firstPolygon, otherCircle, isShowCollideResponse) {
+        return collision.checkPolygonCircle(firstPolygon, otherCircle, isShowCollideResponse);
     };
 
     return polygon;

@@ -474,6 +474,54 @@ define(function (require) {
         return result;
     };
 
+    /**
+     * 射线法判断点是否在多边形内部
+     *
+     * @param {Object} point 点坐标
+     * @param {Object} polygon 多边形
+     *
+     * @return {boolean} 是否在内部
+     */
+    exports.checkPointPolygon = function (point, polygon) {
+        var polygonPoints = polygon.points;
+        var len = polygonPoints.length;
+        var flag = false;
+
+
+        for (var i = 0, j = len - 1; i < len; j = i, i++) {
+            var sx = polygonPoints[i].x + polygon.x;
+            var sy = polygonPoints[i].y + polygon.y;
+            var tx = polygonPoints[j].x + polygon.x;
+            var ty = polygonPoints[j].y + polygon.y;
+
+            // 点与多边形顶点重合
+            if ((sx === point.x && sy === point.y) || (tx === point.x && ty === point.y)) {
+                return true;
+            }
+
+            // 判断线段两端点是否在射线两侧
+            if ((sy < point.y && ty >= point.y) || (sy >= point.y && ty < point.y)) {
+                // 直线方程中,已经知道两个点, 两点式的方程是:
+                // (x - x1) / (x2 - x1) = (y - y1) / (y2 - y1)
+                // 那么 x = x1 + (y - y1) / (y2 - y1)  * (x2 - x1)
+                // 只取一边的值, 也就是 x > x0 的情况下的值
+                // 线段上与射线 Y 坐标相同的点的 X 坐标
+                var x = sx + (point.y - sy) * (tx - sx) / (ty - sy);
+                // 点在多边形的边上
+                if(x === point.x) {
+                    return true;
+                }
+
+                // 射线穿过多边形的边界
+                if (x > point.x) {
+                    flag = !flag;
+                }
+            }
+        }
+
+        return flag;
+    };
+
     return exports;
 
 });

@@ -163,6 +163,23 @@ define(function (require) {
         constructor: DisplayObject,
 
         /**
+         * 设置状态
+         *
+         * @param {number} status 状态值
+         *                        1: 可见，每帧需要更新，各种状态都正常
+         *                        2: 不可见，每帧需要更新，各种状态都正常
+         *                        3: 可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+         *                        4: 不可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+         *                        5: 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        changeStatus: function (status) {
+            this.status = status || this.status;
+            return this;
+        },
+
+        /**
          * 设置 captureFunc，对应 mousedown 和 touchstart 事件
          * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
          *
