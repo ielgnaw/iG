@@ -1372,7 +1372,7 @@ define('ig/ig', ['require'], function (require) {
         this.reverseVX = false;
         this.reverseVY = false;
         this.status = 1;
-        this.customProp = opts.customProp || {};
+        this.c = opts.c || {};
         this.mouseEnable = !!opts.mouseEnable || false;
         this.debug = !!opts.debug || false;
         this.captureFunc = opts.captureFunc || util.noop;
@@ -1526,9 +1526,6 @@ define('ig/ig', ['require'], function (require) {
             this.realCols = floor(this.cols - this.sX / this.tileW);
             this.width = this.tileW;
             this.height = this.tileH;
-            polygon.toPolygon(this);
-            polygon.recalc(this);
-            polygon.getBounds(this);
             return this;
         },
         update: function (dt) {
@@ -2520,9 +2517,17 @@ define('ig/ig', ['require'], function (require) {
         'mousemove',
         'mouseup'
     ];
+    var holdSprites = [];
+    function checkInHoldSprites(displayObjectName) {
+        for (var i = 0, len = holdSprites.length; i < len; i++) {
+            if (holdSprites[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
+    }
     var exports = {};
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
-    var holdSprites = {};
     exports.fireEvt = {};
     exports.fireEvt['touchstart'] = exports.fireEvt['mousedown'] = function (e) {
         var target = e.target;
@@ -2542,8 +2547,8 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
-                holdSprites[curDisplayObject.name] = curDisplayObject;
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !checkInHoldSprites(curDisplayObject.name)) {
+                holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
@@ -2558,12 +2563,12 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || holdSprites.hasOwnProperty(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || checkInHoldSprites(curDisplayObject.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }
         }
-        holdSprites = {};
+        holdSprites = [];
         return target;
     };
     exports.initMouse = function (stage) {

@@ -130,7 +130,7 @@ define(function (require) {
         this.status = 1;
 
         // 自定义的属性
-        this.customProp = opts.customProp || {};
+        this.c = opts.c || {};
 
         // 是否允许鼠标以及 touch 事件
         this.mouseEnable = !!opts.mouseEnable || false;

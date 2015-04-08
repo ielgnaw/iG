@@ -110,7 +110,6 @@ define(function (require) {
 
         polygon.recalc(this);
         polygon.getBounds(this);
-
         return this;
     }
 
@@ -192,9 +191,9 @@ define(function (require) {
             this.width = this.tileW;
             this.height = this.tileH;
 
-            polygon.toPolygon(this);
-            polygon.recalc(this);
-            polygon.getBounds(this);
+            // polygon.toPolygon(this);
+            // polygon.recalc(this);
+            // polygon.getBounds(this);
 
             return this;
         },

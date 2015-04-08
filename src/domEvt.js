@@ -13,12 +13,21 @@ define(function (require) {
 
     var MOUSE_EVENTS = ['mousedown', 'mousemove', 'mouseup'];
 
+    // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
+    var holdSprites = [];
+
+    function checkInHoldSprites(displayObjectName) {
+        for (var i = 0, len = holdSprites.length; i < len; i++) {
+            if (holdSprites[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     var exports = {};
 
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
-
-    // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
-    var holdSprites = {};
 
     /**
      * 事件的触发
@@ -65,8 +74,11 @@ define(function (require) {
             var curDisplayObject = displayObjectList[i];
 
             // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
-                holdSprites[curDisplayObject.name] = curDisplayObject;
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)
+                && !checkInHoldSprites(curDisplayObject.name)
+            ) {
+                // holdSprites[curDisplayObject.name] = curDisplayObject;
+                holdSprites.push(curDisplayObject);
             }
 
             e.data.holdSprites = holdSprites;
@@ -92,12 +104,12 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || holdSprites.hasOwnProperty(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || checkInHoldSprites(curDisplayObject.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }
         }
-        holdSprites = {};
+        holdSprites = [];
         return target;
     };
 

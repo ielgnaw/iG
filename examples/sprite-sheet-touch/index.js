@@ -59,26 +59,32 @@ window.onload = function () {
 
             var spritesData = [
                 {
+                    type:'red',
                     data: allData.red,
                     captureData: allData.redCapture
                 },
                 {
+                    type:'orange',
                     data: allData.orange,
                     captureData: allData.orangeCapture
                 },
                 {
+                    type:'yellow',
                     data: allData.yellow,
                     captureData: allData.yellowCapture
                 },
                 {
+                    type:'green',
                     data: allData.green,
                     captureData: allData.greenCapture
                 },
                 {
+                    type:'blue',
                     data: allData.blue,
                     captureData: allData.blueCapture
                 },
                 {
+                    type:'pink',
                     data: allData.pink,
                     captureData: allData.pinkCapture
                 }
@@ -96,7 +102,7 @@ window.onload = function () {
             var countInRow = 6;
 
             // 七行
-            var countInCol = 7;
+            var countInCol = 7 + 1;
 
             var ratioX = width / (countInRow * 64);
             var ratioY = height / (countInCol * 86);
@@ -126,8 +132,10 @@ window.onload = function () {
                 });
             }
 
-            for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
-                for (var colIndex = 1; colIndex < countInCol + 1; colIndex++) {
+            var index = 0;
+
+            for (var colIndex = 1; colIndex < countInCol; colIndex++) {
+                for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
                     var d = spritesData[util.randomInt(0, 5)];
                     (function (_d) {
                         var balloonSprite = new ig.SpriteSheet({
@@ -147,7 +155,7 @@ window.onload = function () {
                                 },
                                 {
                                     x: _d.data.tileW / 2,
-                                    y: _d.data.tileH - 10
+                                    y: _d.data.tileH - 20
                                 },
                             ],
                             sX: _d.data.sX,
@@ -163,27 +171,26 @@ window.onload = function () {
                             scaleY: ratioY,
                             // debug: 1,
                             mouseEnable: true,
-                            captureData: _d.captureData,
+                            c: {
+                                captureData: _d.captureData,
+                                type: _d.type,
+                                index: ++index
+                            },
                             captureFunc: function (e) {
-                                this.changeFrame(_d.captureData);
+                                this.changeFrame(util.extend({}, this.c.captureData, {ticksPerFrame: 1}));
                             },
                             releaseFunc: function (e) {
                                 this.changeFrame(_d.data);
-                                this.changeStatus(5);
-                                stage.addDisplayObject(
-                                    createBoomSprite(this.x - boomData.tileW / 2 * ratioX + 10, this.y - boomData.tileH / 2 * ratioY + 10)
-                                );
+                                // this.changeStatus(5);
+                                // stage.addDisplayObject(
+                                //     createBoomSprite(
+                                //         this.x - boomData.tileW / 2 * ratioX + 10,
+                                //         this.y - boomData.tileH / 2 * ratioY + 10
+                                //     )
+                                // );
                             },
                             moveFunc: function (e) {
-                                var holdSprites = e.holdSprites;
-                                for (var i in holdSprites) {
-                                    var hs = holdSprites[i];
-                                    if (hs instanceof ig.SpriteSheet
-                                        // && /^red\d+$/.test(hs.name)
-                                    ) {
-                                        hs.changeFrame(hs.captureData);
-                                    }
-                                }
+                                moveFunc.call(this, e);
                             }
                         });
                         stage.addDisplayObject(balloonSprite);
@@ -191,7 +198,31 @@ window.onload = function () {
                 }
             }
 
-            console.warn(stage);
+            var lastHoldSprite;
+
+            function moveFunc(e) {
+                var holdSprites = e.holdSprites;
+                lastHoldSprite = holdSprites[holdSprites.length - 1];
+                for (var i = 0, len = holdSprites.length; i < len; i++) {
+                    var hs = holdSprites[i];
+                    if (this.c.type === hs.c.type) {
+                        var sub = lastHoldSprite.c.index - hs.c.index;
+                        // -7  -6  -5
+                        // -1   c   1
+                        // 5   6   7
+                        if (sub === -7 || sub === -6 || sub === -5
+                            || sub === -1 || sub === 1
+                            || sub === 5 || sub === 6 || sub === 7
+                            || sub === 0
+                            // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
+                        ) {
+                            console.warn(sub);
+                            hs.changeFrame(hs.c.captureData);
+                        }
+                    }
+                }
+                lastHoldSprite = null;
+            }
 
             game.start('bg', function () {
                 console.log('startCallback');
