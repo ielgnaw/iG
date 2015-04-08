@@ -17,6 +17,9 @@ define(function (require) {
 
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
 
+    // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
+    var holdSprites = {};
+
     /**
      * 事件的触发
      *
@@ -36,10 +39,12 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
+
             if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
-                // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 e.data.curStage = target;
                 curDisplayObject.isCapture = true;
+
+                // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
             }
         }
@@ -58,6 +63,14 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
+
+            // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+                holdSprites[curDisplayObject.name] = curDisplayObject;
+            }
+
+            e.data.holdSprites = holdSprites;
+
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 e.data.curStage = target;
@@ -79,8 +92,12 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            curDisplayObject.isCapture = false;
+            if (curDisplayObject.isCapture || holdSprites.hasOwnProperty(curDisplayObject.name)) {
+                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = false;
+            }
         }
+        holdSprites = {};
         return target;
     };
 

@@ -36,10 +36,6 @@ window.onload = function () {
                 src: '../img/sprite-sheet3.png'
             },
             {
-                id: 'ss4',
-                src: '../img/sprite-sheet4.jpg'
-            },
-            {
                 id: 'spritesData',
                 src: './data/sprite-sheet3.json'
             },
@@ -50,10 +46,6 @@ window.onload = function () {
             {
                 id: 'spritesData1',
                 src: './data/sprite-sheet2.json'
-            },
-            {
-                id: 'spritesData2',
-                src: './data/sprite-sheet4.json'
             }
         ],
         function (resource) {
@@ -167,25 +159,6 @@ window.onload = function () {
                 ticksPerFrame: 10
             });
             stage.addDisplayObject(boom1);
-
-            var spritesData2 = resource.spritesData2;
-            var born = spritesData2.born;
-            var born = new ig.SpriteSheet({
-                name: 5,
-                image: resource.ss4,
-                x: 150,
-                y: 600,
-                sX: born.sX,
-                sY: born.sY,
-                total: born.total,
-                tileW: born.tileW,
-                tileH: born.tileH,
-                cols: born.cols,
-                rows: born.rows,
-                zIndex: 1,
-                ticksPerFrame: 10
-            });
-            stage.addDisplayObject(born);
 
             game.start('bg', function () {
                 console.log('startCallback');

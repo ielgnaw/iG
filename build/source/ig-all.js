@@ -399,6 +399,16 @@ define('ig/ig', ['require'], function (require) {
             y: y
         };
     };
+    exports.isEmptyObject = function (obj) {
+        if (exports.getType(obj) !== 'object') {
+            return false;
+        }
+        var key;
+        for (key in obj) {
+            return false;
+        }
+        return true;
+    };
     return exports;
 });define('ig/Event', ['require'], function (require) {
     'use strict';
@@ -1447,11 +1457,13 @@ define('ig/ig', ['require'], function (require) {
 });define('ig/SpriteSheet', [
     'require',
     './util',
-    './DisplayObject'
+    './DisplayObject',
+    './geom/polygon'
 ], function (require) {
     'use strict';
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
+    var polygon = require('./geom/polygon');
     var floor = Math.floor;
     var guid = 0;
     function SpriteSheet(opts) {
@@ -1460,7 +1472,7 @@ define('ig/ig', ['require'], function (require) {
             throw new Error('SpriteSheet must be require a image param');
         }
         DisplayObject.apply(this, arguments);
-        this.p = util.extend({
+        util.extend(this, {
             name: 'ig_spritesheet_' + guid++,
             total: 1,
             x: 0,
@@ -1469,48 +1481,98 @@ define('ig/ig', ['require'], function (require) {
             sY: 0,
             cols: 0,
             rows: 0,
+            tileW: 0,
+            tileH: 0,
+            offsetX: 0,
+            offsetY: 0,
             ticksPerFrame: 0
         }, opts);
         this.tickUpdateCount = 0;
         this.frameIndex = 0;
-        this.originalSX = this.p.sX;
-        this.originalTotal = this.p.total;
-        this.realCols = floor(this.p.cols - this.p.sX / this.p.tileW);
+        this.originalSX = this.sX;
+        this.originalTotal = this.total;
+        this.realCols = floor(this.cols - this.sX / this.tileW);
+        this.width = this.tileW;
+        this.height = this.tileH;
+        polygon.toPolygon(this);
+        polygon.recalc(this);
+        polygon.getBounds(this);
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
+        changeFrame: function (prop) {
+            util.extend(this, {
+                total: this.total,
+                x: this.x,
+                y: this.y,
+                sX: this.sX,
+                sY: this.sY,
+                cols: this.cols,
+                rows: this.rows,
+                tileW: 0,
+                tileH: 0,
+                offsetX: 0,
+                offsetY: 0,
+                ticksPerFrame: this.ticksPerFrame
+            }, prop);
+            this.tickUpdateCount = 0;
+            this.frameIndex = 0;
+            this.originalSX = this.sX;
+            this.originalTotal = this.total;
+            this.realCols = floor(this.cols - this.sX / this.tileW);
+            this.width = this.tileW;
+            this.height = this.tileH;
+            polygon.toPolygon(this);
+            polygon.recalc(this);
+            polygon.getBounds(this);
+            return this;
+        },
         update: function (dt) {
             this.tickUpdateCount++;
-            if (this.tickUpdateCount > this.p.ticksPerFrame) {
+            if (this.tickUpdateCount > this.ticksPerFrame) {
                 this.tickUpdateCount = 0;
-                if (this.frameIndex < this.p.total - 1) {
+                if (this.frameIndex < this.total - 1) {
                     this.frameIndex++;
                 } else {
                     this.frameIndex = 0;
-                    this.p.total = this.originalTotal;
-                    this.p.sX = this.originalSX;
-                    this.realCols = floor(this.p.cols - this.originalSX / this.p.tileW);
-                    this.p.sY -= (this.p.rows - 1) * this.p.tileH;
+                    this.total = this.originalTotal;
+                    this.sX = this.originalSX;
+                    this.realCols = floor(this.cols - this.originalSX / this.tileW);
+                    this.sY -= (this.rows - 1) * this.tileH;
                 }
                 if (this.frameIndex === this.realCols) {
-                    this.p.total -= this.realCols;
+                    this.total -= this.realCols;
                     this.frameIndex = 0;
-                    this.p.sY += this.p.tileH;
-                    this.p.sX = 0;
-                    this.realCols = this.p.cols;
+                    this.sY += this.tileH;
+                    this.sX = 0;
+                    this.realCols = this.cols;
                 }
             }
+            return this;
         },
         render: function (offCtx) {
+            polygon.getBounds(this);
             offCtx.save();
             offCtx.globalAlpha = this.alpha;
             offCtx.translate(this.x, this.y);
             offCtx.rotate(util.deg2Rad(this.angle));
             offCtx.scale(this.scaleX, this.scaleY);
             offCtx.translate(-this.x, -this.y);
-            var p = this.p;
-            offCtx.drawImage(p.image, this.frameIndex * p.tileW + p.sX, p.sY, p.tileW, p.tileH, p.x, p.y, p.tileW, p.tileH);
+            offCtx.drawImage(this.image, this.frameIndex * this.tileW + this.sX, this.sY, this.tileW, this.tileH, this.x, this.y, this.tileW, this.tileH);
+            this.debugRender(offCtx);
             offCtx.restore();
+            return this;
+        },
+        hitTestPoint: function (x, y) {
+            return x >= this.bounds.x && x <= this.bounds.x + this.bounds.width && y >= this.bounds.y && y <= this.bounds.y + this.bounds.height;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
         }
     };
     util.inherits(SpriteSheet, DisplayObject);
@@ -2416,6 +2478,7 @@ define('ig/ig', ['require'], function (require) {
     ];
     var exports = {};
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
+    var holdSprites = {};
     exports.fireEvt = {};
     exports.fireEvt['touchstart'] = exports.fireEvt['mousedown'] = function (e) {
         var target = e.target;
@@ -2435,6 +2498,10 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+                holdSprites[curDisplayObject.name] = curDisplayObject;
+            }
+            e.data.holdSprites = holdSprites;
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 e.data.curStage = target;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
@@ -2447,8 +2514,12 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            curDisplayObject.isCapture = false;
+            if (curDisplayObject.isCapture || holdSprites.hasOwnProperty(curDisplayObject.name)) {
+                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = false;
+            }
         }
+        holdSprites = {};
         return target;
     };
     exports.initMouse = function (stage) {
@@ -2767,7 +2838,7 @@ define('ig/ig', ['require'], function (require) {
     function Animation(opts) {
         opts = opts || {};
         Event.apply(this, arguments);
-        this.p = util.extend({
+        util.extend(this, {
             source: {},
             target: {},
             range: null,
@@ -2777,11 +2848,11 @@ define('ig/ig', ['require'], function (require) {
             fps: _defaultFPS
         }, opts);
         this.setup();
-        this.repeatCount = 0;
-        this._then = Date.now();
-        this._now;
-        this._delta;
-        this._interval = 1000 / this.p.fps;
+        this._ = {
+            _repeatCount: 0,
+            _then: Date.now(),
+            _interval: 1000 / this.fps
+        };
     }
     Animation.prototype = {
         constructor: Animation,
@@ -2789,10 +2860,10 @@ define('ig/ig', ['require'], function (require) {
             this.running = false;
             this.curFrame = 0;
             this.initState = {};
-            this.frames = Math.ceil(this.p.duration * this.p.fps / 1000);
-            var source = this.p.source;
-            var target = this.p.target;
-            var range = this.p.range;
+            this.frames = Math.ceil(this.duration * this.fps / 1000);
+            var source = this.source;
+            var target = this.target;
+            var range = this.range;
             if (range) {
                 for (var i in range) {
                     this.initState[i] = {
@@ -2822,14 +2893,14 @@ define('ig/ig', ['require'], function (require) {
             this.initState = newInitState;
             return this;
         },
-        repeat: function () {
-            this.repeatCount++;
+        repeatFunc: function () {
+            this._._repeatCount++;
             this.swapFromTo();
             this.fire('repeat', {
                 data: {
-                    source: this.p.source,
+                    source: this.source,
                     instance: this,
-                    repeatCount: this.repeatCount
+                    repeatCount: this._._repeatCount
                 }
             });
             this.play();
@@ -2880,29 +2951,29 @@ define('ig/ig', ['require'], function (require) {
                     me.step.call(me);
                 };
             }(me));
-            me._now = Date.now();
-            me._delta = me._now - me._then;
-            if (me._delta > me._interval) {
-                me._then = me._now - me._delta % me._interval;
+            me._._now = Date.now();
+            me._._delta = me._._now - me._._then;
+            if (me._._delta > me._._interval) {
+                me._._then = me._._now - me._._delta % me._._interval;
                 var ds;
                 for (var i in me.initState) {
-                    ds = me.p.tween(me.curFrame, me.initState[i].from, me.initState[i].to - me.initState[i].from, me.frames).toFixed(2);
-                    me.p.source[i] = parseFloat(ds);
+                    ds = me.tween(me.curFrame, me.initState[i].from, me.initState[i].to - me.initState[i].from, me.frames).toFixed(2);
+                    me.source[i] = parseFloat(ds);
                 }
                 me.curFrame++;
                 if (this.curFrame >= this.frames) {
-                    if (me.p.repeat) {
-                        me.repeat.call(me);
+                    if (me.repeat) {
+                        me.repeatFunc.call(me);
                     } else {
-                        if (me.p.range && !me.p.rangeExec) {
-                            me.p.rangeExec = true;
+                        if (me.range && !me.rangeExec) {
+                            me.rangeExec = true;
                             me.swapFromTo();
                         } else {
                             me.stop();
                             me.running = false;
                             me.fire('complete', {
                                 data: {
-                                    source: me.p.source,
+                                    source: me.source,
                                     instance: me
                                 }
                             });

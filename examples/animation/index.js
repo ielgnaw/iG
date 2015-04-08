@@ -60,9 +60,10 @@ window.onload = function () {
                 , range: {
                     y: 20
                 }
-            }).play().on('repeat', function () {
-                // console.warn(arguments);
+            }).play().on('repeat', function (data) {
+                // console.warn(data.data);
             });
+            console.warn(am);
 
             game.start('bg', function () {
                 console.log('startCallback');

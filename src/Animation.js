@@ -24,7 +24,7 @@ define(function (require) {
         opts = opts || {};
         Event.apply(this, arguments);
 
-        this.p = util.extend({
+        util.extend(this, {
             // 源对象，动画的结果最终体现在这个对象的某些属性上
             source: {},
 
@@ -51,13 +51,12 @@ define(function (require) {
 
         this.setup();
 
-        // 记录 repeat 的次数
-        this.repeatCount = 0;
-
-        this._then = Date.now();
-        this._now;
-        this._delta;
-        this._interval = 1000 / this.p.fps;
+        this._ = {
+            // 记录 repeat 的次数
+            _repeatCount: 0,
+            _then: Date.now(),
+            _interval: 1000 / this.fps
+        };
     }
 
     Animation.prototype = {
@@ -75,11 +74,11 @@ define(function (require) {
             this.running = false;
             this.curFrame = 0;
             this.initState = {};
-            this.frames = Math.ceil(this.p.duration * this.p.fps / 1000);
+            this.frames = Math.ceil(this.duration * this.fps / 1000);
 
-            var source = this.p.source;
-            var target = this.p.target;
-            var range = this.p.range;
+            var source = this.source;
+            var target = this.target;
+            var range = this.range;
             if (range) {
                 for (var i in range) {
                     this.initState[i] = {
@@ -124,14 +123,14 @@ define(function (require) {
          *
          * @return {Object} Animation 实例
          */
-        repeat: function () {
-            this.repeatCount++;
+        repeatFunc: function () {
+            this._._repeatCount++;
             this.swapFromTo();
             this.fire('repeat', {
                 data: {
-                    source: this.p.source,
+                    source: this.source,
                     instance: this,
-                    repeatCount: this.repeatCount
+                    repeatCount: this._._repeatCount
                 }
             });
             this.play();
@@ -228,28 +227,28 @@ define(function (require) {
                     };
                 })(me)
             );
-            me._now = Date.now();
-            me._delta = me._now - me._then;
-            if (me._delta > me._interval) {
-                me._then = me._now - (me._delta % me._interval);
+            me._._now = Date.now();
+            me._._delta = me._._now - me._._then;
+            if (me._._delta > me._._interval) {
+                me._._then = me._._now - (me._._delta % me._._interval);
                 var ds;
                 for (var i in me.initState) {
-                    ds = me.p.tween(
+                    ds = me.tween(
                         me.curFrame,
                         me.initState[i].from,
                         me.initState[i].to - me.initState[i].from,
                         me.frames
                     ).toFixed(2);
-                    me.p.source[i] = parseFloat(ds);
+                    me.source[i] = parseFloat(ds);
                 }
                 me.curFrame++;
                 if (this.curFrame >= this.frames) {
-                    if (me.p.repeat) {
-                        me.repeat.call(me);
+                    if (me.repeat) {
+                        me.repeatFunc.call(me);
                     }
                     else {
-                        if (me.p.range && !me.p.rangeExec) {
-                            me.p.rangeExec = true;
+                        if (me.range && !me.rangeExec) {
+                            me.rangeExec = true;
                             me.swapFromTo();
                         }
                         else {
@@ -257,7 +256,7 @@ define(function (require) {
                             me.running = false;
                             me.fire('complete', {
                                 data: {
-                                    source: me.p.source,
+                                    source: me.source,
                                     instance: me
                                 }
                             });

@@ -501,6 +501,26 @@ define(function (require) {
         };
     };
 
+    /**
+     * 检测变量是否为空的简单对象
+     *
+     * @public
+     * @param {*} obj 目标变量
+     * @return {boolean}
+     */
+    exports.isEmptyObject = function (obj) {
+        if (exports.getType(obj) !== 'object') {
+            return false;
+        }
+
+        var key;
+        for (key in obj) {
+            return false;
+        }
+
+        return true;
+    };
+
     return exports;
 
 });
