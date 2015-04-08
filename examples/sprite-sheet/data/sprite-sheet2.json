@@ -1,0 +1,13 @@
+{
+    "boom1": {
+        "sX": 0,
+        "sY": 231,
+        "cols": 4,
+        "rows": 1,
+        "total": 4,
+        "tileW": 77,
+        "tileH": 77,
+        "offsetX": 0,
+        "offsetY": 0
+    }
+}

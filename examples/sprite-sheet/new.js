@@ -36,8 +36,24 @@ window.onload = function () {
                 src: '../img/sprite-sheet3.png'
             },
             {
+                id: 'ss4',
+                src: '../img/sprite-sheet4.jpg'
+            },
+            {
                 id: 'spritesData',
                 src: './data/sprite-sheet3.json'
+            },
+            {
+                id: 'ss2',
+                src: '../img/sprite-sheet2.jpg'
+            },
+            {
+                id: 'spritesData1',
+                src: './data/sprite-sheet2.json'
+            },
+            {
+                id: 'spritesData2',
+                src: './data/sprite-sheet4.json'
             }
         ],
         function (resource) {
@@ -67,16 +83,10 @@ window.onload = function () {
                 image: resource.ss3,
                 x: stage.width / 2,
                 y: stage.height / 2,
-                // frameStartX: 0,
                 sX: red.sX,
-                // frameStartY: ig.util.randomInt(1, 10),
-                // frameStartY: 0,
                 sY: red.sY,
-                // total: 16 + 16 + 9,
                 total: red.total,
-                // frameWidth: 64,
                 tileW: red.tileW,
-                // frameHeight: 86,
                 tileH: red.tileH,
                 cols: red.cols,
                 rows: red.rows,
@@ -91,16 +101,10 @@ window.onload = function () {
                 image: resource.ss3,
                 x: 100,
                 y: 100,
-                // frameStartX: 0,
                 sX: orange.sX,
-                // frameStartY: ig.util.randomInt(1, 10),
-                // frameStartY: 0,
                 sY: orange.sY,
-                // total: 16 + 16 + 9,
                 total: orange.total,
-                // frameWidth: 64,
                 tileW: orange.tileW,
-                // frameHeight: 86,
                 tileH: orange.tileH,
                 cols: orange.cols,
                 rows: orange.rows,
@@ -115,16 +119,10 @@ window.onload = function () {
                 image: resource.ss3,
                 x: 210,
                 y: 210,
-                // frameStartX: 0,
                 sX: smallBoom.sX,
-                // frameStartY: ig.util.randomInt(1, 10),
-                // frameStartY: 0,
                 sY: smallBoom.sY,
-                // total: 16 + 16 + 9,
                 total: smallBoom.total,
-                // frameWidth: 64,
                 tileW: smallBoom.tileW,
-                // frameHeight: 86,
                 tileH: smallBoom.tileH,
                 cols: smallBoom.cols,
                 rows: smallBoom.rows,
@@ -132,6 +130,62 @@ window.onload = function () {
                 ticksPerFrame: 5
             });
             stage.addDisplayObject(smallBoom);
+
+            var redCapture = spritesData.redCapture;
+            var redCapture = new ig.SpriteSheet({
+                name: 3,
+                image: resource.ss3,
+                x: 150,
+                y: 300,
+                sX: redCapture.sX,
+                sY: redCapture.sY,
+                total: redCapture.total,
+                tileW: redCapture.tileW,
+                tileH: redCapture.tileH,
+                cols: redCapture.cols,
+                rows: redCapture.rows,
+                zIndex: 1,
+                ticksPerFrame: 10
+            });
+            stage.addDisplayObject(redCapture);
+
+            var spritesData1 = resource.spritesData1;
+            var boom1 = spritesData1.boom1;
+            var boom1 = new ig.SpriteSheet({
+                name: 4,
+                image: resource.ss2,
+                x: 150,
+                y: 500,
+                sX: boom1.sX,
+                sY: boom1.sY,
+                total: boom1.total,
+                tileW: boom1.tileW,
+                tileH: boom1.tileH,
+                cols: boom1.cols,
+                rows: boom1.rows,
+                zIndex: 1,
+                ticksPerFrame: 10
+            });
+            stage.addDisplayObject(boom1);
+
+            var spritesData2 = resource.spritesData2;
+            var born = spritesData2.born;
+            var born = new ig.SpriteSheet({
+                name: 5,
+                image: resource.ss4,
+                x: 150,
+                y: 600,
+                sX: born.sX,
+                sY: born.sY,
+                total: born.total,
+                tileW: born.tileW,
+                tileH: born.tileH,
+                cols: born.cols,
+                rows: born.rows,
+                zIndex: 1,
+                ticksPerFrame: 10
+            });
+            stage.addDisplayObject(born);
 
             game.start('bg', function () {
                 console.log('startCallback');

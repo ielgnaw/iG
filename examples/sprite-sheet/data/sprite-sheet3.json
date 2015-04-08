@@ -10,6 +10,17 @@
         "offsetX": 0,
         "offsetY": 0
     },
+    "redCapture": {
+        "sX": 896,
+        "sY": 602,
+        "cols": 16,
+        "rows": 2,
+        "total": 4,
+        "tileW": 64,
+        "tileH": 86,
+        "offsetX": 0,
+        "offsetY": 0
+    },
     "orange": {
         "sX": 256,
         "sY": 86,
