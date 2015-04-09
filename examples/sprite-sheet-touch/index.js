@@ -142,7 +142,7 @@ window.onload = function () {
                     var d = spritesData[util.randomInt(0, 5)];
                     (function (_d) {
                         var balloonSprite = new ig.SpriteSheet({
-                            name: 'balloon_' + rowIndex + '_' + colIndex,
+                            name: rowIndex + '_' + colIndex,
                             image: resource.ss3,
                             x: rowIndex * _d.data.tileW * ratioX,
                             y: colIndex * _d.data.tileH * ratioY,
@@ -215,8 +215,10 @@ window.onload = function () {
                 this.changeFrame(util.extend({}, this.c.captureData, {ticksPerFrame: 1}));
             }
 
+            var holdSprites;
+
             function moveFunc(e) {
-                var holdSprites = e.holdSprites;
+                holdSprites = e.holdSprites;
                 var first = holdSprites[0];
                 util.removeArrByCondition(holdSprites, function (item) {
                     return item.c.type !== first.c.type;
@@ -242,38 +244,83 @@ window.onload = function () {
             }
 
             function releaseFunc(e, d) {
+                holdSprites = [];
                 this.changeFrame(d.data);
                 var len = canBoomBalloons.length;
                 if (len >= 3) {
+                    // for (var i = 0; i < len; i++) {
+                    //     var curBoomBalloon = canBoomBalloons[i];
+                    //     curBoomBalloon.changeStatus(5);
+                    //     stage.addDisplayObject(
+                    //         createBoomSprite(
+                    //             curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
+                    //             curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
+                    //             {
+                    //                 boomBalloon: curBoomBalloon
+                    //             },
+                    //             boomSpriteOnceDone
+                    //         )
+                    //     );
+                    // }
                     while (canBoomBalloons.length) {
                         var curBoomBalloon = canBoomBalloons.shift();
                         curBoomBalloon.changeStatus(5);
-                        stage.addDisplayObject(
-                            createBoomSprite(
-                                curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
-                                curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
-                                {
-                                    boomBalloon: curBoomBalloon
-                                },
-                                boomSpriteOnceDone
-                            )
+                        var boomSprite = createBoomSprite(
+                            curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
+                            curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
+                            {
+                                boomBalloon: curBoomBalloon
+                            }
                         );
+                        stage.addDisplayObject(boomSprite);
+                        boomSpriteOnceDone(boomSprite);
                     }
                 }
-                canBoomBalloons = [];
             }
 
+            var tmp = [];
+
             function boomSpriteOnceDone(boomSprite) {
-                console.warn(boomSprite.c.boomBalloon,boomSprite.c.boomBalloon.c.index);
-                var testSprite = stage.getDisplayObjectByName('balloon_4_1');
-                var am = new ig.Animation({
-                    fps: 50,
-                    source: testSprite
-                    , duration: 1000
-                    , target: {
-                        x: testSprite.x - testSprite.tileW * ratioX
+                tmp.push(boomSprite.c.boomBalloon);
+                if (!canBoomBalloons.length) {
+                    for (var i = 0, j = 1, len = tmp.length; i < len; i++, j++) {
+                        var cur = tmp[i];
+                        var col = parseInt(cur.name.split('_')[0], 10);
+                        var row = parseInt(cur.name.split('_')[1], 10);
+                        for (; col <= 5; col++) {
+                            var testSprite = stage.getDisplayObjectByName(col + '_' + row);
+                            var am = new ig.Animation({
+                                fps: 30,
+                                source: testSprite
+                                , duration: 1000
+                                , target: {
+                                    x: testSprite.x - testSprite.tileW * ratioX
+                                }
+                            }).play();
+                        }
+                        console.warn(cur, col);
+                        // var prev = tmp[i];
+                        // var next = tmp[j];
+                        // if (next) {
+                        //     console.warn(prev.c.index, next.c.index);
+                        //     if (prev.c.index % 6 !== 0 && next.c.index % 6 !== 0) {
+
+                        //     }
+                        // }
                     }
-                }).play();
+                    // tmp = [];
+                    // console.warn(11);
+                }
+
+                // var testSprite = stage.getDisplayObjectByName('balloon_4_1');
+                // var am = new ig.Animation({
+                //     fps: 50,
+                //     source: testSprite
+                //     , duration: 1000
+                //     , target: {
+                //         x: testSprite.x - testSprite.tileW * ratioX
+                //     }
+                // }).play();
             }
 
             game.start('bg', function () {
