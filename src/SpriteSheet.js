@@ -77,7 +77,10 @@ define(function (require) {
             ticksPerFrame: 0,
 
             // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
-            isOnce: false
+            isOnce: false,
+
+            // isOnce 为 true 时，一组动画结束后的回调
+            onceDone: util.noop
 
         }, opts);
 
@@ -168,7 +171,10 @@ define(function (require) {
                 ticksPerFrame: this.ticksPerFrame,
 
                 // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
-                isOnce: false
+                isOnce: false,
+
+                // isOnce 为 true 时，一组动画结束后的回调
+                onceDone: util.noop
             }, prop);
 
             // 帧更新的计数器，辅助 ticksPerFrame 计数的
@@ -230,6 +236,12 @@ define(function (require) {
 
                     if (this.isOnce) {
                         this.status = 5;
+                        if (util.getType(this.onceDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDone(me);
+                            }, 100);
+                        }
                     }
                 }
 

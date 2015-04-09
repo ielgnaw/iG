@@ -16,7 +16,7 @@ define(function (require) {
     // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
     var holdSprites = [];
 
-    function checkInHoldSprites(displayObjectName) {
+    function inHoldSprites(displayObjectName) {
         for (var i = 0, len = holdSprites.length; i < len; i++) {
             if (holdSprites[i].name === displayObjectName) {
                 return true;
@@ -75,7 +75,7 @@ define(function (require) {
 
             // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
             if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)
-                && !checkInHoldSprites(curDisplayObject.name)
+                && !inHoldSprites(curDisplayObject.name)
             ) {
                 // holdSprites[curDisplayObject.name] = curDisplayObject;
                 holdSprites.push(curDisplayObject);
@@ -104,7 +104,7 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || checkInHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }

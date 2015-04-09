@@ -1483,7 +1483,8 @@ define('ig/ig', ['require'], function (require) {
             offsetX: 0,
             offsetY: 0,
             ticksPerFrame: 0,
-            isOnce: false
+            isOnce: false,
+            onceDone: util.noop
         }, opts);
         this.tickUpdateCount = 0;
         this.frameIndex = 0;
@@ -1517,7 +1518,8 @@ define('ig/ig', ['require'], function (require) {
                 offsetX: 0,
                 offsetY: 0,
                 ticksPerFrame: this.ticksPerFrame,
-                isOnce: false
+                isOnce: false,
+                onceDone: util.noop
             }, prop);
             this.tickUpdateCount = 0;
             this.frameIndex = 0;
@@ -1542,6 +1544,12 @@ define('ig/ig', ['require'], function (require) {
                     this.sY -= (this.rows - 1) * this.tileH;
                     if (this.isOnce) {
                         this.status = 5;
+                        if (util.getType(this.onceDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDone(me);
+                            }, 100);
+                        }
                     }
                 }
                 if (this.frameIndex === this.realCols) {
@@ -2518,7 +2526,7 @@ define('ig/ig', ['require'], function (require) {
         'mouseup'
     ];
     var holdSprites = [];
-    function checkInHoldSprites(displayObjectName) {
+    function inHoldSprites(displayObjectName) {
         for (var i = 0, len = holdSprites.length; i < len; i++) {
             if (holdSprites[i].name === displayObjectName) {
                 return true;
@@ -2547,7 +2555,7 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !checkInHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
                 holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
@@ -2563,7 +2571,7 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || checkInHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }

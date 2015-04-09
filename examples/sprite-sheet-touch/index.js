@@ -1,3 +1,4 @@
+/* global ig */
 window.onload = function () {
     var canvas = document.querySelector('#canvas');
     var ctx = canvas.getContext('2d');
@@ -108,7 +109,7 @@ window.onload = function () {
             var ratioY = height / (countInCol * 86);
 
             var guid = 0;
-            function createBoomSprite(x, y) {
+            function createBoomSprite(x, y, c, callback) {
                 return new ig.SpriteSheet({
                     x: x,
                     y: y,
@@ -127,7 +128,9 @@ window.onload = function () {
                     ticksPerFrame: 2,
                     scaleX: ratioX,
                     scaleY: ratioY,
-                    isOnce: true
+                    isOnce: true,
+                    onceDone: callback || util.noop,
+                    c: c || {}
                     // debug: 1
                 });
             }
@@ -154,9 +157,13 @@ window.onload = function () {
                                     y: 10
                                 },
                                 {
-                                    x: _d.data.tileW / 2,
-                                    y: _d.data.tileH - 15
+                                    x: 45,
+                                    y: _d.data.tileH - 20
                                 },
+                                {
+                                    x: _d.data.tileW - 45,
+                                    y: _d.data.tileH - 20
+                                }
                             ],
                             sX: _d.data.sX,
                             sY: _d.data.sY,
@@ -172,23 +179,16 @@ window.onload = function () {
                             // debug: 1,
                             mouseEnable: true,
                             c: {
+                                data: _d.data,
                                 captureData: _d.captureData,
                                 type: _d.type,
                                 index: ++index
                             },
                             captureFunc: function (e) {
-                                this.changeFrame(util.extend({}, this.c.captureData, {ticksPerFrame: 1}));
+                                captureFunc.call(this, e);
                             },
                             releaseFunc: function (e) {
                                 releaseFunc.call(this, e, _d);
-                                // this.changeFrame(_d.data);
-                                // this.changeStatus(5);
-                                // stage.addDisplayObject(
-                                //     createBoomSprite(
-                                //         this.x - boomData.tileW / 2 * ratioX + 10,
-                                //         this.y - boomData.tileH / 2 * ratioY + 10
-                                //     )
-                                // );
                             },
                             moveFunc: function (e) {
                                 moveFunc.call(this, e);
@@ -199,98 +199,82 @@ window.onload = function () {
                 }
             }
 
-            var tmp = [];
+            var abs = Math.abs;
+            var canBoomBalloons = [];
+
+            function inCanBoomBalloons(displayObjectName) {
+                for (var i = 0, len = canBoomBalloons.length; i < len; i++) {
+                    if (canBoomBalloons[i].name === displayObjectName) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function captureFunc(e) {
+                this.changeFrame(util.extend({}, this.c.captureData, {ticksPerFrame: 1}));
+            }
+
             function moveFunc(e) {
-                // this 是指开始的那个，就是触发 captureFunc 的那个
-                // 同时也是 holdSprites 的第一个
                 var holdSprites = e.holdSprites;
-                var len = holdSprites.length;
                 var first = holdSprites[0];
-                var last = holdSprites[len - 1];
-                if (len > 1) {
-                    for (var i = 1, j = 0; i <= len - 1; i++, j++) {
-                        var cur = holdSprites[i];
-                        var prev = holdSprites[j];
-                        if (cur.c.type !== prev.c.type && prev.c.index !== first.c.index) {
-                            tmp.push(prev);
-                            break;
-                        }
+                util.removeArrByCondition(holdSprites, function (item) {
+                    return item.c.type !== first.c.type;
+                });
 
-                        var sub = cur.c.index - prev.c.index;
-                        var firstSub = cur.c.index - first.c.index;
-                        console.warn(sub, firstSub);
-                        if (cur.c.type === prev.c.type
-                            && (sub === -7 || sub === -6 || sub === -5
-                            || sub === -1 || sub === 1
-                            || sub === 5 || sub === 6 || sub === 7
-                            || sub === 0
+                var len = holdSprites.length;
 
-                            || firstSub === -7 || firstSub === -6 || firstSub === -5
-                            || firstSub === -1 || firstSub === 1
-                            || firstSub === 5 || firstSub === 6 || firstSub === 7
-                            || firstSub === 0)
-                            // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
-                        ) {
-                            cur.changeFrame(cur.c.captureData);
-                        }
-                        if (tmp.length) {
-                            for (var q = 0, tmpLen = tmp.length; q < tmpLen; q++) {
-                                var sub = last.c.index - tmp[q].c.index;
-                                if (last.c.type === tmp[q].c.type
-                                    &&
-                                    (
-                                        sub === -7 || sub === -6 || sub === -5
-                                            || sub === -1 || sub === 1
-                                            || sub === 5 || sub === 6 || sub === 7
-                                            || sub === 0
-                                    )
-                                    // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
-                                ) {
-                                    last.changeFrame(last.c.captureData);
-                                }
-                            }
+                for (var i = 0, j = -1; i < len; i++, j++) {
+                    var cur = holdSprites[i];
+                    var prev = holdSprites[j] || cur;
+                    var sub = abs(cur.c.index - prev.c.index);
+                    if (sub !== 5 && sub !== 6 && sub !== 7 && sub !== 1 && sub !== 0) {
+                        prev.changeFrame(prev.c.data);
+                        return;
+                    }
+                    else {
+                        cur.changeFrame(cur.c.captureData);
+                        if (!inCanBoomBalloons(cur.name)) {
+                            canBoomBalloons.push(cur);
                         }
                     }
                 }
-                // tmp = null;
             }
 
             function releaseFunc(e, d) {
-                tmp = [];
                 this.changeFrame(d.data);
-                // this.changeStatus(5);
-                // stage.addDisplayObject(
-                //     createBoomSprite(
-                //         this.x - boomData.tileW / 2 * ratioX + 10,
-                //         this.y - boomData.tileH / 2 * ratioY + 10
-                //     )
-                // );
+                var len = canBoomBalloons.length;
+                if (len >= 3) {
+                    while (canBoomBalloons.length) {
+                        var curBoomBalloon = canBoomBalloons.shift();
+                        curBoomBalloon.changeStatus(5);
+                        stage.addDisplayObject(
+                            createBoomSprite(
+                                curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
+                                curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
+                                {
+                                    boomBalloon: curBoomBalloon
+                                },
+                                boomSpriteOnceDone
+                            )
+                        );
+                    }
+                }
+                canBoomBalloons = [];
             }
 
-            // function moveFunc(e) {
-            //     var holdSprites = e.holdSprites;
-            //     for (var i = 0, j = -1, len = holdSprites.length; i < len; i++, j++) {
-            //         var hs = holdSprites[i];
-            //         var prev = holdSprites[j] || this;
-
-            //         if (hs.c.index === this.c.index) {
-            //             continue;
-            //         }
-
-            //         // console.warn(holdSprites);
-            //         if (prev.c.type === hs.c.type && this.c.type === hs.c.type) {
-            //             var sub = prev.c.index - hs.c.index;
-            //             if (sub === -7 || sub === -6 || sub === -5
-            //                 || sub === -1 || sub === 1
-            //                 || sub === 5 || sub === 6 || sub === 7
-            //                 || sub === 0
-            //                 // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
-            //             ) {
-            //                 hs.changeFrame(hs.c.captureData);
-            //             }
-            //         }
-            //     }
-            // }
+            function boomSpriteOnceDone(boomSprite) {
+                console.warn(boomSprite.c.boomBalloon,boomSprite.c.boomBalloon.c.index);
+                var testSprite = stage.getDisplayObjectByName('balloon_4_1');
+                var am = new ig.Animation({
+                    fps: 50,
+                    source: testSprite
+                    , duration: 1000
+                    , target: {
+                        x: testSprite.x - testSprite.tileW * ratioX
+                    }
+                }).play();
+            }
 
             game.start('bg', function () {
                 console.log('startCallback');
