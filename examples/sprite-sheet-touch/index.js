@@ -146,16 +146,16 @@ window.onload = function () {
                             // 用 points 更精确捕捉 touch 事件
                             points: [
                                 {
-                                    x: 10,
+                                    x: 5,
                                     y: 10
                                 },
                                 {
-                                    x: _d.data.tileW - 10,
+                                    x: _d.data.tileW - 5,
                                     y: 10
                                 },
                                 {
                                     x: _d.data.tileW / 2,
-                                    y: _d.data.tileH - 20
+                                    y: _d.data.tileH - 15
                                 },
                             ],
                             sX: _d.data.sX,
@@ -180,7 +180,8 @@ window.onload = function () {
                                 this.changeFrame(util.extend({}, this.c.captureData, {ticksPerFrame: 1}));
                             },
                             releaseFunc: function (e) {
-                                this.changeFrame(_d.data);
+                                releaseFunc.call(this, e, _d);
+                                // this.changeFrame(_d.data);
                                 // this.changeStatus(5);
                                 // stage.addDisplayObject(
                                 //     createBoomSprite(
@@ -198,31 +199,98 @@ window.onload = function () {
                 }
             }
 
-            var lastHoldSprite;
-
+            var tmp = [];
             function moveFunc(e) {
+                // this 是指开始的那个，就是触发 captureFunc 的那个
+                // 同时也是 holdSprites 的第一个
                 var holdSprites = e.holdSprites;
-                lastHoldSprite = holdSprites[holdSprites.length - 1];
-                for (var i = 0, len = holdSprites.length; i < len; i++) {
-                    var hs = holdSprites[i];
-                    if (this.c.type === hs.c.type) {
-                        var sub = lastHoldSprite.c.index - hs.c.index;
-                        // -7  -6  -5
-                        // -1   c   1
-                        // 5   6   7
-                        if (sub === -7 || sub === -6 || sub === -5
+                var len = holdSprites.length;
+                var first = holdSprites[0];
+                var last = holdSprites[len - 1];
+                if (len > 1) {
+                    for (var i = 1, j = 0; i <= len - 1; i++, j++) {
+                        var cur = holdSprites[i];
+                        var prev = holdSprites[j];
+                        if (cur.c.type !== prev.c.type && prev.c.index !== first.c.index) {
+                            tmp.push(prev);
+                            break;
+                        }
+
+                        var sub = cur.c.index - prev.c.index;
+                        var firstSub = cur.c.index - first.c.index;
+                        console.warn(sub, firstSub);
+                        if (cur.c.type === prev.c.type
+                            && (sub === -7 || sub === -6 || sub === -5
                             || sub === -1 || sub === 1
                             || sub === 5 || sub === 6 || sub === 7
                             || sub === 0
+
+                            || firstSub === -7 || firstSub === -6 || firstSub === -5
+                            || firstSub === -1 || firstSub === 1
+                            || firstSub === 5 || firstSub === 6 || firstSub === 7
+                            || firstSub === 0)
                             // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
                         ) {
-                            console.warn(sub);
-                            hs.changeFrame(hs.c.captureData);
+                            cur.changeFrame(cur.c.captureData);
+                        }
+                        if (tmp.length) {
+                            for (var q = 0, tmpLen = tmp.length; q < tmpLen; q++) {
+                                var sub = last.c.index - tmp[q].c.index;
+                                if (last.c.type === tmp[q].c.type
+                                    &&
+                                    (
+                                        sub === -7 || sub === -6 || sub === -5
+                                            || sub === -1 || sub === 1
+                                            || sub === 5 || sub === 6 || sub === 7
+                                            || sub === 0
+                                    )
+                                    // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
+                                ) {
+                                    last.changeFrame(last.c.captureData);
+                                }
+                            }
                         }
                     }
                 }
-                lastHoldSprite = null;
+                // tmp = null;
             }
+
+            function releaseFunc(e, d) {
+                tmp = [];
+                this.changeFrame(d.data);
+                // this.changeStatus(5);
+                // stage.addDisplayObject(
+                //     createBoomSprite(
+                //         this.x - boomData.tileW / 2 * ratioX + 10,
+                //         this.y - boomData.tileH / 2 * ratioY + 10
+                //     )
+                // );
+            }
+
+            // function moveFunc(e) {
+            //     var holdSprites = e.holdSprites;
+            //     for (var i = 0, j = -1, len = holdSprites.length; i < len; i++, j++) {
+            //         var hs = holdSprites[i];
+            //         var prev = holdSprites[j] || this;
+
+            //         if (hs.c.index === this.c.index) {
+            //             continue;
+            //         }
+
+            //         // console.warn(holdSprites);
+            //         if (prev.c.type === hs.c.type && this.c.type === hs.c.type) {
+            //             var sub = prev.c.index - hs.c.index;
+            //             if (sub === -7 || sub === -6 || sub === -5
+            //                 || sub === -1 || sub === 1
+            //                 || sub === 5 || sub === 6 || sub === 7
+            //                 || sub === 0
+            //                 // || sub / 7 === 1 || sub / 6 === 1 || sub / 5 === 1 || sub / 1 === 1
+            //             ) {
+            //                 hs.changeFrame(hs.c.captureData);
+            //             }
+            //         }
+            //     }
+            // }
 
             game.start('bg', function () {
                 console.log('startCallback');
