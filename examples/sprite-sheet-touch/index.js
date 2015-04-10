@@ -125,7 +125,7 @@ window.onload = function () {
                     offsetX: boomData.offsetX,
                     offsetY: boomData.offsetY,
                     zIndex: 10,
-                    ticksPerFrame: 2,
+                    ticksPerFrame: 1,
                     scaleX: ratioX,
                     scaleY: ratioY,
                     isOnce: true,
@@ -329,157 +329,12 @@ window.onload = function () {
                 var am = new ig.Animation({
                     fps: 50,
                     source: balloonSprite
-                    , duration: 500
+                    , duration: 200
                     , target: {
                         scaleX: ratioX,
                         scaleY: ratioY
                     }
                 }).play();
-
-                // curBoomBalloon.status = 1;
-                // curBoomBalloon.scaleX = 0.5;
-                // curBoomBalloon.scaleY = 0.5;
-                // curBoomBalloon.points = [
-                //     {
-                //         x: 5,
-                //         y: 10
-                //     },
-                //     {
-                //         x: d.data.tileW - 5,
-                //         y: 10
-                //     },
-                //     {
-                //         x: 45,
-                //         y: d.data.tileH - 20
-                //     },
-                //     {
-                //         x: d.data.tileW - 45,
-                //         y: d.data.tileH - 20
-                //     }
-                // ],
-                // curBoomBalloon.sX = d.data.sX;
-                // curBoomBalloon.sY = d.data.sY;
-                // curBoomBalloon.total = d.data.total;
-                // curBoomBalloon.tileW = d.data.tileW;
-                // curBoomBalloon.tileH = d.data.tileH;
-                // curBoomBalloon.cols = d.data.cols;
-                // curBoomBalloon.rows = d.data.rows;
-                // curBoomBalloon.ticksPerFrame = 2;
-                // curBoomBalloon.debug = 1;
-                // curBoomBalloon.c = {
-                //     data: d.data,
-                //     captureData: d.captureData,
-                //     type: d.type,
-                //     index: curBoomBalloon.c.index
-                // },
-                // stage.addDisplayObject(curBoomBalloon);
-                // var am = new ig.Animation({
-                //     fps: 50,
-                //     source: curBoomBalloon
-                //     , duration: 500
-                //     , target: {
-                //         scaleX: ratioX,
-                //         scaleY: ratioY
-                //     }
-                // }).play();
-                // console.warn(tmp);
-                // if (!canBoomBalloons.length) {
-                //     for (var i = 0, j = 1, len = tmp.length; i < len; i++, j++) {
-                //         var d = spritesData[util.randomInt(0, 5)];
-                //         console.warn(d);
-                //             // var cur = tmp[i];
-                //             // var balloonSprite = new ig.SpriteSheet({
-                //             //     name: cur.name,
-                //             //     image: resource.ss3,
-                //             //     x: cur.x,
-                //             //     y: cur.y,
-                //             //     points: [
-                //             //         {
-                //             //             x: 5,
-                //             //             y: 10
-                //             //         },
-                //             //         {
-                //             //             x: _d.data.tileW - 5,
-                //             //             y: 10
-                //             //         },
-                //             //         {
-                //             //             x: 45,
-                //             //             y: _d.data.tileH - 20
-                //             //         },
-                //             //         {
-                //             //             x: _d.data.tileW - 45,
-                //             //             y: _d.data.tileH - 20
-                //             //         }
-                //             //     ],
-                //             //     sX: _d.data.sX,
-                //             //     sY: _d.data.sY,
-                //             //     total: _d.data.total,
-                //             //     tileW: _d.data.tileW,
-                //             //     tileH: _d.data.tileH,
-                //             //     cols: _d.data.cols,
-                //             //     rows: _d.data.rows,
-                //             //     zIndex: 1,
-                //             //     ticksPerFrame: 2,
-                //             //     scaleX: ratioX,
-                //             //     scaleY: ratioY,
-                //             //     mouseEnable: true,
-                //             //     status: 1,
-                //             //     c: {
-                //             //         data: _d.data,
-                //             //         captureData: _d.captureData,
-                //             //         type: _d.type,
-                //             //         index: cur.c.index
-                //             //     },
-                //             //     captureFunc: function (e) {
-                //             //         captureFunc.call(this, e);
-                //             //     },
-                //             //     releaseFunc: function (e) {
-                //             //         releaseFunc.call(this, e, _d);
-                //             //     },
-                //             //     moveFunc: function (e) {
-                //             //         moveFunc.call(this, e);
-                //             //     }
-                //             // });
-
-                //             // stage.addDisplayObject(balloonSprite);
-                //             // var am = new ig.Animation({
-                //             //     fps: 50,
-                //             //     source: balloonSprite
-                //             //     , duration: 1000
-                //             //     , target: {
-                //             //         scaleX: ratioX,
-                //             //         scaleY: ratioY
-                //             //     }
-                //             // }).play();
-
-                //         // var col = parseInt(cur.name.split('_')[0], 10);
-                //         // var row = parseInt(cur.name.split('_')[1], 10);
-                //         // for (; col <= 5; col++) {
-                //         //     var testSprite = stage.getDisplayObjectByName(col + '_' + row);
-                //         //     var am = new ig.Animation({
-                //         //         fps: 30,
-                //         //         source: testSprite
-                //         //         , duration: 1000
-                //         //         , target: {
-                //         //             x: testSprite.x - testSprite.tileW * ratioX
-                //         //         }
-                //         //     }).play();
-                //         // }
-                //     }
-                //     tmp = [];
-                // }
-
-                // var testSprite = stage.getDisplayObjectByName('4_1');
-                // var am = new ig.Animation({
-                //     fps: 50,
-                //     source: testSprite
-                //     , duration: 1000
-                //     , target: {
-                //         scaleX: 2,
-                //         scaleY: 2
-                //         // x: testSprite.x - testSprite.tileW * ratioX
-                //     }
-                // }).play();
             }
 
             game.start('bg', function () {
