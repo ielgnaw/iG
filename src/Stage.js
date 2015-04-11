@@ -172,6 +172,8 @@ define(function (require) {
      * @constructor
      *
      * @param {Object} opts 参数
+     *
+     * @return {Object} Stage 实例
      */
     function Stage(opts) {
         Event.apply(this, arguments);
@@ -197,6 +199,8 @@ define(function (require) {
 
         // 初始化 mouse 和 touch 事件
         this.initMouseEvent();
+
+        return this;
     }
 
     Stage.prototype = {

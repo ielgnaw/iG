@@ -107,6 +107,7 @@ window.onload = function () {
 
             var ratioX = width / (countInRow * 64);
             var ratioY = height / (countInCol * 86);
+            console.warn(ratioX, ratioY, game);
 
             var guid = 0;
             function createBoomSprite(x, y, c, callback) {

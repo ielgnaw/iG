@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var util = require('./util');
     var env = require('./env');
     var Event = require('./Event');

@@ -71,6 +71,13 @@ define(function (require) {
         render: function (offCtx) {
             polygon.getBounds(this);
             offCtx.save();
+
+            offCtx.globalAlpha = this.alpha;
+            offCtx.translate(this.x, this.y);
+            offCtx.rotate(util.deg2Rad(this.angle));
+            offCtx.scale(this.scaleX, this.scaleY);
+            offCtx.translate(-this.x, -this.y);
+
             offCtx.drawImage(
                 this.image,
                 this.sX, this.sY, this.sWidth || this.width, this.sHeight || this.height,

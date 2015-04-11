@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    'use strict';
+
     var easing = {};
 
     easing.linear = function (t, b, c, d) {

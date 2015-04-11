@@ -60,6 +60,8 @@ define(function (require) {
         me.height = me.canvas.height;
         me.cssHeight = me.canvas.style.height;
 
+        me.scaleRatio = scaleRatio;
+
         setOffCanvas.call(me);
     }
 

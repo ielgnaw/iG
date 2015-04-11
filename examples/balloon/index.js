@@ -1,3 +1,7 @@
+/* global ig */
+
+'use strict';
+
 window.onload = function () {
     var canvas = document.querySelector('#canvas');
     var ctx = canvas.getContext('2d');
@@ -26,22 +30,30 @@ window.onload = function () {
             {
                 id: 'panel',
                 src: '../img/panel.png'
+            },
+            {
+                id: 'ss3',
+                src: '../img/sprite-sheet3.png'
+            },
+            {
+                id: 'spritesData',
+                src: './data/sprite-sheet3.json'
+            },
+            {
+                id: 'boom',
+                src: '../img/boom.png'
+            },
+            {
+                id: 'boomData',
+                src: './data/boom.json'
             }
         ],
         function (resource) {
 
-            /**
-             * 弹力
-             *
-             * @type {number}
-             */
-            var spring = 0.03;
+            resourceLoaded(resource);
 
-            /**
-             * 摩擦力
-             *
-             * @type {number}
-             */
+            /*var spring = 0.03;
+
             var friction = 0.9;
 
             var coverWidth = 326;
@@ -151,16 +163,138 @@ window.onload = function () {
                   ctx.lineTo(ctx.canvas.width, i);
                   ctx.stroke();
                }
-            }
+            }*/
 
             game.start('bg', function () {
                 console.log('startCallback');
             })
             .on('gameFPS', function (data) {
                 document.querySelector('#fps').innerHTML = 'fps: '+ data.data.fps;
-            }).on('afterGameRender', function (data) {
-                drawGrid(stage.ctx, 'red', (canvas.width) / 6, (canvas.height) / 7);
             });
         }
     );
+
+    var stage;
+
+    /**
+     * 资源加载完成的回调
+     *
+     * @param {Object} resource 资源对象
+     */
+    function resourceLoaded(resource) {
+        stage = game.createStage({
+            name: 'bg'
+        }).setParallaxScroll({
+            image: resource.bg
+            , anims: [
+                {
+                    aX: 1
+                    , aY: 1
+                },
+                {
+                    aX: -1
+                    , aY: 1
+                }
+            ]
+            , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
+        });
+
+        initStartScreen(resource);
+
+        // var coverWidth = 326;
+        // var coverHeight = 320;
+        // var ratioX = width / (countInRow * 64);
+        // console.warn(resource.panel.width);
+
+        // var cover = new ig.Bitmap({
+        //     image: resource.panel,
+        //     // vY: -0.3,
+        //     x: stage.width / 2 - coverWidth / 2
+        //     , y: stage.height / 2 - coverHeight / 2
+        //     , sX: 28
+        //     , sY: 1680
+        //     , width: coverWidth
+        //     , height: coverHeight
+        //     , mouseEnable: true
+        // });
+
+        // cover.update = function (dt) {
+        //     var dx = coverTargetX - this.x;
+        //     var ax = dx * spring;
+        //     var dy = coverTargetY - this.y;
+        //     var ay = dy * spring;
+        //     this.setAccelerationX(ax);
+        //     this.setAccelerationY(ay);
+        //     this.setFrictionY(friction);
+        //     this.setFrictionX(friction);
+        //     // 调用父类 DisplayObject 的 moveStep
+        //     this.moveStep();
+        // };
+
+    }
+
+    /**
+     * 初始化开始屏幕
+     *
+     * @param {Object} resource 资源对象
+     */
+    function initStartScreen(resource) {
+
+        var playBut = new ig.Bitmap({
+            x: stage.width + resource.playBut.width,
+            y: stage.height / 2 + 110,
+            width: 108,
+            height: 108,
+            image: resource.playBut,
+            mouseEnable: true
+            // , debug: true
+        });
+
+        new ig.Animation({
+            fps: 50,
+            source: playBut
+            , duration: 800
+            , target: {
+                x: stage.width / 2 - resource.playBut.width / 2
+            }
+        }).play().on('complete', function (d) {
+            new ig.Animation({
+                fps: 50,
+                source: playBut
+                , duration: 2000
+                , range: {
+                    y: 10
+                },
+                repeat: 1
+            }).play()
+        });
+
+        stage.addDisplayObject(playBut);
+
+        console.warn(stage);
+        console.warn(game);
+
+        /*var originalY = playBut.y;
+        var rangeX = 5;
+
+        var targetX = canvas.width / 2 - 55;
+
+        playBut.update = function () {
+            var dx = targetX - this.x;
+            var ax = dx * spring;
+            this.setAccelerationX(ax);
+            this.setFrictionX(friction);
+
+            if (originalY - this.y > rangeX) {
+                this.setAcceleration(0, 0.05);
+            }
+            else {
+                this.setAcceleration(0, -0.05);
+            }
+            // 调用父类 DisplayObject 的 moveStep
+            this.moveStep();
+        };*/
+    }
+
+
 };

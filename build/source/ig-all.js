@@ -748,6 +748,7 @@ define('ig/ig', ['require'], function (require) {
         me.cssWidth = me.canvas.style.width;
         me.height = me.canvas.height;
         me.cssHeight = me.canvas.style.height;
+        me.scaleRatio = scaleRatio;
         setOffCanvas.call(me);
     }
     function setOffCanvas() {
@@ -1160,6 +1161,7 @@ define('ig/ig', ['require'], function (require) {
         this.cssWidth = opts.game.cssWidth;
         this.cssHeight = opts.game.cssHeight;
         this.initMouseEvent();
+        return this;
     }
     Stage.prototype = {
         constructor: Stage,
@@ -2512,6 +2514,7 @@ define('ig/ig', ['require'], function (require) {
     './env',
     './Event'
 ], function (require) {
+    'use strict';
     var util = require('./util');
     var env = require('./env');
     var Event = require('./Event');
@@ -2667,6 +2670,11 @@ define('ig/ig', ['require'], function (require) {
         render: function (offCtx) {
             polygon.getBounds(this);
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
+            offCtx.translate(this.x, this.y);
+            offCtx.rotate(util.deg2Rad(this.angle));
+            offCtx.scale(this.scaleX, this.scaleY);
+            offCtx.translate(-this.x, -this.y);
             offCtx.drawImage(this.image, this.sX, this.sY, this.sWidth || this.width, this.sHeight || this.height, this.x, this.y, this.width, this.height);
             this.debugRender(offCtx);
             offCtx.restore();
@@ -2687,6 +2695,7 @@ define('ig/ig', ['require'], function (require) {
     util.inherits(Bitmap, DisplayObject);
     return Bitmap;
 });define('ig/easing', ['require'], function (require) {
+    'use strict';
     var easing = {};
     easing.linear = function (t, b, c, d) {
         return c * t / d + b;
