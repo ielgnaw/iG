@@ -12,10 +12,16 @@ window.onload = function () {
     });
 
     game.init({
-        canvas: canvas
-        , maximize: true
-        , scaleFit: true
+        canvas: canvas,
+        maximize: true,
+        scaleFit: true
     });
+
+    // 标准宽度
+    var STANDARD_WIDTH = 383;
+
+    // 标准高度
+    var STANDARD_HEIGHT = 550;
 
     ig.loadResource(
         [
@@ -46,135 +52,29 @@ window.onload = function () {
             {
                 id: 'boomData',
                 src: './data/boom.json'
+            },
+            {
+                id: 'hud',
+                src: '../img/hud.png'
             }
         ],
         function (resource) {
-
             resourceLoaded(resource);
-
-            /*var spring = 0.03;
-
-            var friction = 0.9;
-
-            var coverWidth = 326;
-            var coverHeight = 320;
-
-            var coverTargetY = 30;
-            var coverTargetX = canvas.width / 2 - coverWidth / 2;
-
-            var cover = new ig.Bitmap({
-                image: resource.panel,
-                // vY: -0.3,
-                x: canvas.width / 2 - coverWidth / 2
-                , y: canvas.height / 2 - coverHeight / 2
-                , sX: 28
-                , sY: 1680
-                , width: coverWidth
-                , height: coverHeight
-                , mouseEnable: true
-            });
-
-            cover.update = function (dt) {
-                var dx = coverTargetX - this.x;
-                var ax = dx * spring;
-                var dy = coverTargetY - this.y;
-                var ay = dy * spring;
-                this.setAccelerationX(ax);
-                this.setAccelerationY(ay);
-                this.setFrictionY(friction);
-                this.setFrictionX(friction);
-                // 调用父类 DisplayObject 的 moveStep
-                this.moveStep();
-            };
-
-            var playBut = new ig.Bitmap({
-                x: canvas.width,
-                y: canvas.height / 2 + 110
-                , width: 110
-                , height: 110
-                , image: resource.playBut
-                // , debug: true
-                , mouseEnable: true
-            });
-
-            var originalY = playBut.y;
-            var rangeX = 5;
-
-            var targetX = canvas.width / 2 - 55;
-
-            playBut.update = function () {
-                var dx = targetX - this.x;
-                var ax = dx * spring;
-                this.setAccelerationX(ax);
-                this.setFrictionX(friction);
-
-                if (originalY - this.y > rangeX) {
-                    this.setAcceleration(0, 0.05);
-                }
-                else {
-                    this.setAcceleration(0, -0.05);
-                }
-                // 调用父类 DisplayObject 的 moveStep
-                this.moveStep();
-            };
-
-            playBut.setCaptureFunc(function (e) {
-                coverTargetY = 60;
-                cover.setPos(canvas.width, coverTargetY);
-                cover.setSY(78);
-                playBut.setPos(0, playBut.y);
-            });
-
-            var stage = game.createStage({
-                name: 'bg'
-            }).setParallaxScroll({
-                image: resource.bg
-                , anims: [
-                    {
-                        aX: 1
-                        , aY: 1
-                    },
-                    {
-                        aX: -1
-                        , aY: 1
-                    }
-                ]
-                , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
-            });
-
-            stage.addDisplayObject(cover);
-            stage.addDisplayObject(playBut);
-            console.log(stage);
-
-            function drawGrid(ctx, color, stepx, stepy) {
-               ctx.strokeStyle = color;
-               ctx.lineWidth = 0.5;
-
-               for (var i = stepx + 0.5; i < ctx.canvas.width; i += stepx) {
-                  ctx.beginPath();
-                  ctx.moveTo(i, 105);
-                  ctx.lineTo(i, ctx.canvas.height - 35);
-                  ctx.stroke();
-               }
-
-               for (var i = stepy + 0.5; i < ctx.canvas.height; i += stepy) {
-                  ctx.beginPath();
-                  ctx.moveTo(0, i);
-                  ctx.lineTo(ctx.canvas.width, i);
-                  ctx.stroke();
-               }
-            }*/
-
             game.start('bg', function () {
                 console.log('startCallback');
             })
             .on('gameFPS', function (data) {
-                document.querySelector('#fps').innerHTML = 'fps: '+ data.data.fps;
+                // document.querySelector('#fps').innerHTML = 'fps: '+ data.data.fps;
             });
         }
     );
 
+    var spring = 0.02;
+    var friction = 0.89;
+
     var stage;
+    var ratioX;
+    var ratioY;
 
     /**
      * 资源加载完成的回调
@@ -199,38 +99,51 @@ window.onload = function () {
             , animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
         });
 
-        initStartScreen(resource);
+        ratioX = stage.width / STANDARD_WIDTH;
+        ratioY = stage.height / STANDARD_HEIGHT;
 
-        // var coverWidth = 326;
-        // var coverHeight = 320;
-        // var ratioX = width / (countInRow * 64);
-        // console.warn(resource.panel.width);
+        // initStartScreen(resource);
+        var text = new ig.Text({
+            name: 'text',
+            x: 150,
+            y: 150,
+            color: 'rgba(0, 0, 0, 0.5)',
+            size: 20,
+            content: '60',
+            animate: {
+                // y: text.y - 50,
+                y: -50,
+                alpha: 0,
+                scaleX: 1.5,
+                scaleY: 1.5,
+                color: '#f00',
+                // duration: 1000,
+                complete: function () {}
+            }
+        });
+        stage.addDisplayObject(text);
+        // setInterval(function () {
+        //     var content = text.getContent();
+        //     console.warn(content);
+        //     content--;
+        //     text.changeContent(content);
+        // }, 1000);
+        // new ig.Animation({
+        //     source: text,
+        //     duration: 1000,
+        //     target: {
+        //         y: text.y - 50,
+        //         alpha: 0,
+        //         scaleX: 1.5,
+        //         scaleY: 1.5,
+        //         color: '#f00'
+        //     }
+        // }).play().on('complete', function (d) {
+        //     console.log(d);
+        //     d.data.source.status = 5;
+        //     console.warn(stage);
 
-        // var cover = new ig.Bitmap({
-        //     image: resource.panel,
-        //     // vY: -0.3,
-        //     x: stage.width / 2 - coverWidth / 2
-        //     , y: stage.height / 2 - coverHeight / 2
-        //     , sX: 28
-        //     , sY: 1680
-        //     , width: coverWidth
-        //     , height: coverHeight
-        //     , mouseEnable: true
         // });
-
-        // cover.update = function (dt) {
-        //     var dx = coverTargetX - this.x;
-        //     var ax = dx * spring;
-        //     var dy = coverTargetY - this.y;
-        //     var ay = dy * spring;
-        //     this.setAccelerationX(ax);
-        //     this.setAccelerationY(ay);
-        //     this.setFrictionY(friction);
-        //     this.setFrictionX(friction);
-        //     // 调用父类 DisplayObject 的 moveStep
-        //     this.moveStep();
-        // };
-
     }
 
     /**
@@ -240,60 +153,115 @@ window.onload = function () {
      */
     function initStartScreen(resource) {
 
+        var coverWidth = 326;
+        var coverHeight = 320;
+
+        var coverTargetY = 20 * ratioY;
+        var coverTargetX = stage.width / 2 - coverWidth * ratioX / 2;
+
+        var startCover = new ig.Bitmap({
+            name: 'startCover',
+            image: resource.panel,
+            x: stage.width / 2 - coverWidth * ratioX / 2,
+            y: 500,
+            sX: 28,
+            sY: 1680,
+            scaleX: ratioX,
+            scaleY: ratioY,
+            width: coverWidth,
+            height: coverHeight,
+            mouseEnable: true
+        });
+
+        startCover.update = function (dt) {
+            var dy = coverTargetY - this.y;
+            var ay = dy * spring;
+            this.setAccelerationY(ay);
+            this.setFrictionY(friction);
+
+            var dx = coverTargetX - this.x;
+            var ax = dx * spring;
+            this.setAccelerationX(ax);
+            this.setFrictionX(friction);
+
+            // 调用父类 DisplayObject 的 moveStep
+            this.moveStep();
+        };
+        stage.addDisplayObject(startCover);
+
+        // 开始按钮
         var playBut = new ig.Bitmap({
+            name: 'playBut',
             x: stage.width + resource.playBut.width,
-            y: stage.height / 2 + 110,
+            y: stage.height - 150 * ratioY,
             width: 108,
             height: 108,
+            scaleX: ratioX,
+            scaleY: ratioY,
             image: resource.playBut,
             mouseEnable: true
             // , debug: true
         });
 
-        new ig.Animation({
-            fps: 50,
-            source: playBut
-            , duration: 800
-            , target: {
-                x: stage.width / 2 - resource.playBut.width / 2
-            }
-        }).play().on('complete', function (d) {
-            new ig.Animation({
-                fps: 50,
-                source: playBut
-                , duration: 2000
-                , range: {
-                    y: 10
-                },
-                repeat: 1
-            }).play()
-        });
-
-        stage.addDisplayObject(playBut);
-
-        console.warn(stage);
-        console.warn(game);
-
-        /*var originalY = playBut.y;
-        var rangeX = 5;
-
-        var targetX = canvas.width / 2 - 55;
+        var playButTargetX = stage.width / 2 - resource.playBut.width * ratioX / 2
 
         playBut.update = function () {
-            var dx = targetX - this.x;
+            var dx = playButTargetX - this.x;
             var ax = dx * spring;
             this.setAccelerationX(ax);
             this.setFrictionX(friction);
 
-            if (originalY - this.y > rangeX) {
-                this.setAcceleration(0, 0.05);
-            }
-            else {
-                this.setAcceleration(0, -0.05);
-            }
             // 调用父类 DisplayObject 的 moveStep
             this.moveStep();
-        };*/
+        };
+
+        playBut.setCaptureFunc(function (e) {
+            if (!startCover.c.canStart) {
+                startCover.c.canStart = true;
+                coverTargetY = 40 * ratioY;
+                startCover.setPos(stage.width, coverTargetY);
+                startCover.setSY(78);
+                playBut.setPos(0 - resource.playBut.width, playBut.y);
+                console.warn(startCover.c);
+            }
+            else {
+                startCover.c.canStart = false;
+                startCover.status = 5;
+                playBut.status = 5;
+                initStage(resource);
+            }
+        });
+
+        new ig.Animation({
+            fps: 50,
+            source: playBut
+            , duration: 2000
+            , range: {
+                y: 10
+            },
+            repeat: 1
+        }).play();
+
+        stage.addDisplayObject(playBut);
+    }
+
+    function initStage(resource) {
+        console.warn(resource);
+        console.warn(stage);
+
+        var hud = new ig.Bitmap({
+            name: 'hud',
+            x: 0,
+            y: 0,
+            width: 383,
+            height: 550,
+            scaleX: ratioX,
+            scaleY: ratioY,
+            image: resource.hud,
+            mouseEnable: true
+            // , debug: true
+        });
+        stage.addDisplayObject(hud);
     }
 
 

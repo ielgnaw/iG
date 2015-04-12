@@ -332,7 +332,7 @@ define(function (require) {
          */
         update: function () {
            // this.moveStep();
-           return true;
+           return this;
         },
 
         /**
@@ -342,7 +342,7 @@ define(function (require) {
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          */
         render: function (offCtx) {
-            return true;
+            return this;
             // var me = this;
             // console.warn(me);
             // var me = this;
@@ -356,24 +356,6 @@ define(function (require) {
             // }
             // offCtx.restore();
         }
-
-        // 判断鼠标当前坐标是否在当前渲染对象区域中
-        // , isMouseIn: function (pos) {
-        //     var me = this;
-        //     var x = pos.x;
-        //     var y = pos.y;
-        //     var stage = me.stageOwner;
-        //     var stageX = stage.x || 0;
-        //     var stageY = stage.y || 0;
-        //     var hw = 0;
-        //     var hh = 0;
-        //     // debugger
-        //     if (x - stageX >= me.x - me.radius && x - stageX <= me.x + me.radius
-        //             && y - stageY >= me.y - me.radius && y - stageY <= me.y + me.radius
-        //     ) {
-        //         console.warn('你碰到我了');
-        //     }
-        // }
     };
 
     util.inherits(DisplayObject, Event);

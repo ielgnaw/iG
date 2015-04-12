@@ -25,6 +25,7 @@ exports.modules = {
         {name: 'ig/geom/polygon', folder: 'geom'},
         {name: 'ig/domEvt'},
         {name: 'ig/Bitmap', refName: 'Bitmap'},
+        {name: 'ig/Text', refName: 'Text'},
         {name: 'ig/easing', refName: 'easing'},
         {name: 'ig/Animation', refName: 'Animation'}
     ]

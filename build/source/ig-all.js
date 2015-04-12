@@ -1443,10 +1443,10 @@ define('ig/ig', ['require'], function (require) {
             offCtx.restore();
         },
         update: function () {
-            return true;
+            return this;
         },
         render: function (offCtx) {
-            return true;
+            return this;
         }
     };
     util.inherits(DisplayObject, Event);
@@ -2694,6 +2694,55 @@ define('ig/ig', ['require'], function (require) {
     };
     util.inherits(Bitmap, DisplayObject);
     return Bitmap;
+});define('ig/Text', [
+    'require',
+    './util',
+    './DisplayObject',
+    './geom/polygon'
+], function (require) {
+    'use strict';
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var polygon = require('./geom/polygon');
+    function Text(opts) {
+        opts = opts || {};
+        DisplayObject.apply(this, arguments);
+        util.extend(this, {
+            content: '0',
+            color: this.fillStyle,
+            size: 30,
+            holdTime: 0,
+            animate: util.extend({}, { duration: 1000 }, opts.animate)
+        }, opts);
+        console.warn(this);
+    }
+    Text.prototype = {
+        constructor: Text,
+        changeContent: function (content) {
+            this.content = content;
+            return this;
+        },
+        getContent: function () {
+            return this.content;
+        },
+        render: function (offCtx) {
+            offCtx.save();
+            offCtx.fillStyle = this.color;
+            offCtx.globalAlpha = this.alpha;
+            offCtx.translate(this.x, this.y);
+            offCtx.rotate(util.deg2Rad(this.angle));
+            offCtx.scale(this.scaleX, this.scaleY);
+            offCtx.translate(-this.x, -this.y);
+            offCtx.font = 'bold ' + this.size + 'px sans-serif';
+            var content = this.content;
+            var m = offCtx.measureText(content).width;
+            offCtx.fillText(this.content, this.x - m * 0.5, this.y);
+            offCtx.restore();
+            return this;
+        }
+    };
+    util.inherits(Text, DisplayObject);
+    return Text;
 });define('ig/easing', ['require'], function (require) {
     'use strict';
     var easing = {};
@@ -3432,6 +3481,28 @@ else {
 
 var modName = 'ig/Bitmap';
 var refName = 'Bitmap';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Text';
+var refName = 'Text';
 var folderName = '';
 
 var tmp;
