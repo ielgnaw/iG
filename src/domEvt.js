@@ -51,7 +51,9 @@ define(function (require) {
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
 
-            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+            if (curDisplayObject.mouseEnable
+                && curDisplayObject.hitTestPoint
+                && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.isCapture = true;
 
@@ -76,7 +78,8 @@ define(function (require) {
             var curDisplayObject = displayObjectList[i];
 
             // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)
+            if (curDisplayObject.hitTestPoint
+                && curDisplayObject.hitTestPoint(e.data.x, e.data.y)
                 && !inHoldSprites(curDisplayObject.name)
             ) {
                 // holdSprites[curDisplayObject.name] = curDisplayObject;

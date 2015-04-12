@@ -9,7 +9,8 @@ define(function (require) {
 
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
-    var polygon = require('./geom/polygon');
+    var Animation = require('./Animation');
+    var easing = require('./easing');
 
     /**
      * Text 基类
@@ -25,7 +26,7 @@ define(function (require) {
 
         util.extend(this, {
             // 文字内容
-            content: '0',
+            content: '',
 
             // 颜色
             color: this.fillStyle,
@@ -34,15 +35,8 @@ define(function (require) {
             size: 30,
 
             // 持续时间，为 0 代表不会消失
-            holdTime: 0,
-
-            animate: util.extend({}, {
-                duration: 1000
-            }, opts.animate)
+            holdTime: 0
         }, opts);
-
-        console.warn(this);
-
     }
 
     Text.prototype = {
@@ -50,6 +44,40 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: Text,
+
+        /**
+         * 设置动画
+         *
+         * @param {Object} opts 动画参数
+         *
+         * @return {Object} 当前 Text 实例
+         */
+        setAnimate: function (opts) {
+            this.animate = new Animation({
+                fps: opts.fps || 60,
+                source: this,
+                repeat: opts.repeat,
+                tween: opts.tween || easing.linear,
+                duration: 1000,
+                target: opts.target,
+                range: opts.range
+            })
+            .play()
+            .on('repeat', opts.repeatFunc || util.noop).on('complete', opts.completeFunc || util.noop);
+            return this;
+        },
+
+        /**
+         * 停止动画
+         *
+         * @return {Object} 当前 Text 实例
+         */
+        stopAnimate: function () {
+            this.animate.un('repeat');//, this.repeatFunc);
+            this.animate.un('complete');//, this.completeFunc);
+            this.animate && this.animate.stop();
+            return this;
+        },
 
         /**
          * 改变内容
@@ -91,8 +119,8 @@ define(function (require) {
             offCtx.font = 'bold ' + this.size + 'px sans-serif';
 
             var content = this.content;
-            var m = offCtx.measureText(content).width;
-            offCtx.fillText(this.content, this.x - m * 0.5, this.y);
+            var width = offCtx.measureText(content).width;
+            offCtx.fillText(this.content, this.x - width * 0.5, this.y);
             offCtx.restore();
 
             return this;

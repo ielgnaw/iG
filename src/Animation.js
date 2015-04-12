@@ -19,6 +19,8 @@ define(function (require) {
      * @constructor
      *
      * @param {Object} opts 参数
+     *
+     * @return {Object} Animation 实例
      */
     function Animation(opts) {
         opts = opts || {};
@@ -57,6 +59,8 @@ define(function (require) {
             _then: Date.now(),
             _interval: 1000 / this.fps
         };
+
+        return this;
     }
 
     Animation.prototype = {
@@ -133,7 +137,12 @@ define(function (require) {
                     repeatCount: this._._repeatCount
                 }
             });
-            this.play();
+
+            // TODO: 这样实现不妥，只有绑定了 repeat 才能 play ？
+            var repeatEvents = this._events.repeat;
+            if (repeatEvents && repeatEvents.length) {
+                this.play();
+            }
             return this;
         },
 

@@ -2545,7 +2545,7 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.isCapture = true;
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
@@ -2558,7 +2558,7 @@ define('ig/ig', ['require'], function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
                 holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
@@ -2698,26 +2698,44 @@ define('ig/ig', ['require'], function (require) {
     'require',
     './util',
     './DisplayObject',
-    './geom/polygon'
+    './Animation',
+    './easing'
 ], function (require) {
     'use strict';
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
-    var polygon = require('./geom/polygon');
+    var Animation = require('./Animation');
+    var easing = require('./easing');
     function Text(opts) {
         opts = opts || {};
         DisplayObject.apply(this, arguments);
         util.extend(this, {
-            content: '0',
+            content: '',
             color: this.fillStyle,
             size: 30,
-            holdTime: 0,
-            animate: util.extend({}, { duration: 1000 }, opts.animate)
+            holdTime: 0
         }, opts);
-        console.warn(this);
     }
     Text.prototype = {
         constructor: Text,
+        setAnimate: function (opts) {
+            this.animate = new Animation({
+                fps: opts.fps || 60,
+                source: this,
+                repeat: opts.repeat,
+                tween: opts.tween || easing.linear,
+                duration: 1000,
+                target: opts.target,
+                range: opts.range
+            }).play().on('repeat', opts.repeatFunc || util.noop).on('complete', opts.completeFunc || util.noop);
+            return this;
+        },
+        stopAnimate: function () {
+            this.animate.un('repeat');
+            this.animate.un('complete');
+            this.animate && this.animate.stop();
+            return this;
+        },
         changeContent: function (content) {
             this.content = content;
             return this;
@@ -2735,8 +2753,8 @@ define('ig/ig', ['require'], function (require) {
             offCtx.translate(-this.x, -this.y);
             offCtx.font = 'bold ' + this.size + 'px sans-serif';
             var content = this.content;
-            var m = offCtx.measureText(content).width;
-            offCtx.fillText(this.content, this.x - m * 0.5, this.y);
+            var width = offCtx.measureText(content).width;
+            offCtx.fillText(this.content, this.x - width * 0.5, this.y);
             offCtx.restore();
             return this;
         }
@@ -2968,6 +2986,7 @@ define('ig/ig', ['require'], function (require) {
             _then: Date.now(),
             _interval: 1000 / this.fps
         };
+        return this;
     }
     Animation.prototype = {
         constructor: Animation,
@@ -3018,7 +3037,10 @@ define('ig/ig', ['require'], function (require) {
                     repeatCount: this._._repeatCount
                 }
             });
-            this.play();
+            var repeatEvents = this._events.repeat;
+            if (repeatEvents && repeatEvents.length) {
+                this.play();
+            }
             return this;
         },
         play: function () {
