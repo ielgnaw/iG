@@ -377,7 +377,7 @@ window.onload = function () {
                         cols: _d.data.cols,
                         rows: _d.data.rows,
                         zIndex: 2,
-                        ticksPerFrame: 2,
+                        ticksPerFrame: 1,
                         scaleX: ratioX,
                         scaleY: ratioY,
                         // debug: 1,
