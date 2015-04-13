@@ -76,6 +76,9 @@ window.onload = function () {
     var ratioX;
     var ratioY;
 
+    var gameScore = 0;
+    var gameScoreText;
+
     /**
      * 资源加载完成的回调
      *
@@ -102,7 +105,8 @@ window.onload = function () {
         ratioX = stage.width / STANDARD_WIDTH;
         ratioY = stage.height / STANDARD_HEIGHT;
 
-        initStartScreen(resource);
+        // initStartScreen(resource);
+        initStage(resource);
     }
 
     /**
@@ -214,15 +218,27 @@ window.onload = function () {
             scaleY: ratioY,
             image: resource.hud,
             mouseEnable: true,
-            zIndex: 1
-            // , debug: true
+            zIndex: 1,
+            captureFunc: function (e) {
+                if (e.x >= 300 * ratioX && e.x <= 335 * ratioY
+                    && e.y >= 10 * ratioX && e.y <= 45 * ratioY
+                ) {
+                    var isPause = false;
+                    if (game.paused) {
+                        togglePauseScreen(!isPause, resource);
+                    }
+                    else {
+                        togglePauseScreen(isPause, resource);
+                    }
+                }
+            }
         });
         stage.addDisplayObject(hud);
 
-        var content = 60;
-        var text = new ig.Text({
-            name: 'text',
-            x: (stage.ctx.measureText(content).width + 22) * ratioX,
+        var content = 1;
+        var countDown = new ig.Text({
+            name: 'countDown',
+            x: 33 * ratioX,
             y: 48 * ratioY,
             color: '#fff',
             size: 32 * ratioX,
@@ -230,7 +246,7 @@ window.onload = function () {
             zIndex: 2
         });
 
-        text.setAnimate({
+        countDown.setAnimate({
             duration: 1000,
             target: {
                 alpha: 0,
@@ -249,13 +265,102 @@ window.onload = function () {
                 else {
                     sourceObj.stopAnimate();
                     // game.stop();
+                    showEndScreen(resource);
                 }
             }
         });
 
-        stage.addDisplayObject(text);
+        stage.addDisplayObject(countDown);
+
+        gameScoreText = new ig.Text({
+            name: 'gameScoreText',
+            x: stage.width / 2 - 10 * ratioX,
+            y: 50 * ratioY,
+            color: '#fff',
+            size: 40 * ratioX,
+            content: gameScore,
+            zIndex: 2
+        });
+        stage.addDisplayObject(gameScoreText);
+
 
         initBalloon(resource);
+    }
+
+    function togglePauseScreen(isPause, resource) {
+        var pauseScreen = stage.getDisplayObjectByName('pauseScreen');
+        if (!isPause) {
+            var pauseScreenWidth = 383;
+            var pauseScreenHeight = 500;
+
+            var pauseScreenTargetY = 20 * ratioY;
+            var pauseScreenTargetX = stage.width / 2 - pauseScreenWidth * ratioX / 2;
+            var pauseScreen = new ig.Bitmap({
+                name: 'pauseScreen',
+                image: resource.panel,
+                // x: stage.width / 2 - pauseScreenWidth * ratioX / 2,
+                x: 0,
+                y: 300,
+                sX: 380,
+                sY: 1680,
+                scaleX: ratioX,
+                scaleY: ratioY,
+                width: pauseScreenWidth,
+                height: pauseScreenHeight,
+                mouseEnable: true,
+                zIndex: 20
+            });
+
+            stage.addDisplayObject(pauseScreen);
+
+            new ig.Animation({
+                source: pauseScreen
+                , tween: ig.easing.easeOutBounce
+                , duration: 500
+                , target: {
+                    y: 45 * ratioY
+                }
+            }).play().on('complete', function () {
+                game.pause();
+                console.warn(stage.getDisplayObjectByName('countDown'));
+                stage.getDisplayObjectByName('countDown').stopAnimate();
+            });
+        }
+        else {
+            pauseScreen.status = 5;
+            game.resume();
+            stage.getDisplayObjectByName('countDown').setAnimate({
+                duration: 1000,
+                target: {
+                    alpha: 0,
+                },
+                repeat: true,
+                repeatFunc: function (d) {
+                    var sourceObj = d.data.source;
+                    var content = parseInt(sourceObj.getContent(), 10);
+                    content--;
+                    if (content >= 0) {
+                        if (content < 10) {
+                            content = '0' + content;
+                        }
+                        sourceObj.changeContent(content);
+                    }
+                    else {
+                        sourceObj.stopAnimate();
+                        console.warn(1);
+                        showEndScreen(resource);
+                        // game.stop();
+                    }
+                }
+            });
+        }
+    }
+
+    function showEndScreen(resource) {
+        alert(''
+            + '分数为：'
+            + gameScoreText.getContent()
+        );
     }
 
     function initBalloon(resource) {
@@ -310,7 +415,6 @@ window.onload = function () {
 
         var ratioX = width / (countInRow * 64);
         var ratioY = height / (countInCol * 86);
-        console.warn(ratioX, ratioY, game);
 
         var guid = 0;
         function createBoomSprite(x, y, c, callback) {
@@ -427,7 +531,6 @@ window.onload = function () {
             util.removeArrByCondition(holdSprites, function (item) {
                 return item.c.type !== first.c.type;
             });
-            console.warn(holdSprites);
 
             var len = holdSprites.length;
 
@@ -456,6 +559,8 @@ window.onload = function () {
             this.changeFrame(d.data);
             var len = canBoomBalloons.length;
             if (len >= 3) {
+                var content = parseInt(gameScoreText.getContent(), 10);
+                gameScoreText.changeContent(content + canBoomBalloons.length * 100);
                 while (canBoomBalloons.length) {
                     var curBoomBalloon = canBoomBalloons.shift();
                     curBoomBalloon.changeStatus(5);
@@ -540,6 +645,7 @@ window.onload = function () {
                     scaleY: ratioY
                 }
             }).play();
+
         }
     }
 };
