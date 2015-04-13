@@ -593,9 +593,9 @@ define(function (require) {
          */
         clearAllStage: function () {
             var me = this;
-            for (var i = 0, len = me.stageStack.length; i < len; i++) {
-                me.stageStack[i].clean();
-            }
+            // for (var i = 0, len = me.stageStack.length; i < len; i++) {
+            //     me.stageStack[i].clean();
+            // }
             me.stages = {};
             me.stageStack = [];
         }

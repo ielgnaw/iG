@@ -105,8 +105,8 @@ window.onload = function () {
         ratioX = stage.width / STANDARD_WIDTH;
         ratioY = stage.height / STANDARD_HEIGHT;
 
-        // initStartScreen(resource);
-        initStage(resource);
+        initStartScreen(resource);
+        // initStage(resource);
     }
 
     /**
@@ -235,7 +235,7 @@ window.onload = function () {
         });
         stage.addDisplayObject(hud);
 
-        var content = 1;
+        var content = 30;
         var countDown = new ig.Text({
             name: 'countDown',
             x: 33 * ratioX,
@@ -361,6 +361,10 @@ window.onload = function () {
             + '分数为：'
             + gameScoreText.getContent()
         );
+        stage.clearAllDisplayObject();
+        game.stop();
+        game.start('bg');
+        initStartScreen(resource);
     }
 
     function initBalloon(resource) {
