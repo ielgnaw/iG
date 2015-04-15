@@ -2,7 +2,11 @@
 exports.modules = {
     main: {name: 'ig/ig'},
     parts: [
-        {name: 'ig/easing', refName: 'easing'}
+        {name: 'ig/util', refName: 'util'},
+        {name: 'ig/easing', refName: 'easing'},
+        {name: 'ig/Animation', refName: 'Animation'},
+        {name: 'ig/Vector', refName: 'Vector'},
+        {name: 'ig/Event'},
         // refName 指要挂载到 window.ig 这个全局空间上的名字
         // 如果无 refName 配置，意味着该模板只是 ig 内部调用的，不会被挂载在 window 上
         // {name: 'ig/util', refName: 'util'},     // window.ig.util

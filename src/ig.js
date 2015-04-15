@@ -3,11 +3,9 @@
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
+'use strict';
+
 define(function (require) {
-
-    'use strict';
-
-    /* global ig */
 
     /**
      * requestAnimationFrame polyfill

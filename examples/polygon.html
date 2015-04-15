@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>polygon</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+
+        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
+        <style type="text/css">
+            canvas {
+                border: 1px solid #ddd;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- <ul>
+            <li><a href="###">111111</a></li>
+        </ul> -->
+        <canvas width="800" height="400"></canvas>
+        <script type="text/javascript">
+            var Vector = ig.Vector;
+
+            var canvas = document.querySelector('canvas');
+            var ctx = canvas.getContext('2d');
+
+            /**
+             * 把页面上的鼠标坐标换成相对于 canvas 的坐标
+             *
+             * @param {HTML.Element} canvas canvas 元素
+             * @param {number} x 相对于页面的横坐标
+             * @param {number} y 相对于页面的纵坐标
+             *
+             * @return {Object} 相对于 canvas 的坐标对象
+             */
+            var window2Canvas = function (canvas, x, y) {
+                var boundRect = canvas.getBoundingClientRect();
+                return {
+                    x: Math.round(x - boundRect.left * (canvas.width / boundRect.width)),
+                    y: Math.round(y - boundRect.top * (canvas.height / boundRect.height))
+                };
+            };
+
+            /**
+             * 投射对象，用某条轴上的最小值和最大值可表示一段投影
+             * 可表示它与另外一段投影是否发生重叠
+             */
+            var Projection = function (min, max) {
+                this.min = min;
+                this.max = max;
+            };
+
+            Projection.prototype.overlaps = function (projection) {
+                return this.max > projection.min && this.min < projection.max;
+            };
+
+
+            /**
+             * 顺时针方向凸多边形
+             *
+             * @param {Array.<Vector>} points 多边形中的点的序列，顺时针方向
+             *
+             * @constructor
+             */
+            var Polygon = function (points) {
+                this.points = points || [];
+            };
+
+            Polygon.prototype.createPath = function (ctx) {
+                var points = this.points;
+                var len = points.length;
+                if (!len) {
+                    return;
+                }
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (var i = 0; i < len; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.closePath();
+            };
+
+            Polygon.prototype.move = function (x, y) {
+                var points = this.points;
+                var len = points.length;
+                for (var i = 0; i < len; i++) {
+                    var point = points[i];
+                    point.x += x;
+                    point.y += y;
+                }
+            };
+
+            Polygon.prototype.stroke = function (ctx) {
+                ctx.save();
+                this.createPath(ctx);
+                ctx.stroke();
+                ctx.restore();
+            };
+
+            Polygon.prototype.fill = function (ctx) {
+                ctx.save();
+                this.createPath(ctx);
+                ctx.fill();
+                ctx.restore();
+            };
+
+            Polygon.prototype.getAxes = function () {
+                var v1 = new Vector();
+                var v2 = new Vector();
+                var axes = [];
+                for (var i = 0, len = this.points.length - 1; i < len; i++) {
+                    v1.x = this.points[i].x;
+                    v1.y = this.points[i].y;
+                    v2.x = this.points[i + 1].x;
+                    v2.y = this.points[i + 1].y;
+
+                    // v1.edge(v2).normal() 指示投影轴的方向
+                    axes.push(v1.edge(v2).normal());
+                }
+                return axes;
+            };
+
+            /**
+             * 投射多边形上的每个点到指定的轴 (axis)
+             */
+            Polygon.prototype.project = function (axis) {
+                var scalars = [];
+                var v = new Vector();
+                this.points.forEach(function (point) {
+                    v.x = point.x;
+                    v.y = point.y;
+                    scalars.push(v.dot(axis));
+                });
+                return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
+            };
+
+            Polygon.prototype.collidesWith = function (polygon) {
+                // debugger
+                var axes = this.getAxes().concat(polygon.getAxes());
+                return !this.separationOnAxes(axes, polygon);
+            };
+
+            Polygon.prototype.separationOnAxes = function (axes, polygon) {
+                for (var i = 0, len = axes.length; i < len; i++) {
+                    var axis = axes[i];
+                    var projection1 = polygon.project(axis);
+                    var projection2 = this.project(axis);
+                    if (!projection1.overlaps(projection2)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            Polygon.prototype.isPointInPath = function (ctx, x, y) {
+                this.createPath(ctx);
+                return ctx.isPointInPath(x, y);
+            };
+
+            var p1 = new Polygon([
+                new Vector(200, 150),
+                new Vector(250, 210),
+                new Vector(180, 200),
+                // new Vector(50, 100),
+                // new Vector(10, 90),
+                // new Vector(-20, 30)
+            ]);
+
+            var p2 = new Polygon([
+                new Vector(300, 100),
+                new Vector(350, 130),
+                new Vector(360, 180),
+                new Vector(260, 160),
+                // new Vector(50, 100),
+                // new Vector(10, 90),
+                // new Vector(-20, 30)
+            ]);
+
+            function detectCollision() {
+                console.warn(p1.collidesWith(p2));
+            }
+            var lastDrag = {};
+            var beingDragPolygon = null;
+            canvas.onmousedown = function (e) {
+                canvas.style.cursor = 'pointer';
+                var location = window2Canvas(canvas, e.clientX, e.clientY);
+                if (p1.isPointInPath(ctx, location.x, location.y)) {
+                    beingDragPolygon = p1;
+                    lastDrag.x = location.x;
+                    lastDrag.y = location.y;
+                }
+
+                else if (p2.isPointInPath(ctx, location.x, location.y)) {
+                    beingDragPolygon = p2;
+                    lastDrag.x = location.x;
+                    lastDrag.y = location.y;
+                }
+            };
+
+            canvas.onmousemove = function (e) {
+                if (beingDragPolygon) {
+                    var location = window2Canvas(canvas, e.clientX, e.clientY);
+                    var dragVector = {
+                        x: location.x - lastDrag.x,
+                        y: location.y - lastDrag.y
+                    }
+                    beingDragPolygon.move(dragVector.x, dragVector.y);
+                    lastDrag.x = location.x;
+                    lastDrag.y = location.y;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    p1.stroke(ctx);
+                    p2.fill(ctx);
+                    detectCollision();
+                }
+            };
+
+            canvas.onmouseup = function () {
+                canvas.style.cursor = 'default';
+                beingDragPolygon = null;
+            };
+
+            p1.stroke(ctx);
+            p2.fill(ctx);
+
+        </script>
+    </body>
+</html>
