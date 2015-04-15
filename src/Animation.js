@@ -104,6 +104,7 @@ define(function (require) {
             var source = p.source;
             var target = p.target;
             var range = p.range;
+
             if (range) {
                 for (var i in range) {
                     p.curState[i] = {
@@ -112,40 +113,38 @@ define(function (require) {
                         to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
                     };
                 }
-            }
-            else {
-                if (util.getType(target) === 'array') {
-                    p.animIndex = 0;
-                    p.animLength = target.length;
-                    for (var m = 0; m < p.animLength; m++) {
-                        for (var i in target[m]) {
-                            if (m === 0) {
-                                p.curState[i] = {
-                                    from: parseFloat(source[i]),
-                                    cur: parseFloat(source[i]),
-                                    to: parseFloat(target[p.animIndex][i])
-                                };
-                            }
-                            p.initState[i] = {
-                                from: parseFloat(source[i]),
-                                cur: parseFloat(source[i]),
-                                to: parseFloat(target[m][i])
-                            };
-                        }
-                    }
-                }
-                else {
-                    for (var i in target) {
-                        p.initState[i] = p.curState[i] = {
-                            from: parseFloat(source[i]),
-                            cur: parseFloat(source[i]),
-                            to: parseFloat(target[i])
-                        };
-                    }
-                }
+                return this;
             }
 
-            console.warn(p);
+            if (util.getType(target) !== 'array') {
+                for (var i in target) {
+                    p.initState[i] = p.curState[i] = {
+                        from: parseFloat(source[i]),
+                        cur: parseFloat(source[i]),
+                        to: parseFloat(target[i])
+                    };
+                }
+                return this;
+            }
+
+            p.animIndex = 0;
+            p.animLength = target.length;
+            for (var m = 0; m < p.animLength; m++) {
+                for (var i in target[m]) {
+                    if (m === 0) {
+                        p.curState[i] = {
+                            from: parseFloat(source[i]),
+                            cur: parseFloat(source[i]),
+                            to: parseFloat(target[m][i])
+                        };
+                    }
+                    p.initState[i] = {
+                        from: parseFloat(source[i]),
+                        cur: parseFloat(source[i]),
+                        to: parseFloat(target[m][i])
+                    };
+                }
+            }
 
             return this;
         },
@@ -330,124 +329,148 @@ define(function (require) {
             );
             p.now = Date.now();
             p.delta = p.now - p.then;
-            if (p.delta > p.interval) {
-                me.fire('step', {
-                    data: {
-                        source: p.source,
-                        instance: me
-                    }
-                });
-                p.then = p.now - (p.delta % p.interval);
-                var ds;
-                for (var i in p.curState) {
-                    ds = p.tween(
-                        p.curFrame,
-                        // p.curState[i].from,
-                        // p.curState[i].to - p.curState[i].from,
-                        p.curState[i].cur,
-                        p.curState[i].to - p.curState[i].cur,
-                        p.frames
-                    ).toFixed(2);
-                    p.source[i] = parseFloat(ds);
+
+            if (p.delta <= p.interval) {
+                return;
+            }
+
+            me.fire('step', {
+                data: {
+                    source: p.source,
+                    instance: me
                 }
-                p.curFrame++;
-                if (p.curFrame >= p.frames) {
-                    if (p.range && !p.rangeExec) {
-                        p.rangeExec = true;
-                        // me.swapFromTo();
-                        p.curFrame = 0;
-                        for (var i in p.curState) {
-                            p.curState[i] = {
-                                from: p.curState[i].to,
-                                cur: p.curState[i].to,
-                                to: p.curState[i].from
-                            };
+            });
+            p.then = p.now - (p.delta % p.interval);
+            var ds;
+            for (var i in p.curState) {
+                ds = p.tween(
+                    p.curFrame,
+                    // p.curState[i].from,
+                    // p.curState[i].to - p.curState[i].from,
+                    p.curState[i].cur,
+                    p.curState[i].to - p.curState[i].cur,
+                    p.frames
+                ).toFixed(2);
+                p.source[i] = parseFloat(ds);
+            }
+            p.curFrame++;
+
+            if (p.curFrame < p.frames) {
+                return;
+            }
+
+            if (p.range && !p.rangeExec) {
+                p.curFrame = 0;
+                for (var i in p.curState) {
+                    p.curState[i] = {
+                        from: p.curState[i].to,
+                        cur: p.curState[i].to,
+                        to: p.curState[i].from
+                    };
+                }
+                if (!p.repeat) {
+                    p.rangeExec = true;
+                }
+                else {
+                    p.repeatCount++;
+                    if (p.repeatCount % 2 === 0) {
+                        me.fire('repeat', {
+                            data: {
+                                source: p.source,
+                                instance: me,
+                                repeatCount: p.repeatCount / 2
+                            }
+                        });console.warn(p.repeatCount / 2);
+                    }
+                }
+            }
+            else {
+                // 说明 target 是数组
+                if (p.animLength) {
+                    me.fire('groupComplete', {
+                        data: {
+                            source: p.source,
+                            instance: me
                         }
+                    });
+                    // 说明动画组还没有执行完
+                    if (p.animIndex < p.animLength - 1) {
+                        p.animIndex++;
+                        p.curFrame = 0;
+                        p.curState = {};
+                        var flag = p.repeatCount % 2 === 0;
+                        for (var i in p.target[p.animIndex]) {
+                            p.curState[i] = {
+                                from: flag ? p.initState[i].from : p.initState[i].to,
+                                cur: flag ? p.initState[i].cur : p.initState[i].to,
+                                to: flag ? p.initState[i].to : p.initState[i].from,
+                            };
+
+                            // if (p.repeatCount % 2 === 0) {
+                            //     p.curState[i] = {
+                            //         from: p.initState[i].from,
+                            //         cur: p.initState[i].cur,
+                            //         to: p.initState[i].to
+                            //     };
+                            // }
+                            // else {
+                            //     p.curState[i] = {
+                            //         from: p.initState[i].to,
+                            //         cur: p.initState[i].to,
+                            //         to: p.initState[i].from
+                            //     };
+                            // }
+                        }
+
                     }
                     else {
-                        // 说明 target 是数组
-                        if (p.animLength) {
-                            me.fire('groupComplete', {
+                        // debugger
+                        if (p.repeat) {
+                            p.repeatCount++;
+                            me.swapFromTo();
+                            me.fire('repeat', {
+                                data: {
+                                    source: p.source,
+                                    instance: me,
+                                    repeatCount: p.repeatCount
+                                }
+                            });
+                        }
+                        else {
+                            me.stop();
+                            p.running = false;
+                            me.fire('complete', {
                                 data: {
                                     source: p.source,
                                     instance: me
                                 }
                             });
-                            // 说明动画组还没有执行完
-                            if (p.animIndex < p.animLength - 1) {
-                                // debugger
-                                p.animIndex++;
-                                p.curFrame = 0;
-                                p.curState = {};
-                                for (var i in p.target[p.animIndex]) {
-                                    if (p.repeatCount % 2 === 0) {
-                                        p.curState[i] = {
-                                            from: p.initState[i].from,
-                                            cur: p.initState[i].cur,
-                                            to: p.initState[i].to
-                                        };
-                                    }
-                                    else {
-                                        p.curState[i] = {
-                                            from: p.initState[i].to,
-                                            cur: p.initState[i].to,
-                                            to: p.initState[i].from
-                                        };
-                                    }
-                                }
-
-                            }
-                            else {
-                                // debugger
-                                if (p.repeat) {
-                                    p.repeatCount++;
-                                    me.swapFromTo();
-                                    me.fire('repeat', {
-                                        data: {
-                                            source: p.source,
-                                            instance: me,
-                                            repeatCount: p.repeatCount
-                                        }
-                                    });
-                                }
-                                else {
-                                    me.stop();
-                                    p.running = false;
-                                    me.fire('complete', {
-                                        data: {
-                                            source: p.source,
-                                            instance: me
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        else {
-                            // debugger
-                            if (p.repeat) {
-                                p.repeatCount++;
-                                me.swapFromTo();
-                                me.fire('repeat', {
-                                    data: {
-                                        source: p.source,
-                                        instance: me,
-                                        repeatCount: p.repeatCount
-                                    }
-                                });
-                            }
-                            else {
-                                me.stop();
-                                p.running = false;
-                                me.fire('complete', {
-                                    data: {
-                                        source: p.source,
-                                        instance: me
-                                    }
-                                });
-                            }
                         }
                     }
-                    return;
+                }
+                else {
+                    // debugger
+                    if (p.repeat) {
+                        p.repeatCount++;
+                        me.swapFromTo();
+                        me.fire('repeat', {
+                            data: {
+                                source: p.source,
+                                instance: me,
+                                repeatCount: p.repeatCount
+                            }
+                        });
+                    }
+                    else {
+                        me.stop();
+                        p.running = false;
+                        me.fire('complete', {
+                            data: {
+                                source: p.source,
+                                instance: me
+                            }
+                        });
+                    }
                 }
             }
         }

@@ -10,7 +10,7 @@ window.onload = function () {
         // name: 'asdasd',
         fps: 60,
         // tween: easing.easeOutBounce,
-        duration: 1000,
+        duration: 500,
         source: {
             width: div.style.width,
             left: div.style.left,
@@ -43,6 +43,8 @@ window.onload = function () {
         div.style.width = d.data.source.width + 'px';
         div.style.height = d.data.source.height + 'px';
         div.style.opacity = d.data.source.opacity;
+    }).on('repeat', function (d) {
+        console.warn('repeat');
     }).on('groupComplete', function (d) {
         console.warn('groupComplete');
     }).on('complete', function (d) {
