@@ -464,7 +464,7 @@ define('ig/Animation', [
         util.extend(true, this.p, {
             name: NAME_GUID++,
             source: {},
-            target: {},
+            target: null,
             range: null,
             tween: easing.linear,
             repeat: false,
@@ -483,6 +483,7 @@ define('ig/Animation', [
             p.then = Date.now();
             p.interval = 1000 / p.fps;
             p.curFrame = 0;
+            p.curState = {};
             p.initState = {};
             p.frames = Math.ceil(p.duration * p.fps / 1000);
             var source = p.source;
@@ -490,21 +491,43 @@ define('ig/Animation', [
             var range = p.range;
             if (range) {
                 for (var i in range) {
-                    p.initState[i] = {
+                    p.curState[i] = {
                         from: parseFloat(parseFloat(source[i]) - parseFloat(range[i])),
                         cur: parseFloat(source[i]),
                         to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
                     };
                 }
             } else {
-                for (var i in target) {
-                    p.initState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[i])
-                    };
+                if (util.getType(target) === 'array') {
+                    p.animIndex = 0;
+                    p.animLength = target.length;
+                    for (var m = 0; m < p.animLength; m++) {
+                        for (var i in target[m]) {
+                            if (m === 0) {
+                                p.curState[i] = {
+                                    from: parseFloat(source[i]),
+                                    cur: parseFloat(source[i]),
+                                    to: parseFloat(target[p.animIndex][i])
+                                };
+                            }
+                            p.initState[i] = {
+                                from: parseFloat(source[i]),
+                                cur: parseFloat(source[i]),
+                                to: parseFloat(target[m][i])
+                            };
+                        }
+                    }
+                } else {
+                    for (var i in target) {
+                        p.initState[i] = p.curState[i] = {
+                            from: parseFloat(source[i]),
+                            cur: parseFloat(source[i]),
+                            to: parseFloat(target[i])
+                        };
+                    }
                 }
             }
+            console.warn(p);
             return this;
         },
         play: function () {
@@ -549,17 +572,45 @@ define('ig/Animation', [
             return this;
         },
         swapFromTo: function () {
-            var newInitState = {};
             var p = this.p;
-            for (var i in p.initState) {
-                newInitState[i] = {
-                    from: p.initState[i].to,
-                    cur: p.initState[i].to,
-                    to: p.initState[i].from
-                };
-            }
             p.curFrame = 0;
-            p.initState = newInitState;
+            p.curState = {};
+            if (util.getType(p.target) === 'array') {
+                p.target.reverse();
+                p.animIndex = 0;
+                p.animLength = p.target.length;
+                for (var i in p.target[p.animIndex]) {
+                    if (p.repeatCount % 2 === 0) {
+                        p.curState[i] = {
+                            from: p.initState[i].from,
+                            cur: p.initState[i].cur,
+                            to: p.initState[i].to
+                        };
+                    } else {
+                        p.curState[i] = {
+                            from: p.initState[i].to,
+                            cur: p.initState[i].to,
+                            to: p.initState[i].from
+                        };
+                    }
+                }
+            } else {
+                for (var i in p.target) {
+                    if (p.repeatCount % 2 === 0) {
+                        p.curState[i] = {
+                            from: p.initState[i].from,
+                            cur: p.initState[i].cur,
+                            to: p.initState[i].to
+                        };
+                    } else {
+                        p.curState[i] = {
+                            from: p.initState[i].to,
+                            cur: p.initState[i].to,
+                            to: p.initState[i].from
+                        };
+                    }
+                }
+            }
             return this;
         },
         step: function () {
@@ -581,35 +632,92 @@ define('ig/Animation', [
                 });
                 p.then = p.now - p.delta % p.interval;
                 var ds;
-                for (var i in p.initState) {
-                    ds = p.tween(p.curFrame, p.initState[i].cur, p.initState[i].to - p.initState[i].cur, p.frames).toFixed(2);
+                for (var i in p.curState) {
+                    ds = p.tween(p.curFrame, p.curState[i].cur, p.curState[i].to - p.curState[i].cur, p.frames).toFixed(2);
                     p.source[i] = parseFloat(ds);
                 }
                 p.curFrame++;
                 if (p.curFrame >= p.frames) {
-                    if (p.repeat) {
-                        p.repeatCount++;
-                        me.swapFromTo();
-                        me.fire('repeat', {
-                            data: {
-                                source: p.source,
-                                instance: me,
-                                repeatCount: p.repeatCount
-                            }
-                        });
+                    if (p.range && !p.rangeExec) {
+                        p.rangeExec = true;
+                        p.curFrame = 0;
+                        for (var i in p.curState) {
+                            p.curState[i] = {
+                                from: p.curState[i].to,
+                                cur: p.curState[i].to,
+                                to: p.curState[i].from
+                            };
+                        }
                     } else {
-                        if (p.range && !p.rangeExec) {
-                            p.rangeExec = true;
-                            me.swapFromTo();
-                        } else {
-                            me.stop();
-                            p.running = false;
-                            me.fire('complete', {
+                        if (p.animLength) {
+                            me.fire('groupComplete', {
                                 data: {
                                     source: p.source,
                                     instance: me
                                 }
                             });
+                            if (p.animIndex < p.animLength - 1) {
+                                p.animIndex++;
+                                p.curFrame = 0;
+                                p.curState = {};
+                                for (var i in p.target[p.animIndex]) {
+                                    if (p.repeatCount % 2 === 0) {
+                                        p.curState[i] = {
+                                            from: p.initState[i].from,
+                                            cur: p.initState[i].cur,
+                                            to: p.initState[i].to
+                                        };
+                                    } else {
+                                        p.curState[i] = {
+                                            from: p.initState[i].to,
+                                            cur: p.initState[i].to,
+                                            to: p.initState[i].from
+                                        };
+                                    }
+                                }
+                            } else {
+                                if (p.repeat) {
+                                    p.repeatCount++;
+                                    me.swapFromTo();
+                                    me.fire('repeat', {
+                                        data: {
+                                            source: p.source,
+                                            instance: me,
+                                            repeatCount: p.repeatCount
+                                        }
+                                    });
+                                } else {
+                                    me.stop();
+                                    p.running = false;
+                                    me.fire('complete', {
+                                        data: {
+                                            source: p.source,
+                                            instance: me
+                                        }
+                                    });
+                                }
+                            }
+                        } else {
+                            if (p.repeat) {
+                                p.repeatCount++;
+                                me.swapFromTo();
+                                me.fire('repeat', {
+                                    data: {
+                                        source: p.source,
+                                        instance: me,
+                                        repeatCount: p.repeatCount
+                                    }
+                                });
+                            } else {
+                                me.stop();
+                                p.running = false;
+                                me.fire('complete', {
+                                    data: {
+                                        source: p.source,
+                                        instance: me
+                                    }
+                                });
+                            }
                         }
                     }
                     return;

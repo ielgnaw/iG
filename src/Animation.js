@@ -43,14 +43,16 @@ define(function (require) {
         this.p = {};
 
         util.extend(true, this.p, {
-
+            // 名称
             name: NAME_GUID++,
 
             // 源对象，动画的结果最终体现在这个对象的某些属性上
             source: {},
 
-            // 目标属性，里面设置的属性就是 source 对象的属性变化的最终值
-            target: {},
+            // 目标属性，里面设置的属性就是 source 对象的属性变化的最终值，
+            // 如果这个值是数组，那么意味着是动画组，会按数组的正常顺序一个一个去执行，
+            // 如果存在 repeat，那么会把数组里面的整体完成后再 repeat
+            target: null,
 
             // 范围运动，这个对象里面设置的属性也是对应的 source 对象属性，
             // 与 target 不同的是，这里会把 range 里面设置的值当做运动的范围， +- 运动
@@ -95,6 +97,7 @@ define(function (require) {
             p.then = Date.now();
             p.interval = 1000 / p.fps;
             p.curFrame = 0;
+            p.curState = {};
             p.initState = {};
             p.frames = Math.ceil(p.duration * p.fps / 1000);
 
@@ -103,7 +106,7 @@ define(function (require) {
             var range = p.range;
             if (range) {
                 for (var i in range) {
-                    p.initState[i] = {
+                    p.curState[i] = {
                         from: parseFloat(parseFloat(source[i]) - parseFloat(range[i])),
                         cur: parseFloat(source[i]),
                         to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
@@ -111,14 +114,38 @@ define(function (require) {
                 }
             }
             else {
-                for (var i in target) {
-                    p.initState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[i])
-                    };
+                if (util.getType(target) === 'array') {
+                    p.animIndex = 0;
+                    p.animLength = target.length;
+                    for (var m = 0; m < p.animLength; m++) {
+                        for (var i in target[m]) {
+                            if (m === 0) {
+                                p.curState[i] = {
+                                    from: parseFloat(source[i]),
+                                    cur: parseFloat(source[i]),
+                                    to: parseFloat(target[p.animIndex][i])
+                                };
+                            }
+                            p.initState[i] = {
+                                from: parseFloat(source[i]),
+                                cur: parseFloat(source[i]),
+                                to: parseFloat(target[m][i])
+                            };
+                        }
+                    }
+                }
+                else {
+                    for (var i in target) {
+                        p.initState[i] = p.curState[i] = {
+                            from: parseFloat(source[i]),
+                            cur: parseFloat(source[i]),
+                            to: parseFloat(target[i])
+                        };
+                    }
                 }
             }
+
+            console.warn(p);
 
             return this;
         },
@@ -211,18 +238,80 @@ define(function (require) {
          * @return {Object} Animation 实例
          */
         swapFromTo: function () {
-            var newInitState = {};
+            // var newcurState = {};
             var p = this.p;
-            for (var i in p.initState) {
-                newInitState[i] = {
-                    from: p.initState[i].to,
-                    cur: p.initState[i].to,
-                    to: p.initState[i].from
-                };
-            }
+            // for (var i in p.curState) {
+            //     newcurState[i] = {
+            //         from: p.curState[i].to,
+            //         cur: p.curState[i].to,
+            //         to: p.curState[i].from
+            //     };
+            // }
+
+            // p.curFrame = 0;
+            // p.curState = newcurState;
 
             p.curFrame = 0;
-            p.initState = newInitState;
+            p.curState = {};
+
+            if (util.getType(p.target) === 'array') {
+                p.target.reverse();
+                p.animIndex = 0;
+                p.animLength = p.target.length;
+                for (var i in p.target[p.animIndex]) {
+                    // p.curState[i] = {
+                    //     // from: parseFloat(p.source[i]),
+                    //     // cur: parseFloat(p.source[i]),
+                    //     // to: parseFloat(p.target[p.animIndex][i])
+                    //     from: p.initState[i].to,
+                    //     cur: p.initState[i].to,
+                    //     to: p.initState[i].from
+                    // };
+                    if (p.repeatCount % 2 === 0) {
+                        p.curState[i] = {
+                            from: p.initState[i].from,
+                            cur: p.initState[i].cur,
+                            to: p.initState[i].to
+                        };
+                    }
+                    else {
+                        p.curState[i] = {
+                            from: p.initState[i].to,
+                            cur: p.initState[i].to,
+                            to: p.initState[i].from
+                        };
+                    }
+                }
+            }
+            else {
+                for (var i in p.target) {
+                    // p.curState[i] = {
+                    //     from: parseFloat(p.source[i]),
+                    //     cur: parseFloat(p.source[i]),
+                    //     to: parseFloat(p.target[i])
+                    // };
+                    // p.curState[i] = {
+                    //     from: p.initState[i].to,
+                    //     cur: p.initState[i].to,
+                    //     to: p.initState[i].from
+                    // };
+
+                    if (p.repeatCount % 2 === 0) {
+                        p.curState[i] = {
+                            from: p.initState[i].from,
+                            cur: p.initState[i].cur,
+                            to: p.initState[i].to
+                        };
+                    }
+                    else {
+                        p.curState[i] = {
+                            from: p.initState[i].to,
+                            cur: p.initState[i].to,
+                            to: p.initState[i].from
+                        };
+                    }
+                }
+            }
             return this;
         },
 
@@ -250,44 +339,112 @@ define(function (require) {
                 });
                 p.then = p.now - (p.delta % p.interval);
                 var ds;
-                for (var i in p.initState) {
+                for (var i in p.curState) {
                     ds = p.tween(
                         p.curFrame,
-                        // p.initState[i].from,
-                        // p.initState[i].to - p.initState[i].from,
-                        p.initState[i].cur,
-                        p.initState[i].to - p.initState[i].cur,
+                        // p.curState[i].from,
+                        // p.curState[i].to - p.curState[i].from,
+                        p.curState[i].cur,
+                        p.curState[i].to - p.curState[i].cur,
                         p.frames
                     ).toFixed(2);
                     p.source[i] = parseFloat(ds);
                 }
                 p.curFrame++;
                 if (p.curFrame >= p.frames) {
-                    if (p.repeat) {
-                        p.repeatCount++;
-                        me.swapFromTo();
-                        me.fire('repeat', {
-                            data: {
-                                source: p.source,
-                                instance: me,
-                                repeatCount: p.repeatCount
-                            }
-                        });
+                    if (p.range && !p.rangeExec) {
+                        p.rangeExec = true;
+                        // me.swapFromTo();
+                        p.curFrame = 0;
+                        for (var i in p.curState) {
+                            p.curState[i] = {
+                                from: p.curState[i].to,
+                                cur: p.curState[i].to,
+                                to: p.curState[i].from
+                            };
+                        }
                     }
                     else {
-                        if (p.range && !p.rangeExec) {
-                            p.rangeExec = true;
-                            me.swapFromTo();
-                        }
-                        else {
-                            me.stop();
-                            p.running = false;
-                            me.fire('complete', {
+                        // 说明 target 是数组
+                        if (p.animLength) {
+                            me.fire('groupComplete', {
                                 data: {
                                     source: p.source,
                                     instance: me
                                 }
                             });
+                            // 说明动画组还没有执行完
+                            if (p.animIndex < p.animLength - 1) {
+                                // debugger
+                                p.animIndex++;
+                                p.curFrame = 0;
+                                p.curState = {};
+                                for (var i in p.target[p.animIndex]) {
+                                    if (p.repeatCount % 2 === 0) {
+                                        p.curState[i] = {
+                                            from: p.initState[i].from,
+                                            cur: p.initState[i].cur,
+                                            to: p.initState[i].to
+                                        };
+                                    }
+                                    else {
+                                        p.curState[i] = {
+                                            from: p.initState[i].to,
+                                            cur: p.initState[i].to,
+                                            to: p.initState[i].from
+                                        };
+                                    }
+                                }
+
+                            }
+                            else {
+                                // debugger
+                                if (p.repeat) {
+                                    p.repeatCount++;
+                                    me.swapFromTo();
+                                    me.fire('repeat', {
+                                        data: {
+                                            source: p.source,
+                                            instance: me,
+                                            repeatCount: p.repeatCount
+                                        }
+                                    });
+                                }
+                                else {
+                                    me.stop();
+                                    p.running = false;
+                                    me.fire('complete', {
+                                        data: {
+                                            source: p.source,
+                                            instance: me
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        else {
+                            // debugger
+                            if (p.repeat) {
+                                p.repeatCount++;
+                                me.swapFromTo();
+                                me.fire('repeat', {
+                                    data: {
+                                        source: p.source,
+                                        instance: me,
+                                        repeatCount: p.repeatCount
+                                    }
+                                });
+                            }
+                            else {
+                                me.stop();
+                                p.running = false;
+                                me.fire('complete', {
+                                    data: {
+                                        source: p.source,
+                                        instance: me
+                                    }
+                                });
+                            }
                         }
                     }
                     return;
