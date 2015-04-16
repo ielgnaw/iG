@@ -114,25 +114,27 @@ define(function (require) {
         for (; i < length; i++) {
             if ((options = arguments[i]) != null) {
                 for (name in options) {
-                    src = target[name];
-                    copy = options[name];
+                    if (options.hasOwnProperty(name)) {
+                        src = target[name];
+                        copy = options[name];
 
-                    if (target === copy) {
-                        continue;
-                    }
+                        if (target === copy) {
+                            continue;
+                        }
 
-                    if (deep && copy && (exports.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
-                        if (copyIsArray) {
-                            copyIsArray = false;
-                            clone = src && Array.isArray(src) ? src : [];
+                        if (deep && copy && (exports.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+                            if (copyIsArray) {
+                                copyIsArray = false;
+                                clone = src && Array.isArray(src) ? src : [];
+                            }
+                            else {
+                                clone = src && exports.isPlainObject(src) ? src : {};
+                            }
+                            target[name] = exports.extend(deep, clone, copy);
                         }
-                        else {
-                            clone = src && exports.isPlainObject(src) ? src : {};
+                        else if (copy !== undefined) {
+                            target[name] = copy;
                         }
-                        target[name] = exports.extend(deep, clone, copy);
-                    }
-                    else if (copy !== undefined) {
-                        target[name] = copy;
                     }
                 }
             }
@@ -155,7 +157,9 @@ define(function (require) {
         var proto = subClass.prototype = new Empty();
 
         for (var key in selfPrototype) {
-            proto[key] = selfPrototype[key];
+            if (selfPrototype.hasOwnProperty(key)) {
+                proto[key] = selfPrototype[key];
+            }
         }
         subClass.prototype.constructor = subClass;
 

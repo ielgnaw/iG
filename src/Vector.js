@@ -52,8 +52,8 @@ define(function (require) {
         /**
          * 向量相加
          *
-         * @param {Object} 待加向量
-         * @param {boolean} 是否需要返回一个新的向量
+         * @param {Object} other 待加向量
+         * @param {boolean} isNew 是否需要返回一个新的向量
          *
          * @return {Object} 当前向量实例或者新的向量
          */
@@ -74,8 +74,8 @@ define(function (require) {
         /**
          * 向量相减
          *
-         * @param {Object} 待减向量
-         * @param {boolean} 是否需要返回一个新的向量
+         * @param {Object} other 待减向量
+         * @param {boolean} isNew 是否需要返回一个新的向量
          *
          * @return {Object} 当前向量实例或者新的向量
          */
@@ -96,7 +96,7 @@ define(function (require) {
         /**
          * 当前向量和另一个向量的点积
          *
-         * @param {Object} 另一个向量
+         * @param {Object} other 另一个向量
          *
          * @return {number} 点积
          */
@@ -107,7 +107,7 @@ define(function (require) {
         /**
          * 边向量
          *
-         * @param {Object} 另一个向量
+         * @param {Object} other 另一个向量
          *
          * @return {Object} 新的向量
          */

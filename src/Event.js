@@ -1,11 +1,11 @@
 /**
- * @file Description
+ * @file 事件基类
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-define(function (require) {
+'use strict';
 
-    'use strict';
+define(function (require) {
 
     var guidKey = '_observerGUID';
 
@@ -27,9 +27,12 @@ define(function (require) {
         /**
          * 注册一个事件处理函数
          *
+         * @public
+         *
          * @param {string} type 事件的类型，如果类型为`*`则在所有事件触发时执行
          * @param {Function} handler 事件的处理函数
-         * @public
+         *
+         * @return {Object} 当前 Event 绑定的实例对象
          */
         on: function (type, handler) {
             if (!this._events) {
@@ -50,11 +53,15 @@ define(function (require) {
 
         /**
          * 注销一个事件处理函数
-         * @param {string} type 事件的类型，
-         * 如果值为`*`仅会注销通过`*`为类型注册的事件，并不会将所有事件注销
-         * @param {Function=} handler 事件的处理函数，
-         * 无此参数则注销`type`指定类型的所有事件处理函数
+         *
          * @public
+         *
+         * @param {string} type 事件的类型，
+         *                      如果值为`*`仅会注销通过`*`为类型注册的事件，并不会将所有事件注销
+         * @param {Function=} handler 事件的处理函数，
+         *                            无此参数则注销`type`指定类型的所有事件处理函数
+         *
+         * @return {Object} 当前 Event 绑定的实例对象
          */
         un: function (type, handler) {
             if (!this._events) {

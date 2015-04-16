@@ -3,9 +3,9 @@
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
-define(function (require) {
+'use strict';
 
-    'use strict';
+define(function (require) {
 
     var easing = {};
 
@@ -86,24 +86,24 @@ define(function (require) {
     };
 
     easing.easeInExpo = function (t, b, c, d) {
-        return (t === 0) ? b: c * Math.pow(2, 10 * (t / d - 1)) + b;
+        return (t === 0) ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
     };
 
     easing.easeOutExpo = function (t, b, c, d) {
-        return (t == d) ? b + c: c * ( - Math.pow(2, -10 * t / d) + 1) + b;
+        return (t === d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
     };
 
     easing.easeInOutExpo = function (t, b, c, d) {
         if (t === 0) {
             return b;
         }
-        if (t == d) {
+        if (t === d) {
             return b + c;
         }
         if ((t /= d / 2) < 1) {
             return c / 2 * Math.pow(2, 10 * (t - 1)) + b;
         }
-        return c / 2 * ( - Math.pow(2, -10 * --t) + 2) + b;
+        return c / 2 * (-Math.pow(2, -10 * --t) + 2) + b;
     };
 
     easing.easeInCirc = function (t, b, c, d) {
@@ -116,7 +116,7 @@ define(function (require) {
 
     easing.easeInOutCirc = function (t, b, c, d) {
         if ((t /= d / 2) < 1) {
-            return - c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
+            return -c / 2 * (Math.sqrt(1 - t * t) - 1) + b;
         }
         return c / 2 * (Math.sqrt(1 - (t -= 2) * t) + 1) + b;
     };
@@ -125,7 +125,7 @@ define(function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d) == 1) {
+        if ((t /= d) === 1) {
             return b + c;
         }
         if (!p) {
@@ -146,7 +146,7 @@ define(function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d) == 1) {
+        if ((t /= d) === 1) {
             return b + c;
         }
         if (!p) {
@@ -167,7 +167,7 @@ define(function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d / 2) == 2) {
+        if ((t /= d / 2) === 2) {
             return b + c;
         }
         if (!p) {
@@ -225,18 +225,14 @@ define(function (require) {
         else if (t < (2.5 / 2.75)) {
             return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
         }
-        else {
-            return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
-        }
+        return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
     };
 
     easing.easeInOutBounce = function (t, b, c, d) {
         if (t < d / 2) {
             return easing.easeInBounce(t * 2, 0, c, d) * 0.5 + b;
         }
-        else {
-            return easing.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
-        }
+        return easing.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
     };
     return easing;
 });

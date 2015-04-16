@@ -201,21 +201,23 @@ define('ig/util', ['require'], function (require) {
         for (; i < length; i++) {
             if ((options = arguments[i]) != null) {
                 for (name in options) {
-                    src = target[name];
-                    copy = options[name];
-                    if (target === copy) {
-                        continue;
-                    }
-                    if (deep && copy && (exports.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
-                        if (copyIsArray) {
-                            copyIsArray = false;
-                            clone = src && Array.isArray(src) ? src : [];
-                        } else {
-                            clone = src && exports.isPlainObject(src) ? src : {};
+                    if (options.hasOwnProperty(name)) {
+                        src = target[name];
+                        copy = options[name];
+                        if (target === copy) {
+                            continue;
                         }
-                        target[name] = exports.extend(deep, clone, copy);
-                    } else if (copy !== undefined) {
-                        target[name] = copy;
+                        if (deep && copy && (exports.isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+                            if (copyIsArray) {
+                                copyIsArray = false;
+                                clone = src && Array.isArray(src) ? src : [];
+                            } else {
+                                clone = src && exports.isPlainObject(src) ? src : {};
+                            }
+                            target[name] = exports.extend(deep, clone, copy);
+                        } else if (copy !== undefined) {
+                            target[name] = copy;
+                        }
                     }
                 }
             }
@@ -229,7 +231,9 @@ define('ig/util', ['require'], function (require) {
         var selfPrototype = subClass.prototype;
         var proto = subClass.prototype = new Empty();
         for (var key in selfPrototype) {
-            proto[key] = selfPrototype[key];
+            if (selfPrototype.hasOwnProperty(key)) {
+                proto[key] = selfPrototype[key];
+            }
         }
         subClass.prototype.constructor = subClass;
         subClass.superClass = superClass.prototype;
@@ -249,8 +253,8 @@ define('ig/util', ['require'], function (require) {
         };
     };
     return exports;
-});define('ig/easing', ['require'], function (require) {
-    'use strict';
+});'use strict';
+define('ig/easing', ['require'], function (require) {
     var easing = {};
     easing.linear = function (t, b, c, d) {
         return c * t / d + b;
@@ -316,13 +320,13 @@ define('ig/util', ['require'], function (require) {
         return t === 0 ? b : c * Math.pow(2, 10 * (t / d - 1)) + b;
     };
     easing.easeOutExpo = function (t, b, c, d) {
-        return t == d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
+        return t === d ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
     };
     easing.easeInOutExpo = function (t, b, c, d) {
         if (t === 0) {
             return b;
         }
-        if (t == d) {
+        if (t === d) {
             return b + c;
         }
         if ((t /= d / 2) < 1) {
@@ -346,7 +350,7 @@ define('ig/util', ['require'], function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d) == 1) {
+        if ((t /= d) === 1) {
             return b + c;
         }
         if (!p) {
@@ -365,7 +369,7 @@ define('ig/util', ['require'], function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d) == 1) {
+        if ((t /= d) === 1) {
             return b + c;
         }
         if (!p) {
@@ -384,7 +388,7 @@ define('ig/util', ['require'], function (require) {
         if (t === 0) {
             return b;
         }
-        if ((t /= d / 2) == 2) {
+        if ((t /= d / 2) === 2) {
             return b + c;
         }
         if (!p) {
@@ -433,18 +437,215 @@ define('ig/util', ['require'], function (require) {
             return c * (7.5625 * (t -= 1.5 / 2.75) * t + 0.75) + b;
         } else if (t < 2.5 / 2.75) {
             return c * (7.5625 * (t -= 2.25 / 2.75) * t + 0.9375) + b;
-        } else {
-            return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b;
         }
+        return c * (7.5625 * (t -= 2.625 / 2.75) * t + 0.984375) + b;
     };
     easing.easeInOutBounce = function (t, b, c, d) {
         if (t < d / 2) {
             return easing.easeInBounce(t * 2, 0, c, d) * 0.5 + b;
-        } else {
-            return easing.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
         }
+        return easing.easeOutBounce(t * 2 - d, 0, c, d) * 0.5 + c * 0.5 + b;
     };
     return easing;
+});'use strict';
+define('ig/env', ['require'], function (require) {
+    function detect(ua) {
+        var os = {};
+        var browser = {};
+        var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
+        var android = ua.match(/(Android);?[\s\/]+([\d.]+)?/);
+        var osx = !!ua.match(/\(Macintosh\; Intel /);
+        var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
+        var ipod = ua.match(/(iPod)(.*OS\s([\d_]+))?/);
+        var iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/);
+        var webos = ua.match(/(webOS|hpwOS)[\s\/]([\d.]+)/);
+        var wp = ua.match(/Windows Phone ([\d.]+)/);
+        var touchpad = webos && ua.match(/TouchPad/);
+        var kindle = ua.match(/Kindle\/([\d.]+)/);
+        var silk = ua.match(/Silk\/([\d._]+)/);
+        var blackberry = ua.match(/(BlackBerry).*Version\/([\d.]+)/);
+        var bb10 = ua.match(/(BB10).*Version\/([\d.]+)/);
+        var rimtabletos = ua.match(/(RIM\sTablet\sOS)\s([\d.]+)/);
+        var playbook = ua.match(/PlayBook/);
+        var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
+        var firefox = ua.match(/Firefox\/([\d.]+)/);
+        var ie = ua.match(/MSIE\s([\d.]+)/) || ua.match(/Trident\/[\d](?=[^\?]+).*rv:([0-9.].)/);
+        var webview = !chrome && ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/);
+        var safari = webview || ua.match(/Version\/([\d.]+)([^S](Safari)|[^M]*(Mobile)[^S]*(Safari))/);
+        var wechat = ua.match(/MicroMessenger\/([\d.]+)/);
+        var baidu = ua.match(/baiduboxapp\/[^\/]+\/([\d.]+)_/) || ua.match(/baiduboxapp\/([\d.]+)/) || ua.match(/BaiduHD\/([\d.]+)/) || ua.match(/FlyFlow\/([\d.]+)/) || ua.match(/baidubrowser\/([\d.]+)/);
+        var qq = ua.match(/MQQBrowser\/([\d.]+)/) || ua.match(/QQ\/([\d.]+)/);
+        var uc = ua.match(/UCBrowser\/([\d.]+)/);
+        var sogou = ua.match(/SogouMobileBrowser\/([\d.]+)/);
+        var xiaomi = android && ua.match(/MiuiBrowser\/([\d.]+)/);
+        var liebao = ua.match(/LBKIT/);
+        var mercury = ua.match(/Mercury\/([\d.]+)/);
+        if (browser.webkit = !!webkit) {
+            browser.version = webkit[1];
+        }
+        if (android) {
+            os.android = true;
+            os.version = android[2];
+        }
+        if (iphone && !ipod) {
+            os.ios = os.iphone = true;
+            os.version = iphone[2].replace(/_/g, '.');
+        }
+        if (ipad) {
+            os.ios = os.ipad = true;
+            os.version = ipad[2].replace(/_/g, '.');
+        }
+        if (ipod) {
+            os.ios = os.ipod = true;
+            os.version = ipod[3] ? ipod[3].replace(/_/g, '.') : null;
+        }
+        if (wp) {
+            os.wp = true;
+            os.version = wp[1];
+        }
+        if (webos) {
+            os.webos = true;
+            os.version = webos[2];
+        }
+        if (touchpad) {
+            os.touchpad = true;
+        }
+        if (blackberry) {
+            os.blackberry = true;
+            os.version = blackberry[2];
+        }
+        if (bb10) {
+            os.bb10 = true;
+            os.version = bb10[2];
+        }
+        if (rimtabletos) {
+            os.rimtabletos = true;
+            os.version = rimtabletos[2];
+        }
+        if (playbook) {
+            browser.playbook = true;
+        }
+        if (kindle) {
+            os.kindle = true;
+            os.version = kindle[1];
+        }
+        if (silk) {
+            browser.silk = true;
+            browser.version = silk[1];
+        }
+        if (!silk && os.android && ua.match(/Kindle Fire/)) {
+            browser.silk = true;
+        }
+        if (chrome) {
+            browser.chrome = true;
+            browser.version = chrome[1];
+        }
+        if (firefox) {
+            browser.firefox = true;
+            browser.version = firefox[1];
+        }
+        if (ie) {
+            browser.ie = true;
+            browser.version = ie[1];
+        }
+        if (safari && (osx || os.ios)) {
+            browser.safari = true;
+            if (osx) {
+                browser.version = safari[1];
+            }
+        }
+        if (webview) {
+            browser.webview = true;
+        }
+        if (wechat) {
+            browser.wechat = true;
+            browser.version = wechat[1];
+        }
+        if (baidu) {
+            delete browser.webview;
+            browser.baidu = true;
+            browser.version = baidu[1];
+        }
+        if (qq) {
+            browser.qq = true;
+            browser.version = qq[1];
+        }
+        if (uc) {
+            delete browser.webview;
+            browser.uc = true;
+            browser.version = uc[1];
+        }
+        if (sogou) {
+            delete browser.webview;
+            browser.sogou = true;
+            browser.version = sogou[1];
+        }
+        if (xiaomi) {
+            browser.xiaomi = true;
+            browser.version = xiaomi[1];
+        }
+        if (liebao) {
+            browser.liebao = true;
+            browser.version = '0';
+        }
+        if (mercury) {
+            browser.mercury = true;
+            browser.version = mercury[1];
+        }
+        if (navigator.standalone) {
+            browser.standalone = true;
+        }
+        os.tablet = !!(ipad || playbook || android && !ua.match(/Mobile/) || firefox && ua.match(/Tablet/) || ie && !ua.match(/Phone/) && ua.match(/Touch/));
+        os.phone = !!(!os.tablet && !os.ipod && (android || iphone || webos || blackberry || bb10 || chrome && ua.match(/Android/) || chrome && ua.match(/CriOS\/([\d.]+)/) || firefox && ua.match(/Mobile/) || ie && ua.match(/Touch/)));
+        return {
+            browser: browser,
+            os: os
+        };
+    }
+    function checkAudio(exp) {
+        exp.audioData = !!window.Audio;
+        exp.webAudio = !!(window.AudioContext || window.webkitAudioContext);
+        var audioElement = document.createElement('audio');
+        var result = false;
+        try {
+            if (result = !!audioElement.canPlayType) {
+                if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.ogg = true;
+                }
+                if (audioElement.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, '') || audioElement.canPlayType('audio/opus;').replace(/^no$/, '')) {
+                    exp.opus = true;
+                }
+                if (audioElement.canPlayType('audio/mpeg;').replace(/^no$/, '')) {
+                    exp.mp3 = true;
+                }
+                if (audioElement.canPlayType('audio/wav; codecs="1"').replace(/^no$/, '')) {
+                    exp.wav = true;
+                }
+                if (audioElement.canPlayType('audio/x-m4a;') || audioElement.canPlayType('audio/aac;').replace(/^no$/, '')) {
+                    exp.m4a = true;
+                }
+                if (audioElement.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')) {
+                    exp.webm = true;
+                }
+            }
+        } catch (e) {
+        }
+    }
+    var env = detect(navigator.userAgent);
+    var exports = {
+        browser: env.browser,
+        os: env.os,
+        supportOrientation: typeof window.orientation == 'number' && typeof window.onorientationchange == 'object',
+        supportTouch: 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch,
+        supportGeolocation: navigator.geolocation != null,
+        isAndroid: env.os.android,
+        isIOS: env.os.ios,
+        isPhone: env.os.phone,
+        isTablet: env.os.tablet,
+        isMobile: env.os.phone || env.os.tablet
+    };
+    checkAudio(exports);
+    return exports;
 });'use strict';
 define('ig/Animation', [
     'require',
@@ -814,8 +1015,8 @@ define('ig/Vector', ['require'], function (require) {
         }
     };
     return Vector;
-});define('ig/Event', ['require'], function (require) {
-    'use strict';
+});'use strict';
+define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
     function Event() {
         this._events = {};
@@ -911,6 +1112,159 @@ define('ig/Vector', ['require'], function (require) {
         }
     };
     return Event;
+});define('ig/resourceLoader', [
+    'require',
+    './ig',
+    './util'
+], function (require) {
+    var ig = require('./ig');
+    var util = require('./util');
+    var defaultResourceTypes = {
+        png: 'Image',
+        jpg: 'Image',
+        gif: 'Image',
+        jpeg: 'Image',
+        ogg: 'Audio',
+        wav: 'Audio',
+        m4a: 'Audio',
+        mp3: 'Audio'
+    };
+    function getFileExt(fileName) {
+        var segments = fileName.split('.');
+        return segments[segments.length - 1].toLowerCase();
+    }
+    ig.resources = {};
+    ig.loadOther = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var fileExt = getFileExt(_src);
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    if (fileExt === 'json') {
+                        _callback(_id, JSON.parse(req.responseText));
+                    } else {
+                        _callback(_id, req.responseText);
+                    }
+                } else {
+                    _errorCallback(_src);
+                }
+            }
+        };
+        req.open('GET', _src, true);
+        req.send(null);
+    };
+    ig.loadImage = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var img = new Image();
+        img.addEventListener('load', function (e) {
+            _callback(_id, img);
+        });
+        img.addEventListener('error', function (e) {
+            _errorCallback(_src);
+        });
+        img.src = _src;
+    };
+    ig.loadResource = function (resource, callback, opts) {
+        var me = this;
+        opts = opts || {};
+        if (!Array.isArray(resource)) {
+            resource = [resource];
+        }
+        var loadError = false;
+        var errorCallback = function (item) {
+            loadError = true;
+            (opts.errorCallback || function (errItem) {
+                throw 'Loading Error: ' + errItem;
+            }).call(me, item);
+        };
+        var processCallback = opts.processCallback || util.noop;
+        var totalCount = resource.length;
+        var remainingCount = totalCount;
+        var loadOneCallback = function (id, obj) {
+            if (loadError) {
+                return;
+            }
+            if (!ig.resources[id]) {
+                ig.resources[id] = obj;
+            }
+            remainingCount--;
+            processCallback(totalCount - remainingCount, totalCount);
+            if (remainingCount === 0 && callback) {
+                callback.call(me, ig.resources);
+            }
+        };
+        var customResourceTypes = opts.customResourceTypes || {};
+        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+        for (var i = 0; i < totalCount; i++) {
+            var curResource = resource[i];
+            var resourceId;
+            var resourceSrc;
+            if (util.getType(curResource) === 'object') {
+                resourceId = curResource.id;
+                resourceSrc = curResource.src;
+            } else {
+                resourceId = resourceSrc = curResource;
+            }
+            if (!ig.resources.hasOwnProperty(resourceId)) {
+                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                if (!invokeMethod) {
+                    invokeMethod = me.loadOther;
+                }
+                invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
+            } else {
+                loadOneCallback(resourceId, ig.resources[resourceId]);
+            }
+        }
+    };
 });
 var ig = require('ig');
 
@@ -939,6 +1293,28 @@ else {
 
 var modName = 'ig/easing';
 var refName = 'easing';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/env';
+var refName = 'env';
 var folderName = '';
 
 var tmp;
@@ -1004,6 +1380,28 @@ else {
 }
 
 var modName = 'ig/Event';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/resourceLoader';
 var refName = '';
 var folderName = '';
 
