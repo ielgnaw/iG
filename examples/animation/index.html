@@ -14,11 +14,48 @@
         <meta name="screen-orientation" content="portrait"/>
         <meta name="x5-fullscreen" content="true"/>
         <meta name="360-fullscreen" content="true"/>
-
+        <style type="text/css">
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                width: 800px;
+                height: 400px;
+                margin: 20px auto;
+                /*border: 1px solid #ddd;*/
+                position: relative;
+            }
+            .control a {
+                color: #000;
+                display: inline-block;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                padding: 5px;
+                text-align: center;
+                font-size: 14px;
+            }
+            .control a:hover {
+                background: #5580dd;
+                color: #fff;
+            }
+        </style>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
-        <div style="position: absolute;left:100px;top:100px;background:#f00;width: 100px;height: 50px;opacity:1;"></div>
+        <div class="container">
+            <div class="control">
+                <a href="#" data="toggle">toggle</a>
+                <a href="#" data="simple">简单动画</a>
+                <a href="#" data="simpleRepeat">简单动画（重复）</a>
+                <a href="#" data="anims">动画组</a>
+                <a href="#" data="animsRepeat">动画组（重复）</a>
+                <a href="#" data="range">范围</a>
+                <a href="#" data="rangeRepeat">范围（重复）</a>
+            </div>
+            <div id="target" style="position: absolute;left:100px;top:100px;background:#f00;width: 100px;height: 50px;opacity:1;"></div>
+        </div>
         <script src="./index.js"></script>
     </body>
 </html>

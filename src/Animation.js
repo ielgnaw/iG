@@ -92,7 +92,7 @@ define(function (require) {
         setup: function () {
             var p = this.p;
 
-            p.running = false;
+            p.paused = false;
             p.repeatCount = 0;
             p.then = Date.now();
             p.interval = 1000 / p.fps;
@@ -159,7 +159,7 @@ define(function (require) {
             if (p.requestID) {
                 this.stop();
             }
-            p.running = true;
+            p.paused = false;
             this.step();
             return this;
         },
@@ -171,6 +171,44 @@ define(function (require) {
          */
         stop: function () {
             window.cancelAnimationFrame(this.p.requestID);
+            return this;
+        },
+
+        /**
+         * 销毁
+         */
+        destroy: function () {
+            this.stop();
+            this.clearEvents();
+        },
+
+        /**
+         * 切换暂停状态
+         *
+         * @return {Object} Animation 实例
+         */
+        togglePause: function () {
+            this.p.paused = !this.p.paused;
+            return this;
+        },
+
+        /**
+         * 暂停，暂停意味着 requestAnimationFrame 还在运行，只是 Animation 停止渲染
+         *
+         * @return {Object} Animation 实例
+         */
+        pause: function () {
+            this.p.paused = true;
+            return this;
+        },
+
+        /**
+         * 从暂停状态恢复
+         *
+         * @return {Object} Animation 实例
+         */
+        resume: function () {
+            this.p.paused = false;
             return this;
         },
 
@@ -237,18 +275,7 @@ define(function (require) {
          * @return {Object} Animation 实例
          */
         swapFromTo: function () {
-            // var newcurState = {};
             var p = this.p;
-            // for (var i in p.curState) {
-            //     newcurState[i] = {
-            //         from: p.curState[i].to,
-            //         cur: p.curState[i].to,
-            //         to: p.curState[i].from
-            //     };
-            // }
-
-            // p.curFrame = 0;
-            // p.curState = newcurState;
 
             p.curFrame = 0;
             p.curState = {};
@@ -258,14 +285,6 @@ define(function (require) {
                 p.animIndex = 0;
                 p.animLength = p.target.length;
                 for (var i in p.target[p.animIndex]) {
-                    // p.curState[i] = {
-                    //     // from: parseFloat(p.source[i]),
-                    //     // cur: parseFloat(p.source[i]),
-                    //     // to: parseFloat(p.target[p.animIndex][i])
-                    //     from: p.initState[i].to,
-                    //     cur: p.initState[i].to,
-                    //     to: p.initState[i].from
-                    // };
                     if (p.repeatCount % 2 === 0) {
                         p.curState[i] = {
                             from: p.initState[i].from,
@@ -284,17 +303,6 @@ define(function (require) {
             }
             else {
                 for (var i in p.target) {
-                    // p.curState[i] = {
-                    //     from: parseFloat(p.source[i]),
-                    //     cur: parseFloat(p.source[i]),
-                    //     to: parseFloat(p.target[i])
-                    // };
-                    // p.curState[i] = {
-                    //     from: p.initState[i].to,
-                    //     cur: p.initState[i].to,
-                    //     to: p.initState[i].from
-                    // };
-
                     if (p.repeatCount % 2 === 0) {
                         p.curState[i] = {
                             from: p.initState[i].from,
@@ -320,6 +328,7 @@ define(function (require) {
         step: function () {
             var me = this;
             var p = me.p;
+
             p.requestID = window.requestAnimationFrame(
                 (function (context) {
                     return function () {
@@ -327,6 +336,11 @@ define(function (require) {
                     };
                 })(me)
             );
+
+            if (p.paused) {
+                return;
+            }
+
             p.now = Date.now();
             p.delta = p.now - p.then;
 
@@ -380,7 +394,7 @@ define(function (require) {
                                 instance: me,
                                 repeatCount: p.repeatCount / 2
                             }
-                        });console.warn(p.repeatCount / 2);
+                        });
                     }
                 }
             }
@@ -405,23 +419,7 @@ define(function (require) {
                                 cur: flag ? p.initState[i].cur : p.initState[i].to,
                                 to: flag ? p.initState[i].to : p.initState[i].from,
                             };
-
-                            // if (p.repeatCount % 2 === 0) {
-                            //     p.curState[i] = {
-                            //         from: p.initState[i].from,
-                            //         cur: p.initState[i].cur,
-                            //         to: p.initState[i].to
-                            //     };
-                            // }
-                            // else {
-                            //     p.curState[i] = {
-                            //         from: p.initState[i].to,
-                            //         cur: p.initState[i].to,
-                            //         to: p.initState[i].from
-                            //     };
-                            // }
                         }
-
                     }
                     else {
                         // debugger
@@ -438,7 +436,7 @@ define(function (require) {
                         }
                         else {
                             me.stop();
-                            p.running = false;
+                            p.paused = false;
                             me.fire('complete', {
                                 data: {
                                     source: p.source,
@@ -463,7 +461,7 @@ define(function (require) {
                     }
                     else {
                         me.stop();
-                        p.running = false;
+                        p.paused = false;
                         me.fire('complete', {
                             data: {
                                 source: p.source,

@@ -478,7 +478,7 @@ define('ig/Animation', [
         constructor: Animation,
         setup: function () {
             var p = this.p;
-            p.running = false;
+            p.paused = false;
             p.repeatCount = 0;
             p.then = Date.now();
             p.interval = 1000 / p.fps;
@@ -534,12 +534,28 @@ define('ig/Animation', [
             if (p.requestID) {
                 this.stop();
             }
-            p.running = true;
+            p.paused = false;
             this.step();
             return this;
         },
         stop: function () {
             window.cancelAnimationFrame(this.p.requestID);
+            return this;
+        },
+        destroy: function () {
+            this.stop();
+            this.clearEvents();
+        },
+        togglePause: function () {
+            this.p.paused = !this.p.paused;
+            return this;
+        },
+        pause: function () {
+            this.p.paused = true;
+            return this;
+        },
+        resume: function () {
+            this.p.paused = false;
             return this;
         },
         next: function () {
@@ -620,6 +636,9 @@ define('ig/Animation', [
                     me.step.call(me);
                 };
             }(me));
+            if (p.paused) {
+                return;
+            }
             p.now = Date.now();
             p.delta = p.now - p.then;
             if (p.delta <= p.interval) {
@@ -662,7 +681,6 @@ define('ig/Animation', [
                                 repeatCount: p.repeatCount / 2
                             }
                         });
-                        console.warn(p.repeatCount / 2);
                     }
                 }
             } else {
@@ -698,7 +716,7 @@ define('ig/Animation', [
                             });
                         } else {
                             me.stop();
-                            p.running = false;
+                            p.paused = false;
                             me.fire('complete', {
                                 data: {
                                     source: p.source,
@@ -720,7 +738,7 @@ define('ig/Animation', [
                         });
                     } else {
                         me.stop();
-                        p.running = false;
+                        p.paused = false;
                         me.fire('complete', {
                             data: {
                                 source: p.source,
@@ -881,6 +899,9 @@ define('ig/Vector', ['require'], function (require) {
                     }
                 }
             }
+        },
+        clearEvents: function () {
+            this._events = null;
         },
         enable: function (target) {
             target._events = {};

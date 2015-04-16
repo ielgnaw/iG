@@ -169,6 +169,13 @@ define(function (require) {
         },
 
         /**
+         * 清除所有
+         */
+        clearEvents: function () {
+            this._events = null;
+        },
+
+        /**
          * 在无继承关系的情况下，使一个对象拥有事件处理的功能
          *
          * @param {*} target 需要支持事件处理功能的对象
