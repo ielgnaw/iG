@@ -23,7 +23,7 @@ define(function (require) {
      *
      * @type {number}
      */
-    var NAME_GUID = 0;
+    var GUID_KEY = 0;
 
     /**
      * 动画基类
@@ -35,8 +35,6 @@ define(function (require) {
      * @return {Object} Animation 实例
      */
     function Animation(opts) {
-        Event.apply(this, arguments);
-
         opts = opts || {};
 
         // 属性全部挂载在 p 这个属性下，避免实例上挂载的属性太多，太乱
@@ -44,36 +42,31 @@ define(function (require) {
 
         util.extend(true, this.p, {
             // 名称
-            name: NAME_GUID++,
-
+            name: GUID_KEY++,
             // 源对象，动画的结果最终体现在这个对象的某些属性上
             source: {},
-
             // 目标属性，里面设置的属性就是 source 对象的属性变化的最终值，
             // 如果这个值是数组，那么意味着是动画组，会按数组的正常顺序一个一个去执行，
             // 如果存在 repeat，那么会把数组里面的整体完成后再 repeat
             target: null,
-
             // 范围运动，这个对象里面设置的属性也是对应的 source 对象属性，
             // 与 target 不同的是，这里会把 range 里面设置的值当做运动的范围， +- 运动
             // 例如设置了 range: {x: 5}， 那么运动的范围就是 source.x - 5 至 source.x + 5 之间
             // 设置此属性后，target 的设置就无效了
             range: null,
-
             // 动画缓动类型
             tween: easing.linear,
-
             // 是否重复
             repeat: false,
-
             // 间隔时间，根据这个时间和 fps 计算帧数
             duration: 1000,
-
             // fps
             fps: DEFAULT_FPS
         }, opts);
 
         this.setup();
+
+        Event.apply(this, this.p);
 
         return this;
     }

@@ -209,6 +209,22 @@ define(function (require) {
         };
     };
 
+    /**
+     * 为 dom 节点添加一个父节点
+     * domWrap(curNode, document.createElement('div'), 'newId');
+     *
+     * @param {HTML.Element} curNode 待添加父节点的节点
+     * @param {HTML.Element} newNode 要作为父节点的节点
+     *
+     * @return {HTML.Element} 原节点
+     */
+    exports.domWrap = function (curNode, newNode, newNodeId) {
+        curNode.parentNode.insertBefore(newNode, curNode);
+        newNode.appendChild(curNode);
+        newNode.id = newNodeId || ('ig-create-dom-' + Date.now());
+        return curNode;
+    };
+
     return exports;
 
 });

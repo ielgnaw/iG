@@ -7,6 +7,7 @@ exports.modules = {
         {name: 'ig/env', refName: 'env'},
         {name: 'ig/Animation', refName: 'Animation'},
         {name: 'ig/Vector', refName: 'Vector'},
+        {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Event'},
         {name: 'ig/resourceLoader'},
         // refName 指要挂载到 window.ig 这个全局空间上的名字

@@ -252,6 +252,12 @@ define('ig/util', ['require'], function (require) {
             y: Math.round(y - boundRect.top * (canvas.height / boundRect.height))
         };
     };
+    exports.domWrap = function (curNode, newNode, newNodeId) {
+        curNode.parentNode.insertBefore(newNode, curNode);
+        newNode.appendChild(curNode);
+        newNode.id = newNodeId || 'ig-create-dom-' + Date.now();
+        return curNode;
+    };
     return exports;
 });'use strict';
 define('ig/easing', ['require'], function (require) {
@@ -657,13 +663,12 @@ define('ig/Animation', [
     var Event = require('./Event');
     var easing = require('./easing');
     var DEFAULT_FPS = 60;
-    var NAME_GUID = 0;
+    var GUID_KEY = 0;
     function Animation(opts) {
-        Event.apply(this, arguments);
         opts = opts || {};
         this.p = {};
         util.extend(true, this.p, {
-            name: NAME_GUID++,
+            name: GUID_KEY++,
             source: {},
             target: null,
             range: null,
@@ -673,6 +678,7 @@ define('ig/Animation', [
             fps: DEFAULT_FPS
         }, opts);
         this.setup();
+        Event.apply(this, this.p);
         return this;
     }
     Animation.prototype = {
@@ -1015,6 +1021,268 @@ define('ig/Vector', ['require'], function (require) {
         }
     };
     return Vector;
+});'use strict';
+define('ig/Game', [
+    'require',
+    './Event',
+    './util',
+    './env'
+], function (require) {
+    var Event = require('./Event');
+    var util = require('./util');
+    var env = require('./env');
+    var DEFAULT_FPS = 60;
+    var GUID_KEY = 0;
+    var STANDARD_WIDTH = 320;
+    var MAX_WIDTH = 5000;
+    var STANDARD_HEIGHT = 480;
+    var MAX_HEIGHT = 5000;
+    function Game(opts) {
+        this.p = {};
+        util.extend(true, this.p, {
+            name: 'ig_game_' + GUID_KEY++,
+            fps: DEFAULT_FPS,
+            canvas: null,
+            maximize: false,
+            scaleFit: true,
+            width: STANDARD_WIDTH,
+            height: STANDARD_HEIGHT,
+            maxWidth: MAX_WIDTH,
+            maxHeight: MAX_HEIGHT,
+            horizontalPageScroll: null
+        }, opts);
+        if (!this.p.canvas) {
+            throw new Error('Game initialize must be require a canvas param');
+        }
+        this.p.paused = false;
+        this.p.stageStack = [];
+        this.p.stages = {};
+        initGame.call(this);
+        this._ = {};
+        Event.apply(this, this.p);
+        return this;
+    }
+    Game.prototype = {
+        constructor: Game,
+        start: function (startStageName, startCallback) {
+            var _ = this._;
+            var p = this.p;
+            p.paused = false;
+            _.startTime = Date.now();
+            _.now = 0;
+            _.interval = 1000 / p.fps;
+            _.delta = 0;
+            _.realFpsStart = Date.now();
+            _.realFps = 0;
+            _.realDelta = 0;
+            _.totalFrameCounter = 0;
+            var _startStageName = '';
+            var _startCallback = util.noop;
+            var argLength = arguments.length;
+            switch (argLength) {
+            case 1:
+                if (util.getType(arguments[0]) === 'function') {
+                    _startCallback = arguments[0];
+                } else {
+                    _startStageName = arguments[0];
+                    _startCallback = util.noop;
+                }
+                break;
+            case 2:
+                _startStageName = arguments[0];
+                _startCallback = arguments[1];
+                break;
+            default:
+            }
+            if (_startStageName) {
+                var stageStack = p.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === _startStageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                this.swapStage(candidateIndex, 0);
+            }
+            var me = this;
+            p.requestID = window.requestAnimationFrame(function () {
+                me.render.call(me, _startStageName);
+            });
+            util.getType(_startCallback) === 'function' && _startCallback.call(me, {
+                data: {
+                    startTime: _.startTime,
+                    interval: _.interval
+                }
+            });
+            return this;
+        },
+        render: function () {
+            var me = this;
+            var p = me.p;
+            var _ = me._;
+            p.requestID = window.requestAnimationFrame(function (context) {
+                return function () {
+                    context.render.call(context);
+                };
+            }(me));
+            if (!p.paused) {
+                _.now = Date.now();
+                _.delta = _.now - _.startTime;
+                if (_.delta > _.interval) {
+                    _.totalFrameCounter++;
+                    _.startTime = _.now - _.delta % _.interval;
+                    me.fire('beforeGameRender', {
+                        data: {
+                            startTime: _.startTime,
+                            totalFrameCounter: _.totalFrameCounter
+                        }
+                    });
+                    var curStage = me.getCurrentStage();
+                    if (curStage) {
+                        curStage.update(_.totalFrameCounter, _.delta);
+                        curStage.render();
+                    }
+                    me.fire('afterGameRender', {
+                        data: {
+                            startTime: _.startTime,
+                            totalFrameCounter: _.totalFrameCounter
+                        }
+                    });
+                }
+                if (_.realDelta > 1000) {
+                    _.realFpsStart = Date.now();
+                    _.realDelta = 0;
+                    me.fire('gameFPS', {
+                        data: {
+                            fps: _.realFps,
+                            totalFrameCounter: _.totalFrameCounter
+                        }
+                    });
+                    _.realFps = 0;
+                } else {
+                    _.realDelta = Date.now() - _.realFpsStart;
+                    ++_.realFps;
+                }
+            }
+        },
+        getCurrentStage: function () {
+            var p = this.p;
+            return p.stageStack[0];
+        },
+        swapStage: function (from, to) {
+            var p = this.p;
+            var stageStack = p.stageStack;
+            var len = stageStack.length;
+            if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
+                var sc = stageStack[from];
+                stageStack[from] = stageStack[to];
+                stageStack[to] = sc;
+                this.sortStageIndex();
+            }
+            p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+        }
+    };
+    function initGame() {
+        var p = this.p;
+        p.canvas = util.domWrap(p.canvas, document.createElement('div'), 'ig-game-container-' + p.name);
+        p.canvas.width = p.width;
+        p.canvas.height = p.height;
+        var width = parseInt(p.canvas.width, 10);
+        var height = parseInt(p.canvas.height, 10);
+        var maxWidth = p.maxWidth || 5000;
+        var maxHeight = p.maxHeight || 5000;
+        if (p.maximize) {
+            document.body.style.padding = 0;
+            document.body.style.margin = 0;
+            var horizontalPageScroll;
+            var horizontalPageScrollType = util.getType(p.horizontalPageScroll);
+            if (horizontalPageScrollType === 'number') {
+                horizontalPageScroll = p.horizontalPageScroll;
+            } else if (horizontalPageScrollType === 'boolean') {
+                horizontalPageScroll = 17;
+            } else {
+                horizontalPageScroll = 0;
+            }
+            width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
+            height = Math.min(window.innerHeight - 5, maxHeight);
+        }
+        if (env.supportTouch) {
+            p.canvas.style.height = height * 2 + 'px';
+            window.scrollTo(0, 1);
+            width = Math.min(window.innerWidth, maxWidth);
+            height = Math.min(window.innerHeight, maxHeight);
+        }
+        p.ctx = p.canvas.getContext('2d');
+        p.canvas.style.height = height + 'px';
+        p.canvas.style.width = width + 'px';
+        p.canvas.width = width;
+        p.canvas.height = height;
+        p.canvas.style.position = 'relative';
+        p.width = p.canvas.width;
+        p.cssWidth = p.canvas.style.width;
+        p.height = p.canvas.height;
+        p.cssHeight = p.canvas.style.height;
+        setOffCanvas.call(this);
+        var canvasParent = p.canvas.parentNode;
+        canvasParent.style.width = width + 'px';
+        canvasParent.style.margin = '0 auto';
+        canvasParent.style.position = 'relative';
+        if (p.scaleFit) {
+            fitScreen.call(this);
+        }
+        var me = this;
+        window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
+            setTimeout(function () {
+                window.scrollTo(0, 1);
+                if (p.scaleFit) {
+                    fitScreen.call(me);
+                }
+            }, 0);
+        }, false);
+        p.ratioX = p.width / STANDARD_WIDTH;
+        p.ratioY = p.height / STANDARD_HEIGHT;
+        return this;
+    }
+    function setOffCanvas() {
+        var p = this.p;
+        if (!p.offCanvas) {
+            p.offCanvas = document.createElement('canvas');
+            p.offCtx = p.offCanvas.getContext('2d');
+        }
+        p.offCanvas.width = p.canvas.width;
+        p.offCanvas.style.width = p.canvas.style.width;
+        p.offCanvas.height = p.canvas.height;
+        p.offCanvas.style.height = p.canvas.style.height;
+    }
+    function fitScreen() {
+        var p = this.p;
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var winRatio = winWidth / winHeight;
+        var gameRatio = p.canvas.width / p.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / p.canvas.height : winWidth / p.canvas.width;
+        var scaleWidth = p.canvas.width * scaleRatio;
+        var scaleHeight = p.canvas.height * scaleRatio;
+        p.canvas.style.width = scaleWidth + 'px';
+        p.canvas.style.height = scaleHeight + 'px';
+        if (p.canvas.parentNode) {
+            p.canvas.parentNode.style.width = scaleWidth + 'px';
+            p.canvas.parentNode.style.height = scaleHeight + 'px';
+        }
+        if (gameRatio >= winRatio) {
+            var topPos = (winHeight - scaleHeight) / 2;
+            p.canvas.style.top = topPos + 'px';
+        }
+        p.width = p.canvas.width;
+        p.cssWidth = p.canvas.style.width;
+        p.height = p.canvas.height;
+        p.cssHeight = p.canvas.style.height;
+        p.scaleRatio = scaleRatio;
+        setOffCanvas.call(this);
+    }
+    util.inherits(Game, Event);
+    return Game;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -1359,6 +1627,28 @@ else {
 
 var modName = 'ig/Vector';
 var refName = 'Vector';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Game';
+var refName = 'Game';
 var folderName = '';
 
 var tmp;
