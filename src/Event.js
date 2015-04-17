@@ -179,7 +179,7 @@ define(function (require) {
          * 清除所有
          */
         clearEvents: function () {
-            this._events = null;
+            this._events = {};
         },
 
         /**

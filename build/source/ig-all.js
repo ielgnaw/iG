@@ -245,6 +245,20 @@ define('ig/util', ['require'], function (require) {
     exports.rad2Deg = function (rad) {
         return rad * RAD2DEG_OPERAND;
     };
+    exports.removeArrByCondition = function (list, callback) {
+        var candidateIndex = -1;
+        var tmp;
+        for (var i = 0, len = list.length; i < len; i++) {
+            tmp = list[i];
+            if (callback(tmp)) {
+                candidateIndex = i;
+                break;
+            }
+        }
+        if (candidateIndex !== -1) {
+            list.splice(candidateIndex, 1);
+        }
+    };
     exports.window2Canvas = function (canvas, x, y) {
         var boundRect = canvas.getBoundingClientRect();
         return {
@@ -1026,11 +1040,15 @@ define('ig/Game', [
     'require',
     './Event',
     './util',
-    './env'
+    './env',
+    './Stage',
+    './resourceLoader'
 ], function (require) {
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
+    var Stage = require('./Stage');
+    var resourceLoader = require('./resourceLoader');
     var DEFAULT_FPS = 60;
     var GUID_KEY = 0;
     var STANDARD_WIDTH = 320;
@@ -1059,6 +1077,7 @@ define('ig/Game', [
         this.p.stages = {};
         initGame.call(this);
         this._ = {};
+        this.resources = this.p.resources = resourceLoader.resources;
         Event.apply(this, this.p);
         return this;
     }
@@ -1105,10 +1124,9 @@ define('ig/Game', [
                 }
                 this.swapStage(candidateIndex, 0);
             }
+            this.stop();
             var me = this;
-            p.requestID = window.requestAnimationFrame(function () {
-                me.render.call(me, _startStageName);
-            });
+            me.render.call(me, _startStageName);
             util.getType(_startCallback) === 'function' && _startCallback.call(me, {
                 data: {
                     startTime: _.startTime,
@@ -1166,9 +1184,91 @@ define('ig/Game', [
                 }
             }
         },
+        pause: function () {
+            this.p.paused = true;
+            return this;
+        },
+        resume: function () {
+            this.p.paused = false;
+            return this;
+        },
+        stop: function () {
+            window.cancelAnimationFrame(this.p.requestID);
+            return this;
+        },
+        destroy: function () {
+            this.stop();
+            this.clearEvents();
+        },
+        createStage: function (stageOpts) {
+            var p = this.p;
+            stageOpts = util.extend(true, {}, {
+                canvas: p.canvas,
+                offCanvas: p.offCanvas,
+                game: this
+            }, stageOpts);
+            var stage = new Stage(stageOpts);
+            this.pushStage(stage);
+            return stage;
+        },
+        pushStage: function (stage) {
+            var p = this.p;
+            if (!this.getStageByName(stage.name)) {
+                stage.gameOwner = this;
+                p.stageStack.push(stage);
+                p.stages[stage.name] = stage;
+                this.sortStageIndex();
+            }
+        },
+        popStage: function () {
+            var p = this.p;
+            var stage = p.stageStack.pop();
+            if (stage) {
+                delete p.stages[stage.name];
+                this.sortStageIndex();
+            }
+        },
+        sortStageIndex: function () {
+            var stageStack = this.stageStack;
+            for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
+                stageStack[i].zIndex = j;
+            }
+        },
+        removeStageByName: function (name) {
+            var st = this.getStageByName(name);
+            var p = this.p;
+            if (st) {
+                delete p.stages[st.name];
+                var stageStack = p.stageStack;
+                util.removeArrByCondition(stageStack, function (s) {
+                    return s.name === name;
+                });
+                this.sortStageIndex();
+            }
+        },
         getCurrentStage: function () {
             var p = this.p;
             return p.stageStack[0];
+        },
+        getStageStack: function () {
+            return this.p.stageStack;
+        },
+        getStageByName: function (name) {
+            return this.p.stages[name];
+        },
+        changeStage: function (stageName) {
+            var p = this.p;
+            if (stageName) {
+                var stageStack = p.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === stageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                this.swapStage(candidateIndex, 0);
+            }
         },
         swapStage: function (from, to) {
             var p = this.p;
@@ -1181,6 +1281,23 @@ define('ig/Game', [
                 this.sortStageIndex();
             }
             p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+        },
+        getStageIndex: function (stage) {
+            return stage.zIndex;
+        },
+        clearAllStage: function () {
+            var p = this.p;
+            p.stages = {};
+            p.stageStack = [];
+        },
+        loadOther: function (id, src, callback, errorCallback) {
+            return resourceLoader.loadOther(id, src, callback, errorCallback);
+        },
+        loadImage: function (id, src, callback, errorCallback) {
+            return resourceLoader.loadImage(id, src, callback, errorCallback);
+        },
+        loadResource: function (resource, callback, opts) {
+            return resourceLoader.loadResource(resource, callback, opts);
         }
     };
     function initGame() {
@@ -1283,6 +1400,9 @@ define('ig/Game', [
     }
     util.inherits(Game, Event);
     return Game;
+});define('ig/Stage', ['require'], function (require) {
+    var exports = {};
+    return exports;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -1370,7 +1490,7 @@ define('ig/Event', ['require'], function (require) {
             }
         },
         clearEvents: function () {
-            this._events = null;
+            this._events = {};
         },
         enable: function (target) {
             target._events = {};
@@ -1401,8 +1521,9 @@ define('ig/Event', ['require'], function (require) {
         var segments = fileName.split('.');
         return segments[segments.length - 1].toLowerCase();
     }
-    ig.resources = {};
-    ig.loadOther = function (id, src, callback, errorCallback) {
+    var exports = {};
+    ig.resources = exports.resources = {};
+    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -1446,7 +1567,7 @@ define('ig/Event', ['require'], function (require) {
         req.open('GET', _src, true);
         req.send(null);
     };
-    ig.loadImage = function (id, src, callback, errorCallback) {
+    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -1481,7 +1602,7 @@ define('ig/Event', ['require'], function (require) {
         });
         img.src = _src;
     };
-    ig.loadResource = function (resource, callback, opts) {
+    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
         var me = this;
         opts = opts || {};
         if (!Array.isArray(resource)) {
@@ -1533,6 +1654,7 @@ define('ig/Event', ['require'], function (require) {
             }
         }
     };
+    return exports;
 });
 var ig = require('ig');
 
@@ -1649,6 +1771,28 @@ else {
 
 var modName = 'ig/Game';
 var refName = 'Game';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Stage';
+var refName = 'Stage';
 var folderName = '';
 
 var tmp;

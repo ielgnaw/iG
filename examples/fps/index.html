@@ -26,6 +26,11 @@
                 /*border: 1px solid #ddd;*/
                 position: relative;
             }
+            .control {
+                position: absolute;
+                right: 100px;
+                z-index: 100;
+            }
             .control a {
                 color: #000;
                 display: inline-block;
@@ -54,6 +59,12 @@
     </head>
     <body>
         <div id="fps"></div>
+        <div class="control">
+            <a href="#" data="start">start</a>
+            <a href="#" data="stop">stop</a>
+            <a href="#" data="pause">pause</a>
+            <a href="#" data="resume">resume</a>
+        </div>
         <canvas id="canvas"></canvas>
         <script src="./index.js"></script>
     </body>

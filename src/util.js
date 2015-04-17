@@ -193,6 +193,28 @@ define(function (require) {
     };
 
     /**
+     * 根据条件删除数组里的第一个满足条件的项，只会删除第一个，改变的是原数组
+     *
+     * @param {Array} list 待删除的数组
+     * @param {Function} callback 条件函数，返回 true 就执行
+     */
+    exports.removeArrByCondition = function (list, callback) {
+        var candidateIndex = -1;
+        var tmp;
+        for (var i = 0, len = list.length; i < len; i++) {
+            tmp = list[i];
+            if (callback(tmp)) {
+                candidateIndex = i;
+                break;
+            }
+        }
+
+        if (candidateIndex !== -1) {
+            list.splice(candidateIndex, 1);
+        }
+    };
+
+    /**
      * 把页面上的鼠标坐标换成相对于 canvas 的坐标
      *
      * @param {HTML.Element} canvas canvas 元素

@@ -39,11 +39,20 @@ define(function (require) {
     }
 
     /**
+     * 模块导出对象
+     * resources, loadOther, loadImage, loadResource 同时挂载在 ig 和 exports 上
+     * 挂载在 ig 上为了方便全局调用，挂载在 exports 上是为了内部模块直接引用 resourceLoader 模块
+     *
+     * @type {Object}
+     */
+    var exports = {};
+
+    /**
      * 缓存已经 load 成功的资源
      *
      * @type {Object}
      */
-    ig.resources = {};
+    ig.resources = exports.resources = {};
 
     /**
      * 加载其他资源
@@ -53,7 +62,7 @@ define(function (require) {
      * @param {Function} callback 加载成功回调
      * @param {Function} errorCallback 加载失败回调
      */
-    ig.loadOther = function (id, src, callback, errorCallback) {
+    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -112,7 +121,7 @@ define(function (require) {
      * @param {Function} callback 加载成功回调
      * @param {Function} errorCallback 加载失败回调
      */
-    ig.loadImage = function (id, src, callback, errorCallback) {
+    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
         var _callback;
@@ -159,7 +168,7 @@ define(function (require) {
      * @param {Function} opts.processCallback 加载每一项完成的回调
      * @param {Object} opts.customResourceTypes 自定义的资源配置，opts.customResourceTypes = {'bmp': 'Image'}
      */
-    ig.loadResource = function (resource, callback, opts) {
+    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
         var me = this;
         opts = opts || {};
 
@@ -228,4 +237,6 @@ define(function (require) {
             }
         }
     };
+
+    return exports;
 });
