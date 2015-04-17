@@ -1400,9 +1400,23 @@ define('ig/Game', [
     }
     util.inherits(Game, Event);
     return Game;
-});define('ig/Stage', ['require'], function (require) {
-    var exports = {};
-    return exports;
+});'use strict';
+define('ig/Stage', [
+    'require',
+    './Event',
+    './util',
+    './DisplayObject',
+    './domEvt'
+], function (require) {
+    var Event = require('./Event');
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var domEvt = require('./domEvt');
+    function Stage(opts) {
+        return this;
+    }
+    util.inherits(Stage, Event);
+    return Stage;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';

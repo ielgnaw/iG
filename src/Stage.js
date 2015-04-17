@@ -1,12 +1,24 @@
 /**
- * @file Description
+ * @file 场景类
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
+'use strict';
+
 define(function (require) {
 
-    var exports = {};
+    var Event = require('./Event');
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    var domEvt = require('./domEvt');
 
-    return exports;
+    function Stage(opts) {
 
+        return this;
+    }
+
+
+    util.inherits(Stage, Event);
+
+    return Stage;
 });
