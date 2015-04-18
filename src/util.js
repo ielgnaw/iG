@@ -247,6 +247,26 @@ define(function (require) {
         return curNode;
     };
 
+    /**
+     * 获取节点的偏移
+     *
+     * @param {HTML.Element} element dom 节点
+     *
+     * @return {Object} 偏移量
+     */
+    exports.getElementOffset = function (element) {
+        var x = element.offsetLeft;
+        var y = element.offsetTop;
+        while ((element = element.offsetParent) && element != document.body && element != document) {
+            x += element.offsetLeft;
+            y += element.offsetTop;
+        }
+        return {
+            x: x,
+            y: y
+        };
+    };
+
     return exports;
 
 });

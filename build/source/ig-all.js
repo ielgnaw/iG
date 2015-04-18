@@ -272,6 +272,18 @@ define('ig/util', ['require'], function (require) {
         newNode.id = newNodeId || 'ig-create-dom-' + Date.now();
         return curNode;
     };
+    exports.getElementOffset = function (element) {
+        var x = element.offsetLeft;
+        var y = element.offsetTop;
+        while ((element = element.offsetParent) && element != document.body && element != document) {
+            x += element.offsetLeft;
+            y += element.offsetTop;
+        }
+        return {
+            x: x,
+            y: y
+        };
+    };
     return exports;
 });'use strict';
 define('ig/easing', ['require'], function (require) {
@@ -1413,6 +1425,7 @@ define('ig/Stage', [
     var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
     function Stage(opts) {
+        Event.apply(this, arguments);
         return this;
     }
     util.inherits(Stage, Event);

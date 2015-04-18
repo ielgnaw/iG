@@ -14,6 +14,8 @@ define(function (require) {
 
     function Stage(opts) {
 
+        Event.apply(this, arguments);
+
         return this;
     }
 
