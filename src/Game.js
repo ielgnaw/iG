@@ -327,7 +327,7 @@ define(function (require) {
                 {
                     canvas: p.canvas,
                     offCanvas: p.offCanvas,
-                    game: this
+                    gameOwner: this
                 },
                 stageOpts
             );

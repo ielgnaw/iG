@@ -1217,7 +1217,7 @@ define('ig/Game', [
             stageOpts = util.extend(true, {}, {
                 canvas: p.canvas,
                 offCanvas: p.offCanvas,
-                game: this
+                gameOwner: this
             }, stageOpts);
             var stage = new Stage(stageOpts);
             this.pushStage(stage);
@@ -1417,15 +1417,29 @@ define('ig/Stage', [
     'require',
     './Event',
     './util',
-    './DisplayObject',
     './domEvt'
 ], function (require) {
     var Event = require('./Event');
     var util = require('./util');
-    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
+    var GUID_KEY = 0;
     function Stage(opts) {
-        Event.apply(this, arguments);
+        this.p = {};
+        util.extend(true, this.p, {
+            name: 'ig_stage_' + GUID_KEY++,
+            canvas: opts.canvas,
+            ctx: opts.canvas.getContext('2d'),
+            offCanvas: opts.offCanvas,
+            offCtx: opts.offCanvas.getContext('2d'),
+            width: opts.gameOwner.width,
+            height: opts.gameOwner.height,
+            cssWidth: opts.gameOwner.cssWidth,
+            cssHeight: opts.gameOwner.cssHeight
+        }, opts);
+        this.p.displayObjectList = [];
+        this.p.displayObjects = {};
+        console.warn(this);
+        Event.apply(this, this.p);
         return this;
     }
     util.inherits(Stage, Event);
@@ -1527,6 +1541,116 @@ define('ig/Event', ['require'], function (require) {
         }
     };
     return Event;
+});'use strict';
+define('ig/domEvt', [
+    'require',
+    './util',
+    './env'
+], function (require) {
+    var util = require('./util');
+    var env = require('./env');
+    var TOUCH_EVENTS = [
+        'touchstart',
+        'touchmove',
+        'touchend'
+    ];
+    var MOUSE_EVENTS = [
+        'mousedown',
+        'mousemove',
+        'mouseup'
+    ];
+    var holdSprites = [];
+    function inHoldSprites(displayObjectName) {
+        for (var i = 0, len = holdSprites.length; i < len; i++) {
+            if (holdSprites[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
+    }
+    var exports = {};
+    exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
+    exports.fireEvt = {};
+    exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+                e.data.curStage = target;
+                curDisplayObject.isCapture = true;
+                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+            }
+        }
+        return target;
+    };
+    exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
+                holdSprites.push(curDisplayObject);
+            }
+            e.data.holdSprites = holdSprites;
+            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
+                e.data.curStage = target;
+                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
+            }
+        }
+        return target;
+    };
+    exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
+        var target = e.target;
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = false;
+            }
+        }
+        holdSprites = [];
+        return target;
+    };
+    exports.initMouse = function (stage) {
+        this.stage = stage;
+        this.element = stage.canvas;
+        this.x = 0;
+        this.y = 0;
+        this.isDown = false;
+        var offset = util.getElementOffset(this.element);
+        this.offsetX = offset.x;
+        this.offsetY = offset.y;
+        this.addEvent();
+        return this;
+    };
+    exports.addEvent = function () {
+        var me = this;
+        var elem = me.element;
+        me.events.forEach(function (name, i) {
+            elem.addEventListener(name, function (e) {
+                e.preventDefault();
+                if (i === 0) {
+                    me.isDown = true;
+                } else if (i == 2) {
+                    me.isDown = false;
+                }
+                var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
+                var y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+                me.x = x - me.offsetX;
+                me.y = y - me.offsetY;
+                me.stage.fire(name, {
+                    data: {
+                        x: me.x,
+                        y: me.y,
+                        isDown: me.isDown
+                    }
+                });
+            });
+        });
+    };
+    return exports;
 });define('ig/resourceLoader', [
     'require',
     './ig',
@@ -1841,6 +1965,28 @@ else {
 }
 
 var modName = 'ig/Event';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/domEvt';
 var refName = '';
 var folderName = '';
 

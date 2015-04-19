@@ -10,6 +10,7 @@ exports.modules = {
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage', refName: 'Stage'},
         {name: 'ig/Event'},
+        {name: 'ig/domEvt'},
         {name: 'ig/resourceLoader'},
         // refName 指要挂载到 window.ig 这个全局空间上的名字
         // 如果无 refName 配置，意味着该模板只是 ig 内部调用的，不会被挂载在 window 上
