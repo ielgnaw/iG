@@ -193,6 +193,30 @@ define(function (require) {
     };
 
     /**
+     * 生成 min 到 max 范围内的随机整数
+     *
+     * @param {number} min 最小值
+     * @param {number} max 最大值
+     *
+     * @return {number} min 到 max 之间的随机整数
+     */
+    exports.randomInt = function (min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    };
+
+    /**
+     * 生成 min 到 max 范围内的随机数
+     *
+     * @param {number} min 最小值
+     * @param {number} max 最大值
+     *
+     * @return {number} min 到 max 之间的随机数
+     */
+    exports.randomFloat = function (min, max) {
+        return Math.random() * (max - min) + min;
+    };
+
+    /**
      * 根据条件删除数组里的第一个满足条件的项，只会删除第一个，改变的是原数组
      *
      * @param {Array} list 待删除的数组
@@ -237,6 +261,7 @@ define(function (require) {
      *
      * @param {HTML.Element} curNode 待添加父节点的节点
      * @param {HTML.Element} newNode 要作为父节点的节点
+     * @param {string} newNodeId 新 DOM 的 ID
      *
      * @return {HTML.Element} 原节点
      */
@@ -257,10 +282,12 @@ define(function (require) {
     exports.getElementOffset = function (element) {
         var x = element.offsetLeft;
         var y = element.offsetTop;
+        /* eslint-disable eqeqeq */
         while ((element = element.offsetParent) && element != document.body && element != document) {
             x += element.offsetLeft;
             y += element.offsetTop;
         }
+        /* eslint-enable eqeqeq */
         return {
             x: x,
             y: y

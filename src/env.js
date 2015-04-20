@@ -14,6 +14,7 @@ define(function (require) {
      * @param {string} ua navigator.userAgent
      * @return {Object}
      */
+    /* eslint-disable fecs-max-statements */
     function detect(ua) {
         var os = {};
         var browser = {};
@@ -34,7 +35,7 @@ define(function (require) {
         var playbook = ua.match(/PlayBook/);
         var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
         var firefox = ua.match(/Firefox\/([\d.]+)/);
-        var ie = ua.match(/MSIE\s([\d.]+)/) || ua.match( /Trident\/[\d](?=[^\?]+).*rv:([0-9.].)/);
+        var ie = ua.match(/MSIE\s([\d.]+)/) || ua.match(/Trident\/[\d](?=[^\?]+).*rv:([0-9.].)/);
 
         var webview = !chrome && ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/);
         var safari = webview || ua.match(/Version\/([\d.]+)([^S](Safari)|[^M]*(Mobile)[^S]*(Safari))/);
@@ -203,6 +204,7 @@ define(function (require) {
             os: os
         };
     }
+    /* eslint-enable fecs-max-statements */
 
     /**
      * 检测音频支持

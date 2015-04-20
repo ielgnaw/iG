@@ -252,6 +252,12 @@ define('ig/util', ['require'], function (require) {
     exports.rad2Deg = function (rad) {
         return rad * RAD2DEG_OPERAND;
     };
+    exports.randomInt = function (min, max) {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    };
+    exports.randomFloat = function (min, max) {
+        return Math.random() * (max - min) + min;
+    };
     exports.removeArrByCondition = function (list, callback) {
         var candidateIndex = -1;
         var tmp;
@@ -711,7 +717,7 @@ define('ig/Animation', [
             fps: DEFAULT_FPS
         }, opts);
         this.setup();
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
         return this;
     }
     Animation.prototype = {
@@ -993,68 +999,6 @@ define('ig/Animation', [
     util.inherits(Animation, Event);
     return Animation;
 });'use strict';
-define('ig/Vector', ['require'], function (require) {
-    var sqrt = Math.sqrt;
-    var pow = Math.pow;
-    function Vector(x, y) {
-        this.x = x || 0;
-        this.y = y || x || 0;
-    }
-    Vector.prototype = {
-        constructor: Vector,
-        normalize: function () {
-            var m = this.getMagnitude();
-            if (m !== 0) {
-                this.x /= m;
-                this.y /= m;
-            }
-            return this;
-        },
-        getMagnitude: function () {
-            return sqrt(pow(this.x, 2) + pow(this.y, 2));
-        },
-        add: function (other, isNew) {
-            var x = this.x + other.x;
-            var y = this.y + other.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        sub: function (other, isNew) {
-            var x = this.x - other.x;
-            var y = this.y - other.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        dot: function (other) {
-            return this.x * other.x + this.y * other.y;
-        },
-        edge: function (other) {
-            return this.sub(other, true);
-        },
-        perpendicular: function (isNew) {
-            var x = -this.x;
-            var y = this.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        normal: function () {
-            return this.perpendicular(true).normalize();
-        }
-    };
-    return Vector;
-});'use strict';
 define('ig/Game', [
     'require',
     './Event',
@@ -1097,7 +1041,7 @@ define('ig/Game', [
         initGame.call(this);
         this._ = {};
         this.resources = this.p.resources = resourceLoader.resources;
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
         return this;
     }
     Game.prototype = {
@@ -1449,11 +1393,13 @@ define('ig/Stage', [
     'require',
     './Event',
     './util',
+    './DisplayObject',
     './domEvt',
     './ig'
 ], function (require) {
     var Event = require('./Event');
     var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
     var ig = require('./ig');
     var STATUS = ig.STATUS;
@@ -1475,7 +1421,7 @@ define('ig/Stage', [
         this.p.displayObjectList = [];
         this.p.displayObjects = {};
         initMouseEvent.call(this);
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
         return this;
     }
     Stage.prototype = {
@@ -1581,9 +1527,9 @@ define('ig/Stage', [
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
-                var curDisplay = this.displayObjectList[i];
+                var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.status;
+                    displayObjectStatus = curDisplay.p.status;
                     if (displayObjectStatus === STATUS.DESTROYED) {
                         this.removeDisplayObject(curDisplay);
                     } else if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
@@ -1753,6 +1699,257 @@ define('ig/Stage', [
     }
     util.inherits(Stage, Event);
     return Stage;
+});'use strict';
+define('ig/DisplayObject', [
+    'require',
+    './Event',
+    './util',
+    './Animation',
+    './ig',
+    './Matrix'
+], function (require) {
+    var Event = require('./Event');
+    var util = require('./util');
+    var Animation = require('./Animation');
+    var ig = require('./ig');
+    var Matrix = require('./Matrix');
+    var STATUS = ig.STATUS;
+    var GUID_KEY = 0;
+    function DisplayObject(opts) {
+        this.p = {};
+        util.extend(true, this.p, {
+            name: 'ig_displayobject_' + GUID_KEY++,
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            cX: 0,
+            cY: 0,
+            radius: 0,
+            scaleX: 1,
+            scaleY: 1,
+            angle: 0,
+            alpha: 1,
+            zIndex: 0,
+            fillStyle: null,
+            strokeStyle: null,
+            image: null,
+            vX: 0,
+            vY: 0,
+            aX: 0,
+            aY: 0,
+            frictionX: 1,
+            frictionY: 1,
+            status: STATUS.NORMAL,
+            mouseEnable: true,
+            captureFunc: util.noop,
+            moveFunc: util.noop,
+            releaseFunc: util.noop,
+            debug: false
+        }, opts);
+        this.children = [];
+        this.matrix = new Matrix();
+        this.setPosX(this.p.x);
+        this.setPosY(this.p.y);
+        Event.call(this, this.p);
+        return this;
+    }
+    DisplayObject.prototype = {
+        constructor: DisplayObject,
+        changeStatus: function (status) {
+            this.p.status = status || this.p.status;
+            return this;
+        },
+        setCaptureFunc: function (func) {
+            this.p.captureFunc = func || util.noop;
+            return this;
+        },
+        setMoveFunc: function (func) {
+            this.p.moveFunc = func || util.noop;
+            return this;
+        },
+        setReleaseFunc: function (func) {
+            this.p.releaseFunc = func || util.noop;
+            return this;
+        },
+        setPosX: function (x) {
+            this.p.x = x || 0;
+            return this;
+        },
+        setPosY: function (y) {
+            this.p.y = y || 0;
+            return this;
+        },
+        setAccelerationX: function (ax) {
+            this.p.aX = ax || this.p.aX;
+            return this;
+        },
+        setAccelerationY: function (ay) {
+            this.p.aY = ay || this.p.aY;
+            return this;
+        },
+        setFrictionX: function (frictionX) {
+            this.p.frictionX = frictionX || this.p.frictionX;
+            return this;
+        },
+        setFrictionY: function (frictionY) {
+            this.p.frictionY = frictionY || this.p.frictionY;
+            return this;
+        },
+        move: function (x, y) {
+            this.p.x += x;
+            this.p.y += y;
+            return this;
+        },
+        moveStep: function () {
+            var p = this.p;
+            p.vX += p.aX;
+            p.vX *= p.frictionX;
+            p.x += p.vX;
+            p.vY += p.aY;
+            p.vY *= p.frictionY;
+            p.y += p.vY;
+            return this;
+        },
+        rotate: function (angle) {
+            var offCtx = this.p.stageOwner.p.offCtx;
+            offCtx.save();
+            offCtx.rotate(util.deg2Rad(angle || this.p.angle));
+            offCtx.restore();
+            return this;
+        },
+        setAnimate: function (opts) {
+            var me = this;
+            var animOpts = util.extend(true, {}, {
+                fps: 60,
+                duration: 1000,
+                source: me.p,
+                target: {}
+            }, opts);
+            var stepFunc = util.getType(animOpts.stepFunc) === 'function' ? animOpts.stepFunc : util.noop;
+            var repeatFunc = util.getType(animOpts.repeatFunc) === 'function' ? animOpts.repeatFunc : util.noop;
+            var groupCompleteFunc = util.getType(animOpts.groupCompleteFunc) === 'function' ? animOpts.groupCompleteFunc : util.noop;
+            var completeFunc = util.getType(animOpts.completeFunc) === 'function' ? animOpts.completeFunc : util.noop;
+            this.animate = new Animation(animOpts).play().on('step', function (d) {
+                me.p = d.data.source;
+                stepFunc(d);
+            }).on('repeat', function (d) {
+                repeatFunc(d);
+            }).on('groupComplete', function (d) {
+                groupCompleteFunc(d);
+            }).on('complete', function (d) {
+                completeFunc(d);
+            });
+        },
+        stopAnimate: function () {
+            this.animate && this.animate.stop();
+            console.warn(this.animate);
+            return this;
+        },
+        destroyAnimate: function () {
+            this.animate && this.animate.destroy();
+            return this;
+        },
+        update: function () {
+            return this;
+        },
+        render: function (offCtx) {
+            return this;
+        }
+    };
+    util.inherits(DisplayObject, Event);
+    return DisplayObject;
+});'use strict';
+define('ig/Text', [
+    'require',
+    './util',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    function Text(opts) {
+        this.p = {};
+        util.extend(true, this.p, {
+            content: '',
+            size: 30,
+            isBold: false,
+            fontFamily: 'sans-serif'
+        }, opts);
+        var p = this.p;
+        var obj = measureText(p.content, p.isBold, p.fontFamily, p.size);
+        this.bounds = {
+            x: p.x,
+            y: p.y,
+            width: obj.width,
+            height: obj.height
+        };
+        this.font = '' + (p.isBold ? 'bold ' : '') + p.size + 'pt ' + p.fontFamily;
+        DisplayObject.call(this, this.p);
+        return this;
+    }
+    Text.prototype = {
+        constructor: Text,
+        changeContent: function (content) {
+            this.p.content = content;
+            var obj = measureText(this.p.content, this.p.isBold, this.p.fontFamily, this.p.size);
+            this.bounds = {
+                x: this.p.x,
+                y: this.p.y,
+                width: obj.width,
+                height: obj.height
+            };
+            return this;
+        },
+        getContent: function () {
+            return this.p.content;
+        },
+        render: function (offCtx) {
+            offCtx.save();
+            offCtx.fillStyle = this.p.fillStyle;
+            offCtx.globalAlpha = this.p.alpha;
+            offCtx.font = this.font;
+            this.matrix.reset();
+            this.matrix.translate(this.p.x, this.p.y);
+            this.matrix.rotate(this.p.angle);
+            this.matrix.scale(this.p.scaleX, this.p.scaleY);
+            var m = this.matrix.m;
+            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            offCtx.fillText(this.p.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
+            this.debugRender(offCtx);
+            offCtx.restore();
+            return this;
+        },
+        debugRender: function (offCtx) {
+            if (this.p.debug) {
+                offCtx.save();
+                var m = this.matrix.reset().m;
+                this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height - 10);
+                offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
+        }
+    };
+    function measureText(text, isBold, fontFamily, size) {
+        var div = document.createElement('div');
+        div.innerHTML = text;
+        div.style.position = 'absolute';
+        div.style.top = '-1000px';
+        div.style.left = '-1000px';
+        div.style.fontFamily = fontFamily;
+        div.style.fontWeight = isBold ? 'bold' : 'normal';
+        div.style.fontSize = size + 'pt';
+        document.body.appendChild(div);
+        var ret = {
+            width: div.offsetWidth,
+            height: div.offsetHeight
+        };
+        document.body.removeChild(div);
+        return ret;
+    }
+    util.inherits(Text, DisplayObject);
+    return Text;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -1942,7 +2139,7 @@ define('ig/domEvt', [
                 e.preventDefault();
                 if (i === 0) {
                     me.isDown = true;
-                } else if (i == 2) {
+                } else if (i === 2) {
                     me.isDown = false;
                 }
                 var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
@@ -1960,6 +2157,168 @@ define('ig/domEvt', [
         });
     };
     return exports;
+});'use strict';
+define('ig/Matrix', [
+    'require',
+    './util'
+], function (require) {
+    var util = require('./util');
+    var cos = Math.cos;
+    var sin = Math.sin;
+    function Matrix() {
+        this.m = [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+        ];
+        return this;
+    }
+    Matrix.prototype = {
+        constructor: Matrix,
+        reset: function () {
+            this.m = [
+                1,
+                0,
+                0,
+                1,
+                0,
+                0
+            ];
+            return this;
+        },
+        mul: function (matrix) {
+            var m11 = this.m[0] * matrix.m[0] + this.m[2] * matrix.m[1];
+            var m12 = this.m[1] * matrix.m[0] + this.m[3] * matrix.m[1];
+            var m21 = this.m[0] * matrix.m[2] + this.m[2] * matrix.m[3];
+            var m22 = this.m[1] * matrix.m[2] + this.m[3] * matrix.m[3];
+            var dx = this.m[0] * matrix.m[4] + this.m[2] * matrix.m[5] + this.m[4];
+            var dy = this.m[1] * matrix.m[4] + this.m[3] * matrix.m[5] + this.m[5];
+            this.m[0] = m11;
+            this.m[1] = m12;
+            this.m[2] = m21;
+            this.m[3] = m22;
+            this.m[4] = dx;
+            this.m[5] = dy;
+            return this;
+        },
+        invert: function () {
+            var d = 1 / (this.m[0] * this.m[3] - this.m[1] * this.m[2]);
+            var m0 = this.m[3] * d;
+            var m1 = -this.m[1] * d;
+            var m2 = -this.m[2] * d;
+            var m3 = this.m[0] * d;
+            var m4 = d * (this.m[2] * this.m[5] - this.m[3] * this.m[4]);
+            var m5 = d * (this.m[1] * this.m[4] - this.m[0] * this.m[5]);
+            this.m[0] = m0;
+            this.m[1] = m1;
+            this.m[2] = m2;
+            this.m[3] = m3;
+            this.m[4] = m4;
+            this.m[5] = m5;
+            return this;
+        },
+        rotate: function (angle) {
+            var rad = util.deg2Rad(angle);
+            var c = cos(rad);
+            var s = sin(rad);
+            var m11 = this.m[0] * c + this.m[2] * s;
+            var m12 = this.m[1] * c + this.m[3] * s;
+            var m21 = this.m[0] * -s + this.m[2] * c;
+            var m22 = this.m[1] * -s + this.m[3] * c;
+            this.m[0] = m11;
+            this.m[1] = m12;
+            this.m[2] = m21;
+            this.m[3] = m22;
+            return this;
+        },
+        translate: function (x, y) {
+            this.m[4] += this.m[0] * x + this.m[2] * y;
+            this.m[5] += this.m[1] * x + this.m[3] * y;
+            return this;
+        },
+        scale: function (sx, sy) {
+            this.m[0] *= sx;
+            this.m[1] *= sx;
+            this.m[2] *= sy;
+            this.m[3] *= sy;
+        },
+        transformPoint: function (px, py) {
+            var x = px;
+            var y = py;
+            px = x * this.m[0] + y * this.m[2] + this.m[4];
+            py = x * this.m[1] + y * this.m[3] + this.m[5];
+            return [
+                px,
+                py
+            ];
+        }
+    };
+    return Matrix;
+});'use strict';
+define('ig/Vector', ['require'], function (require) {
+    var sqrt = Math.sqrt;
+    var pow = Math.pow;
+    function Vector(x, y) {
+        this.x = x || 0;
+        this.y = y || x || 0;
+    }
+    Vector.prototype = {
+        constructor: Vector,
+        normalize: function () {
+            var m = this.getMagnitude();
+            if (m !== 0) {
+                this.x /= m;
+                this.y /= m;
+            }
+            return this;
+        },
+        getMagnitude: function () {
+            return sqrt(pow(this.x, 2) + pow(this.y, 2));
+        },
+        add: function (other, isNew) {
+            var x = this.x + other.x;
+            var y = this.y + other.y;
+            if (isNew) {
+                return new Vector(x, y);
+            }
+            this.x = x;
+            this.y = y;
+            return this;
+        },
+        sub: function (other, isNew) {
+            var x = this.x - other.x;
+            var y = this.y - other.y;
+            if (isNew) {
+                return new Vector(x, y);
+            }
+            this.x = x;
+            this.y = y;
+            return this;
+        },
+        dot: function (other) {
+            return this.x * other.x + this.y * other.y;
+        },
+        edge: function (other) {
+            return this.sub(other, true);
+        },
+        perpendicular: function (isNew) {
+            var x = -this.x;
+            var y = this.y;
+            if (isNew) {
+                return new Vector(x, y);
+            }
+            this.x = x;
+            this.y = y;
+            return this;
+        },
+        normal: function () {
+            return this.perpendicular(true).normalize();
+        }
+    };
+    return Vector;
 });define('ig/resourceLoader', [
     'require',
     './ig',
@@ -2207,28 +2566,6 @@ else {
     }
 }
 
-var modName = 'ig/Vector';
-var refName = 'Vector';
-var folderName = '';
-
-var tmp;
-if (folderName) {
-    if (!ig[folderName]) {
-        tmp = {};
-        tmp[refName] = require(modName);
-        ig[folderName] = tmp;
-    }
-    else {
-        ig[folderName][refName] = require(modName);
-    }
-}
-else {
-    tmp = require(modName);
-    if (refName) {
-        ig[refName] = tmp;
-    }
-}
-
 var modName = 'ig/Game';
 var refName = 'Game';
 var folderName = '';
@@ -2273,6 +2610,50 @@ else {
     }
 }
 
+var modName = 'ig/DisplayObject';
+var refName = 'DisplayObject';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Text';
+var refName = 'Text';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
 var modName = 'ig/Event';
 var refName = '';
 var folderName = '';
@@ -2297,6 +2678,50 @@ else {
 
 var modName = 'ig/domEvt';
 var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Matrix';
+var refName = 'Matrix';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Vector';
+var refName = 'Vector';
 var folderName = '';
 
 var tmp;

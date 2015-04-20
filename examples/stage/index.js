@@ -65,7 +65,7 @@ window.onload = function () {
                 animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
             });
 
-            var stage = game.createStage({
+            var stage1 = game.createStage({
                 name: 'stage-name1'
             }).setParallax({
                 image: d.bg1,
@@ -86,11 +86,82 @@ window.onload = function () {
             });
 
             game.start('stage-name');
-            console.warn(game);
+            // console.warn(game);
             setTimeout(function () {
                 // debugger
-                game.swapStageByName('stage-name', 'stage-name1');
+                // game.swapStageByName('stage-name', 'stage-name1');
+            }, 3000);
+
+            // stage.createDisplayObject();
+
+            var text = new ig.Text({
+                content: 'caonidaye',
+                name: 'text1',
+                x: 150,
+                y: 150,
+                // scaleX: 0.5,
+                // scaleY: 0.5,
+                size: 20,
+                isBold: true,
+                angle: 0,
+                debug: 1
+            });
+
+            text.update = function () {
+                // this.p.angle++;
+            };
+
+            stage.addDisplayObject(text);
+
+            setTimeout(function () {
+                // text.changeContent('我们我们我们我们我们玩')
             }, 3000)
+
+            // console.warn(text);
+            text.setAnimate({
+                // target: {
+                    // y: 110,
+                    // scaleX: 1.5
+                    // angle: 360
+                // },
+                // target: [
+                //     {
+                //         y: 110,
+                //         scaleX: 1.5
+                //     },
+                //     {
+                //         x: 200,
+                //         scaleY: 1.5
+                //     }
+                // ],
+                range: {
+                    // y: 10,
+                    scaleX: 0.5,
+                    angle: 180
+                },
+                repeat: 1,
+                // tween: ig.easing.easeInBounce,
+                duration: 5000,
+                stepFunc: function () {
+                    // console.warn('step');
+                },
+                repeatFunc: function () {
+                    // console.warn('repeat');
+                },
+                groupCompleteFunc: function () {
+                    // console.warn('groupCompleteFunc');
+                },
+                completeFunc: function () {
+                    // console.warn('completeFunc');
+                }
+            });
+
+            setTimeout(function () {
+                // text.stopAnimate();
+            }, 1500)
+
+            console.warn(text);
+
 
             // stage.setBgImg(d.bg);
 

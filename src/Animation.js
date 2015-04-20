@@ -66,7 +66,7 @@ define(function (require) {
 
         this.setup();
 
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
 
         return this;
     }
@@ -359,6 +359,7 @@ define(function (require) {
                     p.frames
                 ).toFixed(2);
                 p.source[i] = parseFloat(ds);
+                // console.warn(p.source[i]);
             }
             p.curFrame++;
 

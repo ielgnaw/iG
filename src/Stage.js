@@ -9,7 +9,7 @@ define(function (require) {
 
     var Event = require('./Event');
     var util = require('./util');
-    // var DisplayObject = require('./DisplayObject');
+    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
     var ig = require('./ig');
 
@@ -64,7 +64,7 @@ define(function (require) {
         // 初始化 mouse 和 touch 事件
         initMouseEvent.call(this);
 
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
 
         return this;
     }
@@ -250,16 +250,15 @@ define(function (require) {
             p.offCtx.clearRect(0, 0, p.offCanvas.width, p.offCanvas.height);
 
             renderParallax.call(this);
-
             this.sortDisplayObject();
             var displayObjectList = p.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
 
             for (var i = 0; i < len; i++) {
-                var curDisplay = this.displayObjectList[i];
+                var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.status;
+                    displayObjectStatus = curDisplay.p.status;
                     if (displayObjectStatus === STATUS.DESTROYED) {
                         this.removeDisplayObject(curDisplay);
                     }
@@ -550,7 +549,6 @@ define(function (require) {
             height: height
         };
     }
-
 
     util.inherits(Stage, Event);
 

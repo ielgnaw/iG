@@ -114,7 +114,7 @@ define(function (require) {
         // this.resources 和 this.p.resources 同时指向 resourceLoader.resources 以及 ig.resources
         this.resources = this.p.resources = resourceLoader.resources;
 
-        Event.apply(this, this.p);
+        Event.call(this, this.p);
 
         return this;
     }

@@ -158,7 +158,7 @@ define(function (require) {
                 if (i === 0) {
                     me.isDown = true;
                 }
-                else if (i == 2) {
+                else if (i === 2) {
                     me.isDown = false;
                 }
 
