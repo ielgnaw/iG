@@ -373,6 +373,14 @@ define(function (require) {
             var p = this.p;
             p.displayObjectList = [];
             p.displayObjects = {};
+        },
+
+        /**
+         * 销毁
+         */
+        destroy: function () {
+            this.clearAllDisplayObject();
+            this.clearEvents();
         }
     };
 

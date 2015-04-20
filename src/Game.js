@@ -298,6 +298,7 @@ define(function (require) {
 
         /**
          * 停止游戏
+         *
          * @return {Object} Game 实例
          */
         stop: function () {
@@ -310,6 +311,7 @@ define(function (require) {
          */
         destroy: function () {
             this.stop();
+            this.clearAllStage();
             this.clearEvents();
         },
 
@@ -446,10 +448,42 @@ define(function (require) {
         },
 
         /**
-         * 交换场景位置
+         * 根据场景名称交换场景
+         *
+         * @param {string} fromName 起始场景的名称
+         * @param {string} toName 目标场景的名称
+         *
+         * @return {Object} Game 实例
+         */
+        swapStageByName: function (fromName, toName) {
+            var p = this.p;
+            var stageStack = p.stageStack;
+            var length = stageStack.length;
+            var fromIndex = -1;
+            var toIndex = -1;
+            for (var i = 0; i < length; i++) {
+                if (stageStack[i].p.name === fromName) {
+                    fromIndex = i;
+                }
+                if (stageStack[i].p.name === toName) {
+                    toIndex = i;
+                }
+            }
+
+            if (fromIndex !== -1 && toIndex !== -1) {
+                return this.swapStage(fromIndex, toIndex);
+            }
+
+            return this;
+        },
+
+        /**
+         * 根据位置交换场景
          *
          * @param {number} from 起始位置
          * @param {number} to 目标位置
+         *
+         * @return {Object} Game 实例
          */
         swapStage: function (from, to) {
             var p = this.p;
@@ -466,6 +500,7 @@ define(function (require) {
 
             // 变换场景时，需要清除 this.p.canvas
             p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+            return this;
         },
 
         /**
@@ -484,6 +519,10 @@ define(function (require) {
          */
         clearAllStage: function () {
             var p = this.p;
+            var stageStack = p.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].destroy();
+            }
             p.stages = {};
             p.stageStack = [];
         },

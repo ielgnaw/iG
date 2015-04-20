@@ -20,9 +20,9 @@ window.onload = function () {
         // console.warn('afterGameRender', d);
     }).on('gameFPS', function (d) {
         fpsNode.innerHTML = 'fps: ' + d.data.fps;
-    }).start(function () {
+    })/*.start(function () {
         console.warn('start callback');
-    });
+    })*/;
 
     game.loadResource(
         [
@@ -48,6 +48,26 @@ window.onload = function () {
             var stage = game.createStage({
                 name: 'stage-name'
             }).setParallax({
+                image: d.bg,
+                aX: 1,
+                aY: 1,
+                // repeat: 'repeat',
+                // , anims: [
+                //     {
+                //         aX: 1
+                //         , aY: 1
+                //     },
+                //     {
+                //         aX: -1
+                //         , aY: 1
+                //     }
+                // ]
+                animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
+            });
+
+            var stage = game.createStage({
+                name: 'stage-name1'
+            }).setParallax({
                 image: d.bg1,
                 aX: 1,
                 repeat: 'repeat-x',
@@ -64,6 +84,13 @@ window.onload = function () {
                 // ]
                 animInterval: 1000 // 切换 parallax 的间隔，这里指的是帧数间隔
             });
+
+            game.start('stage-name');
+            console.warn(game);
+            setTimeout(function () {
+                // debugger
+                game.swapStageByName('stage-name', 'stage-name1');
+            }, 3000)
 
             // stage.setBgImg(d.bg);
 

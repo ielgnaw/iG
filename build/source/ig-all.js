@@ -1217,6 +1217,7 @@ define('ig/Game', [
         },
         destroy: function () {
             this.stop();
+            this.clearAllStage();
             this.clearEvents();
         },
         createStage: function (stageOpts) {
@@ -1289,6 +1290,25 @@ define('ig/Game', [
                 this.swapStage(candidateIndex, 0);
             }
         },
+        swapStageByName: function (fromName, toName) {
+            var p = this.p;
+            var stageStack = p.stageStack;
+            var length = stageStack.length;
+            var fromIndex = -1;
+            var toIndex = -1;
+            for (var i = 0; i < length; i++) {
+                if (stageStack[i].p.name === fromName) {
+                    fromIndex = i;
+                }
+                if (stageStack[i].p.name === toName) {
+                    toIndex = i;
+                }
+            }
+            if (fromIndex !== -1 && toIndex !== -1) {
+                return this.swapStage(fromIndex, toIndex);
+            }
+            return this;
+        },
         swapStage: function (from, to) {
             var p = this.p;
             var stageStack = p.stageStack;
@@ -1300,12 +1320,17 @@ define('ig/Game', [
                 this.sortStageIndex();
             }
             p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+            return this;
         },
         getStageIndex: function (stage) {
             return stage.p.zIndex;
         },
         clearAllStage: function () {
             var p = this.p;
+            var stageStack = p.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].destroy();
+            }
             p.stages = {};
             p.stageStack = [];
         },
@@ -1615,6 +1640,10 @@ define('ig/Stage', [
             var p = this.p;
             p.displayObjectList = [];
             p.displayObjects = {};
+        },
+        destroy: function () {
+            this.clearAllDisplayObject();
+            this.clearEvents();
         }
     };
     function initMouseEvent() {
