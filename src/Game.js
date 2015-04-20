@@ -177,7 +177,7 @@ define(function (require) {
                 var stageStack = p.stageStack;
                 var candidateIndex = -1;
                 for (var i = 0, len = stageStack.length; i < len; i++) {
-                    if (stageStack[i].name === _startStageName) {
+                    if (stageStack[i].p.name === _startStageName) {
                         candidateIndex = i;
                         break;
                     }
@@ -189,7 +189,7 @@ define(function (require) {
             this.stop();
 
             var me = this;
-            // p.requestID = window.requestAnimationFrame(function () {
+            // _.requestID = window.requestAnimationFrame(function () {
             me.render.call(me, _startStageName);
             // });
 
@@ -212,7 +212,7 @@ define(function (require) {
             var p = me.p;
             var _ = me._;
 
-            p.requestID = window.requestAnimationFrame(
+            _.requestID = window.requestAnimationFrame(
                 (function (context) {
                     return function () {
                         context.render.call(context);
@@ -246,7 +246,7 @@ define(function (require) {
                     var curStage = me.getCurrentStage();
 
                     if (curStage) {
-                        curStage.update(_.totalFrameCounter, _.delta);
+                        curStage.update(_.totalFrameCounter, _.delta / 1000);
                         curStage.render();
                     }
 
@@ -301,7 +301,7 @@ define(function (require) {
          * @return {Object} Game 实例
          */
         stop: function () {
-            window.cancelAnimationFrame(this.p.requestID);
+            window.cancelAnimationFrame(this._.requestID);
             return this;
         },
 
@@ -347,7 +347,7 @@ define(function (require) {
             if (!this.getStageByName(stage.name)) {
                 stage.gameOwner = this;
                 p.stageStack.push(stage);
-                p.stages[stage.name] = stage;
+                p.stages[stage.p.name] = stage;
                 this.sortStageIndex();
             }
         },
@@ -368,10 +368,10 @@ define(function (require) {
          * 场景排序
          */
         sortStageIndex: function () {
-            var stageStack = this.stageStack;
+            var stageStack = this.p.stageStack;
             // for (var i = 0, len = stageStack.length; i < len; i++) {
             for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
-                stageStack[i].zIndex = j;
+                stageStack[i].p.zIndex = j;
             }
         },
 
@@ -383,8 +383,8 @@ define(function (require) {
          */
         removeStageByName: function (name) {
             var st = this.getStageByName(name);
-            var p = this.p;
             if (st) {
+                var p = this.p;
                 delete p.stages[st.name];
                 var stageStack = p.stageStack;
                 util.removeArrByCondition(stageStack, function (s) {
@@ -476,7 +476,7 @@ define(function (require) {
          * @return {number} zIndex
          */
         getStageIndex: function (stage) {
-            return stage.zIndex;
+            return stage.p.zIndex;
         },
 
         /**

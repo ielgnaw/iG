@@ -15,7 +15,7 @@ define(function (require) {
     var MOUSE_EVENTS = ['mousedown', 'mousemove', 'mouseup'];
 
     // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
-    // 鼠标 / touch 时，把所有经过的可 mouseEnable 的精灵缓存起来
+    // touchmove, mousemove 时，把所有经过的可 mouseEnable 的精灵缓存起来
     var holdSprites = [];
 
     /**
@@ -134,7 +134,7 @@ define(function (require) {
      */
     exports.initMouse = function (stage) {
         this.stage = stage;
-        this.element = stage.canvas;
+        this.element = stage.p.canvas;
         this.x = 0;
         this.y = 0;
         this.isDown = false;
