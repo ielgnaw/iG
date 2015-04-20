@@ -110,6 +110,22 @@ define(function (require) {
             this.m[2] = m21;
             this.m[3] = m22;
 
+            // var aa = this.m[0];
+            // var ac = this.m[2];
+            // var atx = this.m[4];
+            // var ab = this.m[1];
+            // var ad = this.m[3];
+            // var aty = this.m[5];
+            // var st = sin(rad);
+            // var ct = cos(rad);
+
+            // this.m[0] = aa * ct + ab * st;
+            // this.m[1] = -aa * st + ab * ct;
+            // this.m[2] = ac * ct + ad * st;
+            // this.m[3] = -ac * st + ct * ad;
+            // this.m[4] = ct * atx + st * aty;
+            // this.m[5] = ct * aty - st * atx;
+
             return this;
         },
 
@@ -143,19 +159,23 @@ define(function (require) {
         },
 
         /**
-         * 转换点坐标
+         * 转换点坐标，矩阵左乘向量
          *
          * @param {number} px 横坐标
          * @param {number} py 纵坐标
          *
-         * @return {Array} 转换后的坐标
+         * @return {Object} 转换后的坐标
          */
         transformPoint: function (px, py) {
             var x = px;
             var y = py;
             px = x * this.m[0] + y * this.m[2] + this.m[4];
             py = x * this.m[1] + y * this.m[3] + this.m[5];
-            return [px, py];
+
+            return {
+                x: px,
+                y: py
+            };
         }
     };
 

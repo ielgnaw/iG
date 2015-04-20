@@ -40,26 +40,70 @@
             var angle = 0;
             var scale = 0.01;
             var isAdd = true;
+            var points = [
+                {
+                    x: 200,
+                    y: 150
+                },
+                {
+                    x: 250,
+                    y: 210
+                },
+                {
+                    x: 180,
+                    y: 200
+                },
+            ];
+
+            var originalPoints = ig.util.extend(true, [], points);
             setInterval(function () {
                 var m = matrix.reset().m;
-                ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
                 ctx.clearRect(0, 0, width, height);
+                ctx.save();
 
-                matrix.translate(120, 120);
-                matrix.rotate(angle);
-                matrix.scale(scale, scale);
-                ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                ctx.fillStyle = 'red';
-                ctx.fillRect(-50, -50, 100, 100);
+                // matrix.translate(120, 120);
+                // matrix.rotate(angle);
+                // matrix.scale(scale, scale);
+                // ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // ctx.fillStyle = 'red';
+                // ctx.fillRect(-50, -50, 100, 100);
 
-                var m = matrix.reset().m;
-                ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // var m = matrix.reset().m;
+                // ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // matrix.translate(300, 120);
+                // matrix.rotate(-(angle + 60));
+                // matrix.scale(scale, scale);
+                // ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // ctx.fillStyle = 'green';
+                // ctx.fillRect(-90, -80, 180, 160);
+
+                ctx.beginPath();
+                // var m = matrix.reset().m;
+                // ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
                 matrix.translate(300, 120);
-                matrix.rotate(-(angle + 60));
-                matrix.scale(scale, scale);
-                ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                ctx.fillStyle = 'green';
-                ctx.fillRect(-90, -80, 180, 160);
+                matrix.rotate(angle);
+                // console.warn(m);
+                // ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+
+                // debugger
+                for (var i = 0, len = points.length; i < len; i++) {
+                    // var pos = [points[i].x, points[i].y];
+                    points[i] = matrix.transformPoint(originalPoints[i].x, originalPoints[i].y);
+                    // var out = matrix.mulVector([], m, pos);
+                    // p[i].x = out[0];
+                    // p[i].y = out[1];
+                }
+                // console.warn(points[0]);
+                // console.warn(originalPoints);
+
+                ctx.moveTo(points[0].x, points[0].y);
+                for (var i = 0, len = points.length; i < len; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
 
                 angle = angle + 1;
 

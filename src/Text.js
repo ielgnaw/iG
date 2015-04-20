@@ -23,7 +23,6 @@ define(function (require) {
     function Text(opts) {
         this.p = {};
         util.extend(true, this.p, {
-            // 名称
             // 文字内容
             content: '',
             // 大小
