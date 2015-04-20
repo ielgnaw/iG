@@ -27,7 +27,7 @@ define(function (require) {
      */
     function inHoldSprites(displayObjectName) {
         for (var i = 0, len = holdSprites.length; i < len; i++) {
-            if (holdSprites[i].name === displayObjectName) {
+            if (holdSprites[i].p.name === displayObjectName) {
                 return true;
             }
         }
@@ -54,15 +54,15 @@ define(function (require) {
      */
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
 
-            if (curDisplayObject.mouseEnable
+            if (curDisplayObject.p.mouseEnable
                 && curDisplayObject.hitTestPoint
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
-                curDisplayObject.isCapture = true;
+                curDisplayObject.p.isCapture = true;
 
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
@@ -80,22 +80,21 @@ define(function (require) {
      */
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
 
             // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
             if (curDisplayObject.hitTestPoint
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)
-                && !inHoldSprites(curDisplayObject.name)
+                && !inHoldSprites(curDisplayObject.p.name)
             ) {
-                // holdSprites[curDisplayObject.name] = curDisplayObject;
                 holdSprites.push(curDisplayObject);
             }
 
             e.data.holdSprites = holdSprites;
 
-            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
+            if (curDisplayObject.p.mouseEnable && curDisplayObject.p.isCapture) {
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 e.data.curStage = target;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
@@ -113,12 +112,12 @@ define(function (require) {
      */
     exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.p.isCapture || inHoldSprites(curDisplayObject.p.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
-                curDisplayObject.isCapture = false;
+                curDisplayObject.p.isCapture = false;
             }
         }
         holdSprites = [];

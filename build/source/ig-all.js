@@ -1842,7 +1842,7 @@ define('ig/domEvt', [
     var holdSprites = [];
     function inHoldSprites(displayObjectName) {
         for (var i = 0, len = holdSprites.length; i < len; i++) {
-            if (holdSprites[i].name === displayObjectName) {
+            if (holdSprites[i].p.name === displayObjectName) {
                 return true;
             }
         }
@@ -1853,12 +1853,12 @@ define('ig/domEvt', [
     exports.fireEvt = {};
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+            if (curDisplayObject.p.mouseEnable && curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
-                curDisplayObject.isCapture = true;
+                curDisplayObject.p.isCapture = true;
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
             }
         }
@@ -1866,14 +1866,14 @@ define('ig/domEvt', [
     };
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.p.name)) {
                 holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
-            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
+            if (curDisplayObject.p.mouseEnable && curDisplayObject.p.isCapture) {
                 e.data.curStage = target;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
@@ -1882,12 +1882,12 @@ define('ig/domEvt', [
     };
     exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
         var target = e.target;
-        var displayObjectList = target.displayObjectList;
+        var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.p.isCapture || inHoldSprites(curDisplayObject.p.name)) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
-                curDisplayObject.isCapture = false;
+                curDisplayObject.p.isCapture = false;
             }
         }
         holdSprites = [];
