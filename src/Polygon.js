@@ -32,6 +32,17 @@ define(function (require) {
 
         this.getBounds();
 
+        this.p.cX = this.p.x + this.bounds.width / 2;
+        this.p.cY = this.p.y + this.bounds.height / 2;
+
+        if (this.p.cX >= this.bounds.x + this.bounds.width) {
+            this.p.cX = this.bounds.x + this.bounds.width;
+        }
+
+        if (this.p.cY >= this.bounds.y + this.bounds.height) {
+            this.p.cY = this.bounds.y + this.bounds.height;
+        }
+
         this.originalPoints = util.extend(true, [], this.p.points);
 
         DisplayObject.call(this, this.p);
@@ -218,8 +229,8 @@ define(function (require) {
                 height: maxY - minY
             };
 
-            this.p.cX = this.p.x + this.bounds.width / 2;
-            this.p.cY = this.p.y + this.bounds.height / 2;
+            // this.p.cX = this.p.x + this.bounds.width / 2;
+            // this.p.cY = this.p.y + this.bounds.height / 2;
 
             return this;
         },
@@ -240,6 +251,7 @@ define(function (require) {
             this.matrix.reset();
             // var m = this.matrix.m;
             // offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            // this.matrix.translate(this.p.cX, this.p.cY);
             this.matrix.translate(this.p.cX, this.p.cY);
             this.matrix.rotate(this.p.angle);
             this.matrix.scale(this.p.scaleX, this.p.scaleY);

@@ -71,11 +71,11 @@ window.onload = function () {
                 name: 'polygon1',
                 points: [
                     {
-                        x: 200,
+                        x: 290,
                         y: 150
                     },
                     {
-                        x: 250,
+                        x: 280,
                         y: 210
                     },
                     {
@@ -91,22 +91,22 @@ window.onload = function () {
             var scale = 0.01;
             polygon.update = function () {
                 this.p.angle++;
-                if (isAdd) {
-                    scale = scale + 0.01;
-                }
-                else {
-                    scale = scale - 0.01;
-                }
+                // if (isAdd) {
+                //     scale = scale + 0.01;
+                // }
+                // else {
+                //     scale = scale - 0.01;
+                // }
 
-                if (scale >= 1) {
-                    isAdd = false;
-                }
+                // if (scale >= 1) {
+                //     isAdd = false;
+                // }
 
-                if (scale <= 0.01) {
-                    isAdd = true;
-                }
-                this.p.scaleX = scale;
-                this.p.scaleY = scale;
+                // if (scale <= 0.01) {
+                //     isAdd = true;
+                // }
+                // this.p.scaleX = scale;
+                // this.p.scaleY = scale;
             }
 
             stage.addDisplayObject(polygon);

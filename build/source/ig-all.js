@@ -2338,6 +2338,14 @@ define('ig/Vector', ['require'], function (require) {
             this.p.y = this.p.points[0].y;
         }
         this.getBounds();
+        this.p.cX = this.p.x + this.bounds.width / 2;
+        this.p.cY = this.p.y + this.bounds.height / 2;
+        if (this.p.cX >= this.bounds.x + this.bounds.width) {
+            this.p.cX = this.bounds.x + this.bounds.width;
+        }
+        if (this.p.cY >= this.bounds.y + this.bounds.height) {
+            this.p.cY = this.bounds.y + this.bounds.height;
+        }
         this.originalPoints = util.extend(true, [], this.p.points);
         DisplayObject.call(this, this.p);
         return this;
@@ -2440,8 +2448,6 @@ define('ig/Vector', ['require'], function (require) {
                 width: maxX - minX,
                 height: maxY - minY
             };
-            this.p.cX = this.p.x + this.bounds.width / 2;
-            this.p.cY = this.p.y + this.bounds.height / 2;
             return this;
         },
         render: function (offCtx) {
