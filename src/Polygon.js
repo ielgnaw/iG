@@ -64,7 +64,6 @@ define(function (require) {
          * @return {Object} Polygon 实例
          */
         createPath: function (offCtx) {
-            // console.warn(this.matrix);
             var p = this.p;
             var points = p.points;
             var len = points.length;
@@ -94,9 +93,17 @@ define(function (require) {
             var len = points.length;
             for (var i = 0; i < len; i++) {
                 var point = points[i];
-                point.x += x;
-                point.y += y;
+                // point.x += x;
+                // point.y += y;
+                var originalPoint = this.originalPoints[i];
+                originalPoint.x += x;
+                originalPoint.y += y;
             }
+
+            this.getBounds();
+
+            this.p.cX = this.p.x + this.bounds.width / 2;
+            this.p.cY = this.p.y + this.bounds.height / 2;
             return this;
         },
 
@@ -189,9 +196,39 @@ define(function (require) {
          *
          * @return {boolean} 结果
          */
-        isPointInPath: function (ctx, x, y) {
-            this.createPath(ctx);
-            return ctx.isPointInPath(x, y);
+        isPointInPath: function (offCtx, x, y) {
+            this.createPath(offCtx);
+            // offCtx.beginPath();
+            // offCtx.moveTo(this.originalPoints[0].x, this.originalPoints[0].y);
+            // for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+            //     offCtx.lineTo(this.originalPoints[i].x, this.originalPoints[i].y);
+            // }
+            // offCtx.closePath();
+            return offCtx.isPointInPath(x, y);
+        },
+
+        /**
+         * 某个点是否和当前 DisplayObject 实例相交，这个方法应该是由子类重写的
+         *
+         * @override
+         *
+         * @param {number} x 点的横坐标
+         * @param {number} y 点的纵坐标
+         *
+         * @return {boolean} 是否相交
+         */
+        hitTestPoint: function (x, y) {
+            var stage = this.stageOwner;
+            // console.warn(this.p.points);
+            // console.warn(this.bounds);
+            // // console.warn(x, y);
+            // // console.warn(x, y, this.isPointInPath(stage.p.offCtx, x - this.p.cX, y - this.p.cY));
+            // // console.warn(this.matrix.m);
+            // // console.warn(this.matrix.transformPoint(x, y));
+            // // console.warn(this.matrix.m);
+            // // console.warn(x, y, this.matrix.transformPoint(x, y));
+            // console.warn(x, y, this.isPointInPath(stage.p.offCtx, x, y ));
+            return this.isPointInPath(stage.p.offCtx, x, y);
         },
 
         /**
@@ -229,9 +266,6 @@ define(function (require) {
                 height: maxY - minY
             };
 
-            // this.p.cX = this.p.x + this.bounds.width / 2;
-            // this.p.cY = this.p.y + this.bounds.height / 2;
-
             return this;
         },
 
@@ -249,22 +283,23 @@ define(function (require) {
             offCtx.globalAlpha = this.p.alpha;
 
             this.matrix.reset();
-            // var m = this.matrix.m;
-            // offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-            // this.matrix.translate(this.p.cX, this.p.cY);
             this.matrix.translate(this.p.cX, this.p.cY);
+            // this.matrix.translate(this.p.x, this.p.y);
             this.matrix.rotate(this.p.angle);
             this.matrix.scale(this.p.scaleX, this.p.scaleY);
+            this.matrix.translate(-this.p.cX, -this.p.cY);
+            // this.matrix.translate(-this.p.x, -this.p.y);
 
-            var m = this.matrix.m;
-            offCtx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            // var m = this.matrix.m;
+            // offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
             for (var i = 0, len = this.p.points.length; i < len; i++) {
                 this.p.points[i] = {
-                    x: this.originalPoints[i].x - this.p.cX,
-                    y: this.originalPoints[i].y - this.p.cY
+                    x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
+                    y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
                 };
             }
+
             this.createPath(offCtx);
             offCtx.fill();
             offCtx.stroke();
@@ -292,7 +327,6 @@ define(function (require) {
                     this.bounds.width,
                     this.bounds.height
                 );
-
                 offCtx.restore();
             }
         }
@@ -301,5 +335,4 @@ define(function (require) {
     util.inherits(Polygon, DisplayObject);
 
     return Polygon;
-
 });

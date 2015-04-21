@@ -1421,7 +1421,6 @@ define('ig/Stage', [
         this.p.displayObjectList = [];
         this.p.displayObjects = {};
         initMouseEvent.call(this);
-        Event.call(this, this.p);
         return this;
     }
     Stage.prototype = {
@@ -1560,7 +1559,7 @@ define('ig/Stage', [
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.p.name)) {
                 var p = this.p;
-                displayObj.p.stageOwner = this;
+                displayObj.stageOwner = displayObj.p.stageOwner = this;
                 p.displayObjectList.push(displayObj);
                 p.displayObjects[displayObj.p.name] = displayObj;
             }
@@ -1593,8 +1592,8 @@ define('ig/Stage', [
         }
     };
     function initMouseEvent() {
-        domEvt.initMouse(this);
         bindMouseEvent.call(this);
+        domEvt.initMouse(this);
     }
     function bindMouseEvent() {
         var me = this;
@@ -1855,6 +1854,9 @@ define('ig/DisplayObject', [
         },
         render: function (offCtx) {
             return this;
+        },
+        hitTestPoint: function (x, y) {
+            return false;
         }
     };
     util.inherits(DisplayObject, Event);
@@ -2078,14 +2080,15 @@ define('ig/domEvt', [
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
     exports.fireEvt = {};
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
+        console.warn('touchstart');
         var target = e.target;
         var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.p.mouseEnable && curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+            if (curDisplayObject.p.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.p.isCapture = true;
-                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.captureFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
@@ -2095,13 +2098,13 @@ define('ig/domEvt', [
         var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint && curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.p.name)) {
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.p.name)) {
                 holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
             if (curDisplayObject.p.mouseEnable && curDisplayObject.p.isCapture) {
                 e.data.curStage = target;
-                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.moveFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
@@ -2112,7 +2115,7 @@ define('ig/domEvt', [
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
             if (curDisplayObject.p.isCapture || inHoldSprites(curDisplayObject.p.name)) {
-                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.p.isCapture = false;
             }
         }
@@ -2372,9 +2375,13 @@ define('ig/Vector', ['require'], function (require) {
             var len = points.length;
             for (var i = 0; i < len; i++) {
                 var point = points[i];
-                point.x += x;
-                point.y += y;
+                var originalPoint = this.originalPoints[i];
+                originalPoint.x += x;
+                originalPoint.y += y;
             }
+            this.getBounds();
+            this.p.cX = this.p.x + this.bounds.width / 2;
+            this.p.cY = this.p.y + this.bounds.height / 2;
             return this;
         },
         getAxes: function () {
@@ -2418,9 +2425,13 @@ define('ig/Vector', ['require'], function (require) {
             }
             return false;
         },
-        isPointInPath: function (ctx, x, y) {
-            this.createPath(ctx);
-            return ctx.isPointInPath(x, y);
+        isPointInPath: function (offCtx, x, y) {
+            this.createPath(offCtx);
+            return offCtx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stageOwner;
+            return this.isPointInPath(stage.p.offCtx, x, y);
         },
         getBounds: function () {
             var points = this.p.points;
@@ -2459,12 +2470,11 @@ define('ig/Vector', ['require'], function (require) {
             this.matrix.translate(this.p.cX, this.p.cY);
             this.matrix.rotate(this.p.angle);
             this.matrix.scale(this.p.scaleX, this.p.scaleY);
-            var m = this.matrix.m;
-            offCtx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            this.matrix.translate(-this.p.cX, -this.p.cY);
             for (var i = 0, len = this.p.points.length; i < len; i++) {
                 this.p.points[i] = {
-                    x: this.originalPoints[i].x - this.p.cX,
-                    y: this.originalPoints[i].y - this.p.cY
+                    x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
+                    y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
                 };
             }
             this.createPath(offCtx);

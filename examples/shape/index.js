@@ -71,7 +71,7 @@ window.onload = function () {
                 name: 'polygon1',
                 points: [
                     {
-                        x: 290,
+                        x: 120,
                         y: 150
                     },
                     {
@@ -80,17 +80,47 @@ window.onload = function () {
                     },
                     {
                         x: 180,
-                        y: 200
+                        y: 260
+                    },
+                    {
+                        x: 120,
+                        y: 240
+                    },
+                    {
+                        x: 80,
+                        y: 180
                     },
                 ],
                 debug: 1,
-                angle: 0
+                angle: 0,
+                vX: 1,
+                captureFunc: function (d) {
+                    console.warn(d);
+                    console.warn(this);
+                    // this.p.x = 100;
+                    // this.p.y = 100;
+                    // debugger
+                    // this.move(d.x - this.originalPoints[0].x, d.y - this.originalPoints[0].y);
+                    // this.setPosY(100);
+                },
+                moveFunc: function (d) {
+                    this.move(d.x - this.originalPoints[0].x, d.y - this.originalPoints[0].y);
+                    console.warn(this.p.x);
+                }
+                // releaseFunc
             });
-
             var isAdd = false;
             var scale = 0.01;
             polygon.update = function () {
-                this.p.angle++;
+                // console.warn(this.bounds);
+                // if (this.bounds.x + this.bounds.width > game.p.width) {
+                //     this.move(-1, 0);
+                // }
+                // else {
+                //     this.move(1,0);
+                // }
+                // console.warn(game.p.width);
+                // this.p.angle = this.p.angle + 0.5;
                 // if (isAdd) {
                 //     scale = scale + 0.01;
                 // }
@@ -110,7 +140,35 @@ window.onload = function () {
             }
 
             stage.addDisplayObject(polygon);
-            console.warn(polygon);
+
+            // var polygon2 = new ig.Polygon({
+            //     name: 'polygon2',
+            //     points: [
+            //         {
+            //             x: 90,
+            //             y: 150
+            //         },
+            //         {
+            //             x: 150,
+            //             y: 210
+            //         },
+            //         {
+            //             x: 100,
+            //             y: 180
+            //         },
+            //     ],
+            //     // debug: 1,
+            //     angle: 0,
+            //     captureFunc: function () {
+            //         console.warn(1);
+            //     }
+            // });
+            // stage.addDisplayObject(polygon2);
+            // console.warn(polygon2);
+
+            // game.on('afterGameRender', function (d) {
+            //     // console.warn(stage);
+            // })
 
             // stage.setBgImg(d.bg);
 

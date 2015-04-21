@@ -63,8 +63,8 @@ define(function (require) {
 
         // 初始化 mouse 和 touch 事件
         initMouseEvent.call(this);
-
-        Event.call(this, this.p);
+        // debugger
+        // Event.call(this, this.p);
 
         return this;
     }
@@ -326,7 +326,7 @@ define(function (require) {
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.p.name)) {
                 var p = this.p;
-                displayObj.p.stageOwner = this;
+                displayObj.stageOwner = displayObj.p.stageOwner = this;
                 p.displayObjectList.push(displayObj);
                 p.displayObjects[displayObj.p.name] = displayObj;
             }
@@ -389,8 +389,8 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     function initMouseEvent() {
-        domEvt.initMouse(this);
         bindMouseEvent.call(this);
+        domEvt.initMouse(this);
     }
 
     /**

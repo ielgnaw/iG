@@ -53,19 +53,19 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
+        console.warn('touchstart');
         var target = e.target;
         var displayObjectList = target.p.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
 
             if (curDisplayObject.p.mouseEnable
-                && curDisplayObject.hitTestPoint
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.p.isCapture = true;
 
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
-                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.captureFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
@@ -85,8 +85,7 @@ define(function (require) {
             var curDisplayObject = displayObjectList[i];
 
             // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
-            if (curDisplayObject.hitTestPoint
-                && curDisplayObject.hitTestPoint(e.data.x, e.data.y)
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)
                 && !inHoldSprites(curDisplayObject.p.name)
             ) {
                 holdSprites.push(curDisplayObject);
@@ -97,7 +96,7 @@ define(function (require) {
             if (curDisplayObject.p.mouseEnable && curDisplayObject.p.isCapture) {
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 e.data.curStage = target;
-                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.moveFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
@@ -116,7 +115,7 @@ define(function (require) {
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
             if (curDisplayObject.p.isCapture || inHoldSprites(curDisplayObject.p.name)) {
-                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.p.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.p.isCapture = false;
             }
         }
@@ -154,7 +153,6 @@ define(function (require) {
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
                 e.preventDefault();
-
                 if (i === 0) {
                     me.isDown = true;
                 }

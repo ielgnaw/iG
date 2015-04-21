@@ -417,6 +417,20 @@ define(function (require) {
          */
         render: function (offCtx) {
             return this;
+        },
+
+        /**
+         * 某个点是否和当前 DisplayObject 实例相交，这个方法应该是由子类重写的
+         *
+         * @override
+         *
+         * @param {number} x 点的横坐标
+         * @param {number} y 点的纵坐标
+         *
+         * @return {boolean} 是否相交
+         */
+        hitTestPoint: function (x, y) {
+            return false;
         }
     };
 
