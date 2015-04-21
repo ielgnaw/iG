@@ -112,8 +112,6 @@ define(function (require) {
         // this.resources 同时指向 resourceLoader.resources 以及 ig.resources
         this.resources = resourceLoader.resources;
 
-        Event.call(this, this.p);
-
         return this;
     }
 
@@ -206,7 +204,6 @@ define(function (require) {
          */
         render: function () {
             var me = this;
-            var p = me.p;
             var _ = me._;
 
             _.requestID = window.requestAnimationFrame(
@@ -424,7 +421,6 @@ define(function (require) {
          * @param {string} stageName 场景名字
          */
         changeStage: function (stageName) {
-            var p = this.p;
             if (stageName) {
                 var stageStack = this.stageStack;
                 var candidateIndex = -1;
@@ -447,7 +443,6 @@ define(function (require) {
          * @return {Object} Game 实例
          */
         swapStageByName: function (fromName, toName) {
-            var p = this.p;
             var stageStack = this.stageStack;
             var length = stageStack.length;
             var fromIndex = -1;
@@ -477,7 +472,6 @@ define(function (require) {
          * @return {Object} Game 实例
          */
         swapStage: function (from, to) {
-            var p = this.p;
             var stageStack = this.stageStack;
             var len = stageStack.length;
             if (from >= 0 && from <= len - 1
@@ -509,7 +503,6 @@ define(function (require) {
          * 清除所有场景
          */
         clearAllStage: function () {
-            var p = this.p;
             var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
                 stageStack[i].destroy();

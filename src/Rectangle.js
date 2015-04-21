@@ -3,6 +3,8 @@
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
+'use strict';
+
 define(function (require) {
 
     var util = require('./util');
@@ -65,7 +67,9 @@ define(function (require) {
                     y: transformPoint.y
                 };
             }
+
             this.originalPoints = util.extend(true, [], this.points);
+
             return this;
         },
 

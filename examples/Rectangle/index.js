@@ -70,8 +70,8 @@ window.onload = function () {
                 vY: 3,
                 zIndex: 2,
                 captureFunc: function (d) {
-                    console.warn(d);
-                    console.warn(this);
+                    // console.warn(d);
+                    // console.warn(this);
                     // subX = d.x - this.x;
                     // subY = d.y - this.y;
                 },
@@ -122,7 +122,7 @@ window.onload = function () {
             }
 
             stage.addDisplayObject(rect);
-
+            console.warn(rect);
         }
     );
 };

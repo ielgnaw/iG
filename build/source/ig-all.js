@@ -1031,7 +1031,6 @@ define('ig/Game', [
         initGame.call(this);
         this._ = {};
         this.resources = resourceLoader.resources;
-        Event.call(this, this.p);
         return this;
     }
     Game.prototype = {
@@ -1089,7 +1088,6 @@ define('ig/Game', [
         },
         render: function () {
             var me = this;
-            var p = me.p;
             var _ = me._;
             _.requestID = window.requestAnimationFrame(function (context) {
                 return function () {
@@ -1205,7 +1203,6 @@ define('ig/Game', [
             return this.stages[name];
         },
         changeStage: function (stageName) {
-            var p = this.p;
             if (stageName) {
                 var stageStack = this.stageStack;
                 var candidateIndex = -1;
@@ -1219,7 +1216,6 @@ define('ig/Game', [
             }
         },
         swapStageByName: function (fromName, toName) {
-            var p = this.p;
             var stageStack = this.stageStack;
             var length = stageStack.length;
             var fromIndex = -1;
@@ -1238,7 +1234,6 @@ define('ig/Game', [
             return this;
         },
         swapStage: function (from, to) {
-            var p = this.p;
             var stageStack = this.stageStack;
             var len = stageStack.length;
             if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
@@ -1254,7 +1249,6 @@ define('ig/Game', [
             return stage.zIndex;
         },
         clearAllStage: function () {
-            var p = this.p;
             var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
                 stageStack[i].destroy();
@@ -2479,7 +2473,8 @@ define('ig/Vector', ['require'], function (require) {
     };
     util.inherits(Polygon, DisplayObject);
     return Polygon;
-});define('ig/Rectangle', [
+});'use strict';
+define('ig/Rectangle', [
     'require',
     './util',
     './DisplayObject'
