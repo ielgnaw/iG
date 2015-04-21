@@ -25,7 +25,6 @@ define(function (require) {
 
         this.generatePoints();
         this.getBounds();
-
         return this;
     }
 
@@ -70,6 +69,8 @@ define(function (require) {
 
             this.originalPoints = util.extend(true, [], this.points);
 
+            this.cX = this.x + this.width / 2;
+            this.cY = this.y + this.height / 2;
             return this;
         },
 
@@ -156,6 +157,7 @@ define(function (require) {
             this.debugRender(offCtx);
 
             offCtx.restore();
+
             return this;
         },
 
@@ -193,6 +195,8 @@ define(function (require) {
                 width: maxX - minX,
                 height: maxY - minY
             };
+
+            // console.warn(this.bounds.x);
 
             return this;
         },

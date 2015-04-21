@@ -109,23 +109,6 @@ define(function (require) {
             this.m[1] = m12;
             this.m[2] = m21;
             this.m[3] = m22;
-
-            // var aa = this.m[0];
-            // var ac = this.m[2];
-            // var atx = this.m[4];
-            // var ab = this.m[1];
-            // var ad = this.m[3];
-            // var aty = this.m[5];
-            // var st = sin(rad);
-            // var ct = cos(rad);
-
-            // this.m[0] = aa * ct + ab * st;
-            // this.m[1] = -aa * st + ab * ct;
-            // this.m[2] = ac * ct + ad * st;
-            // this.m[3] = -ac * st + ct * ad;
-            // this.m[4] = ct * atx + st * aty;
-            // this.m[5] = ct * aty - st * atx;
-
             return this;
         },
 

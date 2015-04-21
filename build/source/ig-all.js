@@ -2518,6 +2518,8 @@ define('ig/Rectangle', [
                 };
             }
             this.originalPoints = util.extend(true, [], this.points);
+            this.cX = this.x + this.width / 2;
+            this.cY = this.y + this.height / 2;
             return this;
         },
         createPath: function (offCtx) {

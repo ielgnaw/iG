@@ -65,10 +65,12 @@ window.onload = function () {
                 y: 80,
                 width: 100,
                 height: 50,
-                // debug: 1,
+                debug: 1,
                 vX: 3,
                 vY: 3,
                 zIndex: 2,
+                // scaleX: 1.5,
+                angle: 60,
                 captureFunc: function (d) {
                     // console.warn(d);
                     // console.warn(this);
@@ -84,41 +86,43 @@ window.onload = function () {
                     // subY = 0;
                 }
             });
-
+            var isAdd = false;
+            var scale = 0.01;
             rect.update = function () {
-                // this.angle = this.angle + 0.5;
-                // this.moveStep();
-                // console.warn(this.bounds.x, this.bounds.width);
+                this.angle = this.angle + 0.5;
+                this.moveStep();
+                // console.warn(this.bounds.x, this.x, this.vX);
                 // console.warn(this.bounds.x + this.bounds.width, game.width);
-                if (this.bounds.x + this.bounds.width > game.width
-                    || this.bounds.x < 0
-                ) {
-                    // debugger
-                    this.vX = -this.vX;
+                if (this.bounds.x + this.bounds.width > game.width) {
+                    this.vX = -Math.abs(this.vX);
+                }
+                else if (this.bounds.x < 0) {
+                    this.vX = Math.abs(this.vX);
                 }
 
-                if (this.bounds.y + this.bounds.height > game.height
-                    || this.bounds.y < 0
-                ) {
-                    this.vY = -this.vY;
+                if (this.bounds.y + this.bounds.height > game.height) {
+                    this.vY = -Math.abs(this.vY);
+                }
+                else if (this.bounds.y < 0) {
+                    this.vY = Math.abs(this.vY);
                 }
 
-                // if (isAdd) {
-                //     scale = scale + 0.01;
-                // }
-                // else {
-                //     scale = scale - 0.01;
-                // }
+                if (isAdd) {
+                    scale = scale + 0.01;
+                }
+                else {
+                    scale = scale - 0.01;
+                }
 
-                // if (scale >= 1) {
-                //     isAdd = false;
-                // }
+                if (scale >= 1) {
+                    isAdd = false;
+                }
 
-                // if (scale <= 0.01) {
-                //     isAdd = true;
-                // }
-                // this.scaleX = scale;
-                // this.scaleY = scale;
+                if (scale <= 0.01) {
+                    isAdd = true;
+                }
+                this.scaleX = scale;
+                this.scaleY = scale;
             }
 
             stage.addDisplayObject(rect);
