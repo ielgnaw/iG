@@ -8,6 +8,8 @@
 define(function (require) {
 
     var util = require('./util');
+    var Vector = require('./Vector');
+    var Projection = require('./Projection');
     var DisplayObject = require('./DisplayObject');
 
     /**
@@ -231,6 +233,83 @@ define(function (require) {
         hitTestPoint: function (x, y) {
             var stage = this.stageOwner;
             return this.isPointInPath(stage.offCtx, x, y);
+        },
+
+        /**
+         * 获取多边形每边的轴
+         *
+         * @return {Array} 轴数组
+         */
+        getAxes: function () {
+            var v1 = new Vector();
+            var v2 = new Vector();
+            var axes = [];
+            var points = this.points;
+            for (var i = 0, len = points.length - 1; i < len; i++) {
+                v1.x = points[i].x;
+                v1.y = points[i].y;
+                v2.x = points[i + 1].x;
+                v2.y = points[i + 1].y;
+
+                // v1.edge(v2).normal() 指示投影轴的方向
+                axes.push(v1.edge(v2).normal());
+            }
+            return axes;
+        },
+
+        /**
+         * 投射多边形上的每个点到指定的轴 (axis)
+         *
+         * @param {Object} axis 轴对象
+         *
+         * @return {Object} 投射对象
+         */
+        project: function (axis) {
+            var scalars = [];
+            var v = new Vector();
+            var points = this.points;
+            for (var i = 0, len = points.length; i < len; i++) {
+                var point = points[i];
+                v.x = point.x;
+                v.y = point.y;
+                scalars.push(v.dot(axis));
+            }
+            return new Projection(
+                Math.min.apply(Math, scalars),
+                Math.max.apply(Math, scalars)
+            );
+        },
+
+        /**
+         * 多边形和多边形的碰撞
+         *
+         * @param {Object} polygon 多边形
+         *
+         * @return {boolean} 结果
+         */
+        collidesWith: function (polygon) {
+            var axes = this.getAxes().concat(polygon.getAxes());
+            return !this.separationOnAxes(axes, polygon);
+        },
+
+        /**
+         * 找出分离轴
+         *
+         * @param {Array} axes 轴数组
+         * @param {Object} polygon 对变形
+         *
+         * @return {boolean} 是否存在分离轴
+         */
+        separationOnAxes: function (axes, polygon) {
+            for (var i = 0, len = axes.length; i < len; i++) {
+                var axis = axes[i];
+                var projection1 = polygon.project(axis);
+                var projection2 = this.project(axis);
+                if (!projection1.overlaps(projection2)) {
+                    return true;
+                }
+            }
+            return false;
         },
 
         /**

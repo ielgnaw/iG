@@ -56,8 +56,8 @@ window.onload = function () {
 
             game.start('stage-name');
 
-            var subX = 0;
-            var subY = 0;
+            var isAdd = false;
+            var scale = 0.01;
             var rect = new ig.Rectangle({
                 // fillStyle: '#f00',
                 name: 'rect1',
@@ -66,29 +66,90 @@ window.onload = function () {
                 width: 100,
                 height: 50,
                 debug: 1,
-                vX: 3,
-                vY: 3,
+                // vX: 1,
+                // vY: 1,
                 zIndex: 2,
                 // scaleX: 1.5,
                 angle: 60,
                 captureFunc: function (d) {
-                    // console.warn(d);
-                    // console.warn(this);
-                    // subX = d.x - this.x;
-                    // subY = d.y - this.y;
+                    console.warn(d);
+                    console.warn(this);
                 },
                 moveFunc: function (d) {
-                    this.x = d.x;// - subX;
-                    this.y = d.y;// - subY;
+                    this.x = d.x;
+                    this.y = d.y;
                 },
                 releaseFunc: function () {
-                    // subX = 0;
-                    // subY = 0;
                 }
             });
-            var isAdd = false;
-            var scale = 0.01;
             rect.update = function () {
+                this.angle = this.angle + 0.5;
+                this.moveStep();
+                // console.warn(this.bounds.x, this.x, this.vX);
+                // console.warn(this.bounds.x + this.bounds.width, game.width);
+                if (this.bounds.x + this.bounds.width > game.width) {
+                    this.vX = -Math.abs(this.vX);
+                }
+                else if (this.bounds.x < 0) {
+                    this.vX = Math.abs(this.vX);
+                }
+
+                if (this.bounds.y + this.bounds.height > game.height) {
+                    this.vY = -Math.abs(this.vY);
+                }
+                else if (this.bounds.y < 0) {
+                    this.vY = Math.abs(this.vY);
+                }
+
+                // if (isAdd) {
+                //     scale = scale + 0.01;
+                // }
+                // else {
+                //     scale = scale - 0.01;
+                // }
+
+                // if (scale >= 1) {
+                //     isAdd = false;
+                // }
+
+                // if (scale <= 0.01) {
+                //     isAdd = true;
+                // }
+                // this.scaleX = scale;
+                // this.scaleY = scale;
+
+                if (this.collidesWith(rect1)) {
+                    this.fillStyle = 'yellow';
+                }
+                else {
+                    this.fillStyle = '#000';
+                }
+            }
+            stage.addDisplayObject(rect);
+
+            var rect1 = new ig.Rectangle({
+                fillStyle: '#f00',
+                name: 'rect2',
+                x: 200,
+                y: 180,
+                width: 80,
+                height: 30,
+                debug: 1,
+                vX: 3,
+                vY: 3,
+                zIndex: 2,
+                // scaleX: 1.5,
+                angle: 45,
+                captureFunc: function (d) {
+                },
+                moveFunc: function (d) {
+                    this.x = d.x;
+                    this.y = d.y;
+                },
+                releaseFunc: function () {
+                }
+            });
+            rect1.update = function () {
                 this.angle = this.angle + 0.5;
                 this.moveStep();
                 // console.warn(this.bounds.x, this.x, this.vX);
@@ -123,10 +184,16 @@ window.onload = function () {
                 }
                 this.scaleX = scale;
                 this.scaleY = scale;
-            }
 
-            stage.addDisplayObject(rect);
-            console.warn(rect);
+                // console.warn(this.collidesWith(rect));
+                if (this.collidesWith(rect)) {
+                    this.fillStyle = 'green';
+                }
+                else {
+                    this.fillStyle = '#f00';
+                }
+            }
+            stage.addDisplayObject(rect1);
         }
     );
 };
