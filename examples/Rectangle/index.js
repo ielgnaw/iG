@@ -66,8 +66,8 @@ window.onload = function () {
                 width: 100,
                 height: 50,
                 debug: 1,
-                // vX: 1,
-                // vY: 1,
+                vX: 1,
+                vY: 1,
                 zIndex: 2,
                 // scaleX: 1.5,
                 angle: 60,
@@ -124,6 +124,51 @@ window.onload = function () {
                 else {
                     this.fillStyle = '#000';
                 }
+                // if (this.collidesWith(rect1).overlap) {
+                //     // console.warn(this.collidesWith(rect1));
+                //     console.warn(this.collidesWith(rect1));
+                //     var mtv = this.collidesWith(rect1);
+                //     var dy = mtv.axis.y * mtv.overlap;
+                //     var dx = mtv.axis.x * mtv.overlap;
+
+                //     if ((dx < 0 && this.bounds.x < 0) || (dx > 0 && this.bounds.x > 0)) {
+                //         dx = -dx;
+
+                //         // dx = -dx;
+                //         // this.vX = this.vX * dx / this.width;
+                //         this.vX = dx;
+                //     }
+
+                //     if ((dy < 0 && this.bounds.y < 0) || (dy > 0 && this.bounds.y > 0)) {
+                //         dy = -dy;
+
+                //         // dy = -dy;
+                //         // this.vY = this.vY * dy / this.height;
+                //         this.vY = dy;
+                //     }
+
+                //     // 减速
+                //     if (Math.abs(this.vX) >= 15) {
+                //         this.frictionX = .5;
+                //     }
+                //     else {
+                //         this.frictionX = 1;
+                //     }
+                //     if (Math.abs(this.vY) >= 15) {
+                //         this.frictionY = .5;
+                //     }
+                //     else {
+                //         this.frictionY = 1;
+                //     }
+
+                //     this.moveStep();
+
+                //     // this.x += dx;
+                //     // this.y += dy;
+
+                //     // this.generatePoints();
+                //     // this.getBounds();
+                // }
             }
             stage.addDisplayObject(rect);
 

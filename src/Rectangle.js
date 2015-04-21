@@ -290,6 +290,8 @@ define(function (require) {
         collidesWith: function (polygon) {
             var axes = this.getAxes().concat(polygon.getAxes());
             return !this.separationOnAxes(axes, polygon);
+
+            // return polygonCollidesWithPolygon(this, polygon);
         },
 
         /**
@@ -310,6 +312,32 @@ define(function (require) {
                 }
             }
             return false;
+        },
+
+        minimumTranslationVector: function (axes, shape) {
+            var minimumOverlap = 100000;
+            var overlap;
+            var axisWithSmallestOverlap;
+            var mtv;
+            for (var i = 0; i < axes.length; i++) {
+                var axis = axes[i];
+                var projection1 = shape.project(axis);
+                var projection2 = this.project(axis);
+                var overlap = projection1.getOverlap(projection2);
+
+                if (overlap === 0) {
+                    return new MinimumTranslationVector(undefined, 0);
+                }
+                else {
+                    // console.warn(overlap);
+                    if (overlap < minimumOverlap) {
+                        minimumOverlap = overlap;
+                        axisWithSmallestOverlap = axis;
+                    }
+                }
+            }
+
+            return new MinimumTranslationVector(axisWithSmallestOverlap, minimumOverlap);
         },
 
         /**
@@ -333,6 +361,18 @@ define(function (require) {
             }
         }
     };
+
+    function polygonCollidesWithPolygon(p1, p2) {
+        var mtv1 = p1.minimumTranslationVector(p1.getAxes(), p2);
+        var mtv2 = p1.minimumTranslationVector(p2.getAxes(), p2);
+
+        if (mtv1.overlap === 0 || mtv2.overlap === 0) {
+            return { axis: undefined, overlap: 0 };
+        }
+
+        return mtv1.overlap < mtv2.overlap ? mtv1 : mtv2;
+    };
+
 
     util.inherits(Rectangle, DisplayObject);
 
