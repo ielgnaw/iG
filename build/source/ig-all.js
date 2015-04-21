@@ -704,9 +704,7 @@ define('ig/Animation', [
     var DEFAULT_FPS = 60;
     var GUID_KEY = 0;
     function Animation(opts) {
-        opts = opts || {};
-        this.p = {};
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             name: GUID_KEY++,
             source: {},
             target: null,
@@ -717,27 +715,25 @@ define('ig/Animation', [
             fps: DEFAULT_FPS
         }, opts);
         this.setup();
-        Event.call(this, this.p);
         return this;
     }
     Animation.prototype = {
         constructor: Animation,
         setup: function () {
-            var p = this.p;
-            p.paused = false;
-            p.repeatCount = 0;
-            p.then = Date.now();
-            p.interval = 1000 / p.fps;
-            p.curFrame = 0;
-            p.curState = {};
-            p.initState = {};
-            p.frames = Math.ceil(p.duration * p.fps / 1000);
-            var source = p.source;
-            var target = p.target;
-            var range = p.range;
+            this.paused = false;
+            this.repeatCount = 0;
+            this.then = Date.now();
+            this.interval = 1000 / this.fps;
+            this.curFrame = 0;
+            this.curState = {};
+            this.initState = {};
+            this.frames = Math.ceil(this.duration * this.fps / 1000);
+            var source = this.source;
+            var target = this.target;
+            var range = this.range;
             if (range) {
                 for (var i in range) {
-                    p.curState[i] = {
+                    this.curState[i] = {
                         from: parseFloat(parseFloat(source[i]) - parseFloat(range[i])),
                         cur: parseFloat(source[i]),
                         to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
@@ -747,7 +743,7 @@ define('ig/Animation', [
             }
             if (util.getType(target) !== 'array') {
                 for (var i in target) {
-                    p.initState[i] = p.curState[i] = {
+                    this.initState[i] = this.curState[i] = {
                         from: parseFloat(source[i]),
                         cur: parseFloat(source[i]),
                         to: parseFloat(target[i])
@@ -755,18 +751,18 @@ define('ig/Animation', [
                 }
                 return this;
             }
-            p.animIndex = 0;
-            p.animLength = target.length;
-            for (var m = 0; m < p.animLength; m++) {
+            this.animIndex = 0;
+            this.animLength = target.length;
+            for (var m = 0; m < this.animLength; m++) {
                 for (var i in target[m]) {
                     if (m === 0) {
-                        p.curState[i] = {
+                        this.curState[i] = {
                             from: parseFloat(source[i]),
                             cur: parseFloat(source[i]),
                             to: parseFloat(target[m][i])
                         };
                     }
-                    p.initState[i] = {
+                    this.initState[i] = {
                         from: parseFloat(source[i]),
                         cur: parseFloat(source[i]),
                         to: parseFloat(target[m][i])
@@ -776,16 +772,15 @@ define('ig/Animation', [
             return this;
         },
         play: function () {
-            var p = this.p;
-            if (p.requestID) {
+            if (this.requestID) {
                 this.stop();
             }
-            p.paused = false;
+            this.paused = false;
             this.step();
             return this;
         },
         stop: function () {
-            window.cancelAnimationFrame(this.p.requestID);
+            window.cancelAnimationFrame(this.requestID);
             return this;
         },
         destroy: function () {
@@ -793,81 +788,78 @@ define('ig/Animation', [
             this.clearEvents();
         },
         togglePause: function () {
-            this.p.paused = !this.p.paused;
+            this.paused = !this.paused;
             return this;
         },
         pause: function () {
-            this.p.paused = true;
+            this.paused = true;
             return this;
         },
         resume: function () {
-            this.p.paused = false;
+            this.paused = false;
             return this;
         },
         next: function () {
             this.stop();
-            var p = this.p;
-            p.curFrame++;
-            p.curFrame = p.curFrame > p.frames ? p.frames : p.curFrame;
+            this.curFrame++;
+            this.curFrame = this.curFrame > this.frames ? this.frames : this.curFrame;
             this.step.call(this);
             return this;
         },
         prev: function () {
             this.stop();
-            var p = this.p;
-            p.curFrame--;
-            p.curFrame = p.curFrame < 0 ? 0 : p.curFrame;
+            this.curFrame--;
+            this.curFrame = this.curFrame < 0 ? 0 : this.curFrame;
             this.step.call(this);
             return this;
         },
         gotoAndPlay: function (frame) {
             this.stop();
-            this.p.curFrame = frame;
+            this.curFrame = frame;
             this.play.call(this);
             return this;
         },
         gotoAndStop: function (frame) {
             this.stop();
-            this.p.curFrame = frame;
+            this.curFrame = frame;
             this.step.call(this);
             return this;
         },
         swapFromTo: function () {
-            var p = this.p;
-            p.curFrame = 0;
-            p.curState = {};
-            if (util.getType(p.target) === 'array') {
-                p.target.reverse();
-                p.animIndex = 0;
-                p.animLength = p.target.length;
-                for (var i in p.target[p.animIndex]) {
-                    if (p.repeatCount % 2 === 0) {
-                        p.curState[i] = {
-                            from: p.initState[i].from,
-                            cur: p.initState[i].cur,
-                            to: p.initState[i].to
+            this.curFrame = 0;
+            this.curState = {};
+            if (util.getType(this.target) === 'array') {
+                this.target.reverse();
+                this.animIndex = 0;
+                this.animLength = this.target.length;
+                for (var i in this.target[this.animIndex]) {
+                    if (this.repeatCount % 2 === 0) {
+                        this.curState[i] = {
+                            from: this.initState[i].from,
+                            cur: this.initState[i].cur,
+                            to: this.initState[i].to
                         };
                     } else {
-                        p.curState[i] = {
-                            from: p.initState[i].to,
-                            cur: p.initState[i].to,
-                            to: p.initState[i].from
+                        this.curState[i] = {
+                            from: this.initState[i].to,
+                            cur: this.initState[i].to,
+                            to: this.initState[i].from
                         };
                     }
                 }
             } else {
-                for (var i in p.target) {
-                    if (p.repeatCount % 2 === 0) {
-                        p.curState[i] = {
-                            from: p.initState[i].from,
-                            cur: p.initState[i].cur,
-                            to: p.initState[i].to
+                for (var i in this.target) {
+                    if (this.repeatCount % 2 === 0) {
+                        this.curState[i] = {
+                            from: this.initState[i].from,
+                            cur: this.initState[i].cur,
+                            to: this.initState[i].to
                         };
                     } else {
-                        p.curState[i] = {
-                            from: p.initState[i].to,
-                            cur: p.initState[i].to,
-                            to: p.initState[i].from
+                        this.curState[i] = {
+                            from: this.initState[i].to,
+                            cur: this.initState[i].to,
+                            to: this.initState[i].from
                         };
                     }
                 }
@@ -876,118 +868,117 @@ define('ig/Animation', [
         },
         step: function () {
             var me = this;
-            var p = me.p;
-            p.requestID = window.requestAnimationFrame(function (context) {
+            me.requestID = window.requestAnimationFrame(function (context) {
                 return function () {
                     me.step.call(me);
                 };
             }(me));
-            if (p.paused) {
+            if (me.paused) {
                 return;
             }
-            p.now = Date.now();
-            p.delta = p.now - p.then;
-            if (p.delta <= p.interval) {
+            me.now = Date.now();
+            me.delta = me.now - me.then;
+            if (me.delta <= me.interval) {
                 return;
             }
             me.fire('step', {
                 data: {
-                    source: p.source,
+                    source: me.source,
                     instance: me
                 }
             });
-            p.then = p.now - p.delta % p.interval;
+            me.then = me.now - me.delta % me.interval;
             var ds;
-            for (var i in p.curState) {
-                ds = p.tween(p.curFrame, p.curState[i].cur, p.curState[i].to - p.curState[i].cur, p.frames).toFixed(2);
-                p.source[i] = parseFloat(ds);
+            for (var i in me.curState) {
+                ds = me.tween(me.curFrame, me.curState[i].cur, me.curState[i].to - me.curState[i].cur, me.frames).toFixed(2);
+                me.source[i] = parseFloat(ds);
             }
-            p.curFrame++;
-            if (p.curFrame < p.frames) {
+            me.curFrame++;
+            if (me.curFrame < me.frames) {
                 return;
             }
-            if (p.range && !p.rangeExec) {
-                p.curFrame = 0;
-                for (var i in p.curState) {
-                    p.curState[i] = {
-                        from: p.curState[i].to,
-                        cur: p.curState[i].to,
-                        to: p.curState[i].from
+            if (me.range && !me.rangeExec) {
+                me.curFrame = 0;
+                for (var i in me.curState) {
+                    me.curState[i] = {
+                        from: me.curState[i].to,
+                        cur: me.curState[i].to,
+                        to: me.curState[i].from
                     };
                 }
-                if (!p.repeat) {
-                    p.rangeExec = true;
+                if (!me.repeat) {
+                    me.rangeExec = true;
                 } else {
-                    p.repeatCount++;
-                    if (p.repeatCount % 2 === 0) {
+                    me.repeatCount++;
+                    if (me.repeatCount % 2 === 0) {
                         me.fire('repeat', {
                             data: {
-                                source: p.source,
+                                source: me.source,
                                 instance: me,
-                                repeatCount: p.repeatCount / 2
+                                repeatCount: me.repeatCount / 2
                             }
                         });
                     }
                 }
             } else {
-                if (p.animLength) {
+                if (me.animLength) {
                     me.fire('groupComplete', {
                         data: {
-                            source: p.source,
+                            source: me.source,
                             instance: me
                         }
                     });
-                    if (p.animIndex < p.animLength - 1) {
-                        p.animIndex++;
-                        p.curFrame = 0;
-                        p.curState = {};
-                        var flag = p.repeatCount % 2 === 0;
-                        for (var i in p.target[p.animIndex]) {
-                            p.curState[i] = {
-                                from: flag ? p.initState[i].from : p.initState[i].to,
-                                cur: flag ? p.initState[i].cur : p.initState[i].to,
-                                to: flag ? p.initState[i].to : p.initState[i].from
+                    if (me.animIndex < me.animLength - 1) {
+                        me.animIndex++;
+                        me.curFrame = 0;
+                        me.curState = {};
+                        var flag = me.repeatCount % 2 === 0;
+                        for (var i in me.target[me.animIndex]) {
+                            me.curState[i] = {
+                                from: flag ? me.initState[i].from : me.initState[i].to,
+                                cur: flag ? me.initState[i].cur : me.initState[i].to,
+                                to: flag ? me.initState[i].to : me.initState[i].from
                             };
                         }
                     } else {
-                        if (p.repeat) {
-                            p.repeatCount++;
+                        if (me.repeat) {
+                            me.repeatCount++;
                             me.swapFromTo();
                             me.fire('repeat', {
                                 data: {
-                                    source: p.source,
+                                    source: me.source,
                                     instance: me,
-                                    repeatCount: p.repeatCount
+                                    repeatCount: me.repeatCount
                                 }
                             });
                         } else {
                             me.stop();
-                            p.paused = false;
+                            me.paused = false;
                             me.fire('complete', {
                                 data: {
-                                    source: p.source,
+                                    source: me.source,
                                     instance: me
                                 }
                             });
                         }
                     }
                 } else {
-                    if (p.repeat) {
-                        p.repeatCount++;
+                    if (me.repeat) {
+                        me.repeatCount++;
                         me.swapFromTo();
                         me.fire('repeat', {
                             data: {
-                                source: p.source,
+                                source: me.source,
                                 instance: me,
-                                repeatCount: p.repeatCount
+                                repeatCount: me.repeatCount
                             }
                         });
                     } else {
                         me.stop();
-                        p.paused = false;
+                        me.paused = false;
                         me.fire('complete', {
                             data: {
-                                source: p.source,
+                                source: me.source,
                                 instance: me
                             }
                         });
@@ -1019,8 +1010,7 @@ define('ig/Game', [
     var STANDARD_HEIGHT = 480;
     var MAX_HEIGHT = 5000;
     function Game(opts) {
-        this.p = {};
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             name: 'ig_game_' + GUID_KEY++,
             fps: DEFAULT_FPS,
             canvas: null,
@@ -1032,15 +1022,15 @@ define('ig/Game', [
             maxHeight: MAX_HEIGHT,
             horizontalPageScroll: null
         }, opts);
-        if (!this.p.canvas) {
+        if (!this.canvas) {
             throw new Error('Game initialize must be require a canvas param');
         }
-        this.p.paused = false;
-        this.p.stageStack = [];
-        this.p.stages = {};
+        this.paused = false;
+        this.stageStack = [];
+        this.stages = {};
         initGame.call(this);
         this._ = {};
-        this.resources = this.p.resources = resourceLoader.resources;
+        this.resources = resourceLoader.resources;
         Event.call(this, this.p);
         return this;
     }
@@ -1048,11 +1038,10 @@ define('ig/Game', [
         constructor: Game,
         start: function (startStageName, startCallback) {
             var _ = this._;
-            var p = this.p;
-            p.paused = false;
+            this.paused = false;
             _.startTime = Date.now();
             _.now = 0;
-            _.interval = 1000 / p.fps;
+            _.interval = 1000 / this.fps;
             _.delta = 0;
             _.realFpsStart = Date.now();
             _.realFps = 0;
@@ -1077,10 +1066,10 @@ define('ig/Game', [
             default:
             }
             if (_startStageName) {
-                var stageStack = p.stageStack;
+                var stageStack = this.stageStack;
                 var candidateIndex = -1;
                 for (var i = 0, len = stageStack.length; i < len; i++) {
-                    if (stageStack[i].p.name === _startStageName) {
+                    if (stageStack[i].name === _startStageName) {
                         candidateIndex = i;
                         break;
                     }
@@ -1107,7 +1096,7 @@ define('ig/Game', [
                     context.render.call(context);
                 };
             }(me));
-            if (!p.paused) {
+            if (!this.paused) {
                 _.now = Date.now();
                 _.delta = _.now - _.startTime;
                 if (_.delta > _.interval) {
@@ -1148,11 +1137,11 @@ define('ig/Game', [
             }
         },
         pause: function () {
-            this.p.paused = true;
+            this.paused = true;
             return this;
         },
         resume: function () {
-            this.p.paused = false;
+            this.paused = false;
             return this;
         },
         stop: function () {
@@ -1165,10 +1154,9 @@ define('ig/Game', [
             this.clearEvents();
         },
         createStage: function (stageOpts) {
-            var p = this.p;
             stageOpts = util.extend(true, {}, {
-                canvas: p.canvas,
-                offCanvas: p.offCanvas,
+                canvas: this.canvas,
+                offCanvas: this.offCanvas,
                 gameOwner: this
             }, stageOpts);
             var stage = new Stage(stageOpts);
@@ -1176,34 +1164,31 @@ define('ig/Game', [
             return stage;
         },
         pushStage: function (stage) {
-            var p = this.p;
             if (!this.getStageByName(stage.name)) {
                 stage.gameOwner = this;
-                p.stageStack.push(stage);
-                p.stages[stage.p.name] = stage;
+                this.stageStack.push(stage);
+                this.stages[stage.name] = stage;
                 this.sortStageIndex();
             }
         },
         popStage: function () {
-            var p = this.p;
-            var stage = p.stageStack.pop();
+            var stage = this.stageStack.pop();
             if (stage) {
-                delete p.stages[stage.name];
+                delete this.stages[stage.name];
                 this.sortStageIndex();
             }
         },
         sortStageIndex: function () {
-            var stageStack = this.p.stageStack;
+            var stageStack = this.stageStack;
             for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
-                stageStack[i].p.zIndex = j;
+                stageStack[i].zIndex = j;
             }
         },
         removeStageByName: function (name) {
             var st = this.getStageByName(name);
             if (st) {
-                var p = this.p;
-                delete p.stages[st.name];
-                var stageStack = p.stageStack;
+                delete this.stages[st.name];
+                var stageStack = this.stageStack;
                 util.removeArrByCondition(stageStack, function (s) {
                     return s.name === name;
                 });
@@ -1211,19 +1196,18 @@ define('ig/Game', [
             }
         },
         getCurrentStage: function () {
-            var p = this.p;
-            return p.stageStack[0];
+            return this.stageStack[0];
         },
         getStageStack: function () {
-            return this.p.stageStack;
+            return this.stageStack;
         },
         getStageByName: function (name) {
-            return this.p.stages[name];
+            return this.stages[name];
         },
         changeStage: function (stageName) {
             var p = this.p;
             if (stageName) {
-                var stageStack = p.stageStack;
+                var stageStack = this.stageStack;
                 var candidateIndex = -1;
                 for (var i = 0, len = stageStack.length; i < len; i++) {
                     if (stageStack[i].name === stageName) {
@@ -1236,15 +1220,15 @@ define('ig/Game', [
         },
         swapStageByName: function (fromName, toName) {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             var length = stageStack.length;
             var fromIndex = -1;
             var toIndex = -1;
             for (var i = 0; i < length; i++) {
-                if (stageStack[i].p.name === fromName) {
+                if (stageStack[i].name === fromName) {
                     fromIndex = i;
                 }
-                if (stageStack[i].p.name === toName) {
+                if (stageStack[i].name === toName) {
                     toIndex = i;
                 }
             }
@@ -1255,7 +1239,7 @@ define('ig/Game', [
         },
         swapStage: function (from, to) {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             var len = stageStack.length;
             if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
                 var sc = stageStack[from];
@@ -1263,20 +1247,20 @@ define('ig/Game', [
                 stageStack[to] = sc;
                 this.sortStageIndex();
             }
-            p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             return this;
         },
         getStageIndex: function (stage) {
-            return stage.p.zIndex;
+            return stage.zIndex;
         },
         clearAllStage: function () {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
                 stageStack[i].destroy();
             }
-            p.stages = {};
-            p.stageStack = [];
+            this.stages = {};
+            this.stageStack = [];
         },
         loadOther: function (id, src, callback, errorCallback) {
             return resourceLoader.loadOther(id, src, callback, errorCallback);
@@ -1289,21 +1273,20 @@ define('ig/Game', [
         }
     };
     function initGame() {
-        var p = this.p;
-        p.canvas = util.domWrap(p.canvas, document.createElement('div'), 'ig-game-container-' + p.name);
-        p.canvas.width = p.width;
-        p.canvas.height = p.height;
-        var width = parseInt(p.canvas.width, 10);
-        var height = parseInt(p.canvas.height, 10);
-        var maxWidth = p.maxWidth || 5000;
-        var maxHeight = p.maxHeight || 5000;
-        if (p.maximize) {
+        this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        var width = parseInt(this.canvas.width, 10);
+        var height = parseInt(this.canvas.height, 10);
+        var maxWidth = this.maxWidth || 5000;
+        var maxHeight = this.maxHeight || 5000;
+        if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
             var horizontalPageScroll;
-            var horizontalPageScrollType = util.getType(p.horizontalPageScroll);
+            var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
             if (horizontalPageScrollType === 'number') {
-                horizontalPageScroll = p.horizontalPageScroll;
+                horizontalPageScroll = this.horizontalPageScroll;
             } else if (horizontalPageScrollType === 'boolean') {
                 horizontalPageScroll = 17;
             } else {
@@ -1313,77 +1296,75 @@ define('ig/Game', [
             height = Math.min(window.innerHeight - 5, maxHeight);
         }
         if (env.supportTouch) {
-            p.canvas.style.height = height * 2 + 'px';
+            this.canvas.style.height = height * 2 + 'px';
             window.scrollTo(0, 1);
             width = Math.min(window.innerWidth, maxWidth);
             height = Math.min(window.innerHeight, maxHeight);
         }
-        p.ctx = p.canvas.getContext('2d');
-        p.canvas.style.height = height + 'px';
-        p.canvas.style.width = width + 'px';
-        p.canvas.width = width;
-        p.canvas.height = height;
-        p.canvas.style.position = 'relative';
-        p.width = p.canvas.width;
-        p.cssWidth = p.canvas.style.width;
-        p.height = p.canvas.height;
-        p.cssHeight = p.canvas.style.height;
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.style.height = height + 'px';
+        this.canvas.style.width = width + 'px';
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.canvas.style.position = 'relative';
+        this.width = this.canvas.width;
+        this.cssWidth = this.canvas.style.width;
+        this.height = this.canvas.height;
+        this.cssHeight = this.canvas.style.height;
         setOffCanvas.call(this);
-        var canvasParent = p.canvas.parentNode;
+        var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
         canvasParent.style.margin = '0 auto';
         canvasParent.style.position = 'relative';
-        if (p.scaleFit) {
+        if (this.scaleFit) {
             fitScreen.call(this);
         }
         var me = this;
         window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
             setTimeout(function () {
                 window.scrollTo(0, 1);
-                if (p.scaleFit) {
+                if (me.scaleFit) {
                     fitScreen.call(me);
                 }
             }, 0);
         }, false);
-        p.ratioX = p.width / STANDARD_WIDTH;
-        p.ratioY = p.height / STANDARD_HEIGHT;
+        this.ratioX = this.width / STANDARD_WIDTH;
+        this.ratioY = this.height / STANDARD_HEIGHT;
         return this;
     }
     function setOffCanvas() {
-        var p = this.p;
-        if (!p.offCanvas) {
-            p.offCanvas = document.createElement('canvas');
-            p.offCtx = p.offCanvas.getContext('2d');
+        if (!this.offCanvas) {
+            this.offCanvas = document.createElement('canvas');
+            this.offCtx = this.offCanvas.getContext('2d');
         }
-        p.offCanvas.width = p.canvas.width;
-        p.offCanvas.style.width = p.canvas.style.width;
-        p.offCanvas.height = p.canvas.height;
-        p.offCanvas.style.height = p.canvas.style.height;
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
     }
     function fitScreen() {
-        var p = this.p;
         var winWidth = window.innerWidth;
         var winHeight = window.innerHeight;
         var winRatio = winWidth / winHeight;
-        var gameRatio = p.canvas.width / p.canvas.height;
-        var scaleRatio = gameRatio < winRatio ? winHeight / p.canvas.height : winWidth / p.canvas.width;
-        var scaleWidth = p.canvas.width * scaleRatio;
-        var scaleHeight = p.canvas.height * scaleRatio;
-        p.canvas.style.width = scaleWidth + 'px';
-        p.canvas.style.height = scaleHeight + 'px';
-        if (p.canvas.parentNode) {
-            p.canvas.parentNode.style.width = scaleWidth + 'px';
-            p.canvas.parentNode.style.height = scaleHeight + 'px';
+        var gameRatio = this.canvas.width / this.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / this.canvas.height : winWidth / this.canvas.width;
+        var scaleWidth = this.canvas.width * scaleRatio;
+        var scaleHeight = this.canvas.height * scaleRatio;
+        this.canvas.style.width = scaleWidth + 'px';
+        this.canvas.style.height = scaleHeight + 'px';
+        if (this.canvas.parentNode) {
+            this.canvas.parentNode.style.width = scaleWidth + 'px';
+            this.canvas.parentNode.style.height = scaleHeight + 'px';
         }
         if (gameRatio >= winRatio) {
             var topPos = (winHeight - scaleHeight) / 2;
-            p.canvas.style.top = topPos + 'px';
+            this.canvas.style.top = topPos + 'px';
         }
-        p.width = p.canvas.width;
-        p.cssWidth = p.canvas.style.width;
-        p.height = p.canvas.height;
-        p.cssHeight = p.canvas.style.height;
-        p.scaleRatio = scaleRatio;
+        this.width = this.canvas.width;
+        this.cssWidth = this.canvas.style.width;
+        this.height = this.canvas.height;
+        this.cssHeight = this.canvas.style.height;
+        this.scaleRatio = scaleRatio;
         setOffCanvas.call(this);
     }
     util.inherits(Game, Event);
@@ -1406,37 +1387,34 @@ define('ig/Stage', [
     var newImage4ParallaxRepeat = new Image();
     var GUID_KEY = 0;
     function Stage(opts) {
-        this.p = {};
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             name: 'ig_stage_' + GUID_KEY++,
             canvas: opts.canvas,
             ctx: opts.canvas.getContext('2d'),
             offCanvas: opts.offCanvas,
             offCtx: opts.offCanvas.getContext('2d'),
-            width: opts.gameOwner.p.width,
-            height: opts.gameOwner.p.height,
-            cssWidth: opts.gameOwner.p.cssWidth,
-            cssHeight: opts.gameOwner.p.cssHeight
+            width: opts.gameOwner.width,
+            height: opts.gameOwner.height,
+            cssWidth: opts.gameOwner.cssWidth,
+            cssHeight: opts.gameOwner.cssHeight
         }, opts);
-        this.p.displayObjectList = [];
-        this.p.displayObjects = {};
+        this.displayObjectList = [];
+        this.displayObjects = {};
         initMouseEvent.call(this);
         return this;
     }
     Stage.prototype = {
         constructor: Stage,
         clear: function () {
-            var p = this.p;
-            p.offCtx.clearRect(0, 0, p.width, p.height);
+            this.offCtx.clearRect(0, 0, this.width, this.height);
             return this;
         },
         getIndex: function () {
-            return this.p.zIndex;
+            return this.zIndex;
         },
         setBgColor: function (color) {
-            var p = this.p;
-            p.bgColor = color;
-            p.canvas.style.backgroundColor = p.bgColor || 'transparent';
+            this.bgColor = color;
+            this.canvas.style.backgroundColor = this.bgColor || 'transparent';
             return this;
         },
         setBgImg: function (img, repeatPattern) {
@@ -1456,19 +1434,19 @@ define('ig/Stage', [
                 bgPos = 'center';
                 break;
             case 'full':
-                bgSize = p.cssWidth + 'px ' + p.cssHeight + 'px';
+                bgSize = this.cssWidth + 'px ' + this.cssHeight + 'px';
                 break;
             }
             if (imgUrl) {
-                p.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-                p.canvas.style.backgroundRepeat = bgRepeat;
-                p.canvas.style.backgroundPosition = bgPos;
-                p.canvas.style.backgroundSize = bgSize;
+                this.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+                this.canvas.style.backgroundRepeat = bgRepeat;
+                this.canvas.style.backgroundPosition = bgPos;
+                this.canvas.style.backgroundSize = bgSize;
             } else {
-                p.canvas.style.backgroundImage = '';
-                p.canvas.style.backgroundRepeat = '';
-                p.canvas.style.backgroundPosition = '';
-                p.canvas.style.backgroundSize = '';
+                this.canvas.style.backgroundImage = '';
+                this.canvas.style.backgroundRepeat = '';
+                this.canvas.style.backgroundPosition = '';
+                this.canvas.style.backgroundSize = '';
             }
             return this;
         },
@@ -1482,8 +1460,7 @@ define('ig/Stage', [
                 'repeat-x',
                 'repeat-y'
             ].indexOf(opts.repeat) !== -1 ? opts.repeat : 'no-repeat';
-            var p = this.p;
-            p.parallax = util.extend({}, {
+            this.parallax = util.extend({}, {
                 x: 0,
                 y: 0,
                 vX: 0,
@@ -1501,13 +1478,13 @@ define('ig/Stage', [
                 dt = 1 / 15;
             }
             updateParallax.call(this, totalFrameCounter);
-            var displayObjectList = this.p.displayObjectList;
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
                 var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.p.status;
+                    displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
                         curDisplay.update(dt);
                     }
@@ -1517,39 +1494,38 @@ define('ig/Stage', [
         render: function () {
             this.clear();
             this.fire('beforeStageRender');
-            var p = this.p;
-            p.offCtx.save();
-            p.offCtx.clearRect(0, 0, p.offCanvas.width, p.offCanvas.height);
+            this.offCtx.save();
+            this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
             renderParallax.call(this);
             this.sortDisplayObject();
-            var displayObjectList = p.displayObjectList;
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
                 var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.p.status;
+                    displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.DESTROYED) {
                         this.removeDisplayObject(curDisplay);
                     } else if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
-                        curDisplay.render(p.offCtx);
+                        curDisplay.render(this.offCtx);
                     }
                 }
             }
-            p.offCtx.restore();
-            p.ctx.drawImage(p.offCanvas, 0, 0);
+            this.offCtx.restore();
+            this.ctx.drawImage(this.offCanvas, 0, 0);
             this.fire('afterStageRender');
         },
         sortDisplayObject: function () {
-            this.p.displayObjectList.sort(function (o1, o2) {
-                return o1.p.zIndex - o2.p.zIndex;
+            this.displayObjectList.sort(function (o1, o2) {
+                return o1.zIndex - o2.zIndex;
             });
         },
         getDisplayObjectList: function () {
-            return this.p.displayObjectList;
+            return this.displayObjectList;
         },
         getDisplayObjectByName: function (name) {
-            return this.p.displayObjects[name];
+            return this.displayObjects[name];
         },
         createDisplayObject: function (displayObjOpts) {
             var displayObj = new DisplayObject(displayObjOpts);
@@ -1557,34 +1533,31 @@ define('ig/Stage', [
             return displayObj;
         },
         addDisplayObject: function (displayObj) {
-            if (displayObj && !this.getDisplayObjectByName(displayObj.p.name)) {
-                var p = this.p;
-                displayObj.stageOwner = displayObj.p.stageOwner = this;
-                p.displayObjectList.push(displayObj);
-                p.displayObjects[displayObj.p.name] = displayObj;
+            if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
+                displayObj.stageOwner = displayObj.stageOwner = this;
+                this.displayObjectList.push(displayObj);
+                this.displayObjects[displayObj.name] = displayObj;
             }
             return this;
         },
         removeDisplayObject: function (displayObj) {
-            displayObj && this.removeDisplayObjectByName(displayObj.p.name);
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
             return this;
         },
         removeDisplayObjectByName: function (name) {
-            var p = this.p;
-            var candidateObj = p.displayObjects[name];
+            var candidateObj = this.displayObjects[name];
             if (candidateObj) {
-                delete p.displayObjects[candidateObj.p.name];
-                var displayObjectList = p.displayObjectList;
+                delete this.displayObjects[candidateObj.name];
+                var displayObjectList = this.displayObjectList;
                 util.removeArrByCondition(displayObjectList, function (o) {
-                    return o.p.name === name;
+                    return o.name === name;
                 });
             }
             return this;
         },
         clearAllDisplayObject: function () {
-            var p = this.p;
-            p.displayObjectList = [];
-            p.displayObjects = {};
+            this.displayObjectList = [];
+            this.displayObjects = {};
         },
         destroy: function () {
             this.clearAllDisplayObject();
@@ -1606,8 +1579,7 @@ define('ig/Stage', [
         return me;
     }
     function updateParallax(totalFrameCounter) {
-        var p = this.p;
-        var parallax = p.parallax;
+        var parallax = this.parallax;
         if (parallax) {
             if (parallax.anims && util.getType(parallax.anims) === 'array') {
                 parallax.animInterval = parallax.animInterval || 10000;
@@ -1635,10 +1607,9 @@ define('ig/Stage', [
         }
     }
     function renderParallax() {
-        var p = this.p;
-        var parallax = p.parallax;
+        var parallax = this.parallax;
         if (parallax) {
-            var offCtx = p.offCtx;
+            var offCtx = this.offCtx;
             if (parallax.repeat !== 'no-repeat') {
                 renderParallaxRepeatImage.call(parallax, offCtx);
             }
@@ -1715,8 +1686,7 @@ define('ig/DisplayObject', [
     var STATUS = ig.STATUS;
     var GUID_KEY = 0;
     function DisplayObject(opts) {
-        this.p = {};
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             name: 'ig_displayobject_' + GUID_KEY++,
             x: 0,
             y: 0,
@@ -1748,72 +1718,70 @@ define('ig/DisplayObject', [
         }, opts);
         this.children = [];
         this.matrix = new Matrix();
-        this.setPosX(this.p.x);
-        this.setPosY(this.p.y);
-        Event.call(this, this.p);
+        this.setPosX(this.x);
+        this.setPosY(this.y);
         return this;
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
         changeStatus: function (status) {
-            this.p.status = status || this.p.status;
+            this.status = status || this.status;
             return this;
         },
         setCaptureFunc: function (func) {
-            this.p.captureFunc = func || util.noop;
+            this.captureFunc = func || util.noop;
             return this;
         },
         setMoveFunc: function (func) {
-            this.p.moveFunc = func || util.noop;
+            this.moveFunc = func || util.noop;
             return this;
         },
         setReleaseFunc: function (func) {
-            this.p.releaseFunc = func || util.noop;
+            this.releaseFunc = func || util.noop;
             return this;
         },
         setPosX: function (x) {
-            this.p.x = x || 0;
+            this.x = x || 0;
             return this;
         },
         setPosY: function (y) {
-            this.p.y = y || 0;
+            this.y = y || 0;
             return this;
         },
         setAccelerationX: function (ax) {
-            this.p.aX = ax || this.p.aX;
+            this.aX = ax || this.aX;
             return this;
         },
         setAccelerationY: function (ay) {
-            this.p.aY = ay || this.p.aY;
+            this.aY = ay || this.aY;
             return this;
         },
         setFrictionX: function (frictionX) {
-            this.p.frictionX = frictionX || this.p.frictionX;
+            this.frictionX = frictionX || this.frictionX;
             return this;
         },
         setFrictionY: function (frictionY) {
-            this.p.frictionY = frictionY || this.p.frictionY;
+            this.frictionY = frictionY || this.frictionY;
             return this;
         },
         move: function (x, y) {
-            this.p.x += x;
-            this.p.y += y;
+            this.x += x;
+            this.y += y;
             return this;
         },
         moveStep: function () {
-            var p = this.p;
-            p.vX += p.aX;
-            p.vX *= p.frictionX;
-            p.x += p.vX;
-            p.vY += p.aY;
-            p.vY *= p.frictionY;
-            p.y += p.vY;
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
             return this;
         },
         rotate: function (angle) {
-            var offCtx = this.p.stageOwner.p.offCtx;
+            var offCtx = this.stageOwner.offCtx;
             offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.p.angle));
+            offCtx.rotate(util.deg2Rad(angle || this.angle));
             offCtx.restore();
             return this;
         },
@@ -1842,7 +1810,6 @@ define('ig/DisplayObject', [
         },
         stopAnimate: function () {
             this.animate && this.animate.stop();
-            console.warn(this.animate);
             return this;
         },
         destroyAnimate: function () {
@@ -1870,59 +1837,57 @@ define('ig/Text', [
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
     function Text(opts) {
-        this.p = {};
-        util.extend(true, this.p, {
+        DisplayObject.call(this, this);
+        util.extend(true, this, {
             content: '',
             size: 30,
             isBold: false,
             fontFamily: 'sans-serif'
         }, opts);
-        var p = this.p;
-        var obj = measureText(p.content, p.isBold, p.fontFamily, p.size);
+        var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
         this.bounds = {
-            x: p.x,
-            y: p.y,
+            x: this.x,
+            y: this.y,
             width: obj.width,
             height: obj.height
         };
-        this.font = '' + (p.isBold ? 'bold ' : '') + p.size + 'pt ' + p.fontFamily;
-        DisplayObject.call(this, this.p);
+        this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
         return this;
     }
     Text.prototype = {
         constructor: Text,
         changeContent: function (content) {
-            this.p.content = content;
-            var obj = measureText(this.p.content, this.p.isBold, this.p.fontFamily, this.p.size);
+            this.content = content;
+            var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
             this.bounds = {
-                x: this.p.x,
-                y: this.p.y,
+                x: this.x,
+                y: this.y,
                 width: obj.width,
                 height: obj.height
             };
             return this;
         },
         getContent: function () {
-            return this.p.content;
+            return this.content;
         },
         render: function (offCtx) {
             offCtx.save();
-            offCtx.fillStyle = this.p.fillStyle;
-            offCtx.globalAlpha = this.p.alpha;
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.globalAlpha = this.alpha;
             offCtx.font = this.font;
             this.matrix.reset();
-            this.matrix.translate(this.p.x, this.p.y);
-            this.matrix.rotate(this.p.angle);
-            this.matrix.scale(this.p.scaleX, this.p.scaleY);
+            this.matrix.translate(this.x, this.y);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-            offCtx.fillText(this.p.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
+            offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
             this.debugRender(offCtx);
             offCtx.restore();
             return this;
         },
         debugRender: function (offCtx) {
-            if (this.p.debug) {
+            if (this.debug) {
                 offCtx.save();
                 var m = this.matrix.reset().m;
                 this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height - 10);
@@ -2070,7 +2035,7 @@ define('ig/domEvt', [
     var holdSprites = [];
     function inHoldSprites(displayObjectName) {
         for (var i = 0, len = holdSprites.length; i < len; i++) {
-            if (holdSprites[i].p.name === displayObjectName) {
+            if (holdSprites[i].name === displayObjectName) {
                 return true;
             }
         }
@@ -2082,41 +2047,41 @@ define('ig/domEvt', [
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
         console.warn('touchstart');
         var target = e.target;
-        var displayObjectList = target.p.displayObjectList;
+        var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.p.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
-                curDisplayObject.p.isCapture = true;
-                curDisplayObject.p.captureFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = true;
+                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
     };
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         var target = e.target;
-        var displayObjectList = target.p.displayObjectList;
+        var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.p.name)) {
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
                 holdSprites.push(curDisplayObject);
             }
             e.data.holdSprites = holdSprites;
-            if (curDisplayObject.p.mouseEnable && curDisplayObject.p.isCapture) {
+            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 e.data.curStage = target;
-                curDisplayObject.p.moveFunc.call(curDisplayObject, e.data);
+                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
         }
         return target;
     };
     exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
         var target = e.target;
-        var displayObjectList = target.p.displayObjectList;
+        var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.p.isCapture || inHoldSprites(curDisplayObject.p.name)) {
-                curDisplayObject.p.releaseFunc.call(curDisplayObject, e.data);
-                curDisplayObject.p.isCapture = false;
+            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = false;
             }
         }
         holdSprites = [];
@@ -2124,7 +2089,7 @@ define('ig/domEvt', [
     };
     exports.initMouse = function (stage) {
         this.stage = stage;
-        this.element = stage.p.canvas;
+        this.element = stage.canvas;
         this.x = 0;
         this.y = 0;
         this.isDown = false;
@@ -2334,30 +2299,29 @@ define('ig/Vector', ['require'], function (require) {
     var Projection = require('./Projection');
     var DisplayObject = require('./DisplayObject');
     function Polygon(opts) {
-        this.p = {};
-        util.extend(true, this.p, { points: [] }, opts);
-        if (this.p.points.length) {
-            this.p.x = this.p.points[0].x;
-            this.p.y = this.p.points[0].y;
+        DisplayObject.call(this, this);
+        util.extend(true, this, { points: [] }, opts);
+        if (this.points.length) {
+            this.x = this.points[0].x;
+            this.y = this.points[0].y;
         }
         this.getBounds();
-        this.p.cX = this.p.x + this.bounds.width / 2;
-        this.p.cY = this.p.y + this.bounds.height / 2;
-        if (this.p.cX >= this.bounds.x + this.bounds.width) {
-            this.p.cX = this.bounds.x + this.bounds.width;
+        this.cX = this.x + this.bounds.width / 2;
+        this.cY = this.y + this.bounds.height / 2;
+        if (this.cX >= this.bounds.x + this.bounds.width) {
+            this.cX = this.bounds.x + this.bounds.width;
         }
-        if (this.p.cY >= this.bounds.y + this.bounds.height) {
-            this.p.cY = this.bounds.y + this.bounds.height;
+        if (this.cY >= this.bounds.y + this.bounds.height) {
+            this.cY = this.bounds.y + this.bounds.height;
         }
-        this.originalPoints = util.extend(true, [], this.p.points);
-        DisplayObject.call(this, this.p);
+        this.originalPoints = util.extend(true, [], this.points);
+        console.warn(this);
         return this;
     }
     Polygon.prototype = {
         constructor: Polygon,
         createPath: function (offCtx) {
-            var p = this.p;
-            var points = p.points;
+            var points = this.points;
             var len = points.length;
             if (!len) {
                 return;
@@ -2371,7 +2335,7 @@ define('ig/Vector', ['require'], function (require) {
             return this;
         },
         move: function (x, y) {
-            var points = this.p.points;
+            var points = this.points;
             var len = points.length;
             for (var i = 0; i < len; i++) {
                 var point = points[i];
@@ -2380,15 +2344,15 @@ define('ig/Vector', ['require'], function (require) {
                 originalPoint.y += y;
             }
             this.getBounds();
-            this.p.cX = this.p.x + this.bounds.width / 2;
-            this.p.cY = this.p.y + this.bounds.height / 2;
+            this.cX = this.x + this.bounds.width / 2;
+            this.cY = this.y + this.bounds.height / 2;
             return this;
         },
         getAxes: function () {
             var v1 = new Vector();
             var v2 = new Vector();
             var axes = [];
-            var points = this.p.points;
+            var points = this.points;
             for (var i = 0, len = points.length - 1; i < len; i++) {
                 v1.x = points[i].x;
                 v1.y = points[i].y;
@@ -2401,7 +2365,7 @@ define('ig/Vector', ['require'], function (require) {
         project: function (axis) {
             var scalars = [];
             var v = new Vector();
-            var points = this.p.points;
+            var points = this.points;
             for (var i = 0, len = points.length; i < len; i++) {
                 var point = points[i];
                 v.x = point.x;
@@ -2431,10 +2395,10 @@ define('ig/Vector', ['require'], function (require) {
         },
         hitTestPoint: function (x, y) {
             var stage = this.stageOwner;
-            return this.isPointInPath(stage.p.offCtx, x, y);
+            return this.isPointInPath(stage.offCtx, x, y);
         },
         getBounds: function () {
-            var points = this.p.points;
+            var points = this.points;
             var minX = Number.MAX_VALUE;
             var maxX = Number.MIN_VALUE;
             var minY = Number.MAX_VALUE;
@@ -2463,16 +2427,16 @@ define('ig/Vector', ['require'], function (require) {
         },
         render: function (offCtx) {
             offCtx.save();
-            offCtx.fillStyle = this.p.fillStyle;
-            offCtx.strokeStyle = this.p.strokeStyle;
-            offCtx.globalAlpha = this.p.alpha;
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.strokeStyle = this.strokeStyle;
+            offCtx.globalAlpha = this.alpha;
             this.matrix.reset();
-            this.matrix.translate(this.p.cX, this.p.cY);
-            this.matrix.rotate(this.p.angle);
-            this.matrix.scale(this.p.scaleX, this.p.scaleY);
-            this.matrix.translate(-this.p.cX, -this.p.cY);
-            for (var i = 0, len = this.p.points.length; i < len; i++) {
-                this.p.points[i] = {
+            this.matrix.translate(this.cX, this.cY);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cX, -this.cY);
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                this.points[i] = {
                     x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
                     y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
                 };
@@ -2486,7 +2450,7 @@ define('ig/Vector', ['require'], function (require) {
             return this;
         },
         debugRender: function (offCtx) {
-            if (this.p.debug) {
+            if (this.debug) {
                 offCtx.save();
                 offCtx.strokeStyle = 'black';
                 offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);

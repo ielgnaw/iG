@@ -21,8 +21,9 @@ define(function (require) {
      * @return {Object} Text 实例
      */
     function Text(opts) {
-        this.p = {};
-        util.extend(true, this.p, {
+        DisplayObject.call(this, this);
+
+        util.extend(true, this, {
             // 文字内容
             content: '',
             // 大小
@@ -33,23 +34,19 @@ define(function (require) {
             fontFamily: 'sans-serif'
         }, opts);
 
-        var p = this.p;
-
-        var obj = measureText(p.content, p.isBold, p.fontFamily, p.size);
+        var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
         this.bounds = {
-            x: p.x,
-            y: p.y,
+            x: this.x,
+            y: this.y,
             width: obj.width,
             height: obj.height
         };
 
         this.font = ''
-            + (p.isBold ? 'bold ' : '')
-            + p.size
+            + (this.isBold ? 'bold ' : '')
+            + this.size
             + 'pt '
-            + p.fontFamily;
-
-        DisplayObject.call(this, this.p);
+            + this.fontFamily;
 
         return this;
     }
@@ -68,11 +65,11 @@ define(function (require) {
          * @return {Object} 当前 Text 实例
          */
         changeContent: function (content) {
-            this.p.content = content;
-            var obj = measureText(this.p.content, this.p.isBold, this.p.fontFamily, this.p.size);
+            this.content = content;
+            var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
             this.bounds = {
-                x: this.p.x,
-                y: this.p.y,
+                x: this.x,
+                y: this.y,
                 width: obj.width,
                 height: obj.height
             };
@@ -85,7 +82,7 @@ define(function (require) {
          * @return {string} 内容
          */
         getContent: function () {
-            return this.p.content;
+            return this.content;
         },
 
         /**
@@ -98,17 +95,17 @@ define(function (require) {
         render: function (offCtx) {
             offCtx.save();
 
-            offCtx.fillStyle = this.p.fillStyle;
-            offCtx.globalAlpha = this.p.alpha;
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.globalAlpha = this.alpha;
             offCtx.font = this.font;
 
             this.matrix.reset();
-            this.matrix.translate(this.p.x, this.p.y);
-            this.matrix.rotate(this.p.angle);
-            this.matrix.scale(this.p.scaleX, this.p.scaleY);
+            this.matrix.translate(this.x, this.y);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-            offCtx.fillText(this.p.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
+            offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
 
             this.debugRender(offCtx);
             offCtx.restore();
@@ -122,7 +119,7 @@ define(function (require) {
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          */
         debugRender: function (offCtx) {
-            if (this.p.debug) {
+            if (this.debug) {
                 offCtx.save();
 
                 var m = this.matrix.reset().m;

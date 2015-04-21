@@ -108,7 +108,7 @@ window.onload = function () {
             });
 
             text.update = function () {
-                // this.p.angle++;
+                // this.angle++;
             };
 
             stage.addDisplayObject(text);

@@ -97,15 +97,15 @@ window.onload = function () {
                 captureFunc: function (d) {
                     console.warn(d);
                     console.warn(this);
-                    // this.p.x = 100;
-                    // this.p.y = 100;
+                    // this.x = 100;
+                    // this.y = 100;
                     // debugger
                     // this.move(d.x - this.originalPoints[0].x, d.y - this.originalPoints[0].y);
                     // this.setPosY(100);
                 },
                 moveFunc: function (d) {
                     this.move(d.x - this.originalPoints[0].x, d.y - this.originalPoints[0].y);
-                    console.warn(this.p.x);
+                    console.warn(this.x);
                 }
                 // releaseFunc
             });
@@ -113,14 +113,14 @@ window.onload = function () {
             var scale = 0.01;
             polygon.update = function () {
                 // console.warn(this.bounds);
-                // if (this.bounds.x + this.bounds.width > game.p.width) {
+                // if (this.bounds.x + this.bounds.width > game.width) {
                 //     this.move(-1, 0);
                 // }
                 // else {
                 //     this.move(1,0);
                 // }
-                // console.warn(game.p.width);
-                // this.p.angle = this.p.angle + 0.5;
+                // console.warn(game.width);
+                this.angle = this.angle + 0.5;
                 // if (isAdd) {
                 //     scale = scale + 0.01;
                 // }
@@ -135,8 +135,8 @@ window.onload = function () {
                 // if (scale <= 0.01) {
                 //     isAdd = true;
                 // }
-                // this.p.scaleX = scale;
-                // this.p.scaleY = scale;
+                // this.scaleX = scale;
+                // this.scaleY = scale;
             }
 
             stage.addDisplayObject(polygon);

@@ -67,9 +67,7 @@ define(function (require) {
      */
     function Game(opts) {
         // 属性全部挂载在 p 这个属性下，避免实例上挂载的属性太多，太乱
-        this.p = {};
-
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             // 名称
             name: 'ig_game_' + (GUID_KEY++),
             // fps
@@ -93,26 +91,26 @@ define(function (require) {
             horizontalPageScroll: null
         }, opts);
 
-        if (!this.p.canvas) {
+        if (!this.canvas) {
             throw new Error('Game initialize must be require a canvas param');
         }
 
         // 暂停
-        this.p.paused = false;
+        this.paused = false;
 
         // 当前游戏实例中的所有场景，堆栈，后进先出
-        this.p.stageStack = [];
+        this.stageStack = [];
 
         // 当前游戏实例中的所有场景，对象，方便读取
-        this.p.stages = {};
+        this.stages = {};
 
         initGame.call(this);
 
         // 私有属性
         this._ = {};
 
-        // this.resources 和 this.p.resources 同时指向 resourceLoader.resources 以及 ig.resources
-        this.resources = this.p.resources = resourceLoader.resources;
+        // this.resources 同时指向 resourceLoader.resources 以及 ig.resources
+        this.resources = resourceLoader.resources;
 
         Event.call(this, this.p);
 
@@ -136,12 +134,11 @@ define(function (require) {
         start: function (startStageName, startCallback) {
             // 私有属性的引用
             var _ = this._;
-            var p = this.p;
-            p.paused = false;
+            this.paused = false;
 
             _.startTime = Date.now();
             _.now = 0;
-            _.interval = 1000 / p.fps;
+            _.interval = 1000 / this.fps;
             _.delta = 0;
 
             _.realFpsStart = Date.now();
@@ -174,10 +171,10 @@ define(function (require) {
             // 存在启动的 stage，那么游戏开始时就要用这个 stage 启动
             // 需要把这个 stage 移动到 stageStack 的第 0 个，因为 render 的是获取场景是通过 getCurrentStage 来获取的
             if (_startStageName) {
-                var stageStack = p.stageStack;
+                var stageStack = this.stageStack;
                 var candidateIndex = -1;
                 for (var i = 0, len = stageStack.length; i < len; i++) {
-                    if (stageStack[i].p.name === _startStageName) {
+                    if (stageStack[i].name === _startStageName) {
                         candidateIndex = i;
                         break;
                     }
@@ -220,7 +217,7 @@ define(function (require) {
                 })(me)
             );
 
-            if (!p.paused) {
+            if (!this.paused) {
 
                 _.now = Date.now();
                 _.delta = _.now - _.startTime; // 时间差即每帧的时间间隔
@@ -283,7 +280,7 @@ define(function (require) {
          * @return {Object} Game 实例
          */
         pause: function () {
-            this.p.paused = true;
+            this.paused = true;
             return this;
         },
 
@@ -292,7 +289,7 @@ define(function (require) {
          * @return {Object} Game 实例
          */
         resume: function () {
-            this.p.paused = false;
+            this.paused = false;
             return this;
         },
 
@@ -323,12 +320,10 @@ define(function (require) {
          * @return {Object} 创建的场景对象
          */
         createStage: function (stageOpts) {
-            var p = this.p;
-
             stageOpts = util.extend(true, {},
                 {
-                    canvas: p.canvas,
-                    offCanvas: p.offCanvas,
+                    canvas: this.canvas,
+                    offCanvas: this.offCanvas,
                     gameOwner: this
                 },
                 stageOpts
@@ -345,11 +340,10 @@ define(function (require) {
          * @param {Object} stage 场景对象
          */
         pushStage: function (stage) {
-            var p = this.p;
             if (!this.getStageByName(stage.name)) {
                 stage.gameOwner = this;
-                p.stageStack.push(stage);
-                p.stages[stage.p.name] = stage;
+                this.stageStack.push(stage);
+                this.stages[stage.name] = stage;
                 this.sortStageIndex();
             }
         },
@@ -358,10 +352,9 @@ define(function (require) {
          * 场景出栈
          */
         popStage: function () {
-            var p = this.p;
-            var stage = p.stageStack.pop();
+            var stage = this.stageStack.pop();
             if (stage) {
-                delete p.stages[stage.name];
+                delete this.stages[stage.name];
                 this.sortStageIndex();
             }
         },
@@ -370,10 +363,10 @@ define(function (require) {
          * 场景排序
          */
         sortStageIndex: function () {
-            var stageStack = this.p.stageStack;
+            var stageStack = this.stageStack;
             // for (var i = 0, len = stageStack.length; i < len; i++) {
             for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
-                stageStack[i].p.zIndex = j;
+                stageStack[i].zIndex = j;
             }
         },
 
@@ -386,9 +379,8 @@ define(function (require) {
         removeStageByName: function (name) {
             var st = this.getStageByName(name);
             if (st) {
-                var p = this.p;
-                delete p.stages[st.name];
-                var stageStack = p.stageStack;
+                delete this.stages[st.name];
+                var stageStack = this.stageStack;
                 util.removeArrByCondition(stageStack, function (s) {
                     return s.name === name;
                 });
@@ -402,9 +394,8 @@ define(function (require) {
          * @return {Object} 场景对象
          */
         getCurrentStage: function () {
-            var p = this.p;
-            // return p.stageStack[p.stageStack.length - 1];
-            return p.stageStack[0];
+            // return this.stageStack[this.stageStack.length - 1];
+            return this.stageStack[0];
         },
 
         /**
@@ -413,7 +404,7 @@ define(function (require) {
          * @return {Array} 所有场景集合
          */
         getStageStack: function () {
-            return this.p.stageStack;
+            return this.stageStack;
         },
 
         /**
@@ -424,7 +415,7 @@ define(function (require) {
          * @return {Object} 场景对象
          */
         getStageByName: function (name) {
-            return this.p.stages[name];
+            return this.stages[name];
         },
 
         /**
@@ -435,7 +426,7 @@ define(function (require) {
         changeStage: function (stageName) {
             var p = this.p;
             if (stageName) {
-                var stageStack = p.stageStack;
+                var stageStack = this.stageStack;
                 var candidateIndex = -1;
                 for (var i = 0, len = stageStack.length; i < len; i++) {
                     if (stageStack[i].name === stageName) {
@@ -457,15 +448,15 @@ define(function (require) {
          */
         swapStageByName: function (fromName, toName) {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             var length = stageStack.length;
             var fromIndex = -1;
             var toIndex = -1;
             for (var i = 0; i < length; i++) {
-                if (stageStack[i].p.name === fromName) {
+                if (stageStack[i].name === fromName) {
                     fromIndex = i;
                 }
-                if (stageStack[i].p.name === toName) {
+                if (stageStack[i].name === toName) {
                     toIndex = i;
                 }
             }
@@ -487,7 +478,7 @@ define(function (require) {
          */
         swapStage: function (from, to) {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             var len = stageStack.length;
             if (from >= 0 && from <= len - 1
                     && to >= 0 && to <= len - 1
@@ -498,8 +489,8 @@ define(function (require) {
                 this.sortStageIndex();
             }
 
-            // 变换场景时，需要清除 this.p.canvas
-            p.ctx.clearRect(0, 0, p.canvas.width, p.canvas.height);
+            // 变换场景时，需要清除 this.canvas
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             return this;
         },
 
@@ -511,7 +502,7 @@ define(function (require) {
          * @return {number} zIndex
          */
         getStageIndex: function (stage) {
-            return stage.p.zIndex;
+            return stage.zIndex;
         },
 
         /**
@@ -519,12 +510,12 @@ define(function (require) {
          */
         clearAllStage: function () {
             var p = this.p;
-            var stageStack = p.stageStack;
+            var stageStack = this.stageStack;
             for (var i = 0, len = stageStack.length; i < len; i++) {
                 stageStack[i].destroy();
             }
-            p.stages = {};
-            p.stageStack = [];
+            this.stages = {};
+            this.stageStack = [];
         },
 
         /**
@@ -571,26 +562,25 @@ define(function (require) {
      * @return {Object} 当前 Game 实例
      */
     function initGame() {
-        var p = this.p;
-        p.canvas = util.domWrap(p.canvas, document.createElement('div'), 'ig-game-container-' + p.name);
-        p.canvas.width = p.width;
-        p.canvas.height = p.height;
+        this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
 
-        var width = parseInt(p.canvas.width, 10);
-        var height = parseInt(p.canvas.height, 10);
+        var width = parseInt(this.canvas.width, 10);
+        var height = parseInt(this.canvas.height, 10);
 
-        var maxWidth = p.maxWidth || 5000;
-        var maxHeight = p.maxHeight || 5000;
+        var maxWidth = this.maxWidth || 5000;
+        var maxHeight = this.maxHeight || 5000;
 
-        if (p.maximize) {
+        if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
 
             var horizontalPageScroll;
-            var horizontalPageScrollType = util.getType(p.horizontalPageScroll);
+            var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
 
             if (horizontalPageScrollType === 'number') {
-                horizontalPageScroll = p.horizontalPageScroll;
+                horizontalPageScroll = this.horizontalPageScroll;
             }
             else if (horizontalPageScrollType === 'boolean') {
                 horizontalPageScroll = 17;
@@ -604,35 +594,35 @@ define(function (require) {
         }
 
         if (env.supportTouch) {
-            p.canvas.style.height = (height * 2) + 'px';
+            this.canvas.style.height = (height * 2) + 'px';
             window.scrollTo(0, 1);
 
             width = Math.min(window.innerWidth, maxWidth);
             height = Math.min(window.innerHeight, maxHeight);
         }
 
-        p.ctx = p.canvas.getContext('2d');
-        p.canvas.style.height = height + 'px';
-        p.canvas.style.width = width + 'px';
-        p.canvas.width = width;
-        p.canvas.height = height;
-        p.canvas.style.position = 'relative';
+        this.ctx = this.canvas.getContext('2d');
+        this.canvas.style.height = height + 'px';
+        this.canvas.style.width = width + 'px';
+        this.canvas.width = width;
+        this.canvas.height = height;
+        this.canvas.style.position = 'relative';
 
-        p.width = p.canvas.width;
-        p.cssWidth = p.canvas.style.width;
+        this.width = this.canvas.width;
+        this.cssWidth = this.canvas.style.width;
 
-        p.height = p.canvas.height;
-        p.cssHeight = p.canvas.style.height;
+        this.height = this.canvas.height;
+        this.cssHeight = this.canvas.style.height;
 
         setOffCanvas.call(this);
 
-        var canvasParent = p.canvas.parentNode;
+        var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
         canvasParent.style.margin = '0 auto';
         canvasParent.style.position = 'relative';
 
         // 是否需要在页面加载时候执行 fitScreen ?
-        if (p.scaleFit) {
+        if (this.scaleFit) {
             fitScreen.call(this);
         }
 
@@ -642,7 +632,7 @@ define(function (require) {
             function () {
                 setTimeout(function () {
                     window.scrollTo(0, 1);
-                    if (p.scaleFit) {
+                    if (me.scaleFit) {
                         fitScreen.call(me);
                     }
                 }, 0);
@@ -650,8 +640,8 @@ define(function (require) {
             false
         );
 
-        p.ratioX = p.width / STANDARD_WIDTH;
-        p.ratioY = p.height / STANDARD_HEIGHT;
+        this.ratioX = this.width / STANDARD_WIDTH;
+        this.ratioY = this.height / STANDARD_HEIGHT;
 
         return this;
     }
@@ -660,52 +650,50 @@ define(function (require) {
      * 设置离屏 canvas
      */
     function setOffCanvas() {
-        var p = this.p;
-        if (!p.offCanvas) {
-            p.offCanvas = document.createElement('canvas');
-            p.offCtx = p.offCanvas.getContext('2d');
+        if (!this.offCanvas) {
+            this.offCanvas = document.createElement('canvas');
+            this.offCtx = this.offCanvas.getContext('2d');
         }
 
-        p.offCanvas.width = p.canvas.width;
-        p.offCanvas.style.width = p.canvas.style.width;
-        p.offCanvas.height = p.canvas.height;
-        p.offCanvas.style.height = p.canvas.style.height;
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
     }
 
     /**
      * 屏幕适配
      */
     function fitScreen() {
-        var p = this.p;
         var winWidth = window.innerWidth;
         var winHeight = window.innerHeight;
         var winRatio = winWidth / winHeight;
-        var gameRatio = p.canvas.width / p.canvas.height;
-        var scaleRatio = gameRatio < winRatio ? winHeight / p.canvas.height : winWidth / p.canvas.width;
-        var scaleWidth = p.canvas.width * scaleRatio;
-        var scaleHeight = p.canvas.height * scaleRatio;
+        var gameRatio = this.canvas.width / this.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / this.canvas.height : winWidth / this.canvas.width;
+        var scaleWidth = this.canvas.width * scaleRatio;
+        var scaleHeight = this.canvas.height * scaleRatio;
 
-        p.canvas.style.width = scaleWidth + 'px';
-        p.canvas.style.height = scaleHeight + 'px';
+        this.canvas.style.width = scaleWidth + 'px';
+        this.canvas.style.height = scaleHeight + 'px';
 
-        if (p.canvas.parentNode) {
-            p.canvas.parentNode.style.width = scaleWidth + 'px';
-            p.canvas.parentNode.style.height = scaleHeight + 'px';
+        if (this.canvas.parentNode) {
+            this.canvas.parentNode.style.width = scaleWidth + 'px';
+            this.canvas.parentNode.style.height = scaleHeight + 'px';
         }
 
         if (gameRatio >= winRatio) {
             var topPos = (winHeight - scaleHeight) / 2;
-            p.canvas.style.top = topPos + 'px';
+            this.canvas.style.top = topPos + 'px';
         }
 
-        p.width = p.canvas.width;
-        p.cssWidth = p.canvas.style.width;
+        this.width = this.canvas.width;
+        this.cssWidth = this.canvas.style.width;
 
-        p.height = p.canvas.height;
-        p.cssHeight = p.canvas.style.height;
+        this.height = this.canvas.height;
+        this.cssHeight = this.canvas.style.height;
 
         // 这个 scaleRatio 是指屏幕适配的 ratio
-        p.scaleRatio = scaleRatio;
+        this.scaleRatio = scaleRatio;
 
         setOffCanvas.call(this);
     }

@@ -62,10 +62,7 @@ define(function (require) {
      * @return {Object} DisplayObject 实例
      */
     function DisplayObject(opts) {
-        // 属性全部挂载在 p 这个属性下，避免实例上挂载的属性太多，太乱
-        this.p = {};
-
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             // 名称
             name: 'ig_displayobject_' + (GUID_KEY++),
             // 横坐标
@@ -135,10 +132,8 @@ define(function (require) {
         this.matrix = new Matrix();
 
         // 初始化的时候设置位置
-        this.setPosX(this.p.x);
-        this.setPosY(this.p.y);
-
-        Event.call(this, this.p);
+        this.setPosX(this.x);
+        this.setPosY(this.y);
 
         return this;
     }
@@ -162,7 +157,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         changeStatus: function (status) {
-            this.p.status = status || this.p.status;
+            this.status = status || this.status;
             return this;
         },
 
@@ -175,7 +170,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setCaptureFunc: function (func) {
-            this.p.captureFunc = func || util.noop;
+            this.captureFunc = func || util.noop;
             return this;
         },
 
@@ -188,7 +183,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setMoveFunc: function (func) {
-            this.p.moveFunc = func || util.noop;
+            this.moveFunc = func || util.noop;
             return this;
         },
 
@@ -201,7 +196,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setReleaseFunc: function (func) {
-            this.p.releaseFunc = func || util.noop;
+            this.releaseFunc = func || util.noop;
             return this;
         },
 
@@ -213,7 +208,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setPosX: function (x) {
-            this.p.x = x || 0;
+            this.x = x || 0;
             return this;
         },
 
@@ -225,7 +220,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setPosY: function (y) {
-            this.p.y = y || 0;
+            this.y = y || 0;
             return this;
         },
 
@@ -237,7 +232,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setAccelerationX: function (ax) {
-            this.p.aX = ax || this.p.aX;
+            this.aX = ax || this.aX;
             return this;
         },
 
@@ -249,7 +244,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setAccelerationY: function (ay) {
-            this.p.aY = ay || this.p.aY;
+            this.aY = ay || this.aY;
             return this;
         },
 
@@ -261,7 +256,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setFrictionX: function (frictionX) {
-            this.p.frictionX = frictionX || this.p.frictionX;
+            this.frictionX = frictionX || this.frictionX;
             return this;
         },
 
@@ -273,7 +268,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setFrictionY: function (frictionY) {
-            this.p.frictionY = frictionY || this.p.frictionY;
+            this.frictionY = frictionY || this.frictionY;
             return this;
         },
 
@@ -287,8 +282,8 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         move: function (x, y) {
-            this.p.x += x;
-            this.p.y += y;
+            this.x += x;
+            this.y += y;
             return this;
         },
 
@@ -300,14 +295,13 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         moveStep: function () {
-            var p = this.p;
-            p.vX += p.aX;
-            p.vX *= p.frictionX;
-            p.x += p.vX;
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
 
-            p.vY += p.aY;
-            p.vY *= p.frictionY;
-            p.y += p.vY;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
             return this;
         },
 
@@ -320,9 +314,9 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         rotate: function (angle) {
-            var offCtx = this.p.stageOwner.p.offCtx;
+            var offCtx = this.stageOwner.offCtx;
             offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.p.angle));
+            offCtx.rotate(util.deg2Rad(angle || this.angle));
             offCtx.restore();
             return this;
         },
@@ -383,7 +377,6 @@ define(function (require) {
          */
         stopAnimate: function () {
             this.animate && this.animate.stop();
-            console.warn(this.animate);
             return this;
         },
 

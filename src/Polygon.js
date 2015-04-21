@@ -18,34 +18,32 @@ define(function (require) {
      * @return {Object} Polygon 实例
      */
     function Polygon(opts) {
-        this.p = {};
-
-        util.extend(true, this.p, {
+        DisplayObject.call(this, this);
+        util.extend(true, this, {
             // 多边形各个顶点
             points: []
         }, opts);
 
-        if (this.p.points.length) {
-            this.p.x = this.p.points[0].x;
-            this.p.y = this.p.points[0].y;
+        if (this.points.length) {
+            this.x = this.points[0].x;
+            this.y = this.points[0].y;
         }
 
         this.getBounds();
 
-        this.p.cX = this.p.x + this.bounds.width / 2;
-        this.p.cY = this.p.y + this.bounds.height / 2;
+        this.cX = this.x + this.bounds.width / 2;
+        this.cY = this.y + this.bounds.height / 2;
 
-        if (this.p.cX >= this.bounds.x + this.bounds.width) {
-            this.p.cX = this.bounds.x + this.bounds.width;
+        if (this.cX >= this.bounds.x + this.bounds.width) {
+            this.cX = this.bounds.x + this.bounds.width;
         }
 
-        if (this.p.cY >= this.bounds.y + this.bounds.height) {
-            this.p.cY = this.bounds.y + this.bounds.height;
+        if (this.cY >= this.bounds.y + this.bounds.height) {
+            this.cY = this.bounds.y + this.bounds.height;
         }
 
-        this.originalPoints = util.extend(true, [], this.p.points);
-
-        DisplayObject.call(this, this.p);
+        this.originalPoints = util.extend(true, [], this.points);
+        console.warn(this);
 
         return this;
     }
@@ -64,8 +62,7 @@ define(function (require) {
          * @return {Object} Polygon 实例
          */
         createPath: function (offCtx) {
-            var p = this.p;
-            var points = p.points;
+            var points = this.points;
             var len = points.length;
             if (!len) {
                 return;
@@ -89,7 +86,7 @@ define(function (require) {
          * @return {Object} Polygon 实例
          */
         move: function (x, y) {
-            var points = this.p.points;
+            var points = this.points;
             var len = points.length;
             for (var i = 0; i < len; i++) {
                 var point = points[i];
@@ -102,8 +99,8 @@ define(function (require) {
 
             this.getBounds();
 
-            this.p.cX = this.p.x + this.bounds.width / 2;
-            this.p.cY = this.p.y + this.bounds.height / 2;
+            this.cX = this.x + this.bounds.width / 2;
+            this.cY = this.y + this.bounds.height / 2;
             return this;
         },
 
@@ -116,7 +113,7 @@ define(function (require) {
             var v1 = new Vector();
             var v2 = new Vector();
             var axes = [];
-            var points = this.p.points;
+            var points = this.points;
             for (var i = 0, len = points.length - 1; i < len; i++) {
                 v1.x = points[i].x;
                 v1.y = points[i].y;
@@ -139,7 +136,7 @@ define(function (require) {
         project: function (axis) {
             var scalars = [];
             var v = new Vector();
-            var points = this.p.points;
+            var points = this.points;
             for (var i = 0, len = points.length; i < len; i++) {
                 var point = points[i];
                 v.x = point.x;
@@ -219,16 +216,16 @@ define(function (require) {
          */
         hitTestPoint: function (x, y) {
             var stage = this.stageOwner;
-            // console.warn(this.p.points);
+            // console.warn(this.points);
             // console.warn(this.bounds);
             // // console.warn(x, y);
-            // // console.warn(x, y, this.isPointInPath(stage.p.offCtx, x - this.p.cX, y - this.p.cY));
+            // // console.warn(x, y, this.isPointInPath(stage.offCtx, x - this.cX, y - this.cY));
             // // console.warn(this.matrix.m);
             // // console.warn(this.matrix.transformPoint(x, y));
             // // console.warn(this.matrix.m);
             // // console.warn(x, y, this.matrix.transformPoint(x, y));
-            // console.warn(x, y, this.isPointInPath(stage.p.offCtx, x, y ));
-            return this.isPointInPath(stage.p.offCtx, x, y);
+            // console.warn(x, y, this.isPointInPath(stage.offCtx, x, y ));
+            return this.isPointInPath(stage.offCtx, x, y);
         },
 
         /**
@@ -237,7 +234,7 @@ define(function (require) {
          * @return {Polygon} Polygon 实例
          */
         getBounds: function () {
-            var points = this.p.points;
+            var points = this.points;
 
             var minX = Number.MAX_VALUE;
             var maxX = Number.MIN_VALUE;
@@ -278,23 +275,23 @@ define(function (require) {
          */
         render: function (offCtx) {
             offCtx.save();
-            offCtx.fillStyle = this.p.fillStyle;
-            offCtx.strokeStyle = this.p.strokeStyle;
-            offCtx.globalAlpha = this.p.alpha;
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.strokeStyle = this.strokeStyle;
+            offCtx.globalAlpha = this.alpha;
 
             this.matrix.reset();
-            this.matrix.translate(this.p.cX, this.p.cY);
-            // this.matrix.translate(this.p.x, this.p.y);
-            this.matrix.rotate(this.p.angle);
-            this.matrix.scale(this.p.scaleX, this.p.scaleY);
-            this.matrix.translate(-this.p.cX, -this.p.cY);
-            // this.matrix.translate(-this.p.x, -this.p.y);
+            this.matrix.translate(this.cX, this.cY);
+            // this.matrix.translate(this.x, this.y);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cX, -this.cY);
+            // this.matrix.translate(-this.x, -this.y);
 
             // var m = this.matrix.m;
             // offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
-            for (var i = 0, len = this.p.points.length; i < len; i++) {
-                this.p.points[i] = {
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                this.points[i] = {
                     x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
                     y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
                 };
@@ -318,7 +315,7 @@ define(function (require) {
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          */
         debugRender: function (offCtx) {
-            if (this.p.debug) {
+            if (this.debug) {
                 offCtx.save();
                 offCtx.strokeStyle = 'black';
                 offCtx.strokeRect(

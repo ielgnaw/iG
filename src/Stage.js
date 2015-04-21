@@ -30,11 +30,7 @@ define(function (require) {
     var GUID_KEY = 0;
 
     function Stage(opts) {
-
-        // 属性全部挂载在 p 这个属性下，避免实例上挂载的属性太多，太乱
-        this.p = {};
-
-        util.extend(true, this.p, {
+        util.extend(true, this, {
             // 名称
             name: 'ig_stage_' + (GUID_KEY++),
             // canvas DOM
@@ -46,20 +42,20 @@ define(function (require) {
             // 离屏 canvas context
             offCtx: opts.offCanvas.getContext('2d'),
             // 场景的宽度，实际上是游戏的宽度即 canvas.width
-            width: opts.gameOwner.p.width,
+            width: opts.gameOwner.width,
             // 场景的高度，实际上是游戏的高度即 canvas.height
-            height: opts.gameOwner.p.height,
+            height: opts.gameOwner.height,
             // 场景的 cssWidth
-            cssWidth: opts.gameOwner.p.cssWidth,
+            cssWidth: opts.gameOwner.cssWidth,
             // 场景的 cssHeight
-            cssHeight: opts.gameOwner.p.cssHeight
+            cssHeight: opts.gameOwner.cssHeight
         }, opts);
 
         // 当前场景中的所有可显示对象集合
-        this.p.displayObjectList = [];
+        this.displayObjectList = [];
 
         // 当前场景中的所有可显示对象，对象，方便读取
-        this.p.displayObjects = {};
+        this.displayObjects = {};
 
         // 初始化 mouse 和 touch 事件
         initMouseEvent.call(this);
@@ -81,8 +77,7 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         clear: function () {
-            var p = this.p;
-            p.offCtx.clearRect(0, 0, p.width, p.height);
+            this.offCtx.clearRect(0, 0, this.width, this.height);
             return this;
         },
 
@@ -93,7 +88,7 @@ define(function (require) {
          * @return {number} zIndex
          */
         getIndex: function () {
-            return this.p.zIndex;
+            return this.zIndex;
         },
 
         /**
@@ -104,9 +99,8 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         setBgColor: function (color) {
-            var p = this.p;
-            p.bgColor = color;
-            p.canvas.style.backgroundColor = p.bgColor || 'transparent';
+            this.bgColor = color;
+            this.canvas.style.backgroundColor = this.bgColor || 'transparent';
             return this;
         },
 
@@ -143,21 +137,21 @@ define(function (require) {
                     break;
                 // 拉伸
                 case 'full':
-                    bgSize = p.cssWidth + 'px ' + p.cssHeight + 'px';
+                    bgSize = this.cssWidth + 'px ' + this.cssHeight + 'px';
                     break;
             }
 
             if (imgUrl) {
-                p.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-                p.canvas.style.backgroundRepeat = bgRepeat;
-                p.canvas.style.backgroundPosition = bgPos;
-                p.canvas.style.backgroundSize = bgSize;
+                this.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+                this.canvas.style.backgroundRepeat = bgRepeat;
+                this.canvas.style.backgroundPosition = bgPos;
+                this.canvas.style.backgroundSize = bgSize;
             }
             else {
-                p.canvas.style.backgroundImage = '';
-                p.canvas.style.backgroundRepeat = '';
-                p.canvas.style.backgroundPosition = '';
-                p.canvas.style.backgroundSize = '';
+                this.canvas.style.backgroundImage = '';
+                this.canvas.style.backgroundRepeat = '';
+                this.canvas.style.backgroundPosition = '';
+                this.canvas.style.backgroundSize = '';
             }
 
             return this;
@@ -188,9 +182,8 @@ define(function (require) {
             opts.repeat = (opts.repeat && ['repeat', 'repeat-x', 'repeat-y'].indexOf(opts.repeat) !== -1)
                 ? opts.repeat : 'no-repeat';
 
-            var p = this.p;
             // 视差滚动的场景才会有这个属性
-            p.parallax = util.extend(
+            this.parallax = util.extend(
                 {},
                 {
                     x: 0, // 横坐标
@@ -222,13 +215,13 @@ define(function (require) {
 
             updateParallax.call(this, totalFrameCounter);
 
-            var displayObjectList = this.p.displayObjectList;
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
             for (var i = 0; i < len; i++) {
                 var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.p.status;
+                    displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
                         curDisplay.update(dt);
                     }
@@ -245,31 +238,30 @@ define(function (require) {
 
             this.fire('beforeStageRender');
 
-            var p = this.p;
-            p.offCtx.save();
-            p.offCtx.clearRect(0, 0, p.offCanvas.width, p.offCanvas.height);
+            this.offCtx.save();
+            this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
 
             renderParallax.call(this);
             this.sortDisplayObject();
-            var displayObjectList = p.displayObjectList;
+            var displayObjectList = this.displayObjectList;
             var len = displayObjectList.length;
             var displayObjectStatus;
 
             for (var i = 0; i < len; i++) {
                 var curDisplay = displayObjectList[i];
                 if (curDisplay) {
-                    displayObjectStatus = curDisplay.p.status;
+                    displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.DESTROYED) {
                         this.removeDisplayObject(curDisplay);
                     }
                     else if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
-                        curDisplay.render(p.offCtx);
+                        curDisplay.render(this.offCtx);
                     }
                 }
             }
 
-            p.offCtx.restore();
-            p.ctx.drawImage(p.offCanvas, 0, 0);
+            this.offCtx.restore();
+            this.ctx.drawImage(this.offCanvas, 0, 0);
 
             this.fire('afterStageRender');
         },
@@ -278,8 +270,8 @@ define(function (require) {
          * 排序场景中的 displayObject
          */
         sortDisplayObject: function () {
-            this.p.displayObjectList.sort(function (o1, o2) {
-                return o1.p.zIndex - o2.p.zIndex;
+            this.displayObjectList.sort(function (o1, o2) {
+                return o1.zIndex - o2.zIndex;
             });
         },
 
@@ -289,7 +281,7 @@ define(function (require) {
          * @return {Array} 所有 displayObject 集合
          */
         getDisplayObjectList: function () {
-            return this.p.displayObjectList;
+            return this.displayObjectList;
         },
 
         /**
@@ -300,7 +292,7 @@ define(function (require) {
          * @return {Object} displayObject 对象
          */
         getDisplayObjectByName: function (name) {
-            return this.p.displayObjects[name];
+            return this.displayObjects[name];
         },
 
         /**
@@ -324,11 +316,10 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         addDisplayObject: function (displayObj) {
-            if (displayObj && !this.getDisplayObjectByName(displayObj.p.name)) {
-                var p = this.p;
-                displayObj.stageOwner = displayObj.p.stageOwner = this;
-                p.displayObjectList.push(displayObj);
-                p.displayObjects[displayObj.p.name] = displayObj;
+            if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
+                displayObj.stageOwner = displayObj.stageOwner = this;
+                this.displayObjectList.push(displayObj);
+                this.displayObjects[displayObj.name] = displayObj;
             }
             return this;
         },
@@ -341,7 +332,7 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         removeDisplayObject: function (displayObj) {
-            displayObj && this.removeDisplayObjectByName(displayObj.p.name);
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
             return this;
         },
 
@@ -353,13 +344,12 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         removeDisplayObjectByName: function (name) {
-            var p = this.p;
-            var candidateObj = p.displayObjects[name];
+            var candidateObj = this.displayObjects[name];
             if (candidateObj) {
-                delete p.displayObjects[candidateObj.p.name];
-                var displayObjectList = p.displayObjectList;
+                delete this.displayObjects[candidateObj.name];
+                var displayObjectList = this.displayObjectList;
                 util.removeArrByCondition(displayObjectList, function (o) {
-                    return o.p.name === name;
+                    return o.name === name;
                 });
             }
             return this;
@@ -369,9 +359,8 @@ define(function (require) {
          * 清除所有 displayObject
          */
         clearAllDisplayObject: function () {
-            var p = this.p;
-            p.displayObjectList = [];
-            p.displayObjects = {};
+            this.displayObjectList = [];
+            this.displayObjects = {};
         },
 
         /**
@@ -415,8 +404,7 @@ define(function (require) {
       * @param {number} totalFrameCounter 游戏的总帧数记录器
       */
     function updateParallax(totalFrameCounter) {
-        var p = this.p;
-        var parallax = p.parallax;
+        var parallax = this.parallax;
         if (parallax) {
 
             if (parallax.anims && util.getType(parallax.anims) === 'array') {
@@ -455,10 +443,9 @@ define(function (require) {
      * 渲染视差滚动
      */
     function renderParallax() {
-        var p = this.p;
-        var parallax = p.parallax;
+        var parallax = this.parallax;
         if (parallax) {
-            var offCtx = p.offCtx;
+            var offCtx = this.offCtx;
             if (parallax.repeat !== 'no-repeat') {
                 renderParallaxRepeatImage.call(parallax, offCtx);
             }
