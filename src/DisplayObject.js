@@ -336,7 +336,7 @@ define(function (require) {
                 {
                     fps: 60,
                     duration: 1000,
-                    source: me.p,
+                    source: me,
                     target: {}
                 },
                 opts
@@ -359,7 +359,6 @@ define(function (require) {
 
             this.animate = new Animation(animOpts).play()
                 .on('step', function (d) {
-                    me.p = d.data.source;
                     stepFunc(d);
                 }).on('repeat', function (d) {
                     repeatFunc(d);

@@ -1790,7 +1790,7 @@ define('ig/DisplayObject', [
             var animOpts = util.extend(true, {}, {
                 fps: 60,
                 duration: 1000,
-                source: me.p,
+                source: me,
                 target: {}
             }, opts);
             var stepFunc = util.getType(animOpts.stepFunc) === 'function' ? animOpts.stepFunc : util.noop;
@@ -1798,7 +1798,6 @@ define('ig/DisplayObject', [
             var groupCompleteFunc = util.getType(animOpts.groupCompleteFunc) === 'function' ? animOpts.groupCompleteFunc : util.noop;
             var completeFunc = util.getType(animOpts.completeFunc) === 'function' ? animOpts.completeFunc : util.noop;
             this.animate = new Animation(animOpts).play().on('step', function (d) {
-                me.p = d.data.source;
                 stepFunc(d);
             }).on('repeat', function (d) {
                 repeatFunc(d);

@@ -118,6 +118,7 @@ window.onload = function () {
             }, 3000)
 
             // console.warn(text);
+
             text.setAnimate({
                 // target: {
                     // y: 110,
