@@ -34,6 +34,22 @@ define(function (require) {
         return false;
     }
 
+    /**
+     * 用于记录按下是的横坐标和形状的 x 之间的偏移量
+     * move 的时候不回出现始终跟随顶点移动的情况
+     *
+     * @type {number}
+     */
+    var subX = 0;
+
+    /**
+     * 用于记录按下是的纵坐标和形状的 y 之间的偏移量
+     * move 的时候不回出现始终跟随顶点移动的情况
+     *
+     * @type {number}
+     */
+    var subY = 0;
+
     var exports = {};
 
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
@@ -53,8 +69,8 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
-        console.warn('touchstart');
         var target = e.target;
+        // debugger
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
@@ -63,6 +79,8 @@ define(function (require) {
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.isCapture = true;
+                subX = e.data.x - curDisplayObject.x;
+                subY = e.data.y - curDisplayObject.y;
 
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
@@ -96,6 +114,8 @@ define(function (require) {
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
                 e.data.curStage = target;
+                e.data.x = e.data.x - subX;
+                e.data.y = e.data.y - subY;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
         }
@@ -119,6 +139,8 @@ define(function (require) {
                 curDisplayObject.isCapture = false;
             }
         }
+        subX = 0;
+        subY = 0;
         holdSprites = [];
         return target;
     };

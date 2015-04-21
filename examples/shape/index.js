@@ -60,29 +60,26 @@ window.onload = function () {
                 name: 'polygon1',
                 points: [
                     {
-                        x: 120,
-                        y: 150
-                    },
-                    {
-                        x: 280,
-                        y: 210
-                    },
-                    {
-                        x: 180,
-                        y: 260
+                        x: 0,
+                        y: 80
                     },
                     {
                         x: 120,
-                        y: 240
+                        y: 160
                     },
                     {
-                        x: 80,
+                        x: 100,
+                        y: 200
+                    },
+                    {
+                        x: 30,
                         y: 180
-                    },
+                    }
                 ],
                 debug: 1,
                 angle: 0,
                 vX: 1,
+                // vY: 5,
                 zIndex: 10,
                 captureFunc: function (d) {
                     console.warn(d);
@@ -126,15 +123,22 @@ window.onload = function () {
             //     }
             // });
             polygon.update = function () {
-                this.angle = this.angle + 0.5;
-                // this.moveStep();
-                // console.warn(this.x);
+                // this.angle = this.angle + 0.5;
+                this.moveStep();
+                // // console.warn(this.x);
                 // console.warn(this.bounds.x + this.bounds.width, game.width);
-                // if (this.bounds.x + this.bounds.width > game.width
-                //     || this.bounds.x <= 0
-                // ) {
-                //     this.vX = -this.vX;
-                // }
+                // debugger
+                if (this.bounds.x + this.bounds.width > game.width
+                    || this.bounds.x < 0
+                ) {
+                    this.vX = -this.vX;
+                }
+
+                if (this.bounds.y + this.bounds.height > game.height
+                    || this.bounds.y < 0
+                ) {
+                    this.vY = -this.vY;
+                }
                 // else {
                 //     this.move(1, 0);
                 // }
@@ -165,53 +169,33 @@ window.onload = function () {
 
             stage.addDisplayObject(polygon);
 
-            var polygon2 = new ig.Polygon({
-                name: 'polygon2',
-                fillStyle: '#f00',
-                points: [
-                    {
-                        x: 90,
-                        y: 150
-                    },
-                    {
-                        x: 150,
-                        y: 210
-                    },
-                    {
-                        x: 100,
-                        y: 180
-                    },
-                ],
-                debug: 1,
-                angle: 0,
-                captureFunc: function () {
-                    console.warn(1);
-                }
-            });
-            polygon2.update = function () {
-                this.angle = this.angle + 0.5;
-            }
-            stage.addDisplayObject(polygon2);
-            // console.warn(polygon2);
-
-            // game.on('afterGameRender', function (d) {
-            //     // console.warn(stage);
-            // })
-
-            // stage.setBgImg(d.bg);
-
-            // setTimeout(function () {
-            //     stage.setBgImg(d.bg1, 'center');
-            //     setTimeout(function () {
-            //         stage.setBgImg('', 'center');
-            //     }, 3000);
-            // }, 3000);
-
-            // console.warn(game);
-
-            // console.warn(stage);
+            // var polygon2 = new ig.Polygon({
+            //     name: 'polygon2',
+            //     fillStyle: '#f00',
+            //     points: [
+            //         {
+            //             x: 90,
+            //             y: 150
+            //         },
+            //         {
+            //             x: 150,
+            //             y: 210
+            //         },
+            //         {
+            //             x: 100,
+            //             y: 180
+            //         },
+            //     ],
+            //     debug: 1,
+            //     angle: 0,
+            //     captureFunc: function () {
+            //         console.warn(1);
+            //     }
+            // });
+            // polygon2.update = function () {
+            //     this.angle = this.angle + 0.5;
+            // }
+            // stage.addDisplayObject(polygon2);
         }
     );
-
-    // stage.setBgColor('#f00');
 };

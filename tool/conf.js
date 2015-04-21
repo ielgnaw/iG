@@ -15,6 +15,7 @@ exports.modules = {
         {name: 'ig/Matrix', refName: 'Matrix'},
         {name: 'ig/Vector', refName: 'Vector'},
         {name: 'ig/Polygon', refName: 'Polygon'},
+        {name: 'ig/Rectangle', refName: 'Rectangle'},
         {name: 'ig/Projection'},
         {name: 'ig/resourceLoader'},
         // refName 指要挂载到 window.ig 这个全局空间上的名字

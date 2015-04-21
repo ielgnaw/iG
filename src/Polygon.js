@@ -266,6 +266,25 @@ define(function (require) {
             return this;
         },
 
+        moveStep: function () {
+            // console.warn(1);
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            // this.x += this.vX;
+
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            // this.y += this.vY;
+
+            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+                this.originalPoints[i] = {
+                    x: this.originalPoints[i].x + this.vX,
+                    y: this.originalPoints[i].y + this.vY
+                };
+            }
+            return this;
+        },
+
         /**
          * 渲染当前 Text 实例
          *
@@ -289,6 +308,13 @@ define(function (require) {
 
             // var m = this.matrix.m;
             // offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+
+            // for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+            //     this.originalPoints[i] = {
+            //         x: this.originalPoints[i].x + this.vX,
+            //         y: this.originalPoints[i].y + this.vY
+            //     };
+            // }
 
             for (var i = 0, len = this.points.length; i < len; i++) {
                 this.points[i] = {

@@ -2040,11 +2040,12 @@ define('ig/domEvt', [
         }
         return false;
     }
+    var subX = 0;
+    var subY = 0;
     var exports = {};
     exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
     exports.fireEvt = {};
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
-        console.warn('touchstart');
         var target = e.target;
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
@@ -2052,6 +2053,8 @@ define('ig/domEvt', [
             if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 e.data.curStage = target;
                 curDisplayObject.isCapture = true;
+                subX = e.data.x - curDisplayObject.x;
+                subY = e.data.y - curDisplayObject.y;
                 curDisplayObject.captureFunc.call(curDisplayObject, e.data);
             }
         }
@@ -2068,6 +2071,8 @@ define('ig/domEvt', [
             e.data.holdSprites = holdSprites;
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 e.data.curStage = target;
+                e.data.x = e.data.x - subX;
+                e.data.y = e.data.y - subY;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
         }
@@ -2083,6 +2088,8 @@ define('ig/domEvt', [
                 curDisplayObject.isCapture = false;
             }
         }
+        subX = 0;
+        subY = 0;
         holdSprites = [];
         return target;
     };
@@ -2424,6 +2431,19 @@ define('ig/Vector', ['require'], function (require) {
             };
             return this;
         },
+        moveStep: function () {
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+                this.originalPoints[i] = {
+                    x: this.originalPoints[i].x + this.vX,
+                    y: this.originalPoints[i].y + this.vY
+                };
+            }
+            return this;
+        },
         render: function (offCtx) {
             offCtx.save();
             offCtx.fillStyle = this.fillStyle;
@@ -2459,6 +2479,143 @@ define('ig/Vector', ['require'], function (require) {
     };
     util.inherits(Polygon, DisplayObject);
     return Polygon;
+});define('ig/Rectangle', [
+    'require',
+    './util',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    function Rectangle(opts) {
+        DisplayObject.call(this, opts);
+        this.cX = this.x + this.width / 2;
+        this.cY = this.y + this.height / 2;
+        this.generatePoints();
+        this.getBounds();
+        return this;
+    }
+    Rectangle.prototype = {
+        constructor: Rectangle,
+        generatePoints: function () {
+            this.points = [
+                {
+                    x: this.x,
+                    y: this.y
+                },
+                {
+                    x: this.x + this.width,
+                    y: this.y
+                },
+                {
+                    x: this.x + this.width,
+                    y: this.y + this.height
+                },
+                {
+                    x: this.x,
+                    y: this.y + this.height
+                }
+            ];
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.points[i].x, this.points[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+            this.originalPoints = util.extend(true, [], this.points);
+            return this;
+        },
+        createPath: function (offCtx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            offCtx.beginPath();
+            offCtx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                offCtx.lineTo(points[i].x, points[i].y);
+            }
+            offCtx.closePath();
+            return this;
+        },
+        moveStep: function () {
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
+            this.generatePoints();
+            this.getBounds();
+            return this;
+        },
+        render: function (offCtx) {
+            offCtx.save();
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.strokeStyle = this.strokeStyle;
+            offCtx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cX, this.cY);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cX, -this.cY);
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(offCtx);
+            offCtx.fill();
+            offCtx.stroke();
+            this.debugRender(offCtx);
+            offCtx.restore();
+            return this;
+        },
+        getBounds: function () {
+            var points = this.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.bounds = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        },
+        isPointInPath: function (offCtx, x, y) {
+            this.createPath(offCtx);
+            return offCtx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stageOwner;
+            return this.isPointInPath(stage.offCtx, x, y);
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                offCtx.strokeStyle = 'green';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
+        }
+    };
+    util.inherits(Rectangle, DisplayObject);
+    return Rectangle;
 });define('ig/Projection', ['require'], function (require) {
     function Projection(min, max) {
         this.min = min;
@@ -2896,6 +3053,28 @@ else {
 
 var modName = 'ig/Polygon';
 var refName = 'Polygon';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Rectangle';
+var refName = 'Rectangle';
 var folderName = '';
 
 var tmp;
