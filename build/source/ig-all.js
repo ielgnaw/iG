@@ -2299,7 +2299,7 @@ define('ig/Polygon', [
     var Vector = require('./Vector');
     var Projection = require('./Projection');
     var DisplayObject = require('./DisplayObject');
-    function Rectangle(opts) {
+    function Polygon(opts) {
         DisplayObject.call(this, opts);
         util.extend(true, this, { points: [] }, opts);
         for (var i = 0, len = this.points.length; i < len; i++) {
@@ -2320,8 +2320,8 @@ define('ig/Polygon', [
         this.cY = this.bounds.y + this.bounds.height / 2;
         return this;
     }
-    Rectangle.prototype = {
-        constructor: Rectangle,
+    Polygon.prototype = {
+        constructor: Polygon,
         generatePoints: function (x, y) {
             for (var i = 0, len = this.origin.points.length; i < len; i++) {
                 var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
@@ -2496,14 +2496,14 @@ define('ig/Polygon', [
             }
             return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
         },
-        collidesWith: function (rectangle) {
-            var axes = this.getAxes().concat(rectangle.getAxes());
-            return !this.separationOnAxes(axes, rectangle);
+        collidesWith: function (polygon) {
+            var axes = this.getAxes().concat(polygon.getAxes());
+            return !this.separationOnAxes(axes, polygon);
         },
-        separationOnAxes: function (axes, rectangle) {
+        separationOnAxes: function (axes, polygon) {
             for (var i = 0, len = axes.length; i < len; i++) {
                 var axis = axes[i];
-                var projection1 = rectangle.project(axis);
+                var projection1 = polygon.project(axis);
                 var projection2 = this.project(axis);
                 if (!projection1.overlaps(projection2)) {
                     return true;
@@ -2520,8 +2520,8 @@ define('ig/Polygon', [
             }
         }
     };
-    util.inherits(Rectangle, DisplayObject);
-    return Rectangle;
+    util.inherits(Polygon, DisplayObject);
+    return Polygon;
 });'use strict';
 define('ig/Rectangle', [
     'require',

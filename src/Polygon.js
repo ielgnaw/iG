@@ -1,5 +1,5 @@
 /**
- * @file 矩形
+ * @file 多边形
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
@@ -13,13 +13,13 @@ define(function (require) {
     var DisplayObject = require('./DisplayObject');
 
     /**
-     * 矩形
+     * 多边形
      *
      * @param {Object} opts 参数对象
      *
-     * @return {Object} Rectangle 实例
+     * @return {Object} Polygon 实例
      */
-    function Rectangle(opts) {
+    function Polygon(opts) {
         DisplayObject.call(this, opts);
 
         util.extend(true, this, {
@@ -56,16 +56,16 @@ define(function (require) {
         return this;
     }
 
-    Rectangle.prototype = {
+    Polygon.prototype = {
         /**
          * 还原 constructor
          */
-        constructor: Rectangle,
+        constructor: Polygon,
 
         /**
          * 生成 points
          *
-         * @return {Object} Rectangle 实例
+         * @return {Object} Polygon 实例
          */
         generatePoints: function (x, y) {
             for (var i = 0, len = this.origin.points.length; i < len; i++) {
@@ -84,7 +84,7 @@ define(function (require) {
          *
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          *
-         * @return {Object} Rectangle 实例
+         * @return {Object} Polygon 实例
          */
         createPath: function (offCtx) {
             var points = this.points;
@@ -199,11 +199,11 @@ define(function (require) {
         },
 
         /**
-         * 渲染当前 Rectangle 实例
+         * 渲染当前 Polygon 实例
          *
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          *
-         * @return {Object} 当前 Rectangle 实例
+         * @return {Object} 当前 Polygon 实例
          */
         render: function (offCtx) {
             offCtx.save();
@@ -244,7 +244,7 @@ define(function (require) {
         /**
          * 最大最小顶点法来获取边界盒
          *
-         * @return {Object} Rectangle 实例
+         * @return {Object} Polygon 实例
          */
         getBounds: function () {
             var points = this.points;
@@ -357,29 +357,29 @@ define(function (require) {
         },
 
         /**
-         * 矩形和矩形的碰撞
+         * 多边形和多边形的碰撞
          *
-         * @param {Object} rectangle 矩形
+         * @param {Object} polygon 多边形
          *
          * @return {boolean} 结果
          */
-        collidesWith: function (rectangle) {
-            var axes = this.getAxes().concat(rectangle.getAxes());
-            return !this.separationOnAxes(axes, rectangle);
+        collidesWith: function (polygon) {
+            var axes = this.getAxes().concat(polygon.getAxes());
+            return !this.separationOnAxes(axes, polygon);
         },
 
         /**
          * 找出分离轴
          *
          * @param {Array} axes 轴数组
-         * @param {Object} rectangle 矩形
+         * @param {Object} polygon 多边形
          *
          * @return {boolean} 是否存在分离轴
          */
-        separationOnAxes: function (axes, rectangle) {
+        separationOnAxes: function (axes, polygon) {
             for (var i = 0, len = axes.length; i < len; i++) {
                 var axis = axes[i];
-                var projection1 = rectangle.project(axis);
+                var projection1 = polygon.project(axis);
                 var projection2 = this.project(axis);
                 if (!projection1.overlaps(projection2)) {
                     return true;
@@ -410,7 +410,7 @@ define(function (require) {
         }
     };
 
-    util.inherits(Rectangle, DisplayObject);
+    util.inherits(Polygon, DisplayObject);
 
-    return Rectangle;
+    return Polygon;
 });
