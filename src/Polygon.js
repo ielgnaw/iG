@@ -99,8 +99,6 @@ define(function (require) {
                 return;
             }
 
-            // console.warn(points[0]);
-
             offCtx.beginPath();
             offCtx.moveTo(points[0].x, points[0].y);
             for (var i = 0; i < len; i++) {
