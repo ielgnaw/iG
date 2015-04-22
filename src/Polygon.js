@@ -23,14 +23,32 @@ define(function (require) {
         DisplayObject.call(this, opts);
 
         util.extend(true, this, {
-            // 多边形各个顶点
+            // 多边形各个顶点，相对于 this.x, this.y
             points: []
         }, opts);
 
-        this.originalPoints = util.extend(true, [], this.points);
-        // console.warn(this.originalPoints);
-        // debugger
-        this.generatePoints();
+        for (var i = 0, len = this.points.length; i < len; i++) {
+            var point = this.points[i];
+            this.points[i] = {
+                x: point.x + this.x,
+                y: point.y + this.y
+            };
+        }
+
+        // 初始状态的一些备份
+        this.origin = {
+            // 初始的起始点横坐标
+            x: this.x,
+            // 初始的起始点纵坐标
+            y: this.y,
+            // 初始的 points，变换时会用到，这个值在 move 或者 moveStep 的时候会变化
+            points: util.extend(true, [], this.points),
+            // 初始的 points，由于变换时 this.origin.points 会变化
+            // 因此加入 _points，为了在 move 的时候记录最原始的 points
+            _points: util.extend(true, [], this.points)
+        };
+
+        // this.generatePoints();
         this.getBounds();
 
         this.cX = this.bounds.x + this.bounds.width / 2;
@@ -50,37 +68,13 @@ define(function (require) {
          * @return {Object} Rectangle 实例
          */
         generatePoints: function (x, y) {
-            // this.points = [
-            //     {
-            //         x: this.x,
-            //         y: this.y
-            //     },
-            //     {
-            //         x: this.x + this.width,
-            //         y: this.y
-            //     },
-            //     {
-            //         x: this.x + this.width,
-            //         y: this.y + this.height
-            //     },
-            //     {
-            //         x: this.x,
-            //         y: this.y + this.height
-            //     }
-            // ];
-
-            var x = x || 0;
-            var y = y || 0;
-
-            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
-                var transformPoint = this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y);
+            for (var i = 0, len = this.origin.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
                 this.points[i] = {
                     x: transformPoint.x,
                     y: transformPoint.y
                 };
             }
-
-            // this.originalPoints = util.extend(true, [], this.points);
 
             return this;
         },
@@ -109,28 +103,25 @@ define(function (require) {
         },
 
         /**
-         * 移动一步，重写了父类的 moveStep
+         * 移动
+         * x, y 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
          *
-         * @return {Object} Rectangle 实例
+         * @param {number} x 横轴要移动的距离
+         * @param {number} y 纵轴要移动的距离
+         *
+         * @return {Object} Polygon 实例
          */
-        moveStep: function () {
-            // console.warn(1);
-            this.vX += this.aX;
-            this.vX *= this.frictionX;
-            this.x += this.vX;
-
-            this.vY += this.aY;
-            this.vY *= this.frictionY;
-            this.y += this.vY;
-
-            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
-                this.originalPoints[i] = {
-                    x: this.originalPoints[i].x + this.vX,
-                    y: this.originalPoints[i].y + this.vY
+        move: function (x, y) {
+            this.x = x;
+            this.y = y;
+            for (var i = 0, len = this.origin._points.length; i < len; i++) {
+                this.origin.points[i] = {
+                    x: this.origin._points[i].x + x - this.origin.x,// - x,
+                    y: this.origin._points[i].y + y - this.origin.y// - y
                 };
             }
 
-            var points = this.originalPoints;
+            var points = this.origin.points;
 
             var minX = Number.MAX_VALUE;
             var maxX = Number.MIN_VALUE;
@@ -152,22 +143,58 @@ define(function (require) {
                 }
             }
 
-            // this.bounds = {
-            //     x: minX,
-            //     y: minY,
-            //     width: maxX - minX,
-            //     height: maxY - minY
-            // };
+            this.cX = minX + (maxX - minX) / 2;
+            this.cY = minY + (maxY - minY) / 2;
+        },
+
+        /**
+         * 移动一步，重写了父类的 moveStep
+         *
+         * @return {Object} Polygon 实例
+         */
+        moveStep: function () {
+            var x = this.x;
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
+
+            var y = this.y;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
+
+            for (var i = 0, len = this.origin.points.length; i < len; i++) {
+                this.origin.points[i] = {
+                    x: this.origin.points[i].x + this.x - x,
+                    y: this.origin.points[i].y + this.y - y
+                };
+            }
+
+            var points = this.origin.points;
+
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
 
             this.cX = minX + (maxX - minX) / 2;
             this.cY = minY + (maxY - minY) / 2;
 
-            // this.generatePoints();
-            // this.getBounds();
-            // debugger
-            // this.cX = this.bounds.x + this.bounds.width / 2;
-            // this.cY = this.bounds.y + this.bounds.height / 2;
-            // console.warn(this.matrix.m);
             return this;
         },
 
@@ -195,8 +222,8 @@ define(function (require) {
 
             // for (var i = 0, len = this.points.length; i < len; i++) {
             //     this.points[i] = {
-            //         x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
-            //         y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
+            //         x: this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y).x,
+            //         y: this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y).y
             //     };
             // }
 

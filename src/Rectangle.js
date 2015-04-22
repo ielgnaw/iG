@@ -97,6 +97,26 @@ define(function (require) {
         },
 
         /**
+         * 移动
+         * x, y 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
+         *
+         * @param {number} x 横轴要移动的距离
+         * @param {number} y 纵轴要移动的距离
+         *
+         * @return {Object} Rectangle 实例
+         */
+        move: function (x, y) {
+            // console.warn(1);
+            this.x = x;
+            this.y = y;
+
+            this.generatePoints();
+            this.getBounds();
+
+            return this;
+        },
+
+        /**
          * 移动一步，重写了父类的 moveStep
          *
          * @return {Object} Rectangle 实例

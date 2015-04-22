@@ -2302,8 +2302,19 @@ define('ig/Polygon', [
     function Rectangle(opts) {
         DisplayObject.call(this, opts);
         util.extend(true, this, { points: [] }, opts);
-        this.originalPoints = util.extend(true, [], this.points);
-        this.generatePoints();
+        for (var i = 0, len = this.points.length; i < len; i++) {
+            var point = this.points[i];
+            this.points[i] = {
+                x: point.x + this.x,
+                y: point.y + this.y
+            };
+        }
+        this.origin = {
+            x: this.x,
+            y: this.y,
+            points: util.extend(true, [], this.points),
+            _points: util.extend(true, [], this.points)
+        };
         this.getBounds();
         this.cX = this.bounds.x + this.bounds.width / 2;
         this.cY = this.bounds.y + this.bounds.height / 2;
@@ -2312,10 +2323,8 @@ define('ig/Polygon', [
     Rectangle.prototype = {
         constructor: Rectangle,
         generatePoints: function (x, y) {
-            var x = x || 0;
-            var y = y || 0;
-            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
-                var transformPoint = this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y);
+            for (var i = 0, len = this.origin.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
                 this.points[i] = {
                     x: transformPoint.x,
                     y: transformPoint.y
@@ -2337,20 +2346,53 @@ define('ig/Polygon', [
             offCtx.closePath();
             return this;
         },
+        move: function (x, y) {
+            this.x = x;
+            this.y = y;
+            for (var i = 0, len = this.origin._points.length; i < len; i++) {
+                this.origin.points[i] = {
+                    x: this.origin._points[i].x + x - this.origin.x,
+                    y: this.origin._points[i].y + y - this.origin.y
+                };
+            }
+            var points = this.origin.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.cX = minX + (maxX - minX) / 2;
+            this.cY = minY + (maxY - minY) / 2;
+        },
         moveStep: function () {
+            var x = this.x;
             this.vX += this.aX;
             this.vX *= this.frictionX;
             this.x += this.vX;
+            var y = this.y;
             this.vY += this.aY;
             this.vY *= this.frictionY;
             this.y += this.vY;
-            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
-                this.originalPoints[i] = {
-                    x: this.originalPoints[i].x + this.vX,
-                    y: this.originalPoints[i].y + this.vY
+            for (var i = 0, len = this.origin.points.length; i < len; i++) {
+                this.origin.points[i] = {
+                    x: this.origin.points[i].x + this.x - x,
+                    y: this.origin.points[i].y + this.y - y
                 };
             }
-            var points = this.originalPoints;
+            var points = this.origin.points;
             var minX = Number.MAX_VALUE;
             var maxX = Number.MIN_VALUE;
             var minY = Number.MAX_VALUE;
@@ -2542,6 +2584,13 @@ define('ig/Rectangle', [
                 offCtx.lineTo(points[i].x, points[i].y);
             }
             offCtx.closePath();
+            return this;
+        },
+        move: function (x, y) {
+            this.x = x;
+            this.y = y;
+            this.generatePoints();
+            this.getBounds();
             return this;
         },
         moveStep: function () {

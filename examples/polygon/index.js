@@ -61,8 +61,8 @@ window.onload = function () {
             var polygon = new ig.Polygon({
                 fillStyle: '#000',
                 name: 'polygon',
-                // x: 100,
-                // y: 80,
+                x: 100,
+                y: 80,
                 points: [
                     {
                         x: 30,
@@ -86,8 +86,8 @@ window.onload = function () {
                     }
                 ],
                 debug: 1,
-                vX: 3,
-                vY: 3,
+                // vX: 3,
+                // vY: 3,
                 zIndex: 2,
                 // scaleX: 1.5,
                 // angle: 80,
@@ -96,15 +96,14 @@ window.onload = function () {
                     console.warn(this);
                 },
                 moveFunc: function (d) {
-                    this.x = d.x;
-                    this.y = d.y;
+                    this.move(d.x, d.y);
                 },
                 releaseFunc: function () {
                 }
             });
             polygon.update = function () {
-                this.angle = this.angle + 0.5;
-                this.moveStep();
+                this.angle = this.angle + 1.5;
+                // this.moveStep();
                 if (this.bounds.x + this.bounds.width > game.width) {
                     this.vX = -Math.abs(this.vX);
                 }
@@ -130,7 +129,7 @@ window.onload = function () {
                 //     isAdd = false;
                 // }
 
-                // if (scale <= 0.01) {
+                // if (scale <= 0.1) {
                 //     isAdd = true;
                 // }
                 // this.scaleX = scale;
@@ -163,28 +162,25 @@ window.onload = function () {
                         x: 100,
                         y: 200
                     },
-                    {
-                        x: 50,
-                        y: 240
-                    },
-                    {
-                        x: 30,
-                        y: 180
-                    }
+                    // {
+                    //     x: 50,
+                    //     y: 240
+                    // },
+                    // {
+                    //     x: 30,
+                    //     y: 180
+                    // }
                 ],
                 debug: 1,
-                // vX: 1,
-                // vY: 1,
+                vX: 1,
+                vY: 1,
                 zIndex: 2,
                 // scaleX: 1.5,
                 // angle: 80,
                 captureFunc: function (d) {
-                    console.warn(d);
-                    console.warn(this);
                 },
                 moveFunc: function (d) {
-                    this.x = d.x;
-                    this.y = d.y;
+                    this.move(d.x, d.y);
                 },
                 releaseFunc: function () {
                 }
