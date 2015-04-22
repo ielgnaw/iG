@@ -147,8 +147,8 @@ window.onload = function () {
             var polygon1 = new ig.Polygon({
                 fillStyle: '#f00',
                 name: 'polygon1',
-                // x: 100,
-                // y: 80,
+                x: 100,
+                y: 80,
                 points: [
                     {
                         x: 30,
@@ -171,9 +171,9 @@ window.onload = function () {
                     //     y: 180
                     // }
                 ],
-                debug: 1,
-                vX: 1,
-                vY: 1,
+                // debug: 1,
+                // vX: 1,
+                // vY: 1,
                 zIndex: 2,
                 // scaleX: 1.5,
                 // angle: 80,

@@ -732,22 +732,26 @@ define('ig/Animation', [
             var target = this.target;
             var range = this.range;
             if (range) {
-                for (var i in range) {
-                    this.curState[i] = {
-                        from: parseFloat(parseFloat(source[i]) - parseFloat(range[i])),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
-                    };
+                for (var j in range) {
+                    if (range.hasOwnProperty(j)) {
+                        this.curState[j] = {
+                            from: parseFloat(parseFloat(source[j]) - parseFloat(range[j])),
+                            cur: parseFloat(source[j]),
+                            to: parseFloat(parseFloat(source[j]) + parseFloat(range[j]))
+                        };
+                    }
                 }
                 return this;
             }
             if (util.getType(target) !== 'array') {
-                for (var i in target) {
-                    this.initState[i] = this.curState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[i])
-                    };
+                for (var k in target) {
+                    if (target.hasOwnProperty(k)) {
+                        this.initState[k] = this.curState[k] = {
+                            from: parseFloat(source[k]),
+                            cur: parseFloat(source[k]),
+                            to: parseFloat(target[k])
+                        };
+                    }
                 }
                 return this;
             }
@@ -755,18 +759,20 @@ define('ig/Animation', [
             this.animLength = target.length;
             for (var m = 0; m < this.animLength; m++) {
                 for (var i in target[m]) {
-                    if (m === 0) {
-                        this.curState[i] = {
+                    if (target[m].hasOwnProperty(i)) {
+                        if (m === 0) {
+                            this.curState[i] = {
+                                from: parseFloat(source[i]),
+                                cur: parseFloat(source[i]),
+                                to: parseFloat(target[m][i])
+                            };
+                        }
+                        this.initState[i] = {
                             from: parseFloat(source[i]),
                             cur: parseFloat(source[i]),
                             to: parseFloat(target[m][i])
                         };
                     }
-                    this.initState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[m][i])
-                    };
                 }
             }
             return this;
@@ -848,18 +854,18 @@ define('ig/Animation', [
                     }
                 }
             } else {
-                for (var i in this.target) {
+                for (var j in this.target) {
                     if (this.repeatCount % 2 === 0) {
-                        this.curState[i] = {
-                            from: this.initState[i].from,
-                            cur: this.initState[i].cur,
-                            to: this.initState[i].to
+                        this.curState[j] = {
+                            from: this.initState[j].from,
+                            cur: this.initState[j].cur,
+                            to: this.initState[j].to
                         };
                     } else {
-                        this.curState[i] = {
-                            from: this.initState[i].to,
-                            cur: this.initState[i].to,
-                            to: this.initState[i].from
+                        this.curState[j] = {
+                            from: this.initState[j].to,
+                            cur: this.initState[j].to,
+                            to: this.initState[j].from
                         };
                     }
                 }
@@ -890,8 +896,10 @@ define('ig/Animation', [
             me.then = me.now - me.delta % me.interval;
             var ds;
             for (var i in me.curState) {
-                ds = me.tween(me.curFrame, me.curState[i].cur, me.curState[i].to - me.curState[i].cur, me.frames).toFixed(2);
-                me.source[i] = parseFloat(ds);
+                if (me.curState.hasOwnProperty(i)) {
+                    ds = me.tween(me.curFrame, me.curState[i].cur, me.curState[i].to - me.curState[i].cur, me.frames).toFixed(2);
+                    me.source[i] = parseFloat(ds);
+                }
             }
             me.curFrame++;
             if (me.curFrame < me.frames) {
@@ -899,12 +907,14 @@ define('ig/Animation', [
             }
             if (me.range && !me.rangeExec) {
                 me.curFrame = 0;
-                for (var i in me.curState) {
-                    me.curState[i] = {
-                        from: me.curState[i].to,
-                        cur: me.curState[i].to,
-                        to: me.curState[i].from
-                    };
+                for (var j in me.curState) {
+                    if (me.curState.hasOwnProperty(j)) {
+                        me.curState[j] = {
+                            from: me.curState[j].to,
+                            cur: me.curState[j].to,
+                            to: me.curState[j].from
+                        };
+                    }
                 }
                 if (!me.repeat) {
                     me.rangeExec = true;
@@ -933,12 +943,14 @@ define('ig/Animation', [
                         me.curFrame = 0;
                         me.curState = {};
                         var flag = me.repeatCount % 2 === 0;
-                        for (var i in me.target[me.animIndex]) {
-                            me.curState[i] = {
-                                from: flag ? me.initState[i].from : me.initState[i].to,
-                                cur: flag ? me.initState[i].cur : me.initState[i].to,
-                                to: flag ? me.initState[i].to : me.initState[i].from
-                            };
+                        for (var k in me.target[me.animIndex]) {
+                            if (me.target[me.animIndex].hasOwnProperty(k)) {
+                                me.curState[k] = {
+                                    from: flag ? me.initState[k].from : me.initState[k].to,
+                                    cur: flag ? me.initState[k].cur : me.initState[k].to,
+                                    to: flag ? me.initState[k].to : me.initState[k].from
+                                };
+                            }
                         }
                     } else {
                         if (me.repeat) {
@@ -1257,13 +1269,13 @@ define('ig/Game', [
             this.stageStack = [];
         },
         loadOther: function (id, src, callback, errorCallback) {
-            return resourceLoader.loadOther(id, src, callback, errorCallback);
+            resourceLoader.loadOther(id, src, callback, errorCallback);
         },
         loadImage: function (id, src, callback, errorCallback) {
-            return resourceLoader.loadImage(id, src, callback, errorCallback);
+            resourceLoader.loadImage(id, src, callback, errorCallback);
         },
         loadResource: function (resource, callback, opts) {
-            return resourceLoader.loadResource(resource, callback, opts);
+            resourceLoader.loadResource(resource, callback, opts);
         }
     };
     function initGame() {
@@ -1421,7 +1433,6 @@ define('ig/Stage', [
             var bgRepeat = '';
             var bgPos = '';
             var bgSize = '';
-            var p = this.p;
             switch (repeatPattern) {
             case 'center':
                 bgRepeat = 'no-repeat';
@@ -1561,6 +1572,7 @@ define('ig/Stage', [
     function initMouseEvent() {
         bindMouseEvent.call(this);
         domEvt.initMouse(this);
+        return this;
     }
     function bindMouseEvent() {
         var me = this;
@@ -1800,6 +1812,7 @@ define('ig/DisplayObject', [
             }).on('complete', function (d) {
                 completeFunc(d);
             });
+            return this;
         },
         stopAnimate: function () {
             this.animate && this.animate.stop();
@@ -2042,15 +2055,23 @@ define('ig/domEvt', [
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
         var target = e.target;
         var displayObjectList = target.displayObjectList;
+        var candidateDisplayObject;
+        var maxZIndex = -1;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
             if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
-                e.data.curStage = target;
-                curDisplayObject.isCapture = true;
-                subX = e.data.x - curDisplayObject.x;
-                subY = e.data.y - curDisplayObject.y;
-                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+                if (curDisplayObject.zIndex >= maxZIndex) {
+                    maxZIndex = curDisplayObject.zIndex;
+                    candidateDisplayObject = curDisplayObject;
+                }
             }
+        }
+        if (candidateDisplayObject) {
+            e.data.curStage = target;
+            candidateDisplayObject.isCapture = true;
+            subX = e.data.x - candidateDisplayObject.x;
+            subY = e.data.y - candidateDisplayObject.y;
+            candidateDisplayObject.captureFunc.call(candidateDisplayObject, e.data);
         }
         return target;
     };
@@ -2212,6 +2233,7 @@ define('ig/Matrix', [
             this.m[1] *= sx;
             this.m[2] *= sy;
             this.m[3] *= sy;
+            return this;
         },
         transformPoint: function (px, py) {
             var x = px;
@@ -2313,7 +2335,7 @@ define('ig/Polygon', [
             x: this.x,
             y: this.y,
             points: util.extend(true, [], this.points),
-            _points: util.extend(true, [], this.points)
+            persistencePoints: util.extend(true, [], this.points)
         };
         this.getBounds();
         this.cX = this.bounds.x + this.bounds.width / 2;
@@ -2322,7 +2344,7 @@ define('ig/Polygon', [
     }
     Polygon.prototype = {
         constructor: Polygon,
-        generatePoints: function (x, y) {
+        generatePoints: function () {
             for (var i = 0, len = this.origin.points.length; i < len; i++) {
                 var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
                 this.points[i] = {
@@ -2349,10 +2371,10 @@ define('ig/Polygon', [
         move: function (x, y) {
             this.x = x;
             this.y = y;
-            for (var i = 0, len = this.origin._points.length; i < len; i++) {
-                this.origin.points[i] = {
-                    x: this.origin._points[i].x + x - this.origin.x,
-                    y: this.origin._points[i].y + y - this.origin.y
+            for (var j = 0, len = this.origin.persistencePoints.length; j < len; j++) {
+                this.origin.points[j] = {
+                    x: this.origin.persistencePoints[j].x + x - this.origin.x,
+                    y: this.origin.persistencePoints[j].y + y - this.origin.y
                 };
             }
             var points = this.origin.points;
@@ -2360,7 +2382,7 @@ define('ig/Polygon', [
             var maxX = Number.MIN_VALUE;
             var minY = Number.MAX_VALUE;
             var maxY = Number.MIN_VALUE;
-            for (var i = 0, len = points.length; i < len; i++) {
+            for (var i = 0, pLen = points.length; i < pLen; i++) {
                 if (points[i].x < minX) {
                     minX = points[i].x;
                 }
@@ -2376,6 +2398,7 @@ define('ig/Polygon', [
             }
             this.cX = minX + (maxX - minX) / 2;
             this.cY = minY + (maxY - minY) / 2;
+            return this;
         },
         moveStep: function () {
             var x = this.x;
@@ -2386,10 +2409,10 @@ define('ig/Polygon', [
             this.vY += this.aY;
             this.vY *= this.frictionY;
             this.y += this.vY;
-            for (var i = 0, len = this.origin.points.length; i < len; i++) {
-                this.origin.points[i] = {
-                    x: this.origin.points[i].x + this.x - x,
-                    y: this.origin.points[i].y + this.y - y
+            for (var j = 0, len = this.origin.points.length; j < len; j++) {
+                this.origin.points[j] = {
+                    x: this.origin.points[j].x + this.x - x,
+                    y: this.origin.points[j].y + this.y - y
                 };
             }
             var points = this.origin.points;
@@ -2397,7 +2420,7 @@ define('ig/Polygon', [
             var maxX = Number.MIN_VALUE;
             var minY = Number.MAX_VALUE;
             var maxY = Number.MIN_VALUE;
-            for (var i = 0, len = points.length; i < len; i++) {
+            for (var i = 0, pLen = points.length; i < pLen; i++) {
                 if (points[i].x < minX) {
                     minX = points[i].x;
                 }

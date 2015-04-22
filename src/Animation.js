@@ -89,23 +89,27 @@ define(function (require) {
             var range = this.range;
 
             if (range) {
-                for (var i in range) {
-                    this.curState[i] = {
-                        from: parseFloat(parseFloat(source[i]) - parseFloat(range[i])),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(parseFloat(source[i]) + parseFloat(range[i]))
-                    };
+                for (var j in range) {
+                    if (range.hasOwnProperty(j)) {
+                        this.curState[j] = {
+                            from: parseFloat(parseFloat(source[j]) - parseFloat(range[j])),
+                            cur: parseFloat(source[j]),
+                            to: parseFloat(parseFloat(source[j]) + parseFloat(range[j]))
+                        };
+                    }
                 }
                 return this;
             }
 
             if (util.getType(target) !== 'array') {
-                for (var i in target) {
-                    this.initState[i] = this.curState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[i])
-                    };
+                for (var k in target) {
+                    if (target.hasOwnProperty(k)) {
+                        this.initState[k] = this.curState[k] = {
+                            from: parseFloat(source[k]),
+                            cur: parseFloat(source[k]),
+                            to: parseFloat(target[k])
+                        };
+                    }
                 }
                 return this;
             }
@@ -114,18 +118,20 @@ define(function (require) {
             this.animLength = target.length;
             for (var m = 0; m < this.animLength; m++) {
                 for (var i in target[m]) {
-                    if (m === 0) {
-                        this.curState[i] = {
+                    if (target[m].hasOwnProperty(i)) {
+                        if (m === 0) {
+                            this.curState[i] = {
+                                from: parseFloat(source[i]),
+                                cur: parseFloat(source[i]),
+                                to: parseFloat(target[m][i])
+                            };
+                        }
+                        this.initState[i] = {
                             from: parseFloat(source[i]),
                             cur: parseFloat(source[i]),
                             to: parseFloat(target[m][i])
                         };
                     }
-                    this.initState[i] = {
-                        from: parseFloat(source[i]),
-                        cur: parseFloat(source[i]),
-                        to: parseFloat(target[m][i])
-                    };
                 }
             }
 
@@ -202,7 +208,7 @@ define(function (require) {
         next: function () {
             this.stop();
             this.curFrame++;
-            this.curFrame = this.curFrame > this.frames ? this.frames: this.curFrame;
+            this.curFrame = this.curFrame > this.frames ? this.frames : this.curFrame;
             this.step.call(this);
             return this;
         },
@@ -280,19 +286,19 @@ define(function (require) {
                 }
             }
             else {
-                for (var i in this.target) {
+                for (var j in this.target) {
                     if (this.repeatCount % 2 === 0) {
-                        this.curState[i] = {
-                            from: this.initState[i].from,
-                            cur: this.initState[i].cur,
-                            to: this.initState[i].to
+                        this.curState[j] = {
+                            from: this.initState[j].from,
+                            cur: this.initState[j].cur,
+                            to: this.initState[j].to
                         };
                     }
                     else {
-                        this.curState[i] = {
-                            from: this.initState[i].to,
-                            cur: this.initState[i].to,
-                            to: this.initState[i].from
+                        this.curState[j] = {
+                            from: this.initState[j].to,
+                            cur: this.initState[j].to,
+                            to: this.initState[j].from
                         };
                     }
                 }
@@ -303,6 +309,7 @@ define(function (require) {
         /**
          * 每一帧执行
          */
+        /* eslint-disable fecs-max-statements */
         step: function () {
             var me = this;
 
@@ -334,15 +341,17 @@ define(function (require) {
             me.then = me.now - (me.delta % me.interval);
             var ds;
             for (var i in me.curState) {
-                ds = me.tween(
-                    me.curFrame,
-                    // me.curState[i].from,
-                    // me.curState[i].to - me.curState[i].from,
-                    me.curState[i].cur,
-                    me.curState[i].to - me.curState[i].cur,
-                    me.frames
-                ).toFixed(2);
-                me.source[i] = parseFloat(ds);
+                if (me.curState.hasOwnProperty(i)) {
+                    ds = me.tween(
+                        me.curFrame,
+                        // me.curState[i].from,
+                        // me.curState[i].to - me.curState[i].from,
+                        me.curState[i].cur,
+                        me.curState[i].to - me.curState[i].cur,
+                        me.frames
+                    ).toFixed(2);
+                    me.source[i] = parseFloat(ds);
+                }
                 // console.warn(me.source[i]);
             }
             me.curFrame++;
@@ -353,12 +362,14 @@ define(function (require) {
 
             if (me.range && !me.rangeExec) {
                 me.curFrame = 0;
-                for (var i in me.curState) {
-                    me.curState[i] = {
-                        from: me.curState[i].to,
-                        cur: me.curState[i].to,
-                        to: me.curState[i].from
-                    };
+                for (var j in me.curState) {
+                    if (me.curState.hasOwnProperty(j)) {
+                        me.curState[j] = {
+                            from: me.curState[j].to,
+                            cur: me.curState[j].to,
+                            to: me.curState[j].from
+                        };
+                    }
                 }
                 if (!me.repeat) {
                     me.rangeExec = true;
@@ -391,12 +402,15 @@ define(function (require) {
                         me.curFrame = 0;
                         me.curState = {};
                         var flag = me.repeatCount % 2 === 0;
-                        for (var i in me.target[me.animIndex]) {
-                            me.curState[i] = {
-                                from: flag ? me.initState[i].from : me.initState[i].to,
-                                cur: flag ? me.initState[i].cur : me.initState[i].to,
-                                to: flag ? me.initState[i].to : me.initState[i].from,
-                            };
+                        /* jshint maxdepth: 6 */
+                        for (var k in me.target[me.animIndex]) {
+                            if (me.target[me.animIndex].hasOwnProperty(k)) {
+                                me.curState[k] = {
+                                    from: flag ? me.initState[k].from : me.initState[k].to,
+                                    cur: flag ? me.initState[k].cur : me.initState[k].to,
+                                    to: flag ? me.initState[k].to : me.initState[k].from
+                                };
+                            }
                         }
                     }
                     else {
@@ -450,6 +464,7 @@ define(function (require) {
                 }
             }
         }
+        /* eslint-enable fecs-max-statements */
 
     };
 

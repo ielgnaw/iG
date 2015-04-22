@@ -128,7 +128,6 @@ define(function (require) {
             var bgPos = '';
             var bgSize = '';
 
-            var p = this.p;
             switch (repeatPattern) {
                 // 居中
                 case 'center':
@@ -203,6 +202,7 @@ define(function (require) {
          * 场景的更新，需要更新场景里面的所有精灵
          *
          * @param {number} totalFrameCounter 游戏的总帧数计数器
+         * @param {number} dt delta
          */
         update: function (totalFrameCounter, dt) {
             if (dt < 0) {
@@ -380,6 +380,7 @@ define(function (require) {
     function initMouseEvent() {
         bindMouseEvent.call(this);
         domEvt.initMouse(this);
+        return this;
     }
 
     /**

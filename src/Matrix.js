@@ -139,6 +139,7 @@ define(function (require) {
             this.m[1] *= sx;
             this.m[2] *= sy;
             this.m[3] *= sy;
+            return this;
         },
 
         /**

@@ -63,6 +63,8 @@ define(function (require) {
      *
      * @constructor
      *
+     * @param {Object} opts 参数对象
+     *
      * @return {Object} 当前游戏实例
      */
     function Game(opts) {
@@ -520,7 +522,7 @@ define(function (require) {
          * @param {Function} errorCallback 加载失败回调
          */
         loadOther: function (id, src, callback, errorCallback) {
-            return resourceLoader.loadOther(id, src, callback, errorCallback);
+            resourceLoader.loadOther(id, src, callback, errorCallback);
         },
 
         /**
@@ -532,7 +534,7 @@ define(function (require) {
          * @param {Function} errorCallback 加载失败回调
          */
         loadImage: function (id, src, callback, errorCallback) {
-            return resourceLoader.loadImage(id, src, callback, errorCallback);
+            resourceLoader.loadImage(id, src, callback, errorCallback);
         },
 
         /**
@@ -545,7 +547,7 @@ define(function (require) {
          * @param {Object} opts.customResourceTypes 自定义的资源配置，opts.customResourceTypes = {'bmp': 'Image'}
          */
         loadResource: function (resource, callback, opts) {
-            return resourceLoader.loadResource(resource, callback, opts);
+            resourceLoader.loadResource(resource, callback, opts);
         }
     };
 

@@ -326,7 +326,7 @@ define(function (require) {
          *
          * @param {Object} opts 动画参数
          *
-         * @return {Object} 当前 Text 实例
+         * @return {Object} 当前 DisplayObject 实例
          */
         setAnimate: function (opts) {
             var me = this;
@@ -367,6 +367,8 @@ define(function (require) {
                 }).on('complete', function (d) {
                     completeFunc(d);
                 });
+
+            return this;
         },
 
         /**

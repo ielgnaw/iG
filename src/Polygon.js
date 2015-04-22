@@ -44,8 +44,8 @@ define(function (require) {
             // 初始的 points，变换时会用到，这个值在 move 或者 moveStep 的时候会变化
             points: util.extend(true, [], this.points),
             // 初始的 points，由于变换时 this.origin.points 会变化
-            // 因此加入 _points，为了在 move 的时候记录最原始的 points
-            _points: util.extend(true, [], this.points)
+            // 因此加入 persistencePoints，为了在 move 的时候记录最原始的 points
+            persistencePoints: util.extend(true, [], this.points)
         };
 
         // this.generatePoints();
@@ -67,7 +67,7 @@ define(function (require) {
          *
          * @return {Object} Polygon 实例
          */
-        generatePoints: function (x, y) {
+        generatePoints: function () {
             for (var i = 0, len = this.origin.points.length; i < len; i++) {
                 var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
                 this.points[i] = {
@@ -114,10 +114,10 @@ define(function (require) {
         move: function (x, y) {
             this.x = x;
             this.y = y;
-            for (var i = 0, len = this.origin._points.length; i < len; i++) {
-                this.origin.points[i] = {
-                    x: this.origin._points[i].x + x - this.origin.x,// - x,
-                    y: this.origin._points[i].y + y - this.origin.y// - y
+            for (var j = 0, len = this.origin.persistencePoints.length; j < len; j++) {
+                this.origin.points[j] = {
+                    x: this.origin.persistencePoints[j].x + x - this.origin.x,// - x,
+                    y: this.origin.persistencePoints[j].y + y - this.origin.y// - y
                 };
             }
 
@@ -128,7 +128,7 @@ define(function (require) {
             var minY = Number.MAX_VALUE;
             var maxY = Number.MIN_VALUE;
 
-            for (var i = 0, len = points.length; i < len; i++) {
+            for (var i = 0, pLen = points.length; i < pLen; i++) {
                 if (points[i].x < minX) {
                     minX = points[i].x;
                 }
@@ -145,6 +145,8 @@ define(function (require) {
 
             this.cX = minX + (maxX - minX) / 2;
             this.cY = minY + (maxY - minY) / 2;
+
+            return this;
         },
 
         /**
@@ -163,10 +165,10 @@ define(function (require) {
             this.vY *= this.frictionY;
             this.y += this.vY;
 
-            for (var i = 0, len = this.origin.points.length; i < len; i++) {
-                this.origin.points[i] = {
-                    x: this.origin.points[i].x + this.x - x,
-                    y: this.origin.points[i].y + this.y - y
+            for (var j = 0, len = this.origin.points.length; j < len; j++) {
+                this.origin.points[j] = {
+                    x: this.origin.points[j].x + this.x - x,
+                    y: this.origin.points[j].y + this.y - y
                 };
             }
 
@@ -177,7 +179,7 @@ define(function (require) {
             var minY = Number.MAX_VALUE;
             var maxY = Number.MIN_VALUE;
 
-            for (var i = 0, len = points.length; i < len; i++) {
+            for (var i = 0, pLen = points.length; i < pLen; i++) {
                 if (points[i].x < minX) {
                     minX = points[i].x;
                 }

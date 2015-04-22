@@ -72,20 +72,30 @@ define(function (require) {
         var target = e.target;
         // debugger
         var displayObjectList = target.displayObjectList;
+
+        var candidateDisplayObject;
+        var maxZIndex = -1;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-
             if (curDisplayObject.mouseEnable
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
-                e.data.curStage = target;
-                curDisplayObject.isCapture = true;
-                subX = e.data.x - curDisplayObject.x;
-                subY = e.data.y - curDisplayObject.y;
-
-                // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
-                curDisplayObject.captureFunc.call(curDisplayObject, e.data);
+                if (curDisplayObject.zIndex >= maxZIndex) {
+                    maxZIndex = curDisplayObject.zIndex;
+                    candidateDisplayObject = curDisplayObject;
+                }
             }
         }
+
+        if (candidateDisplayObject) {
+            e.data.curStage = target;
+            candidateDisplayObject.isCapture = true;
+            subX = e.data.x - candidateDisplayObject.x;
+            subY = e.data.y - candidateDisplayObject.y;
+
+            // 这里 call 的时候返回的是坐标数据，this 的指向是当前的 displayObject
+            candidateDisplayObject.captureFunc.call(candidateDisplayObject, e.data);
+        }
+
         return target;
     };
 
