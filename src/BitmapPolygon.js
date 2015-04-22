@@ -28,12 +28,14 @@ define(function (require) {
 
         Polygon.call(this, opts);
 
-        // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-        // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
-        this.sX = opts.sX || 0;
-        this.sY = opts.sY || 0;
-        this.sWidth = opts.sWidth || 0;
-        this.sHeight = opts.sHeight || 0;
+        util.extend(true, this, {
+            // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
+            sX: 0,
+            sY: 0,
+            sWidth: 0,
+            sHeight: 0
+        }, opts);
 
         return this;
     }

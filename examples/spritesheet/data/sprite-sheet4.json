@@ -1,0 +1,13 @@
+{
+    "born": {
+        "sX": 0,
+        "sY": 0,
+        "cols": 8,
+        "rows": 1,
+        "total": 8,
+        "tileW": 30,
+        "tileH": 61,
+        "offsetX": 0,
+        "offsetY": 0
+    }
+}

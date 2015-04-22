@@ -392,6 +392,17 @@ define(function (require) {
         },
 
         /**
+         * 内部的每帧更新，这个方法应该是由子类重写的
+         * 例如精灵表，如果调用者重写了 update 那么精灵表就不会切换帧了
+         * `SubClass.superClass.update.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
+         *
+         * @override
+         */
+        _update: function () {
+            return this;
+        },
+
+        /**
          * 每帧更新，这个方法应该是由子类重写的
          * `SubClass.superClass.update.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
          *

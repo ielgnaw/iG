@@ -224,6 +224,7 @@ define(function (require) {
                     displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
                         curDisplay.update(dt);
+                        curDisplay._update(dt);
                     }
                 }
             }

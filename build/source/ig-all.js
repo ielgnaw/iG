@@ -1647,6 +1647,7 @@ define('ig/Stage', [
                     displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
                         curDisplay.update(dt);
+                        curDisplay._update(dt);
                     }
                 }
             }
@@ -1977,6 +1978,9 @@ define('ig/DisplayObject', [
             this.animate && this.animate.destroy();
             return this;
         },
+        _update: function () {
+            return this;
+        },
         update: function () {
             return this;
         },
@@ -2092,12 +2096,14 @@ define('ig/Bitmap', [
             throw new Error('Bitmap must be require a image param');
         }
         Rectangle.call(this, opts);
-        this.width = opts.width || this.image.width || 0;
-        this.height = opts.height || this.image.height || 0;
-        this.sX = opts.sX || 0;
-        this.sY = opts.sY || 0;
-        this.sWidth = opts.sWidth || 0;
-        this.sHeight = opts.sHeight || 0;
+        util.extend(true, this, {
+            width: this.image.width,
+            height: this.image.height,
+            sX: 0,
+            sY: 0,
+            sWidth: 0,
+            sHeight: 0
+        }, opts);
         return this;
     }
     Bitmap.prototype = {
@@ -2128,10 +2134,12 @@ define('ig/BitmapPolygon', [
             throw new Error('BitmapPolygon must be require a image param');
         }
         Polygon.call(this, opts);
-        this.sX = opts.sX || 0;
-        this.sY = opts.sY || 0;
-        this.sWidth = opts.sWidth || 0;
-        this.sHeight = opts.sHeight || 0;
+        util.extend(true, this, {
+            sX: 0,
+            sY: 0,
+            sWidth: 0,
+            sHeight: 0
+        }, opts);
         return this;
     }
     BitmapPolygon.prototype = {
@@ -2148,6 +2156,116 @@ define('ig/BitmapPolygon', [
     };
     util.inherits(BitmapPolygon, Polygon);
     return BitmapPolygon;
+});'use strict';
+define('ig/SpriteSheet', [
+    'require',
+    './util',
+    './Rectangle'
+], function (require) {
+    var util = require('./util');
+    var Rectangle = require('./Rectangle');
+    var floor = Math.floor;
+    function SpriteSheet(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('SpriteSheet must be require a image param');
+        }
+        Rectangle.apply(this, arguments);
+        util.extend(this, {
+            total: 1,
+            sX: 0,
+            sY: 0,
+            cols: 0,
+            rows: 0,
+            tileW: 0,
+            tileH: 0,
+            offsetX: 0,
+            offsetY: 0,
+            ticksPerFrame: 0,
+            isOnce: false,
+            onceDone: util.noop
+        }, opts);
+        this.tickUpdateCount = 0;
+        this.frameIndex = 0;
+        this.originalSX = this.sX;
+        this.originalTotal = this.total;
+        this.realCols = floor(this.cols - this.sX / this.tileW);
+        this.width = this.tileW;
+        this.height = this.tileH;
+        return this;
+    }
+    SpriteSheet.prototype = {
+        constructor: SpriteSheet,
+        changeFrame: function (prop) {
+            util.extend(this, {
+                total: this.total,
+                x: this.x,
+                y: this.y,
+                sX: this.sX,
+                sY: this.sY,
+                cols: this.cols,
+                rows: this.rows,
+                tileW: 0,
+                tileH: 0,
+                offsetX: 0,
+                offsetY: 0,
+                ticksPerFrame: this.ticksPerFrame,
+                isOnce: false,
+                onceDone: util.noop
+            }, prop);
+            this.tickUpdateCount = 0;
+            this.frameIndex = 0;
+            this.originalSX = this.sX;
+            this.originalTotal = this.total;
+            this.realCols = floor(this.cols - this.sX / this.tileW);
+            this.width = this.tileW;
+            this.height = this.tileH;
+            return this;
+        },
+        _update: function (dt) {
+            this.tickUpdateCount++;
+            if (this.tickUpdateCount > this.ticksPerFrame) {
+                this.tickUpdateCount = 0;
+                if (this.frameIndex < this.total - 1) {
+                    this.frameIndex++;
+                } else {
+                    this.frameIndex = 0;
+                    this.total = this.originalTotal;
+                    this.sX = this.originalSX;
+                    this.realCols = floor(this.cols - this.originalSX / this.tileW);
+                    this.sY -= (this.rows - 1) * this.tileH;
+                    if (this.isOnce) {
+                        this.status = 5;
+                        if (util.getType(this.onceDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDone(me);
+                            }, 100);
+                        }
+                    }
+                }
+                if (this.frameIndex === this.realCols) {
+                    this.total -= this.realCols;
+                    this.frameIndex = 0;
+                    this.sY += this.tileH;
+                    this.sX = 0;
+                    this.realCols = this.cols;
+                }
+            }
+            return this;
+        },
+        render: function (offCtx) {
+            offCtx.save();
+            SpriteSheet.superClass.render.apply(this, arguments);
+            var m = this.matrix.m;
+            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            offCtx.drawImage(this.image, this.frameIndex * this.tileW + this.sX, this.sY, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
+            offCtx.restore();
+            return this;
+        }
+    };
+    util.inherits(SpriteSheet, Rectangle);
+    return SpriteSheet;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -3209,6 +3327,28 @@ else {
 
 var modName = 'ig/BitmapPolygon';
 var refName = 'BitmapPolygon';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/SpriteSheet';
+var refName = 'SpriteSheet';
 var folderName = '';
 
 var tmp;
