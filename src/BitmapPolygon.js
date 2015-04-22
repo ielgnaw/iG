@@ -1,5 +1,5 @@
 /**
- * @file 位图精灵（矩形），这个精灵承载一个静态的图片
+ * @file 位图精灵（多边形），这个精灵承载一个静态的图片
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
@@ -8,28 +8,25 @@
 define(function (require) {
 
     var util = require('./util');
-    var Rectangle = require('./Rectangle');
+    var Polygon = require('./Polygon');
 
     /**
-     * Bitmap 基类
+     * BitmapPolygon 基类
      *
      * @extends DisplayObject
      * @constructor
      *
      * @param {Object} opts 参数
      *
-     * @return {Object} Bitmap 实例
+     * @return {Object} BitmapPolygon 实例
      */
-    function Bitmap(opts) {
+    function BitmapPolygon(opts) {
         opts = opts || {};
         if (!opts.image) {
-            throw new Error('Bitmap must be require a image param');
+            throw new Error('BitmapPolygon must be require a image param');
         }
 
-        Rectangle.call(this, opts);
-
-        this.width = opts.width || this.image.width || 0;
-        this.height = opts.height || this.image.height || 0;
+        Polygon.call(this, opts);
 
         // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
         // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
@@ -41,23 +38,24 @@ define(function (require) {
         return this;
     }
 
-    Bitmap.prototype = {
+    BitmapPolygon.prototype = {
         /**
          * 还原 constructor
          */
-        constructor: Bitmap,
+        constructor: BitmapPolygon,
 
         /**
-         * 渲染当前 Bitmap 实例
+         * 渲染当前 BitmapPolygon 实例
          *
          * @param {Object} offCtx 离屏 canvas 2d context 对象
          *
-         * @return {Object} 当前 Bitmap 实例
+         * @return {Object} 当前 BitmapPolygon 实例
          */
         render: function (offCtx) {
             offCtx.save();
 
-            Bitmap.superClass.render.apply(this, arguments);
+            BitmapPolygon.superClass.render.apply(this, arguments);
+
 
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -65,7 +63,7 @@ define(function (require) {
             offCtx.drawImage(
                 this.image,
                 this.sX, this.sY, this.sWidth, this.sHeight,
-                this.x, this.y, this.width, this.height
+                this.x, this.y, this.bounds.width, this.bounds.height
             );
 
             offCtx.restore();
@@ -74,8 +72,8 @@ define(function (require) {
         }
     };
 
-    util.inherits(Bitmap, Rectangle);
+    util.inherits(BitmapPolygon, Polygon);
 
-    return Bitmap;
+    return BitmapPolygon;
 
 });

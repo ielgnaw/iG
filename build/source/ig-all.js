@@ -2098,7 +2098,6 @@ define('ig/Bitmap', [
         this.sY = opts.sY || 0;
         this.sWidth = opts.sWidth || 0;
         this.sHeight = opts.sHeight || 0;
-        console.warn(this);
         return this;
     }
     Bitmap.prototype = {
@@ -2115,6 +2114,40 @@ define('ig/Bitmap', [
     };
     util.inherits(Bitmap, Rectangle);
     return Bitmap;
+});'use strict';
+define('ig/BitmapPolygon', [
+    'require',
+    './util',
+    './Polygon'
+], function (require) {
+    var util = require('./util');
+    var Polygon = require('./Polygon');
+    function BitmapPolygon(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('BitmapPolygon must be require a image param');
+        }
+        Polygon.call(this, opts);
+        this.sX = opts.sX || 0;
+        this.sY = opts.sY || 0;
+        this.sWidth = opts.sWidth || 0;
+        this.sHeight = opts.sHeight || 0;
+        return this;
+    }
+    BitmapPolygon.prototype = {
+        constructor: BitmapPolygon,
+        render: function (offCtx) {
+            offCtx.save();
+            BitmapPolygon.superClass.render.apply(this, arguments);
+            var m = this.matrix.m;
+            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            offCtx.drawImage(this.image, this.sX, this.sY, this.sWidth, this.sHeight, this.x, this.y, this.bounds.width, this.bounds.height);
+            offCtx.restore();
+            return this;
+        }
+    };
+    util.inherits(BitmapPolygon, Polygon);
+    return BitmapPolygon;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -3154,6 +3187,28 @@ else {
 
 var modName = 'ig/Bitmap';
 var refName = 'Bitmap';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/BitmapPolygon';
+var refName = 'BitmapPolygon';
 var folderName = '';
 
 var tmp;

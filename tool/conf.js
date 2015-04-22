@@ -13,6 +13,7 @@ exports.modules = {
         {name: 'ig/DisplayObject', refName: 'DisplayObject'},
         {name: 'ig/Text', refName: 'Text'},
         {name: 'ig/Bitmap', refName: 'Bitmap'},
+        {name: 'ig/BitmapPolygon', refName: 'BitmapPolygon'},
 
         {name: 'ig/Event'},
         {name: 'ig/domEvt'},
