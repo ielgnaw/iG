@@ -22,9 +22,6 @@ define(function (require) {
     function Rectangle(opts) {
         DisplayObject.call(this, opts);
 
-        this.cX = this.x + this.width / 2;
-        this.cY = this.y + this.height / 2;
-
         this.generatePoints();
         this.getBounds();
         return this;
@@ -69,7 +66,7 @@ define(function (require) {
                 };
             }
 
-            this.originalPoints = util.extend(true, [], this.points);
+            // this.originalPoints = util.extend(true, [], this.points);
 
             this.cX = this.x + this.width / 2;
             this.cY = this.y + this.height / 2;
@@ -281,63 +278,35 @@ define(function (require) {
         },
 
         /**
-         * 多边形和多边形的碰撞
+         * 矩形和矩形的碰撞
          *
-         * @param {Object} polygon 多边形
+         * @param {Object} rectangle 矩形
          *
          * @return {boolean} 结果
          */
-        collidesWith: function (polygon) {
-            var axes = this.getAxes().concat(polygon.getAxes());
-            return !this.separationOnAxes(axes, polygon);
-
-            // return polygonCollidesWithPolygon(this, polygon);
+        collidesWith: function (rectangle) {
+            var axes = this.getAxes().concat(rectangle.getAxes());
+            return !this.separationOnAxes(axes, rectangle);
         },
 
         /**
          * 找出分离轴
          *
          * @param {Array} axes 轴数组
-         * @param {Object} polygon 对变形
+         * @param {Object} rectangle 矩形
          *
          * @return {boolean} 是否存在分离轴
          */
-        separationOnAxes: function (axes, polygon) {
+        separationOnAxes: function (axes, rectangle) {
             for (var i = 0, len = axes.length; i < len; i++) {
                 var axis = axes[i];
-                var projection1 = polygon.project(axis);
+                var projection1 = rectangle.project(axis);
                 var projection2 = this.project(axis);
                 if (!projection1.overlaps(projection2)) {
                     return true;
                 }
             }
             return false;
-        },
-
-        minimumTranslationVector: function (axes, shape) {
-            var minimumOverlap = 100000;
-            var overlap;
-            var axisWithSmallestOverlap;
-            var mtv;
-            for (var i = 0; i < axes.length; i++) {
-                var axis = axes[i];
-                var projection1 = shape.project(axis);
-                var projection2 = this.project(axis);
-                var overlap = projection1.getOverlap(projection2);
-
-                if (overlap === 0) {
-                    return new MinimumTranslationVector(undefined, 0);
-                }
-                else {
-                    // console.warn(overlap);
-                    if (overlap < minimumOverlap) {
-                        minimumOverlap = overlap;
-                        axisWithSmallestOverlap = axis;
-                    }
-                }
-            }
-
-            return new MinimumTranslationVector(axisWithSmallestOverlap, minimumOverlap);
         },
 
         /**
@@ -361,18 +330,6 @@ define(function (require) {
             }
         }
     };
-
-    function polygonCollidesWithPolygon(p1, p2) {
-        var mtv1 = p1.minimumTranslationVector(p1.getAxes(), p2);
-        var mtv2 = p1.minimumTranslationVector(p2.getAxes(), p2);
-
-        if (mtv1.overlap === 0 || mtv2.overlap === 0) {
-            return { axis: undefined, overlap: 0 };
-        }
-
-        return mtv1.overlap < mtv2.overlap ? mtv1 : mtv2;
-    };
-
 
     util.inherits(Rectangle, DisplayObject);
 

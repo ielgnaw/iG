@@ -2287,7 +2287,8 @@ define('ig/Vector', ['require'], function (require) {
         }
     };
     return Vector;
-});define('ig/Polygon', [
+});'use strict';
+define('ig/Polygon', [
     'require',
     './util',
     './Vector',
@@ -2298,28 +2299,30 @@ define('ig/Vector', ['require'], function (require) {
     var Vector = require('./Vector');
     var Projection = require('./Projection');
     var DisplayObject = require('./DisplayObject');
-    function Polygon(opts) {
-        DisplayObject.call(this, this);
+    function Rectangle(opts) {
+        DisplayObject.call(this, opts);
         util.extend(true, this, { points: [] }, opts);
-        if (this.points.length) {
-            this.x = this.points[0].x;
-            this.y = this.points[0].y;
-        }
-        this.getBounds();
-        this.cX = this.x + this.bounds.width / 2;
-        this.cY = this.y + this.bounds.height / 2;
-        if (this.cX >= this.bounds.x + this.bounds.width) {
-            this.cX = this.bounds.x + this.bounds.width;
-        }
-        if (this.cY >= this.bounds.y + this.bounds.height) {
-            this.cY = this.bounds.y + this.bounds.height;
-        }
         this.originalPoints = util.extend(true, [], this.points);
-        console.warn(this);
+        this.generatePoints();
+        this.getBounds();
+        this.cX = this.bounds.x + this.bounds.width / 2;
+        this.cY = this.bounds.y + this.bounds.height / 2;
         return this;
     }
-    Polygon.prototype = {
-        constructor: Polygon,
+    Rectangle.prototype = {
+        constructor: Rectangle,
+        generatePoints: function (x, y) {
+            var x = x || 0;
+            var y = y || 0;
+            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+            return this;
+        },
         createPath: function (offCtx) {
             var points = this.points;
             var len = points.length;
@@ -2334,68 +2337,60 @@ define('ig/Vector', ['require'], function (require) {
             offCtx.closePath();
             return this;
         },
-        move: function (x, y) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                var point = points[i];
-                var originalPoint = this.originalPoints[i];
-                originalPoint.x += x;
-                originalPoint.y += y;
+        moveStep: function () {
+            this.vX += this.aX;
+            this.vX *= this.frictionX;
+            this.x += this.vX;
+            this.vY += this.aY;
+            this.vY *= this.frictionY;
+            this.y += this.vY;
+            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
+                this.originalPoints[i] = {
+                    x: this.originalPoints[i].x + this.vX,
+                    y: this.originalPoints[i].y + this.vY
+                };
             }
-            this.getBounds();
-            this.cX = this.x + this.bounds.width / 2;
-            this.cY = this.y + this.bounds.height / 2;
-            return this;
-        },
-        getAxes: function () {
-            var v1 = new Vector();
-            var v2 = new Vector();
-            var axes = [];
-            var points = this.points;
-            for (var i = 0, len = points.length - 1; i < len; i++) {
-                v1.x = points[i].x;
-                v1.y = points[i].y;
-                v2.x = points[i + 1].x;
-                v2.y = points[i + 1].y;
-                axes.push(v1.edge(v2).normal());
-            }
-            return axes;
-        },
-        project: function (axis) {
-            var scalars = [];
-            var v = new Vector();
-            var points = this.points;
+            var points = this.originalPoints;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
             for (var i = 0, len = points.length; i < len; i++) {
-                var point = points[i];
-                v.x = point.x;
-                v.y = point.y;
-                scalars.push(v.dot(axis));
-            }
-            return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
-        },
-        collidesWith: function (polygon) {
-            var axes = this.getAxes().concat(polygon.getAxes());
-            return !this.separationOnAxes(axes, polygon);
-        },
-        separationOnAxes: function (axes, polygon) {
-            for (var i = 0, len = axes.length; i < len; i++) {
-                var axis = axes[i];
-                var projection1 = polygon.project(axis);
-                var projection2 = this.project(axis);
-                if (!projection1.overlaps(projection2)) {
-                    return true;
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
                 }
             }
-            return false;
+            this.cX = minX + (maxX - minX) / 2;
+            this.cY = minY + (maxY - minY) / 2;
+            return this;
         },
-        isPointInPath: function (offCtx, x, y) {
+        render: function (offCtx) {
+            offCtx.save();
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.strokeStyle = this.strokeStyle;
+            offCtx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cX, this.cY);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cX, -this.cY);
+            this.generatePoints();
+            this.getBounds();
             this.createPath(offCtx);
-            return offCtx.isPointInPath(x, y);
-        },
-        hitTestPoint: function (x, y) {
-            var stage = this.stageOwner;
-            return this.isPointInPath(stage.offCtx, x, y);
+            offCtx.fill();
+            offCtx.stroke();
+            this.debugRender(offCtx);
+            offCtx.restore();
+            return this;
         },
         getBounds: function () {
             var points = this.points;
@@ -2425,54 +2420,66 @@ define('ig/Vector', ['require'], function (require) {
             };
             return this;
         },
-        moveStep: function () {
-            this.vX += this.aX;
-            this.vX *= this.frictionX;
-            this.vY += this.aY;
-            this.vY *= this.frictionY;
-            for (var i = 0, len = this.originalPoints.length; i < len; i++) {
-                this.originalPoints[i] = {
-                    x: this.originalPoints[i].x + this.vX,
-                    y: this.originalPoints[i].y + this.vY
-                };
-            }
-            return this;
-        },
-        render: function (offCtx) {
-            offCtx.save();
-            offCtx.fillStyle = this.fillStyle;
-            offCtx.strokeStyle = this.strokeStyle;
-            offCtx.globalAlpha = this.alpha;
-            this.matrix.reset();
-            this.matrix.translate(this.cX, this.cY);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cX, -this.cY);
-            for (var i = 0, len = this.points.length; i < len; i++) {
-                this.points[i] = {
-                    x: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).x,
-                    y: this.matrix.transformPoint(this.originalPoints[i].x, this.originalPoints[i].y).y
-                };
-            }
+        isPointInPath: function (offCtx, x, y) {
             this.createPath(offCtx);
-            offCtx.fill();
-            offCtx.stroke();
-            this.getBounds();
-            this.debugRender(offCtx);
-            offCtx.restore();
-            return this;
+            return offCtx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stageOwner;
+            return this.isPointInPath(stage.offCtx, x, y);
+        },
+        getAxes: function () {
+            var v1 = new Vector();
+            var v2 = new Vector();
+            var axes = [];
+            var points = this.points;
+            for (var i = 0, len = points.length - 1; i < len; i++) {
+                v1.x = points[i].x;
+                v1.y = points[i].y;
+                v2.x = points[i + 1].x;
+                v2.y = points[i + 1].y;
+                axes.push(v1.edge(v2).normal());
+            }
+            return axes;
+        },
+        project: function (axis) {
+            var scalars = [];
+            var v = new Vector();
+            var points = this.points;
+            for (var i = 0, len = points.length; i < len; i++) {
+                var point = points[i];
+                v.x = point.x;
+                v.y = point.y;
+                scalars.push(v.dot(axis));
+            }
+            return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
+        },
+        collidesWith: function (rectangle) {
+            var axes = this.getAxes().concat(rectangle.getAxes());
+            return !this.separationOnAxes(axes, rectangle);
+        },
+        separationOnAxes: function (axes, rectangle) {
+            for (var i = 0, len = axes.length; i < len; i++) {
+                var axis = axes[i];
+                var projection1 = rectangle.project(axis);
+                var projection2 = this.project(axis);
+                if (!projection1.overlaps(projection2)) {
+                    return true;
+                }
+            }
+            return false;
         },
         debugRender: function (offCtx) {
             if (this.debug) {
                 offCtx.save();
-                offCtx.strokeStyle = 'black';
+                offCtx.strokeStyle = 'green';
                 offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 offCtx.restore();
             }
         }
     };
-    util.inherits(Polygon, DisplayObject);
-    return Polygon;
+    util.inherits(Rectangle, DisplayObject);
+    return Rectangle;
 });'use strict';
 define('ig/Rectangle', [
     'require',
@@ -2487,8 +2494,6 @@ define('ig/Rectangle', [
     var DisplayObject = require('./DisplayObject');
     function Rectangle(opts) {
         DisplayObject.call(this, opts);
-        this.cX = this.x + this.width / 2;
-        this.cY = this.y + this.height / 2;
         this.generatePoints();
         this.getBounds();
         return this;
@@ -2521,7 +2526,6 @@ define('ig/Rectangle', [
                     y: transformPoint.y
                 };
             }
-            this.originalPoints = util.extend(true, [], this.points);
             this.cX = this.x + this.width / 2;
             this.cY = this.y + this.height / 2;
             return this;
@@ -2632,41 +2636,20 @@ define('ig/Rectangle', [
             }
             return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
         },
-        collidesWith: function (polygon) {
-            var axes = this.getAxes().concat(polygon.getAxes());
-            return !this.separationOnAxes(axes, polygon);
+        collidesWith: function (rectangle) {
+            var axes = this.getAxes().concat(rectangle.getAxes());
+            return !this.separationOnAxes(axes, rectangle);
         },
-        separationOnAxes: function (axes, polygon) {
+        separationOnAxes: function (axes, rectangle) {
             for (var i = 0, len = axes.length; i < len; i++) {
                 var axis = axes[i];
-                var projection1 = polygon.project(axis);
+                var projection1 = rectangle.project(axis);
                 var projection2 = this.project(axis);
                 if (!projection1.overlaps(projection2)) {
                     return true;
                 }
             }
             return false;
-        },
-        minimumTranslationVector: function (axes, shape) {
-            var minimumOverlap = 100000;
-            var overlap;
-            var axisWithSmallestOverlap;
-            var mtv;
-            for (var i = 0; i < axes.length; i++) {
-                var axis = axes[i];
-                var projection1 = shape.project(axis);
-                var projection2 = this.project(axis);
-                var overlap = projection1.getOverlap(projection2);
-                if (overlap === 0) {
-                    return new MinimumTranslationVector(undefined, 0);
-                } else {
-                    if (overlap < minimumOverlap) {
-                        minimumOverlap = overlap;
-                        axisWithSmallestOverlap = axis;
-                    }
-                }
-            }
-            return new MinimumTranslationVector(axisWithSmallestOverlap, minimumOverlap);
         },
         debugRender: function (offCtx) {
             if (this.debug) {
@@ -2677,18 +2660,6 @@ define('ig/Rectangle', [
             }
         }
     };
-    function polygonCollidesWithPolygon(p1, p2) {
-        var mtv1 = p1.minimumTranslationVector(p1.getAxes(), p2);
-        var mtv2 = p1.minimumTranslationVector(p2.getAxes(), p2);
-        if (mtv1.overlap === 0 || mtv2.overlap === 0) {
-            return {
-                axis: undefined,
-                overlap: 0
-            };
-        }
-        return mtv1.overlap < mtv2.overlap ? mtv1 : mtv2;
-    }
-    ;
     util.inherits(Rectangle, DisplayObject);
     return Rectangle;
 });define('ig/Projection', ['require'], function (require) {
