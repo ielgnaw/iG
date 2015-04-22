@@ -691,6 +691,161 @@ define('ig/env', ['require'], function (require) {
     };
     checkAudio(exports);
     return exports;
+});define('ig/resourceLoader', [
+    'require',
+    './ig',
+    './util'
+], function (require) {
+    var ig = require('./ig');
+    var util = require('./util');
+    var defaultResourceTypes = {
+        png: 'Image',
+        jpg: 'Image',
+        gif: 'Image',
+        jpeg: 'Image',
+        ogg: 'Audio',
+        wav: 'Audio',
+        m4a: 'Audio',
+        mp3: 'Audio'
+    };
+    function getFileExt(fileName) {
+        var segments = fileName.split('.');
+        return segments[segments.length - 1].toLowerCase();
+    }
+    var exports = {};
+    ig.resources = exports.resources = {};
+    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var fileExt = getFileExt(_src);
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    if (fileExt === 'json') {
+                        _callback(_id, JSON.parse(req.responseText));
+                    } else {
+                        _callback(_id, req.responseText);
+                    }
+                } else {
+                    _errorCallback(_src);
+                }
+            }
+        };
+        req.open('GET', _src, true);
+        req.send(null);
+    };
+    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var img = new Image();
+        img.addEventListener('load', function (e) {
+            _callback(_id, img);
+        });
+        img.addEventListener('error', function (e) {
+            _errorCallback(_src);
+        });
+        img.src = _src;
+    };
+    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
+        var me = this;
+        opts = opts || {};
+        if (!Array.isArray(resource)) {
+            resource = [resource];
+        }
+        var loadError = false;
+        var errorCallback = function (item) {
+            loadError = true;
+            (opts.errorCallback || function (errItem) {
+                throw 'Loading Error: ' + errItem;
+            }).call(me, item);
+        };
+        var processCallback = opts.processCallback || util.noop;
+        var totalCount = resource.length;
+        var remainingCount = totalCount;
+        var loadOneCallback = function (id, obj) {
+            if (loadError) {
+                return;
+            }
+            if (!ig.resources[id]) {
+                ig.resources[id] = obj;
+            }
+            remainingCount--;
+            processCallback(totalCount - remainingCount, totalCount);
+            if (remainingCount === 0 && callback) {
+                callback.call(me, ig.resources);
+            }
+        };
+        var customResourceTypes = opts.customResourceTypes || {};
+        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+        for (var i = 0; i < totalCount; i++) {
+            var curResource = resource[i];
+            var resourceId;
+            var resourceSrc;
+            if (util.getType(curResource) === 'object') {
+                resourceId = curResource.id;
+                resourceSrc = curResource.src;
+            } else {
+                resourceId = resourceSrc = curResource;
+            }
+            if (!ig.resources.hasOwnProperty(resourceId)) {
+                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                if (!invokeMethod) {
+                    invokeMethod = me.loadOther;
+                }
+                invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
+            } else {
+                loadOneCallback(resourceId, ig.resources[resourceId]);
+            }
+        }
+    };
+    return exports;
 });'use strict';
 define('ig/Animation', [
     'require',
@@ -1706,8 +1861,8 @@ define('ig/DisplayObject', [
             angle: 0,
             alpha: 1,
             zIndex: 0,
-            fillStyle: null,
-            strokeStyle: null,
+            fillStyle: 'transparent',
+            strokeStyle: 'transparent',
             image: null,
             vX: 0,
             vY: 0,
@@ -1843,7 +1998,7 @@ define('ig/Text', [
     var util = require('./util');
     var DisplayObject = require('./DisplayObject');
     function Text(opts) {
-        DisplayObject.call(this, this);
+        DisplayObject.call(this, opts);
         util.extend(true, this, {
             content: '',
             size: 30,
@@ -1923,6 +2078,43 @@ define('ig/Text', [
     }
     util.inherits(Text, DisplayObject);
     return Text;
+});'use strict';
+define('ig/Bitmap', [
+    'require',
+    './util',
+    './Rectangle'
+], function (require) {
+    var util = require('./util');
+    var Rectangle = require('./Rectangle');
+    function Bitmap(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('Bitmap must be require a image param');
+        }
+        Rectangle.call(this, opts);
+        this.width = opts.width || this.image.width || 0;
+        this.height = opts.height || this.image.height || 0;
+        this.sX = opts.sX || 0;
+        this.sY = opts.sY || 0;
+        this.sWidth = opts.sWidth || 0;
+        this.sHeight = opts.sHeight || 0;
+        console.warn(this);
+        return this;
+    }
+    Bitmap.prototype = {
+        constructor: Bitmap,
+        render: function (offCtx) {
+            offCtx.save();
+            Bitmap.superClass.render.apply(this, arguments);
+            var m = this.matrix.m;
+            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            offCtx.drawImage(this.image, this.sX, this.sY, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
+            offCtx.restore();
+            return this;
+        }
+    };
+    util.inherits(Bitmap, Rectangle);
+    return Bitmap;
 });'use strict';
 define('ig/Event', ['require'], function (require) {
     var guidKey = '_observerGUID';
@@ -2758,161 +2950,6 @@ define('ig/Rectangle', [
         }
     };
     return Projection;
-});define('ig/resourceLoader', [
-    'require',
-    './ig',
-    './util'
-], function (require) {
-    var ig = require('./ig');
-    var util = require('./util');
-    var defaultResourceTypes = {
-        png: 'Image',
-        jpg: 'Image',
-        gif: 'Image',
-        jpeg: 'Image',
-        ogg: 'Audio',
-        wav: 'Audio',
-        m4a: 'Audio',
-        mp3: 'Audio'
-    };
-    function getFileExt(fileName) {
-        var segments = fileName.split('.');
-        return segments[segments.length - 1].toLowerCase();
-    }
-    var exports = {};
-    ig.resources = exports.resources = {};
-    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
-        var _id;
-        var _src;
-        var _callback;
-        var _errorCallback;
-        var argLength = arguments.length;
-        switch (argLength) {
-        case 1:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = util.noop;
-            break;
-        case 2:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = arguments[1];
-            break;
-        case 3:
-            _id = _src = arguments[0];
-            _callback = arguments[1];
-            _errorCallback = arguments[2];
-            break;
-        default:
-            _id = arguments[0];
-            _src = arguments[1];
-            _callback = arguments[2];
-            _errorCallback = arguments[3];
-        }
-        var fileExt = getFileExt(_src);
-        var req = new XMLHttpRequest();
-        req.onreadystatechange = function () {
-            if (req.readyState === 4) {
-                if (req.status === 200) {
-                    if (fileExt === 'json') {
-                        _callback(_id, JSON.parse(req.responseText));
-                    } else {
-                        _callback(_id, req.responseText);
-                    }
-                } else {
-                    _errorCallback(_src);
-                }
-            }
-        };
-        req.open('GET', _src, true);
-        req.send(null);
-    };
-    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
-        var _id;
-        var _src;
-        var _callback;
-        var _errorCallback;
-        var argLength = arguments.length;
-        switch (argLength) {
-        case 1:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = util.noop;
-            break;
-        case 2:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = arguments[1];
-            break;
-        case 3:
-            _id = _src = arguments[0];
-            _callback = arguments[1];
-            _errorCallback = arguments[2];
-            break;
-        default:
-            _id = arguments[0];
-            _src = arguments[1];
-            _callback = arguments[2];
-            _errorCallback = arguments[3];
-        }
-        var img = new Image();
-        img.addEventListener('load', function (e) {
-            _callback(_id, img);
-        });
-        img.addEventListener('error', function (e) {
-            _errorCallback(_src);
-        });
-        img.src = _src;
-    };
-    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
-        var me = this;
-        opts = opts || {};
-        if (!Array.isArray(resource)) {
-            resource = [resource];
-        }
-        var loadError = false;
-        var errorCallback = function (item) {
-            loadError = true;
-            (opts.errorCallback || function (errItem) {
-                throw 'Loading Error: ' + errItem;
-            }).call(me, item);
-        };
-        var processCallback = opts.processCallback || util.noop;
-        var totalCount = resource.length;
-        var remainingCount = totalCount;
-        var loadOneCallback = function (id, obj) {
-            if (loadError) {
-                return;
-            }
-            if (!ig.resources[id]) {
-                ig.resources[id] = obj;
-            }
-            remainingCount--;
-            processCallback(totalCount - remainingCount, totalCount);
-            if (remainingCount === 0 && callback) {
-                callback.call(me, ig.resources);
-            }
-        };
-        var customResourceTypes = opts.customResourceTypes || {};
-        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
-        for (var i = 0; i < totalCount; i++) {
-            var curResource = resource[i];
-            var resourceId;
-            var resourceSrc;
-            if (util.getType(curResource) === 'object') {
-                resourceId = curResource.id;
-                resourceSrc = curResource.src;
-            } else {
-                resourceId = resourceSrc = curResource;
-            }
-            if (!ig.resources.hasOwnProperty(resourceId)) {
-                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
-                if (!invokeMethod) {
-                    invokeMethod = me.loadOther;
-                }
-                invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
-            } else {
-                loadOneCallback(resourceId, ig.resources[resourceId]);
-            }
-        }
-    };
-    return exports;
 });
 var ig = require('ig');
 
@@ -2963,6 +3000,28 @@ else {
 
 var modName = 'ig/env';
 var refName = 'env';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/resourceLoader';
+var refName = '';
 var folderName = '';
 
 var tmp;
@@ -3073,6 +3132,28 @@ else {
 
 var modName = 'ig/Text';
 var refName = 'Text';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Bitmap';
+var refName = 'Bitmap';
 var folderName = '';
 
 var tmp;
@@ -3226,28 +3307,6 @@ else {
 }
 
 var modName = 'ig/Projection';
-var refName = '';
-var folderName = '';
-
-var tmp;
-if (folderName) {
-    if (!ig[folderName]) {
-        tmp = {};
-        tmp[refName] = require(modName);
-        ig[folderName] = tmp;
-    }
-    else {
-        ig[folderName][refName] = require(modName);
-    }
-}
-else {
-    tmp = require(modName);
-    if (refName) {
-        ig[refName] = tmp;
-    }
-}
-
-var modName = 'ig/resourceLoader';
 var refName = '';
 var folderName = '';
 

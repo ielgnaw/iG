@@ -90,9 +90,9 @@ define(function (require) {
             // 层叠关系
             zIndex: 0,
             // fill 的样式
-            fillStyle: null,
+            fillStyle: 'transparent',
             // stroke 的样式
-            strokeStyle: null,
+            strokeStyle: 'transparent',
             // image 图像
             image: null,
             // 横轴速度，x += vX

@@ -5,11 +5,15 @@ exports.modules = {
         {name: 'ig/util', refName: 'util'},
         {name: 'ig/easing', refName: 'easing'},
         {name: 'ig/env', refName: 'env'},
+        {name: 'ig/resourceLoader'},
+
         {name: 'ig/Animation', refName: 'Animation'},
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage', refName: 'Stage'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'},
         {name: 'ig/Text', refName: 'Text'},
+        {name: 'ig/Bitmap', refName: 'Bitmap'},
+
         {name: 'ig/Event'},
         {name: 'ig/domEvt'},
         {name: 'ig/Matrix', refName: 'Matrix'},
@@ -17,7 +21,7 @@ exports.modules = {
         {name: 'ig/Polygon', refName: 'Polygon'},
         {name: 'ig/Rectangle', refName: 'Rectangle'},
         {name: 'ig/Projection'},
-        {name: 'ig/resourceLoader'},
+
         // refName 指要挂载到 window.ig 这个全局空间上的名字
         // 如果无 refName 配置，意味着该模板只是 ig 内部调用的，不会被挂载在 window 上
         // {name: 'ig/util', refName: 'util'},     // window.ig.util

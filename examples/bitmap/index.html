@@ -14,20 +14,41 @@
         <meta name="screen-orientation" content="portrait"/>
         <meta name="x5-fullscreen" content="true"/>
         <meta name="360-fullscreen" content="true"/>
-
-        <script type="text/javascript" src="../../build/source/ig-all.js"></script>
         <style type="text/css">
-            canvas {
-                /*border: 1px solid #ddd;*/
+            body {
+                padding: 0;
+                margin: 0;
             }
-            #fps {
+            .container {
+                width: 800px;
+                height: 400px;
+                margin: 20px auto;
+                /*border: 1px solid #ddd;*/
+                position: relative;
+            }
+            .control a {
+                color: #000;
+                display: inline-block;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                padding: 5px;
+                text-align: center;
+                font-size: 14px;
+            }
+            .control a:hover {
+                background: #5580dd;
                 color: #fff;
+            }
+
+            #fps {
                 position: absolute;
                 z-index: 10000;
                 top: 5px;
                 left: 5px;
             }
         </style>
+        <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
         <div id="fps"></div>

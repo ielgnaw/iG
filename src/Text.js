@@ -21,7 +21,7 @@ define(function (require) {
      * @return {Object} Text 实例
      */
     function Text(opts) {
-        DisplayObject.call(this, this);
+        DisplayObject.call(this, opts);
 
         util.extend(true, this, {
             // 文字内容
