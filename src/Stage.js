@@ -48,7 +48,17 @@ define(function (require) {
             // 场景的 cssWidth
             cssWidth: opts.gameOwner.cssWidth,
             // 场景的 cssHeight
-            cssHeight: opts.gameOwner.cssHeight
+            cssHeight: opts.gameOwner.cssHeight,
+
+            // 对应 mousedown 和 touchstart 事件
+            // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+            captureFunc: util.noop,
+            // 对应 mousemove 和 touchmove 事件
+            // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+            moveFunc: util.noop,
+            // 对应 mouseup 和 touchend 事件
+            // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+            releaseFunc: util.noop,
         }, opts);
 
         // 当前场景中的所有可显示对象集合
@@ -70,6 +80,45 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: Stage,
+
+        /**
+         * 设置 captureFunc，对应 mousedown 和 touchstart 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+
+        /**
+         * 设置 moveFunc，对应 mousemove 和 touchmove 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+
+        /**
+         * 设置 releaseFunc，对应 mouseup 和 touchend 事件
+         * 这个 func 中的 this 指向的是当前的 DisplayObject 实例
+         *
+         * @param {Function} func function
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
 
         /**
          * 清除
@@ -223,8 +272,8 @@ define(function (require) {
                 if (curDisplay) {
                     displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
-                        curDisplay.update(dt);
                         curDisplay._update(dt);
+                        curDisplay.update(dt);
                     }
                 }
             }

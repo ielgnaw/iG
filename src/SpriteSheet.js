@@ -100,46 +100,34 @@ define(function (require) {
             util.extend(this, {
                 // 一组动画中的所有帧数
                 total: this.total,
-
                 // 横坐标
                 x: this.x,
-
                 // 纵坐标
                 y: this.y,
-
                 // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
                 // 这两个参数对应 drawImage 的 sx, sy
                 sX: this.sX,
                 sY: this.sY,
-
                 // 列数，如果精灵在当前行不是从第 0 列开始的，这个列数也还是指的所有的列数
                 // 例如 sprite-sheet3.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
                 cols: this.cols,
-
                 // 行数，当前这组精灵所占的行数
                 // 例如 sprite-sheet3.png 气球图，红球的行数数是 2，桔球的行数是 2
                 rows: this.rows,
-
                 // 每帧宽度
                 tileW: 0,
-
                 // 每帧高度
                 tileH: 0,
-
                 // 横轴偏移
                 offsetX: 0,
-
                 // 纵轴偏移
                 offsetY: 0,
-
                 // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
                 // 所以这是这个值来控制精灵切换的速度，
                 // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
                 ticksPerFrame: this.ticksPerFrame,
-
                 // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
                 isOnce: false,
-
                 // isOnce 为 true 时，一组动画结束后的回调
                 onceDone: util.noop
             }, prop);
@@ -241,6 +229,7 @@ define(function (require) {
         render: function (offCtx) {
             // polygon.getBounds(this);
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
 
             SpriteSheet.superClass.render.apply(this, arguments);
 

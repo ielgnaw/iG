@@ -69,10 +69,13 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
+        // target 是 Stage
         var target = e.target;
-        // debugger
-        var displayObjectList = target.displayObjectList;
+        if (util.getType(target.captureFunc) === 'function') {
+            target.captureFunc.call(target, e.data);
+        }
 
+        var displayObjectList = target.displayObjectList;
         var candidateDisplayObject;
         var maxZIndex = -1;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
@@ -107,7 +110,11 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
+        // target 是 Stage
         var target = e.target;
+        if (util.getType(target.moveFunc) === 'function') {
+            target.moveFunc.call(target, e.data);
+        }
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
@@ -140,7 +147,11 @@ define(function (require) {
      * @return {Object} Stage 实例
      */
     exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
+        // target 是 Stage
         var target = e.target;
+        if (util.getType(target.releaseFunc) === 'function') {
+            target.releaseFunc.call(target, e.data);
+        }
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];

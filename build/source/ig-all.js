@@ -1557,7 +1557,10 @@ define('ig/Stage', [
             width: opts.gameOwner.width,
             height: opts.gameOwner.height,
             cssWidth: opts.gameOwner.cssWidth,
-            cssHeight: opts.gameOwner.cssHeight
+            cssHeight: opts.gameOwner.cssHeight,
+            captureFunc: util.noop,
+            moveFunc: util.noop,
+            releaseFunc: util.noop
         }, opts);
         this.displayObjectList = [];
         this.displayObjects = {};
@@ -1566,6 +1569,18 @@ define('ig/Stage', [
     }
     Stage.prototype = {
         constructor: Stage,
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
         clear: function () {
             this.offCtx.clearRect(0, 0, this.width, this.height);
             return this;
@@ -1646,8 +1661,8 @@ define('ig/Stage', [
                 if (curDisplay) {
                     displayObjectStatus = curDisplay.status;
                     if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
-                        curDisplay.update(dt);
                         curDisplay._update(dt);
+                        curDisplay.update(dt);
                     }
                 }
             }
@@ -2113,6 +2128,7 @@ define('ig/Bitmap', [
         constructor: Bitmap,
         render: function (offCtx) {
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
             Bitmap.superClass.render.apply(this, arguments);
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -2149,6 +2165,7 @@ define('ig/BitmapPolygon', [
         constructor: BitmapPolygon,
         render: function (offCtx) {
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
             BitmapPolygon.superClass.render.apply(this, arguments);
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -2259,6 +2276,7 @@ define('ig/SpriteSheet', [
         },
         render: function (offCtx) {
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
             SpriteSheet.superClass.render.apply(this, arguments);
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
@@ -2400,6 +2418,9 @@ define('ig/domEvt', [
     exports.fireEvt = {};
     exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
         var target = e.target;
+        if (util.getType(target.captureFunc) === 'function') {
+            target.captureFunc.call(target, e.data);
+        }
         var displayObjectList = target.displayObjectList;
         var candidateDisplayObject;
         var maxZIndex = -1;
@@ -2423,6 +2444,9 @@ define('ig/domEvt', [
     };
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         var target = e.target;
+        if (util.getType(target.moveFunc) === 'function') {
+            target.moveFunc.call(target, e.data);
+        }
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
@@ -2441,6 +2465,9 @@ define('ig/domEvt', [
     };
     exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
         var target = e.target;
+        if (util.getType(target.releaseFunc) === 'function') {
+            target.releaseFunc.call(target, e.data);
+        }
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];

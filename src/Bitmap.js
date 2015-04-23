@@ -58,6 +58,7 @@ define(function (require) {
          */
         render: function (offCtx) {
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
 
             Bitmap.superClass.render.apply(this, arguments);
 

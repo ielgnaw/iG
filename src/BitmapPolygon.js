@@ -55,9 +55,9 @@ define(function (require) {
          */
         render: function (offCtx) {
             offCtx.save();
+            offCtx.globalAlpha = this.alpha;
 
             BitmapPolygon.superClass.render.apply(this, arguments);
-
 
             var m = this.matrix.m;
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
