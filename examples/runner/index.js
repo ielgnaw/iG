@@ -22,26 +22,11 @@ window.onload = function () {
 
     game.loadResource(
         [
-            {
-                id: 'wallBg',
-                src: '/examples/img/runner-bg-wall.png'
-            },
-            {
-                id: 'playerData',
-                src: './data/player.json'
-            },
-            {
-                id: 'playerImg',
-                src: '/examples/img/runner-player.png'
-            },
-            {
-                id: 'boxData',
-                src: './data/box.json'
-            },
-            {
-                id: 'boxImg',
-                src: '/examples/img/runner-box.png'
-            }
+            {id: 'wallBg', src: '/examples/img/runner-bg-wall.png'},
+            {id: 'playerData', src: './data/player.json'},
+            {id: 'playerImg', src: '/examples/img/runner-player.png'},
+            {id: 'boxData', src: './data/box.json'},
+            {id: 'boxImg', src: '/examples/img/runner-box.png'}
         ],
         function (d) {
             var playerImg = d.playerImg;
@@ -87,7 +72,7 @@ window.onload = function () {
                         target: {
                             alpha: 0,
                         },
-                        duration: 200,
+                        duration: 100,
                         completeFunc: function (evt) {
                             evt.data.source.changeStatus(STATUS.DESTROYED);
                         }
@@ -157,7 +142,7 @@ window.onload = function () {
                 var box = new ig.SpriteSheet({
                     image: d.boxImg,
                     x: game.width + 10,
-                    y: util.randomInt(game.height - d.boxImg.height - 10, game.height - d.boxImg.height - 190),
+                    y: util.randomInt(game.height - d.boxImg.height - 10, game.height - d.boxImg.height - 150),
                     sX: boxData.sX,
                     sY: boxData.sY,
                     total: boxData.total,
@@ -167,10 +152,8 @@ window.onload = function () {
                     rows: boxData.rows,
                     zIndex: 1,
                     ticksPerFrame: 1,
-                    vX: util.randomInt(-1, -9),
-                    captureFunc: function (e) {
-                        jump(this);
-                    }
+                    // vX: util.randomInt(-15, -19)
+                    vX: -15
                 });
                 box.update = function () {
                     this.angle = this.angle + 5;
@@ -186,7 +169,7 @@ window.onload = function () {
                         }
                     }
                     else {
-                        if (this.bounds.x * 3 >= player.bounds.x + player.bounds.width) {
+                        if (this.bounds.x * 2 >= player.bounds.x + player.bounds.width) {
                             boxCollidesWidthPlayer.call(this, player);
                         }
                     }

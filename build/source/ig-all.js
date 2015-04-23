@@ -2924,11 +2924,13 @@ define('ig/Rectangle', [
     './util',
     './Vector',
     './Projection',
+    './MinTranslationVector',
     './DisplayObject'
 ], function (require) {
     var util = require('./util');
     var Vector = require('./Vector');
     var Projection = require('./Projection');
+    var MinTranslationVector = require('./MinTranslationVector');
     var DisplayObject = require('./DisplayObject');
     function Rectangle(opts) {
         DisplayObject.call(this, opts);
@@ -3085,6 +3087,26 @@ define('ig/Rectangle', [
             var axes = this.getAxes().concat(rectangle.getAxes());
             return !this.separationOnAxes(axes, rectangle);
         },
+        minTranslationVector: function (axes, rectangle) {
+            var minOverlap = Number.MAX_VALUE;
+            var overlap;
+            var axisWithSmallestOverlap;
+            for (var i = 0; i < axes.length; i++) {
+                var axis = axes[i];
+                var projection1 = this.project(axis);
+                var projection2 = rectangle.project(axis);
+                var overlap = projection1.getOverlap(projection2);
+                if (overlap === 0) {
+                    return new MinTranslationVector(undefined, 0);
+                } else {
+                    if (overlap < minOverlap) {
+                        minOverlap = overlap;
+                        axisWithSmallestOverlap = axis;
+                    }
+                }
+            }
+            return new MinTranslationVector(axisWithSmallestOverlap, minOverlap);
+        },
         separationOnAxes: function (axes, rectangle) {
             for (var i = 0, len = axes.length; i < len; i++) {
                 var axis = axes[i];
@@ -3107,6 +3129,12 @@ define('ig/Rectangle', [
     };
     util.inherits(Rectangle, DisplayObject);
     return Rectangle;
+});define('ig/MinTranslationVector', ['require'], function (require) {
+    function MinimumTranslationVector(axis, overlap) {
+        this.axis = axis;
+        this.overlap = overlap;
+    }
+    return MinimumTranslationVector;
 });define('ig/Projection', ['require'], function (require) {
     function Projection(min, max) {
         this.min = min;
@@ -3511,6 +3539,28 @@ else {
 
 var modName = 'ig/Rectangle';
 var refName = 'Rectangle';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/MinTranslationVector';
+var refName = '';
 var folderName = '';
 
 var tmp;

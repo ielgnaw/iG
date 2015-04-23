@@ -10,6 +10,7 @@ define(function (require) {
     var util = require('./util');
     var Vector = require('./Vector');
     var Projection = require('./Projection');
+    var MinTranslationVector = require('./MinTranslationVector');
     var DisplayObject = require('./DisplayObject');
 
     /**
@@ -307,6 +308,43 @@ define(function (require) {
         collidesWith: function (rectangle) {
             var axes = this.getAxes().concat(rectangle.getAxes());
             return !this.separationOnAxes(axes, rectangle);
+
+            // var mtv1 = this.minTranslationVector(this.getAxes(), rectangle);
+            // var mtv2 = this.minTranslationVector(rectangle.getAxes(), rectangle);
+            // // console.warn(mtv1.overlap, mtv2.overlap);
+            // if (mtv1.overlap === 0 || mtv2.overlap === 0) {
+            //     return {
+            //         axis: undefined,
+            //         overlap: 0
+            //     };
+            // }
+            // else {
+            //     return mtv1.overlap < mtv2.overlap ? mtv1 : mtv2;
+            // }
+        },
+
+        minTranslationVector: function (axes, rectangle) {
+            var minOverlap = Number.MAX_VALUE;
+            var overlap;
+            var axisWithSmallestOverlap;
+            for (var i = 0; i < axes.length; i++) {
+                var axis = axes[i];
+                var projection1 = this.project(axis);
+                var projection2 = rectangle.project(axis);
+                var overlap = projection1.getOverlap(projection2);
+
+                if (overlap === 0) {
+                    return new MinTranslationVector(undefined, 0);
+                }
+                else {
+                    if (overlap < minOverlap) {
+                        minOverlap = overlap;
+                        axisWithSmallestOverlap = axis;
+                    }
+                }
+            }
+
+            return new MinTranslationVector(axisWithSmallestOverlap, minOverlap);
         },
 
         /**
