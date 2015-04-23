@@ -156,6 +156,11 @@ window.onload = function () {
             }
             stage.addDisplayObject(red);
 
+            setTimeout(function () {
+                red.destroy();
+                console.warn(game);
+            }, 3000);
+
             // var orangeData = spritesData.orange;
             // var orange = new ig.SpriteSheet({
             //     name: 1,

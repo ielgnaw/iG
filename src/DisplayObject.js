@@ -436,6 +436,13 @@ define(function (require) {
          */
         hitTestPoint: function (x, y) {
             return false;
+        },
+
+        /**
+         * 销毁
+         */
+        destroy: function () {
+            this.status = STATUS.DESTROYED;
         }
     };
 

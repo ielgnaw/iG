@@ -1989,6 +1989,9 @@ define('ig/DisplayObject', [
         },
         hitTestPoint: function (x, y) {
             return false;
+        },
+        destroy: function () {
+            this.status = STATUS.DESTROYED;
         }
     };
     util.inherits(DisplayObject, Event);
