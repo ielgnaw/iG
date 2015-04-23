@@ -234,8 +234,9 @@ define(function (require) {
             SpriteSheet.superClass.render.apply(this, arguments);
 
             var m = this.matrix.m;
+            // console.warn(m);
             offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-
+            // console.warn(this.sY);
             offCtx.drawImage(
                 this.image,
                 this.frameIndex * this.tileW + this.sX,
