@@ -309,6 +309,36 @@ define(function (require) {
             var axes = this.getAxes().concat(rectangle.getAxes());
             return !this.separationOnAxes(axes, rectangle);
 
+            // var offCtx = this.stageOwner.offCtx;
+            // var axes = this.getAxes().concat(rectangle.getAxes());
+
+            // if (this.separationOnAxes(axes, rectangle)) {
+            //     return false;
+            // }
+
+            // if (!this.image || !rectangle.image) {
+            //     return false;
+            // }
+
+            // var minx = this.x > rectangle.x ? this.x :rectangle.x;
+            // var maxx = this.x + this.width < rectangle.x + rectangle.width ? this.x + this.width : rectangle.x + rectangle.width ;
+            // var miny = this.y > rectangle.y ? this.y : rectangle.y;
+            // var maxy = this.y + this.width < rectangle.y + rectangle.width ? this.y + this.width : rectangle.y + rectangle.width;
+            // offCtx.save();
+            // offCtx.drawImage(this.image, this.x, this.y);
+            // offCtx.globalCompositeOperation = 'xor';
+            // offCtx.drawImage(rectangle.image, rectangle.x, rectangle.y);
+            // var data = offCtx.getImageData(minx, miny, maxx - minx, maxy - miny).data;
+            // offCtx.globalCompositeOperation = 'source-over';
+            // offCtx.restore();
+
+            // for (var i = 3; i < data.length; i += 4) {
+            //     if (data[i] === 0) {
+            //         return true;
+            //     }
+            // }
+            // return false;
+
             // var mtv1 = this.minTranslationVector(this.getAxes(), rectangle);
             // var mtv2 = this.minTranslationVector(rectangle.getAxes(), rectangle);
             // // console.warn(mtv1.overlap, mtv2.overlap);

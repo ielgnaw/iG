@@ -84,7 +84,7 @@ window.onload = function () {
                 }
             });
             rect.update = function () {
-                this.angle = this.angle + 0.5;
+                this.angle = this.angle + 10.5;
                 // this.moveStep();
                 // console.warn(this.bounds.x, this.x, this.vX);
                 // console.warn(this.bounds.x + this.bounds.width, game.width);

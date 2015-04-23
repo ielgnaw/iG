@@ -115,7 +115,7 @@ window.onload = function () {
             var player = new SpriteSheet({
                 name: 'player',
                 image: playerImg,
-                x: 50,
+                x: 150,
                 y: game.height - playerImg.height,
                 sX: playerData.sX,
                 sY: playerData.sY,
@@ -153,7 +153,7 @@ window.onload = function () {
                     zIndex: 1,
                     ticksPerFrame: 1,
                     // vX: util.randomInt(-15, -19)
-                    vX: -15
+                    vX: -10
                 });
                 box.update = function () {
                     this.angle = this.angle + 5;
