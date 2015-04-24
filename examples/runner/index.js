@@ -3,7 +3,7 @@
 window.onload = function () {
     var canvas = document.querySelector('#canvas');
     var fpsNode = document.querySelector('#fps');
-
+    // alert(window.orientation)
     var Game = ig.Game;
     var SpriteSheet = ig.SpriteSheet;
     var util = ig.util;
@@ -14,6 +14,8 @@ window.onload = function () {
             canvas: canvas,
             name: 'runner-game',
             fps: 50,
+            // maxWidth: 300,
+            // height: 500
             maximize: 1
         }
     ).on('gameFPS', function (d) {
@@ -68,13 +70,15 @@ window.onload = function () {
                 if (this.collidesWith(player)) {
                     this.vX = 5;
                     this.vY = -5;
+                    stage.parallax.aX = 3;
                     this.setAnimate({
                         target: {
                             alpha: 0,
                         },
-                        duration: 100,
+                        duration: 300,
                         completeFunc: function (evt) {
                             evt.data.source.changeStatus(STATUS.DESTROYED);
+                            stage.parallax.aX = 5;
                         }
                     });
                 }
@@ -83,6 +87,8 @@ window.onload = function () {
             var stage = game.createStage({
                 name: 'stage-name',
                 captureFunc: function (e) {
+                    var domEvent = e.domEvent;
+                    // domEvent.preventDefault();
                     var curPlayer = this.getDisplayObjectByName('player');
                     if (e.x > game.width / 2) {
                         jump(curPlayer);
@@ -143,6 +149,7 @@ window.onload = function () {
                     image: d.boxImg,
                     x: game.width + 10,
                     y: util.randomInt(game.height - d.boxImg.height - 10, game.height - d.boxImg.height - 150),
+                    // y: game.height - d.boxImg.height - 30,
                     sX: boxData.sX,
                     sY: boxData.sY,
                     total: boxData.total,
@@ -152,8 +159,9 @@ window.onload = function () {
                     rows: boxData.rows,
                     zIndex: 1,
                     ticksPerFrame: 1,
+                    vX: util.randomInt(-5, -20)
                     // vX: util.randomInt(-15, -19)
-                    vX: -10
+                    // vX: -50
                 });
                 box.update = function () {
                     this.angle = this.angle + 5;
@@ -162,17 +170,7 @@ window.onload = function () {
                     if (this.bounds.x + this.bounds.width <= 0) {
                         this.changeStatus(STATUS.DESTROYED);
                     }
-
-                    if (!player.isJump) {
-                        if (this.bounds.x >= player.bounds.x + player.bounds.width) {
-                            boxCollidesWidthPlayer.call(this, player);
-                        }
-                    }
-                    else {
-                        if (this.bounds.x * 2 >= player.bounds.x + player.bounds.width) {
-                            boxCollidesWidthPlayer.call(this, player);
-                        }
-                    }
+                    boxCollidesWidthPlayer.call(this, player);
                 };
                 stage.addDisplayObject(box);
             }

@@ -2498,7 +2498,6 @@ define('ig/domEvt', [
         var elem = me.element;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
-                e.preventDefault();
                 if (i === 0) {
                     me.isDown = true;
                 } else if (i === 2) {
@@ -2512,7 +2511,8 @@ define('ig/domEvt', [
                     data: {
                         x: me.x,
                         y: me.y,
-                        isDown: me.isDown
+                        isDown: me.isDown,
+                        domEvent: e
                     }
                 });
             });
@@ -3084,8 +3084,7 @@ define('ig/Rectangle', [
             return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
         },
         collidesWith: function (rectangle) {
-            var axes = this.getAxes().concat(rectangle.getAxes());
-            return !this.separationOnAxes(axes, rectangle);
+            return !(this.x + this.width < rectangle.x || rectangle.x + rectangle.width < this.x || this.y + this.height < rectangle.y || rectangle.y + rectangle.height < this.y);
         },
         minTranslationVector: function (axes, rectangle) {
             var minOverlap = Number.MAX_VALUE;

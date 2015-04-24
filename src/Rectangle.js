@@ -300,14 +300,23 @@ define(function (require) {
 
         /**
          * 矩形和矩形的碰撞
+         * 矩形的检测就用最基本的外接图形判别法，用 sat 检测反而会出现一些问题
          *
          * @param {Object} rectangle 矩形
          *
          * @return {boolean} 结果
          */
         collidesWith: function (rectangle) {
-            var axes = this.getAxes().concat(rectangle.getAxes());
-            return !this.separationOnAxes(axes, rectangle);
+            // var axes = this.getAxes().concat(rectangle.getAxes());
+            // return !this.separationOnAxes(axes, rectangle);
+
+            return !(
+                this.x + this.width < rectangle.x
+                    || rectangle.x + rectangle.width < this.x
+                    || this.y + this.height < rectangle.y
+                    || rectangle.y + rectangle.height < this.y
+            );
+
 
             // var offCtx = this.stageOwner.offCtx;
             // var axes = this.getAxes().concat(rectangle.getAxes());

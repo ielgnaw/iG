@@ -195,7 +195,7 @@ define(function (require) {
         var elem = me.element;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
-                e.preventDefault();
+                // e.preventDefault();
                 if (i === 0) {
                     me.isDown = true;
                 }
@@ -212,7 +212,8 @@ define(function (require) {
                     data: {
                         x: me.x,
                         y: me.y,
-                        isDown: me.isDown
+                        isDown: me.isDown,
+                        domEvent: e
                     }
                 });
             });
