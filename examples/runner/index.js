@@ -71,6 +71,11 @@ window.onload = function () {
                     this.vX = 5;
                     this.vY = -5;
                     stage.parallax.aX = 3;
+                    if (!player.isCrouch) {
+                        player.changeFrame(util.extend(true, {ticksPerFrame: 1}, playerCollisionData));
+                    }
+                    // player.x = player.x - 3;
+                    // console.warn(player.x);
                     this.setAnimate({
                         target: {
                             alpha: 0,
@@ -79,6 +84,9 @@ window.onload = function () {
                         completeFunc: function (evt) {
                             evt.data.source.changeStatus(STATUS.DESTROYED);
                             stage.parallax.aX = 5;
+                            player.changeFrame(
+                                util.extend(true, {ticksPerFrame: 1}, playerData)
+                            );
                         }
                     });
                 }
@@ -111,6 +119,7 @@ window.onload = function () {
             }).setParallax({
                 image: d.wallBg,
                 aX: 5,
+                aY: 5,
                 repeat: 'repeat'
             });
             game.start('stage-name1');
@@ -118,6 +127,7 @@ window.onload = function () {
             var playerData = d.playerData.player;
             var playerJumpData = d.playerData.playerJump;
             var playerCrouchData = d.playerData.playerCrouch;
+            var playerCollisionData = d.playerData.playerCollision;
             var player = new SpriteSheet({
                 name: 'player',
                 image: playerImg,
@@ -131,7 +141,8 @@ window.onload = function () {
                 cols: playerData.cols,
                 rows: playerData.rows,
                 zIndex: 1,
-                ticksPerFrame: 1
+                ticksPerFrame: 1,
+                // debug: 1
             });
             stage.addDisplayObject(player);
 
@@ -159,7 +170,8 @@ window.onload = function () {
                     rows: boxData.rows,
                     zIndex: 1,
                     ticksPerFrame: 1,
-                    vX: util.randomInt(-5, -20)
+                    vX: util.randomInt(-5, -20),
+                    // debug:1
                     // vX: util.randomInt(-15, -19)
                     // vX: -50
                 });

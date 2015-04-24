@@ -85,7 +85,7 @@ window.onload = function () {
             // 红色气球
             var redData = spritesData.red;
             var red = new ig.SpriteSheet({
-                fillStyle: 'green',
+                // fillStyle: 'green',
                 name: 'red',
                 image: d.ss3,
                 x: stage.width / 2,
@@ -98,7 +98,7 @@ window.onload = function () {
                 cols: redData.cols,
                 rows: redData.rows,
                 zIndex: 1,
-                ticksPerFrame: 3,
+                ticksPerFrame: 10,
                 // debug: 1,
                 vX: 1,
                 vY: 1,
@@ -112,9 +112,9 @@ window.onload = function () {
             });
 
             red.update = function () {
-                this.angle = this.angle + 0.5;
+                // this.angle = this.angle + 0.5;
                 // debugger
-                this.moveStep();
+                // this.moveStep();
 
                 if (this.bounds.x + this.bounds.width > game.width) {
                     this.vX = -Math.abs(this.vX);
@@ -144,20 +144,20 @@ window.onload = function () {
                 if (scale <= 0.01) {
                     isAdd = true;
                 }
-                this.scaleX = scale;
-                this.scaleY = scale;
+                // this.scaleX = scale;
+                // this.scaleY = scale;
 
                 if (this.collidesWith(smallBoom)) {
                     this.fillStyle = 'yellow';
                 }
                 else {
-                    this.fillStyle = 'green';
+                    // this.fillStyle = 'green';
                 }
             }
             stage.addDisplayObject(red);
 
             setTimeout(function () {
-                red.destroy();
+                // red.destroy();
                 console.warn(game);
             }, 3000);
 

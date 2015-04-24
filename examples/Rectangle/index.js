@@ -228,8 +228,8 @@ window.onload = function () {
                 if (scale <= 0.01) {
                     isAdd = true;
                 }
-                this.scaleX = scale;
-                this.scaleY = scale;
+                // this.scaleX = scale;
+                // this.scaleY = scale;
 
                 // console.warn(this.collidesWith(rect));
                 if (this.collidesWith(rect)) {
