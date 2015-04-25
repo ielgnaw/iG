@@ -34,6 +34,13 @@ define(function (require) {
             return this.max > projection.min && this.min < projection.max;
         },
 
+        /**
+         * 获取两段投影重叠的大小
+         *
+         * @param {Object} projection 另外一段投影
+         *
+         * @return {number} 重叠大小
+         */
         getOverlap: function (projection) {
             var overlap;
 
@@ -47,6 +54,7 @@ define(function (require) {
             else {
                 overlap = this.max - projection.min;
             }
+
             return overlap;
         }
     };
