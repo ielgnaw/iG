@@ -35,14 +35,14 @@ window.onload = function () {
             function crouch(sprite) {
                 if (!sprite.isJump && !sprite.isCrouch) {
                     var y = game.height - playerImg.height + 21;
-                    sprite.changeFrame(util.extend(true, {ticksPerFrame: 1, y: y}, playerCrouchData));
+                    sprite.changeFrame(util.extend(true, {y: y}, playerCrouchData));
                     sprite.isCrouch = 1;
                 }
             }
 
             function jump(sprite) {
                 if (!sprite.isJump && !sprite.isCrouch) {
-                    sprite.changeFrame(util.extend(true, {ticksPerFrame: 1}, playerJumpData));
+                    sprite.changeFrame(playerJumpData);
                     sprite.isJump = 1;
                     sprite.setAnimate({
                         target: {
@@ -57,7 +57,7 @@ window.onload = function () {
                                 },
                                 duration: 300,
                                 completeFunc: function (evt1) {
-                                    evt1.data.source.changeFrame(util.extend(true, {ticksPerFrame: 1}, playerData));
+                                    evt1.data.source.changeFrame(playerData);
                                     sprite.isJump = 0;
                                 }
                             });
@@ -72,10 +72,8 @@ window.onload = function () {
                     this.vY = -5;
                     stage.parallax.aX = 3;
                     if (!player.isCrouch) {
-                        player.changeFrame(util.extend(true, {ticksPerFrame: 1}, playerCollisionData));
+                        player.changeFrame(playerCollisionData);
                     }
-                    // player.x = player.x - 3;
-                    // console.warn(player.x);
                     this.setAnimate({
                         target: {
                             alpha: 0,
@@ -84,9 +82,9 @@ window.onload = function () {
                         completeFunc: function (evt) {
                             evt.data.source.changeStatus(STATUS.DESTROYED);
                             stage.parallax.aX = 5;
-                            player.changeFrame(
-                                util.extend(true, {ticksPerFrame: 1}, playerData)
-                            );
+                            if (!player.isCrouch) {
+                                player.changeFrame(playerData);
+                            }
                         }
                     });
                 }
@@ -110,7 +108,7 @@ window.onload = function () {
                         var curPlayer = stage.getDisplayObjectByName('player');
                         if (curPlayer.isCrouch) {
                             curPlayer.changeFrame(
-                                util.extend(true, {ticksPerFrame: 1, y: game.height - playerImg.height}, playerData)
+                                util.extend(true, {y: game.height - playerImg.height}, playerData)
                             );
                             curPlayer.isCrouch = 0;
                         }
@@ -119,7 +117,7 @@ window.onload = function () {
             }).setParallax({
                 image: d.wallBg,
                 aX: 5,
-                aY: 5,
+                // aY: 5,
                 repeat: 'repeat'
             });
             game.start('stage-name1');
