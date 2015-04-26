@@ -254,7 +254,7 @@ define(function (require) {
         },
 
         /**
-         * 获取多边形每边的轴
+         * 获取多边形每边对应的投影轴
          *
          * @return {Array} 轴数组
          */
