@@ -1,0 +1,47 @@
+{
+    "player": {
+        "sX": 0,
+        "sY": 1,
+        "cols": 18,
+        "rows": 1,
+        "total": 9,
+        "tileW": 72,
+        "tileH": 97,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "playerJump": {
+        "sX": 936,
+        "sY": 1,
+        "cols": 18,
+        "rows": 1,
+        "total": 1,
+        "tileW": 72,
+        "tileH": 97,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "playerCrouch": {
+        "sX": 1080,
+        "sY": 21,
+        "cols": 18,
+        "rows": 1,
+        "total": 1,
+        "tileW": 72,
+        "tileH": 76,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "playerCollision": {
+        "sX": 864,
+        "sY": 1,
+        "cols": 18,
+        "rows": 1,
+        "total": 1,
+        "tileW": 72,
+        "tileH": 97,
+        "offsetX": 0,
+        "offsetY": 0
+    }
+}
+

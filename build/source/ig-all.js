@@ -128,7 +128,10 @@ var require, define;
 }());
 define('ig', ['ig/ig'], function (main) {return main;});
 'use strict';
-define('ig/ig', ['require'], function (require) {
+define('ig/ig', [
+    'require',
+    './util'
+], function (require) {
     window.requestAnimationFrame = function () {
         return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.msRequestAnimationFrame || window.oRequestAnimationFrame || function (callback, elem) {
             var me = this;
@@ -145,6 +148,7 @@ define('ig/ig', ['require'], function (require) {
     window.cancelAnimationFrame = function () {
         return window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.webkitCancelRequestAnimationFrame || window.mozCancelAnimationFrame || window.mozCancelRequestAnimationFrame || window.msCancelAnimationFrame || window.msCancelRequestAnimationFrame || window.oCancelAnimationFrame || window.oCancelRequestAnimationFrame || window.clearTimeout;
     }();
+    var util = require('./util');
     var exports = {};
     exports.STATUS = {
         NORMAL: 1,
@@ -152,6 +156,32 @@ define('ig/ig', ['require'], function (require) {
         NOT_UPDATE: 3,
         NOT_RU: 4,
         DESTROYED: 5
+    };
+    exports.loop = function (opts) {
+        var conf = util.extend(true, {}, {
+            fps: 60,
+            exec: util.noop,
+            ticksPerFrame: 0
+        }, opts);
+        var requestId;
+        var now;
+        var delta;
+        var then = Date.now();
+        var interval = 1000 / conf.fps;
+        var tickUpdateCount = 0;
+        (function tick() {
+            requestId = window.requestAnimationFrame(tick);
+            now = Date.now();
+            delta = now - then;
+            if (delta > interval) {
+                then = now - delta % interval;
+                tickUpdateCount++;
+                if (tickUpdateCount > conf.ticksPerFrame) {
+                    tickUpdateCount = 0;
+                    conf.exec(requestId);
+                }
+            }
+        }());
     };
     return exports;
 });'use strict';

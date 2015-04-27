@@ -45,6 +45,8 @@ define(function (require) {
                 || window.clearTimeout;
     })();
 
+    var util = require('./util');
+
     var exports = {};
 
     /**
@@ -68,6 +70,45 @@ define(function (require) {
         NOT_RU: 4,
         // 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
         DESTROYED: 5
+    };
+
+    /**
+     * 利用 requestAnimationFrame 来循环
+     *
+     * @param {Object} opts 参数对象
+     * @param {number} opts.fps fps
+     * @param {Function} opts.exec 每帧执行的函数
+     * @param {number} opts.ticksPerFrame 控制执行的速度
+     *                                    如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
+     *                                    如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
+     */
+    exports.loop = function (opts) {
+        var conf = util.extend(true, {}, {
+            fps: 60,
+            exec: util.noop,
+            ticksPerFrame: 0
+        }, opts);
+
+        var requestId;
+        var now;
+        var delta;
+        var then = Date.now();
+        var interval = 1000 / conf.fps;
+        var tickUpdateCount = 0;
+
+        (function tick() {
+            requestId = window.requestAnimationFrame(tick);
+            now = Date.now();
+            delta = now - then;
+            if (delta > interval) {
+                then = now - (delta % interval);
+                tickUpdateCount++;
+                if (tickUpdateCount > conf.ticksPerFrame) {
+                    tickUpdateCount = 0;
+                    conf.exec(requestId);
+                }
+            }
+        })();
     };
 
     return exports;
