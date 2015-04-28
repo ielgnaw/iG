@@ -187,18 +187,10 @@ window.onload = function () {
             // }
             // tick();
 
-            // var a = 0;
             ig.loop({
                 ticksPerFrame: 30,
                 exec: function (requestId) {
                     createBox();
-                    // a++;
-                    // console.error(a);
-                    // if (a >= 5) {
-                    //     window.cancelAnimationFrame(requestId);
-                    //     console.warn('over');
-                    // }
-                    // console.warn(requestId);
                 }
             })
 
