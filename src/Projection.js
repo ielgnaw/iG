@@ -9,6 +9,8 @@ define(function (require) {
      * 投射对象，用某条轴上的最小值和最大值可表示一段投影
      * 可表示它与另外一段投影是否发生重叠
      *
+     * @constructor
+     *
      * @param {number} min 最小值
      * @param {number} max 最大值
      */

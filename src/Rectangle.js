@@ -16,6 +16,8 @@ define(function (require) {
     /**
      * 矩形
      *
+     * @constructor
+     *
      * @param {Object} opts 参数对象
      *
      * @return {Object} Rectangle 实例
