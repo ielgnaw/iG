@@ -227,7 +227,6 @@ define(function (require) {
          * @return {Object} 当前 SpriteSheet 实例
          */
         render: function (offCtx) {
-            // polygon.getBounds(this);
             offCtx.save();
             offCtx.globalAlpha = this.alpha;
 
