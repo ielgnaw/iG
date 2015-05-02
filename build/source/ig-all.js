@@ -3158,12 +3158,13 @@ define('ig/Rectangle', [
     };
     util.inherits(Rectangle, DisplayObject);
     return Rectangle;
-});define('ig/MinTranslationVector', ['require'], function (require) {
-    function MinimumTranslationVector(axis, overlap) {
+});'use strict';
+define('ig/MinTranslationVector', ['require'], function (require) {
+    function MinTranslationVector(axis, overlap) {
         this.axis = axis;
         this.overlap = overlap;
     }
-    return MinimumTranslationVector;
+    return MinTranslationVector;
 });define('ig/Projection', ['require'], function (require) {
     function Projection(min, max) {
         this.min = min;

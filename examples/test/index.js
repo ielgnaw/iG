@@ -175,18 +175,6 @@ window.onload = function () {
                 }
             }
 
-            // var updateCount = 0;
-            // var perFrame = 40;
-            // function tick() {
-            //     window.requestAnimationFrame(tick);
-            //     updateCount++;
-            //     if (updateCount > perFrame) {
-            //         updateCount = 0;
-            //         createBox();
-            //     }
-            // }
-            // tick();
-
             ig.loop({
                 ticksPerFrame: 30,
                 exec: function (requestId) {
