@@ -5,6 +5,215 @@
 
 window.onload = function () {
 
+    /*var BUFFERS_TO_LOAD = {
+        a1m: './data/a1.mp3',
+        a1o: './data/a1.ogg',
+        a2m: './data/a2.mp3',
+        a2o: './data/a2.ogg',
+        a3m: './data/a3.mp3',
+        a3o: './data/a3.ogg',
+        a4m: './data/a4.mp3',
+        a4o: './data/a4.ogg',
+        a5m: './data/a5.mp3',
+        a5o: './data/a5.ogg',
+        a6m: './data/a6.mp3',
+        a6o: './data/a6.ogg'
+    };
+
+    var sound = new Howl({
+        urls: ['./data/a1.mp3', './data/a1.ogg']
+    });
+
+    console.warn(sound);
+
+    document.querySelector('#play').addEventListener('click', function (e) {
+        alert(1);
+        sound.stop().play();
+    })*/
+
+    var hasWebAudio = (typeof AudioContext !== 'undefined') || (typeof webkitAudioContext !== 'undefined');
+    var audioContext;
+    if (hasWebAudio) {
+        if (typeof AudioContext !== 'undefined') {
+            audioContext = new AudioContext();
+        }
+        else {
+            audioContext = new window.webkitAudioContext();
+        }
+    }
+
+    // android qq 浏览器 audioContext = undefined
+    // alert(audioContext);
+
+    function enableSound() {
+        if (hasWebAudio) {
+            enableWebAudioSound();
+        }
+        else {
+            enableHTML5Sound();
+        }
+    }
+
+    function enableWebAudioSound() {
+        var webSound = {
+            channels: [],
+            channelMax: 10,
+            active: {},
+            play: function() {}
+        };
+        webSound.type = 'WebAudio';
+        webSound.soundID = 0;
+        webSound.playingSounds = {};
+
+        webSound.removeSound = function (soundID) {
+            delete webSound.playingSounds[soundID];
+        };
+
+        webSound.play = function (s, options) {
+            var now = new Date().getTime();
+
+            if(webSound.active[s] && webSound.active[s] > now) {
+                return;
+            }
+
+            if (options && options['debounce']) {
+                webSound.active[s] = now + options['debounce'];
+            }
+            else {
+                delete webSound.active[s];
+            }
+
+            var soundID = webSound.soundID++;
+
+            var source = audioContext.createBufferSource();
+            alert(s)
+            source.buffer = s; // 流
+            source.connect(audioContext.destination);
+            if (options && options['loop']) {
+                source.loop = true;
+            }
+            else {
+                setTimeout(function() {
+                    webSound.removeSound(soundID);
+                }, source.buffer.duration * 1000);
+            }
+            source.assetName = s;
+            if (source.start) {
+                source.start(0);
+            }
+            else {
+                source.noteOn(0);
+            }
+
+            webSound.playingSounds[soundID] = source;
+        };
+
+        webSound.stop = function (s) {
+            for (var key in webSound.playingSounds) {
+                var snd = webSound.playingSounds[key];
+                if(!s || s === snd.assetName) {
+                    if (snd.stop) {
+                        snd.stop(0);
+                    }
+                    else {
+                        snd.noteOff(0);
+                    }
+                }
+            }
+        };
+        return webSound;
+    }
+
+    function enableHTML5Sound() {
+        var h5Sound = {
+            channels: [],
+            channelMax: 10,
+            active: {},
+            play: function() {}
+        };
+        h5Sound.type = "HTML5";
+
+        for (var i = 0; i < h5Sound.channelMax; i++) {
+            h5Sound.channels[i] = {};
+            h5Sound.channels[i]['channel'] = new Audio();
+            h5Sound.channels[i]['finished'] = -1;
+        }
+
+        h5Sound.play = function (s,options) {
+            var now = new Date().getTime();
+            if (h5Sound.active[s] && h5Sound.active[s] > now) {
+                return;
+            }
+
+            if (options && options['debounce']) {
+                h5Sound.active[s] = now + options['debounce'];
+            }
+            else {
+                delete h5Sound.active[s];
+            }
+
+            for (var i = 0; i < h5Sound.channels.length; i++) {
+                if (!h5Sound.channels[i]['loop'] && h5Sound.channels[i]['finished'] < now) {
+                    h5Sound.channels[i]['channel'].src = s.src;
+                    if(options && options['loop']) {
+                        h5Sound.channels[i]['loop'] = true;
+                        h5Sound.channels[i]['channel'].loop = true;
+                    }
+                    else {
+                        s.duration = 40;
+                        h5Sound.channels[i]['finished'] = now + s.duration*1000;
+                    }
+                    h5Sound.channels[i]['channel'].load();
+                    h5Sound.channels[i]['channel'].play();
+                    break;
+                }
+            }
+        };
+
+        h5Sound.stop = function (s) {
+            var src = s ? s.src : null;
+            var tm = new Date().getTime();
+            for (var i = 0; i < h5Sound.channels.length; i++) {
+                if ((!src || h5Sound.channels[i]['channel'].src === src) &&
+                    (h5Sound.channels[i]['loop'] || h5Sound.channels[i]['finished'] >= tm)
+                ) {
+                    h5Sound.channels[i]['channel'].pause();
+                    h5Sound.channels[i]['loop'] = false;
+                }
+            }
+        };
+
+        return h5Sound;
+    }
+
+    function finishedLoading(bufferList) {
+        // var sound = enableWebAudioSound();
+        // sound.play(bufferList[0]); // safari mobile 不行
+
+        // var sound = enableHTML5Sound();
+        // sound.play(bufferList[0]);
+
+        // var snd = new Audio();
+        // snd.src = './data/a5.ogg';
+        // var sound = enableHTML5Sound();
+        // sound.play(snd);
+
+        document.querySelector('#play').addEventListener('click', function (e) {
+            // alert(99);
+            // android
+            // var snd = new Audio();
+            // // snd.src = './data/a5.mp3';
+            // snd.src = './data/a5.ogg';
+            // // snd.src = './data/blueyellow.wav';
+            // var sound = enableHTML5Sound();
+            // sound.play(snd);
+            alert(11)
+            // safari
+            var sound = enableWebAudioSound();
+            sound.play(bufferList[0]);
+        })
+    }
+
     function BufferLoader(context, urlList, callback) {
         this.context = context;
         this.urlList = urlList;
@@ -53,7 +262,18 @@ window.onload = function () {
         }
     }
 
-    var context;
+    var bufferLoader = new BufferLoader(
+        audioContext,
+        [
+          // './data/a5.mp3',
+          './data/blueyellow.wav',
+        ],
+        finishedLoading
+    );
+
+    bufferLoader.load();
+
+    /*var context;
     var bufferLoader;
 
     function init() {
@@ -64,7 +284,7 @@ window.onload = function () {
       bufferLoader = new BufferLoader(
         context,
         [
-          './data/a5.mp3',
+          // './data/a5.mp3',
           './data/blueyellow.wav',
         ],
         finishedLoading
@@ -74,20 +294,21 @@ window.onload = function () {
     }
 
     function finishedLoading(bufferList) {
+        console.warn(1);
         console.warn(bufferList);
         // Create two sources and play them both together.
         var source1 = context.createBufferSource();
-        var source2 = context.createBufferSource();
+        // var source2 = context.createBufferSource();
         source1.buffer = bufferList[0];
-        source2.buffer = bufferList[1];
+        // source2.buffer = bufferList[1];
 
         source1.connect(context.destination);
-        source2.connect(context.destination);
+        // source2.connect(context.destination);
         source1.start(0);
-        source2.start(0);
+        // source2.start(0);
     }
 
-    init();
+    init();*/
 
 
     /*var BUFFERS = {};
