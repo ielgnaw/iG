@@ -5,11 +5,10 @@
 
 define(function (require) {
 
-    // TODO: load Audio/WebAudio
-
     var ig = require('./ig');
     var util = require('./util');
-    var env = require('./env');
+
+    var Howl = require('./dep/howler').Howl;
 
     /**
      * 默认的资源类型
@@ -26,11 +25,6 @@ define(function (require) {
         m4a: 'Audio',
         mp3: 'Audio'
     };
-
-    // test
-    // env.ogg = false;
-    // env.mp3 = false;
-    // env.wav = false;
 
     /**
      * 获取文件的后缀名
@@ -59,8 +53,6 @@ define(function (require) {
      * @type {Object}
      */
     ig.resources = exports.resources = {};
-
-    ig.resourcesExtname = exports.resourcesExtname = [];
 
     /**
      * 加载其他资源
@@ -115,11 +107,6 @@ define(function (require) {
                     _errorCallback(_src);
                 }
             }
-        };
-
-        req.onerror = function() {
-            alert('loadOther: XHR error');
-            throw new Error('loadOther: XHR error');
         };
 
         req.open('GET', _src, true);
@@ -208,8 +195,8 @@ define(function (require) {
                 return;
             }
 
-            if (!exports.resources[id]) {
-                exports.resources[id] = obj;
+            if (!ig.resources[id]) {
+                ig.resources[id] = obj;
             }
 
             remainingCount--;
@@ -217,7 +204,7 @@ define(function (require) {
             processCallback(totalCount - remainingCount, totalCount);
 
             if (remainingCount === 0 && callback) {
-                callback.call(me, exports.resources);
+                callback.call(me, ig.resources);
             }
         };
 
@@ -226,11 +213,8 @@ define(function (require) {
 
         for (var i = 0; i < totalCount; i++) {
             var curResource = resource[i];
-            var resourceType = '';
-            var extName;
             var resourceId;
             var resourceSrc;
-
             if (util.getType(curResource) === 'object') {
                 resourceId = curResource.id;
                 resourceSrc = curResource.src;
@@ -239,22 +223,25 @@ define(function (require) {
                 resourceId = resourceSrc = curResource;
             }
 
-            if (!exports.resources.hasOwnProperty(resourceId)) {
-
-                // 是数组说明是音频资源
+            if (!ig.resources.hasOwnProperty(resourceId)) {
                 if (util.getType(resourceSrc) === 'array') {
-                    exports.loadAudio(resourceId, resourceSrc, loadOneCallback, errorCallback);
+                    /* jshint loopfunc:true */
+                    /* jshint nonew: false */
+                    (function (rId, r) {
+                        var howlOpts = {
+                            urls: resourceSrc,
+                            onload: function () {
+                                loadOneCallback(rId, this);
+                            },
+                            onloaderror: function () {
+                                errorCallback(this._src);
+                            }
+                        };
+                        new Howl(util.extend(true, {}, howlOpts, r.opts || {}));
+                    })(resourceId, curResource);
                 }
                 else {
-                    extName = getFileExt(resourceSrc);
-                    resourceType = resourceTypes[extName];
-                    exports.resourcesExtname.push({
-                        src: resourceSrc,
-                        extName: extName,
-                        resourceType: resourceType
-                    });
-
-                    var invokeMethod = me['load' + resourceType];
+                    var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
                     if (!invokeMethod) {
                         invokeMethod = me.loadOther;
                     }
@@ -265,198 +252,10 @@ define(function (require) {
                 }
             }
             else {
-                loadOneCallback(resourceId, exports.resources[resourceId]);
+                loadOneCallback(resourceId, ig.resources[resourceId]);
             }
         }
     };
-
-    /**
-     * 加载 audio
-     *
-     * @param {string} id audio id
-     * @param {string} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     */
-    ig.loadAudio = exports.loadAudio = function (id, src, callback, errorCallback) {
-        var _id;
-        var _src;
-        var _callback;
-        var _errorCallback;
-
-        var argLength = arguments.length;
-        switch (argLength) {
-            case 1:
-                _id = _src = arguments[0];
-                _callback = _errorCallback = util.noop;
-                break;
-            case 2:
-                _id = _src = arguments[0];
-                _callback = _errorCallback = arguments[1];
-                break;
-            case 3:
-                _id = _src = arguments[0];
-                _callback = arguments[1];
-                _errorCallback = arguments[2];
-                break;
-            default:
-                _id = arguments[0];
-                _src = arguments[1];
-                _callback = arguments[2];
-                _errorCallback = arguments[3];
-        }
-
-        if (env.webAudio) {
-            loadWebAudio(_id, _src, _callback, _errorCallback);
-        }
-        else {
-            loadAudio(_id, _src, _callback, _errorCallback);
-        }
-        // alert(''
-        //     + ' audioData: ' + env.audioData
-        //     + ', webAudio: ' + env.webAudio
-        //     + ', m4a: ' + env.m4a
-        //     + ', mp3: ' + env.mp3
-        //     + ', ogg: ' + env.ogg
-        //     + ', opus: ' + env.opus
-        //     + ', wav: ' + env.wav
-        //     + ', webm: ' + env.webm);
-    };
-
-    /**
-     * 加载 audio，传入的资源是一个数组，只要有一个加载成功即可
-     *
-     * @param {string} id audio id
-     * @param {Array} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     */
-    function loadAudio(id, src, callback, errorCallback) {
-        if (!document.createElement('audio').play) {
-            callback(id, null);
-            return;
-        }
-
-        var length = src.length;
-        var isAllNotSupported = true;
-        for (var i = 0; i < length; i++) {
-            var extName = getFileExt(src[i]);
-            if (env[extName]) {
-                loadHTML5Audio(id, src[i], callback, errorCallback, isAllNotSupported);
-                isAllNotSupported = false;
-            }
-        }
-    }
-
-    /**
-     * 加载 audio
-     *
-     * @param {string} id audio id
-     * @param {Array} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     * @param {boolean} isAllNotSupported 是否全部不支持，如果是的话，那么就加载下一个
-     */
-    function loadHTML5Audio(id, src, callback, errorCallback, isAllNotSupported) {
-        if (isAllNotSupported) {
-            var aud = new Audio();
-            aud.addEventListener('error', errorCallback);
-            aud.addEventListener('canplaythrough', function () {
-                callback(id, aud);
-            });
-            aud.src = src;
-            aud.load();
-
-            callback(id, aud);
-        }
-    }
-
-    /**
-     * 加载 webAudio，传入的资源是一个数组，只要有一个加载成功即可
-     *
-     * @param {string} id audio id
-     * @param {Array} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     */
-    function loadWebAudio(id, src, callback, errorCallback) {
-        var length = src.length;
-        var isAllNotSupported = true;
-        for (var i = 0; i < length; i++) {
-            var extName = getFileExt(src[i]);
-            if (env[extName]) {
-                isAllNotSupported = false;
-                loadBuffer(id, src[i], callback, errorCallback);
-            }
-        }
-
-        if (isAllNotSupported) {
-            alert('All Audio\'s types are not supported on your resources id: ' + id);
-            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
-        }
-    }
-
-    /**
-     * 加载 webAudio 的 buffer
-     * 设置音频的资源一般这样设置：
-     * {id: 'sound1', src: ['./data/a1.ogg', './data/a1.wav', './data/a1.mp3']}
-     * 这里的判断原则是只会去加载平台支持的文件，例如 ios 只会去加载 wav 和 mp3
-     * 同时由于设置音频的时候，src 数组中的音频文件内容都是一样的，只是格式不一样，因此这里加载的时候，
-     * 请求还是会发送多个，但是只要有一个文件加载完毕（通常是 size 小的文件）那么就触发加载完毕的函数了，
-     * 不需要等到所有能加载的资源全部 onload 后
-     * 例如上面的例子，ogg 格式无法加载，mp3 的 size 比 wav 小，因此当 mp3 加载完毕后就会触发 callback
-     *
-     * @param {string} id audio id
-     * @param {string} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     */
-    function loadBuffer(id, src, callback, errorCallback) {
-        var req = new XMLHttpRequest();
-
-        req.onload = function () {
-            ig.audioContext.decodeAudioData(
-                req.response,
-                function (buffer) {
-                    if (!buffer) {
-                        errorCallback(src);
-                        return;
-                    }
-                    callback(id, buffer);
-                },
-                function (error) {
-                    errorCallback(src);
-                }
-            );
-        };
-
-        req.onerror = function() {
-            alert('loadBuffer: XHR error');
-            throw new Error('loadBuffer: XHR error');
-        };
-
-        req.open('GET', src, true);
-        req.responseType = 'arraybuffer';
-        req.send(null);
-    }
-
-    /**
-     * 检测当前传入的资源里，是否所有的 audio 都不支持
-     * 只要有一个支持就行，如果都不支持，那么在 load 完毕后会 throw Error
-     *
-     * @return {boolean} 是否有一个支持
-     */
-    // function checkAllAudioSupport() {
-    //     for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
-    //         var cur = ig.resourcesExtname[i];
-    //         if (cur.resourceType.toLowerCase() === 'audio') {
-    //             if (env[cur.extName]) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
 
     return exports;
 });

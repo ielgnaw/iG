@@ -2,6 +2,8 @@
 exports.modules = {
     main: {name: 'ig/ig'},
     parts: [
+        {name: 'ig/dep/howler'},
+
         {name: 'ig/util', refName: 'util'},
         {name: 'ig/easing', refName: 'easing'},
         {name: 'ig/env', refName: 'env'},
