@@ -798,6 +798,10 @@ define('ig/env', [
                 }
             }
         };
+        req.onerror = function () {
+            alert('loadOther: XHR error');
+            throw new Error('loadOther: XHR error');
+        };
         req.open('GET', _src, true);
         req.send(null);
     };
@@ -846,6 +850,7 @@ define('ig/env', [
         var errorCallback = function (item) {
             loadError = true;
             (opts.errorCallback || function (errItem) {
+                alert('Loading Error: ' + errItem);
                 throw new Error('Loading Error: ' + errItem);
             }).call(me, item);
         };
@@ -856,16 +861,13 @@ define('ig/env', [
             if (loadError) {
                 return;
             }
-            if (!ig.resources[id]) {
-                ig.resources[id] = obj;
+            if (!exports.resources[id]) {
+                exports.resources[id] = obj;
             }
             remainingCount--;
             processCallback(totalCount - remainingCount, totalCount);
             if (remainingCount === 0 && callback) {
-                if (!checkAllAudioSupport()) {
-                    throw new Error('All audio\'s type is not supported');
-                }
-                callback.call(me, ig.resources);
+                callback.call(me, exports.resources);
             }
         };
         var customResourceTypes = opts.customResourceTypes || {};
@@ -882,21 +884,25 @@ define('ig/env', [
             } else {
                 resourceId = resourceSrc = curResource;
             }
-            if (!ig.resources.hasOwnProperty(resourceId)) {
-                extName = getFileExt(resourceSrc);
-                resourceType = resourceTypes[extName];
-                ig.resourcesExtname.push({
-                    src: resourceSrc,
-                    extName: extName,
-                    resourceType: resourceType
-                });
-                var invokeMethod = me['load' + resourceType];
-                if (!invokeMethod) {
-                    invokeMethod = me.loadOther;
+            if (!exports.resources.hasOwnProperty(resourceId)) {
+                if (util.getType(resourceSrc) === 'array') {
+                    exports.loadAudio(resourceId, resourceSrc, loadOneCallback, errorCallback);
+                } else {
+                    extName = getFileExt(resourceSrc);
+                    resourceType = resourceTypes[extName];
+                    exports.resourcesExtname.push({
+                        src: resourceSrc,
+                        extName: extName,
+                        resourceType: resourceType
+                    });
+                    var invokeMethod = me['load' + resourceType];
+                    if (!invokeMethod) {
+                        invokeMethod = me.loadOther;
+                    }
+                    invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
                 }
-                invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
             } else {
-                loadOneCallback(resourceId, ig.resources[resourceId]);
+                loadOneCallback(resourceId, exports.resources[resourceId]);
             }
         }
     };
@@ -930,31 +936,41 @@ define('ig/env', [
             loadWebAudio(_id, _src, _callback, _errorCallback);
         }
     };
-    function loadWebAudio(id, src, callback, errorCallback) {
+    function loadBuffer(id, src, callback, errorCallback) {
         var req = new XMLHttpRequest();
-        req.open('GET', src, true);
-        req.responseType = 'arraybuffer';
         req.onload = function () {
-            var audioData = req.response;
-            ig.audioContext.decodeAudioData(audioData, function (buffer) {
+            ig.audioContext.decodeAudioData(req.response, function (buffer) {
+                if (!buffer) {
+                    errorCallback(src);
+                    return;
+                }
                 callback(id, buffer);
-            }, function () {
-                console.warn(id, src, callback, errorCallback);
-                ig.loadOther(id, src, callback, errorCallback);
+            }, function (error) {
+                errorCallback(src);
             });
         };
+        req.onerror = function () {
+            alert('loadBuffer: XHR error');
+            throw new Error('loadBuffer: XHR error');
+        };
+        req.open('GET', src, true);
+        req.responseType = 'arraybuffer';
         req.send(null);
     }
-    function checkAllAudioSupport() {
-        for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
-            var cur = ig.resourcesExtname[i];
-            if (cur.resourceType.toLowerCase() === 'audio') {
-                if (env[cur.extName]) {
-                    return true;
-                }
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                isAllNotSupported = false;
+                loadBuffer(id, src[i], callback, errorCallback);
             }
         }
-        return false;
+        if (isAllNotSupported) {
+            alert('All Audio\'s types are not supported on your resources id: ' + id);
+            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
+        }
     }
     return exports;
 });'use strict';

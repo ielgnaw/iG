@@ -117,6 +117,11 @@ define(function (require) {
             }
         };
 
+        req.onerror = function() {
+            alert('loadOther: XHR error');
+            throw new Error('loadOther: XHR error');
+        };
+
         req.open('GET', _src, true);
         req.send(null);
     };
@@ -189,6 +194,7 @@ define(function (require) {
         var errorCallback = function (item) {
             loadError = true;
             (opts.errorCallback || function (errItem) {
+                alert('Loading Error: ' + errItem);
                 throw new Error('Loading Error: ' + errItem);
             }).call(me, item);
         };
@@ -202,8 +208,8 @@ define(function (require) {
                 return;
             }
 
-            if (!ig.resources[id]) {
-                ig.resources[id] = obj;
+            if (!exports.resources[id]) {
+                exports.resources[id] = obj;
             }
 
             remainingCount--;
@@ -211,12 +217,7 @@ define(function (require) {
             processCallback(totalCount - remainingCount, totalCount);
 
             if (remainingCount === 0 && callback) {
-                // console.warn(ig.resources);
-                // console.warn(ig.resourcesExtname);
-                if (!checkAllAudioSupport()) {
-                    throw new Error('All audio\'s type is not supported');
-                }
-                callback.call(me, ig.resources);
+                callback.call(me, exports.resources);
             }
         };
 
@@ -229,6 +230,7 @@ define(function (require) {
             var extName;
             var resourceId;
             var resourceSrc;
+
             if (util.getType(curResource) === 'object') {
                 resourceId = curResource.id;
                 resourceSrc = curResource.src;
@@ -237,26 +239,33 @@ define(function (require) {
                 resourceId = resourceSrc = curResource;
             }
 
-            if (!ig.resources.hasOwnProperty(resourceId)) {
-                extName = getFileExt(resourceSrc);
-                resourceType = resourceTypes[extName];
-                ig.resourcesExtname.push({
-                    src: resourceSrc,
-                    extName: extName,
-                    resourceType: resourceType
-                });
+            if (!exports.resources.hasOwnProperty(resourceId)) {
 
-                var invokeMethod = me['load' + resourceType];
-                if (!invokeMethod) {
-                    invokeMethod = me.loadOther;
+                // 是数组说明是音频资源
+                if (util.getType(resourceSrc) === 'array') {
+                    exports.loadAudio(resourceId, resourceSrc, loadOneCallback, errorCallback);
                 }
+                else {
+                    extName = getFileExt(resourceSrc);
+                    resourceType = resourceTypes[extName];
+                    exports.resourcesExtname.push({
+                        src: resourceSrc,
+                        extName: extName,
+                        resourceType: resourceType
+                    });
 
-                invokeMethod(
-                    resourceId, resourceSrc, loadOneCallback, errorCallback
-                );
+                    var invokeMethod = me['load' + resourceType];
+                    if (!invokeMethod) {
+                        invokeMethod = me.loadOther;
+                    }
+
+                    invokeMethod(
+                        resourceId, resourceSrc, loadOneCallback, errorCallback
+                    );
+                }
             }
             else {
-                loadOneCallback(resourceId, ig.resources[resourceId]);
+                loadOneCallback(resourceId, exports.resources[resourceId]);
             }
         }
     };
@@ -304,6 +313,7 @@ define(function (require) {
         // 设备支持 webAudio
         if (env.webAudio) {
             loadWebAudio(_id, _src, _callback, _errorCallback);
+            // console.warn(_id, _src, _callback, _errorCallback);
         }
         // alert(''
         //     + ' audioData: ' + env.audioData
@@ -317,34 +327,72 @@ define(function (require) {
     };
 
     /**
-     * 加载 webAudio
+     * 加载 webAudio 的 buffer
+     * 设置音频的资源一般这样设置：
+     * {id: 'sound1', src: ['./data/a1.ogg', './data/a1.wav', './data/a1.mp3']}
+     * 这里的判断原则是只会去加载平台支持的文件，例如 ios 只会去加载 wav 和 mp3
+     * 同时由于设置音频的时候，src 数组中的音频文件内容都是一样的，只是格式不一样，因此这里加载的时候，
+     * 请求还是会发送多个，但是只要有一个文件加载完毕（通常是 size 小的文件）那么就触发加载完毕的函数了，
+     * 不需要等到所有能加载的资源全部 onload 后
+     * 例如上面的例子，ogg 格式无法加载，mp3 的 size 比 wav 小，因此当 mp3 加载完毕后就会触发 callback
      *
      * @param {string} id audio id
      * @param {string} src audio 路径
      * @param {Function} callback 加载成功回调
      * @param {Function} errorCallback 加载失败回调
      */
-    function loadWebAudio(id, src, callback, errorCallback) {
+    function loadBuffer(id, src, callback, errorCallback) {
         var req = new XMLHttpRequest();
-        req.open('GET', src, true);
-        req.responseType = 'arraybuffer';
-        req.onload = function () {
-            var audioData = req.response;
 
+        req.onload = function () {
             ig.audioContext.decodeAudioData(
-                audioData,
+                req.response,
                 function (buffer) {
+                    if (!buffer) {
+                        errorCallback(src);
+                        return;
+                    }
                     callback(id, buffer);
                 },
-                function () {
-                    console.warn(id, src, callback, errorCallback);
-                    ig.loadOther(id, src, callback, errorCallback);
-                    // errorCallback(src);
+                function (error) {
+                    errorCallback(src);
                 }
             );
         };
 
+        req.onerror = function() {
+            alert('loadBuffer: XHR error');
+            throw new Error('loadBuffer: XHR error');
+        };
+
+        req.open('GET', src, true);
+        req.responseType = 'arraybuffer';
         req.send(null);
+    }
+
+    /**
+     * 加载 webAudio，传入的资源是一个数组，只要有一个加载成功即可
+     *
+     * @param {string} id audio id
+     * @param {Array} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     */
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                isAllNotSupported = false;
+                loadBuffer(id, src[i], callback, errorCallback);
+            }
+        }
+
+        if (isAllNotSupported) {
+            alert('All Audio\'s types are not supported on your resources id: ' + id);
+            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
+        }
     }
 
     /**
@@ -353,17 +401,17 @@ define(function (require) {
      *
      * @return {boolean} 是否有一个支持
      */
-    function checkAllAudioSupport() {
-        for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
-            var cur = ig.resourcesExtname[i];
-            if (cur.resourceType.toLowerCase() === 'audio') {
-                if (env[cur.extName]) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    // function checkAllAudioSupport() {
+    //     for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
+    //         var cur = ig.resourcesExtname[i];
+    //         if (cur.resourceType.toLowerCase() === 'audio') {
+    //             if (env[cur.extName]) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     return exports;
 });

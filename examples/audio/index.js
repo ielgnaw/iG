@@ -77,11 +77,12 @@ window.onload = function () {
 
     ig.loadResource(
         [
+            {id: 'sound1', src: ['./data/a1.ogg', './data/a1.wav', './data/a1.mp3']},
             // './data/a1.mp3', './data/a1.ogg',
             // {id: 'a1m', src: './data/a1.mp3'},
             // {id: 'a1o', src: './data/a1.ogg'},
             // {id: 'a2m', src: './data/a2.mp3'},
-            // {id: 'a2o', src: './data/a2.ogg'},
+            {id: 'a2o', src: ['./data/a2.ogg','./data/a2.ogg']},
             // {id: 'a3m', src: './data/a3.mp3'},
             // {id: 'a3o', src: './data/a3.ogg'},
             // {id: 'a4m', src: './data/a4.mp3'},
@@ -90,12 +91,12 @@ window.onload = function () {
             // {id: 'a5o', src: './data/a5.ogg'},
             // {id: 'a6m', src: './data/a6.mp3'},
             // {id: 'a6o', src: './data/a6.ogg'}
-            // {id: 'blueyellow', src: './data/blueyellow.wav'},
+            // {id: 'blueyellow', src: ['./data/blueyellow.wav']},
             {id: 'bg', src: '/examples/img/bg.jpg'}
         ],
         function (d) {
             console.log('all done', d);
-            alert(1)
+            // alert(1)
             // safari
             // var sound = enableWebAudioSound();
             // sound.play(d.a1m, {loop: true});
@@ -114,7 +115,7 @@ window.onload = function () {
         // sound.play(snd);
         // safari
         var sound = enableWebAudioSound();
-        sound.play(ig.resources.blueyellow, {loop: true});
+        sound.play(ig.resources.sound1, {loop: true});
         // console.warn(sound);
     })
 
