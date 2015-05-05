@@ -306,14 +306,11 @@ define(function (require) {
                 _errorCallback = arguments[3];
         }
 
-        // var fileExt = getFileExt(_src);
-        // console.warn(env);
-        // console.warn(fileExt);
-        // console.log(_id,_src,_callback, _errorCallback);
-        // 设备支持 webAudio
         if (env.webAudio) {
             loadWebAudio(_id, _src, _callback, _errorCallback);
-            // console.warn(_id, _src, _callback, _errorCallback);
+        }
+        else {
+            loadAudio(_id, _src, _callback, _errorCallback);
         }
         // alert(''
         //     + ' audioData: ' + env.audioData
@@ -325,6 +322,79 @@ define(function (require) {
         //     + ', wav: ' + env.wav
         //     + ', webm: ' + env.webm);
     };
+
+    /**
+     * 加载 audio，传入的资源是一个数组，只要有一个加载成功即可
+     *
+     * @param {string} id audio id
+     * @param {Array} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     */
+    function loadAudio(id, src, callback, errorCallback) {
+        if (!document.createElement('audio').play) {
+            callback(id, null);
+            return;
+        }
+
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                loadHTML5Audio(id, src[i], callback, errorCallback, isAllNotSupported);
+                isAllNotSupported = false;
+            }
+        }
+    }
+
+    /**
+     * 加载 audio
+     *
+     * @param {string} id audio id
+     * @param {Array} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     * @param {boolean} isAllNotSupported 是否全部不支持，如果是的话，那么就加载下一个
+     */
+    function loadHTML5Audio(id, src, callback, errorCallback, isAllNotSupported) {
+        if (isAllNotSupported) {
+            var aud = new Audio();
+            aud.addEventListener('error', errorCallback);
+            aud.addEventListener('canplaythrough', function () {
+                callback(id, aud);
+            });
+            aud.src = src;
+            aud.load();
+
+            callback(id, aud);
+        }
+    }
+
+    /**
+     * 加载 webAudio，传入的资源是一个数组，只要有一个加载成功即可
+     *
+     * @param {string} id audio id
+     * @param {Array} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     */
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                isAllNotSupported = false;
+                loadBuffer(id, src[i], callback, errorCallback);
+            }
+        }
+
+        if (isAllNotSupported) {
+            alert('All Audio\'s types are not supported on your resources id: ' + id);
+            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
+        }
+    }
 
     /**
      * 加载 webAudio 的 buffer
@@ -368,31 +438,6 @@ define(function (require) {
         req.open('GET', src, true);
         req.responseType = 'arraybuffer';
         req.send(null);
-    }
-
-    /**
-     * 加载 webAudio，传入的资源是一个数组，只要有一个加载成功即可
-     *
-     * @param {string} id audio id
-     * @param {Array} src audio 路径
-     * @param {Function} callback 加载成功回调
-     * @param {Function} errorCallback 加载失败回调
-     */
-    function loadWebAudio(id, src, callback, errorCallback) {
-        var length = src.length;
-        var isAllNotSupported = true;
-        for (var i = 0; i < length; i++) {
-            var extName = getFileExt(src[i]);
-            if (env[extName]) {
-                isAllNotSupported = false;
-                loadBuffer(id, src[i], callback, errorCallback);
-            }
-        }
-
-        if (isAllNotSupported) {
-            alert('All Audio\'s types are not supported on your resources id: ' + id);
-            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
-        }
     }
 
     /**

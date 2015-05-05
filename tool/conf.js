@@ -6,6 +6,7 @@ exports.modules = {
         {name: 'ig/easing', refName: 'easing'},
         {name: 'ig/env', refName: 'env'},
         {name: 'ig/resourceLoader'},
+        {name: 'ig/sound', refName: 'sound'},
 
         {name: 'ig/Animation', refName: 'Animation'},
         {name: 'ig/Game', refName: 'Game'},

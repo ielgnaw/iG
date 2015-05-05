@@ -934,8 +934,52 @@ define('ig/env', [
         }
         if (env.webAudio) {
             loadWebAudio(_id, _src, _callback, _errorCallback);
+        } else {
+            loadAudio(_id, _src, _callback, _errorCallback);
         }
     };
+    function loadAudio(id, src, callback, errorCallback) {
+        if (!document.createElement('audio').play) {
+            callback(id, null);
+            return;
+        }
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                loadHTML5Audio(id, src[i], callback, errorCallback, isAllNotSupported);
+                isAllNotSupported = false;
+            }
+        }
+    }
+    function loadHTML5Audio(id, src, callback, errorCallback, isAllNotSupported) {
+        if (isAllNotSupported) {
+            var aud = new Audio();
+            aud.addEventListener('error', errorCallback);
+            aud.addEventListener('canplaythrough', function () {
+                callback(id, aud);
+            });
+            aud.src = src;
+            aud.load();
+            callback(id, aud);
+        }
+    }
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var length = src.length;
+        var isAllNotSupported = true;
+        for (var i = 0; i < length; i++) {
+            var extName = getFileExt(src[i]);
+            if (env[extName]) {
+                isAllNotSupported = false;
+                loadBuffer(id, src[i], callback, errorCallback);
+            }
+        }
+        if (isAllNotSupported) {
+            alert('All Audio\'s types are not supported on your resources id: ' + id);
+            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
+        }
+    }
     function loadBuffer(id, src, callback, errorCallback) {
         var req = new XMLHttpRequest();
         req.onload = function () {
@@ -957,22 +1001,133 @@ define('ig/env', [
         req.responseType = 'arraybuffer';
         req.send(null);
     }
-    function loadWebAudio(id, src, callback, errorCallback) {
-        var length = src.length;
-        var isAllNotSupported = true;
-        for (var i = 0; i < length; i++) {
-            var extName = getFileExt(src[i]);
-            if (env[extName]) {
-                isAllNotSupported = false;
-                loadBuffer(id, src[i], callback, errorCallback);
+    return exports;
+});'use strict';
+define('ig/sound', [
+    'require',
+    './env',
+    './util',
+    './ig'
+], function (require) {
+    var env = require('./env');
+    var util = require('./util');
+    var ig = require('./ig');
+    var sound = null;
+    function WebAudioSound() {
+        var webSound = {
+            channels: [],
+            channelMax: 10,
+            active: {},
+            play: util.noop
+        };
+        webSound.type = 'WebAudio';
+        webSound.soundID = 0;
+        webSound.playingSounds = {};
+        webSound.removeSound = function (soundID) {
+            delete webSound.playingSounds[soundID];
+            return webSound;
+        };
+        webSound.play = function (buffer, options) {
+            var now = new Date().getTime();
+            if (webSound.active[buffer] && webSound.active[buffer] + (options.debounce || 0) > now) {
+                return;
             }
+            webSound.active[buffer] = now;
+            var soundID = webSound.soundID++;
+            var source = ig.audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ig.audioContext.destination);
+            if (options && options.loop) {
+                source.loop = true;
+            } else {
+                setTimeout(function () {
+                    webSound.removeSound(soundID);
+                }, source.buffer.duration * 1000);
+            }
+            source.assetName = buffer;
+            if (source.start) {
+                source.start(0);
+            } else {
+                source.noteOn(0);
+            }
+            webSound.playingSounds[soundID] = source;
+            return webSound;
+        };
+        webSound.stop = function (buffer) {
+            for (var key in webSound.playingSounds) {
+                var snd = webSound.playingSounds[key];
+                if (!buffer || buffer === snd.assetName) {
+                    if (snd.stop) {
+                        snd.stop(0);
+                    } else {
+                        snd.noteOff(0);
+                    }
+                }
+            }
+            return webSound;
+        };
+        return webSound;
+    }
+    function HTML5Sound() {
+        var h5Sound = {
+            channels: [],
+            channelMax: 10,
+            active: {},
+            play: util.noop
+        };
+        h5Sound.type = 'HTML5';
+        for (var i = 0; i < h5Sound.channelMax; i++) {
+            h5Sound.channels[i] = {};
+            h5Sound.channels[i].channel = new Audio();
+            h5Sound.channels[i].finished = -1;
         }
-        if (isAllNotSupported) {
-            alert('All Audio\'s types are not supported on your resources id: ' + id);
-            throw new Error('All Audio\'s types are not supported on your resources id: ' + id);
+        h5Sound.removeSound = function () {
+            return h5Sound;
+        };
+        h5Sound.play = function (audioNode, options) {
+            var now = new Date().getTime();
+            if (h5Sound.active[audioNode] && h5Sound.active[audioNode] + (options.debounce || 0) > now) {
+                return;
+            }
+            h5Sound.active[audioNode] = now;
+            for (var i = 0; i < h5Sound.channels.length; i++) {
+                if (!h5Sound.channels[i].loop && h5Sound.channels[i].finished < now) {
+                    h5Sound.channels[i].channel.src = audioNode.src;
+                    if (options && options.loop) {
+                        h5Sound.channels[i].loop = true;
+                        h5Sound.channels[i].channel.loop = true;
+                    } else {
+                        audioNode.duration = 40;
+                        h5Sound.channels[i].finished = now + audioNode.duration * 1000;
+                    }
+                    h5Sound.channels[i].channel.load();
+                    h5Sound.channels[i].channel.play();
+                    break;
+                }
+            }
+            return h5Sound;
+        };
+        h5Sound.stop = function (audioNode) {
+            var src = audioNode ? audioNode.src : null;
+            var tm = new Date().getTime();
+            for (var i = 0; i < h5Sound.channels.length; i++) {
+                if ((!src || h5Sound.channels[i].channel.src === src) && (h5Sound.channels[i].loop || h5Sound.channels[i].finished >= tm)) {
+                    h5Sound.channels[i].channel.pause();
+                    h5Sound.channels[i].loop = false;
+                }
+            }
+            return h5Sound;
+        };
+        return h5Sound;
+    }
+    if (!sound) {
+        if (env.webAudio) {
+            sound = new WebAudioSound();
+        } else {
+            sound = new HTML5Sound();
         }
     }
-    return exports;
+    return sound;
 });'use strict';
 define('ig/Animation', [
     'require',
@@ -3358,6 +3513,28 @@ else {
 
 var modName = 'ig/resourceLoader';
 var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/sound';
+var refName = 'sound';
 var folderName = '';
 
 var tmp;
