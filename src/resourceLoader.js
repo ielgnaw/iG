@@ -9,6 +9,7 @@ define(function (require) {
 
     var ig = require('./ig');
     var util = require('./util');
+    var env = require('./env');
 
     /**
      * 默认的资源类型
@@ -25,6 +26,11 @@ define(function (require) {
         m4a: 'Audio',
         mp3: 'Audio'
     };
+
+    // test
+    // env.ogg = false;
+    // env.mp3 = false;
+    // env.wav = false;
 
     /**
      * 获取文件的后缀名
@@ -53,6 +59,8 @@ define(function (require) {
      * @type {Object}
      */
     ig.resources = exports.resources = {};
+
+    ig.resourcesExtname = exports.resourcesExtname = [];
 
     /**
      * 加载其他资源
@@ -181,7 +189,7 @@ define(function (require) {
         var errorCallback = function (item) {
             loadError = true;
             (opts.errorCallback || function (errItem) {
-                throw ('Loading Error: ' + errItem);
+                throw new Error('Loading Error: ' + errItem);
             }).call(me, item);
         };
 
@@ -203,6 +211,11 @@ define(function (require) {
             processCallback(totalCount - remainingCount, totalCount);
 
             if (remainingCount === 0 && callback) {
+                // console.warn(ig.resources);
+                // console.warn(ig.resourcesExtname);
+                if (!checkAllAudioSupport()) {
+                    throw new Error('All audio\'s type is not supported');
+                }
                 callback.call(me, ig.resources);
             }
         };
@@ -212,6 +225,8 @@ define(function (require) {
 
         for (var i = 0; i < totalCount; i++) {
             var curResource = resource[i];
+            var resourceType = '';
+            var extName;
             var resourceId;
             var resourceSrc;
             if (util.getType(curResource) === 'object') {
@@ -223,7 +238,15 @@ define(function (require) {
             }
 
             if (!ig.resources.hasOwnProperty(resourceId)) {
-                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                extName = getFileExt(resourceSrc);
+                resourceType = resourceTypes[extName];
+                ig.resourcesExtname.push({
+                    src: resourceSrc,
+                    extName: extName,
+                    resourceType: resourceType
+                });
+
+                var invokeMethod = me['load' + resourceType];
                 if (!invokeMethod) {
                     invokeMethod = me.loadOther;
                 }
@@ -237,6 +260,110 @@ define(function (require) {
             }
         }
     };
+
+    /**
+     * 加载 audio
+     *
+     * @param {string} id audio id
+     * @param {string} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     */
+    ig.loadAudio = exports.loadAudio = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+
+        var argLength = arguments.length;
+        switch (argLength) {
+            case 1:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = util.noop;
+                break;
+            case 2:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = arguments[1];
+                break;
+            case 3:
+                _id = _src = arguments[0];
+                _callback = arguments[1];
+                _errorCallback = arguments[2];
+                break;
+            default:
+                _id = arguments[0];
+                _src = arguments[1];
+                _callback = arguments[2];
+                _errorCallback = arguments[3];
+        }
+
+        // var fileExt = getFileExt(_src);
+        // console.warn(env);
+        // console.warn(fileExt);
+        // console.log(_id,_src,_callback, _errorCallback);
+        // 设备支持 webAudio
+        if (env.webAudio) {
+            loadWebAudio(_id, _src, _callback, _errorCallback);
+        }
+        // alert(''
+        //     + ' audioData: ' + env.audioData
+        //     + ', webAudio: ' + env.webAudio
+        //     + ', m4a: ' + env.m4a
+        //     + ', mp3: ' + env.mp3
+        //     + ', ogg: ' + env.ogg
+        //     + ', opus: ' + env.opus
+        //     + ', wav: ' + env.wav
+        //     + ', webm: ' + env.webm);
+    };
+
+    /**
+     * 加载 webAudio
+     *
+     * @param {string} id audio id
+     * @param {string} src audio 路径
+     * @param {Function} callback 加载成功回调
+     * @param {Function} errorCallback 加载失败回调
+     */
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var req = new XMLHttpRequest();
+        req.open('GET', src, true);
+        req.responseType = 'arraybuffer';
+        req.onload = function () {
+            var audioData = req.response;
+
+            ig.audioContext.decodeAudioData(
+                audioData,
+                function (buffer) {
+                    callback(id, buffer);
+                },
+                function () {
+                    console.warn(id, src, callback, errorCallback);
+                    ig.loadOther(id, src, callback, errorCallback);
+                    // errorCallback(src);
+                }
+            );
+        };
+
+        req.send(null);
+    }
+
+    /**
+     * 检测当前传入的资源里，是否所有的 audio 都不支持
+     * 只要有一个支持就行，如果都不支持，那么在 load 完毕后会 throw Error
+     *
+     * @return {boolean} 是否有一个支持
+     */
+    function checkAllAudioSupport() {
+        for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
+            var cur = ig.resourcesExtname[i];
+            if (cur.resourceType.toLowerCase() === 'audio') {
+                if (env[cur.extName]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     return exports;
 });

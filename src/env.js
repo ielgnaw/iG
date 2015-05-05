@@ -7,6 +7,8 @@
 
 define(function (require) {
 
+    var ig = require('./ig');
+
     /**
      * ua 探测
      * from saber-env
@@ -218,11 +220,21 @@ define(function (require) {
         exp.audioData = !!(window.Audio);
         exp.webAudio = !!(window.AudioContext || window.webkitAudioContext);
 
+        if (exp.webAudio) {
+            if (typeof window.AudioContext !== 'undefined') {
+                ig.audioContext = new window.AudioContext();
+            }
+            else {
+                ig.audioContext = new window.webkitAudioContext();
+            }
+        }
+
         var audioElement = document.createElement('audio');
-        var result = false;
+        // var result = false;
         try {
             /* jshint boss:true */
-            if (result = !!audioElement.canPlayType) {
+            // if (result = !!audioElement.canPlayType) {
+            if (audioElement.canPlayType) {
                 if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')) {
                     exp.ogg = true;
                 }

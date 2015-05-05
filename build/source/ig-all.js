@@ -523,7 +523,11 @@ define('ig/easing', ['require'], function (require) {
     };
     return easing;
 });'use strict';
-define('ig/env', ['require'], function (require) {
+define('ig/env', [
+    'require',
+    './ig'
+], function (require) {
+    var ig = require('./ig');
     function detect(ua) {
         var os = {};
         var browser = {};
@@ -680,10 +684,16 @@ define('ig/env', ['require'], function (require) {
     function checkAudio(exp) {
         exp.audioData = !!window.Audio;
         exp.webAudio = !!(window.AudioContext || window.webkitAudioContext);
+        if (exp.webAudio) {
+            if (typeof window.AudioContext !== 'undefined') {
+                ig.audioContext = new window.AudioContext();
+            } else {
+                ig.audioContext = new window.webkitAudioContext();
+            }
+        }
         var audioElement = document.createElement('audio');
-        var result = false;
         try {
-            if (result = !!audioElement.canPlayType) {
+            if (audioElement.canPlayType) {
                 if (audioElement.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')) {
                     exp.ogg = true;
                 }
@@ -724,10 +734,12 @@ define('ig/env', ['require'], function (require) {
 });define('ig/resourceLoader', [
     'require',
     './ig',
-    './util'
+    './util',
+    './env'
 ], function (require) {
     var ig = require('./ig');
     var util = require('./util');
+    var env = require('./env');
     var defaultResourceTypes = {
         png: 'Image',
         jpg: 'Image',
@@ -744,6 +756,7 @@ define('ig/env', ['require'], function (require) {
     }
     var exports = {};
     ig.resources = exports.resources = {};
+    ig.resourcesExtname = exports.resourcesExtname = [];
     ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
         var _id;
         var _src;
@@ -833,7 +846,7 @@ define('ig/env', ['require'], function (require) {
         var errorCallback = function (item) {
             loadError = true;
             (opts.errorCallback || function (errItem) {
-                throw 'Loading Error: ' + errItem;
+                throw new Error('Loading Error: ' + errItem);
             }).call(me, item);
         };
         var processCallback = opts.processCallback || util.noop;
@@ -849,6 +862,9 @@ define('ig/env', ['require'], function (require) {
             remainingCount--;
             processCallback(totalCount - remainingCount, totalCount);
             if (remainingCount === 0 && callback) {
+                if (!checkAllAudioSupport()) {
+                    throw new Error('All audio\'s type is not supported');
+                }
                 callback.call(me, ig.resources);
             }
         };
@@ -856,6 +872,8 @@ define('ig/env', ['require'], function (require) {
         var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
         for (var i = 0; i < totalCount; i++) {
             var curResource = resource[i];
+            var resourceType = '';
+            var extName;
             var resourceId;
             var resourceSrc;
             if (util.getType(curResource) === 'object') {
@@ -865,7 +883,14 @@ define('ig/env', ['require'], function (require) {
                 resourceId = resourceSrc = curResource;
             }
             if (!ig.resources.hasOwnProperty(resourceId)) {
-                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                extName = getFileExt(resourceSrc);
+                resourceType = resourceTypes[extName];
+                ig.resourcesExtname.push({
+                    src: resourceSrc,
+                    extName: extName,
+                    resourceType: resourceType
+                });
+                var invokeMethod = me['load' + resourceType];
                 if (!invokeMethod) {
                     invokeMethod = me.loadOther;
                 }
@@ -875,6 +900,62 @@ define('ig/env', ['require'], function (require) {
             }
         }
     };
+    ig.loadAudio = exports.loadAudio = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        if (env.webAudio) {
+            loadWebAudio(_id, _src, _callback, _errorCallback);
+        }
+    };
+    function loadWebAudio(id, src, callback, errorCallback) {
+        var req = new XMLHttpRequest();
+        req.open('GET', src, true);
+        req.responseType = 'arraybuffer';
+        req.onload = function () {
+            var audioData = req.response;
+            ig.audioContext.decodeAudioData(audioData, function (buffer) {
+                callback(id, buffer);
+            }, function () {
+                console.warn(id, src, callback, errorCallback);
+                ig.loadOther(id, src, callback, errorCallback);
+            });
+        };
+        req.send(null);
+    }
+    function checkAllAudioSupport() {
+        for (var i = 0, len = ig.resourcesExtname.length; i < len; i++) {
+            var cur = ig.resourcesExtname[i];
+            if (cur.resourceType.toLowerCase() === 'audio') {
+                if (env[cur.extName]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     return exports;
 });'use strict';
 define('ig/Animation', [

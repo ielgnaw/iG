@@ -5,55 +5,6 @@
 
 window.onload = function () {
 
-    /*var BUFFERS_TO_LOAD = {
-        a1m: './data/a1.mp3',
-        a1o: './data/a1.ogg',
-        a2m: './data/a2.mp3',
-        a2o: './data/a2.ogg',
-        a3m: './data/a3.mp3',
-        a3o: './data/a3.ogg',
-        a4m: './data/a4.mp3',
-        a4o: './data/a4.ogg',
-        a5m: './data/a5.mp3',
-        a5o: './data/a5.ogg',
-        a6m: './data/a6.mp3',
-        a6o: './data/a6.ogg'
-    };
-
-    var sound = new Howl({
-        urls: ['./data/a1.mp3', './data/a1.ogg']
-    });
-
-    console.warn(sound);
-
-    document.querySelector('#play').addEventListener('click', function (e) {
-        alert(1);
-        sound.stop().play();
-    })*/
-
-    var hasWebAudio = (typeof AudioContext !== 'undefined') || (typeof webkitAudioContext !== 'undefined');
-    var audioContext;
-    if (hasWebAudio) {
-        if (typeof AudioContext !== 'undefined') {
-            audioContext = new AudioContext();
-        }
-        else {
-            audioContext = new window.webkitAudioContext();
-        }
-    }
-
-    // android qq 浏览器 audioContext = undefined
-    // alert(audioContext);
-
-    function enableSound() {
-        if (hasWebAudio) {
-            enableWebAudioSound();
-        }
-        else {
-            enableHTML5Sound();
-        }
-    }
-
     function enableWebAudioSound() {
         var webSound = {
             channels: [],
@@ -85,10 +36,10 @@ window.onload = function () {
 
             var soundID = webSound.soundID++;
 
-            var source = audioContext.createBufferSource();
+            var source = ig.audioContext.createBufferSource();
             alert(s)
             source.buffer = s; // 流
-            source.connect(audioContext.destination);
+            source.connect(ig.audioContext.destination);
             if (options && options['loop']) {
                 source.loop = true;
             }
@@ -124,154 +75,254 @@ window.onload = function () {
         return webSound;
     }
 
-    function enableHTML5Sound() {
-        var h5Sound = {
-            channels: [],
-            channelMax: 10,
-            active: {},
-            play: function() {}
-        };
-        h5Sound.type = "HTML5";
-
-        for (var i = 0; i < h5Sound.channelMax; i++) {
-            h5Sound.channels[i] = {};
-            h5Sound.channels[i]['channel'] = new Audio();
-            h5Sound.channels[i]['finished'] = -1;
-        }
-
-        h5Sound.play = function (s,options) {
-            var now = new Date().getTime();
-            if (h5Sound.active[s] && h5Sound.active[s] > now) {
-                return;
-            }
-
-            if (options && options['debounce']) {
-                h5Sound.active[s] = now + options['debounce'];
-            }
-            else {
-                delete h5Sound.active[s];
-            }
-
-            for (var i = 0; i < h5Sound.channels.length; i++) {
-                if (!h5Sound.channels[i]['loop'] && h5Sound.channels[i]['finished'] < now) {
-                    h5Sound.channels[i]['channel'].src = s.src;
-                    if(options && options['loop']) {
-                        h5Sound.channels[i]['loop'] = true;
-                        h5Sound.channels[i]['channel'].loop = true;
-                    }
-                    else {
-                        s.duration = 40;
-                        h5Sound.channels[i]['finished'] = now + s.duration*1000;
-                    }
-                    h5Sound.channels[i]['channel'].load();
-                    h5Sound.channels[i]['channel'].play();
-                    break;
-                }
-            }
-        };
-
-        h5Sound.stop = function (s) {
-            var src = s ? s.src : null;
-            var tm = new Date().getTime();
-            for (var i = 0; i < h5Sound.channels.length; i++) {
-                if ((!src || h5Sound.channels[i]['channel'].src === src) &&
-                    (h5Sound.channels[i]['loop'] || h5Sound.channels[i]['finished'] >= tm)
-                ) {
-                    h5Sound.channels[i]['channel'].pause();
-                    h5Sound.channels[i]['loop'] = false;
-                }
-            }
-        };
-
-        return h5Sound;
-    }
-
-    function finishedLoading(bufferList) {
-        // var sound = enableWebAudioSound();
-        // sound.play(bufferList[0]); // safari mobile 不行
-
-        // var sound = enableHTML5Sound();
-        // sound.play(bufferList[0]);
-
-        // var snd = new Audio();
-        // snd.src = './data/a5.ogg';
-        // var sound = enableHTML5Sound();
-        // sound.play(snd);
-
-        document.querySelector('#play').addEventListener('click', function (e) {
-            // alert(99);
-            // android
-            // var snd = new Audio();
-            // // snd.src = './data/a5.mp3';
-            // snd.src = './data/a5.ogg';
-            // // snd.src = './data/blueyellow.wav';
-            // var sound = enableHTML5Sound();
-            // sound.play(snd);
-            alert(11)
-            // safari
-            var sound = enableWebAudioSound();
-            sound.play(bufferList[0]);
-        })
-    }
-
-    function BufferLoader(context, urlList, callback) {
-        this.context = context;
-        this.urlList = urlList;
-        this.onload = callback;
-        this.bufferList = new Array();
-        this.loadCount = 0;
-    }
-
-    BufferLoader.prototype.loadBuffer = function(url, index) {
-        // Load buffer asynchronously
-        var request = new XMLHttpRequest();
-        request.open("GET", url, true);
-        request.responseType = "arraybuffer";
-
-        var loader = this;
-
-        request.onload = function() {
-            loader.context.decodeAudioData(
-                request.response,
-                function(buffer) {
-                    if (!buffer) {
-                        alert('error decoding file data: ' + url);
-                        return;
-                    }
-                    loader.bufferList[index] = buffer;
-                    if (++loader.loadCount == loader.urlList.length) {
-                        loader.onload(loader.bufferList);
-                    }
-                },
-                function (error) {
-                    console.error('decodeAudioData error', error);
-                }
-            );
-        }
-
-        request.onerror = function() {
-            alert('BufferLoader: XHR error');
-        }
-
-        request.send();
-    }
-
-    BufferLoader.prototype.load = function() {
-        for (var i = 0; i < this.urlList.length; i++) {
-            this.loadBuffer(this.urlList[i], i);
-        }
-    }
-
-    var bufferLoader = new BufferLoader(
-        audioContext,
+    ig.loadResource(
         [
-          // './data/a5.mp3',
-          './data/blueyellow.wav',
+            // './data/a1.mp3', './data/a1.ogg',
+            // {id: 'a1m', src: './data/a1.mp3'},
+            // {id: 'a1o', src: './data/a1.ogg'},
+            // {id: 'a2m', src: './data/a2.mp3'},
+            // {id: 'a2o', src: './data/a2.ogg'},
+            // {id: 'a3m', src: './data/a3.mp3'},
+            // {id: 'a3o', src: './data/a3.ogg'},
+            // {id: 'a4m', src: './data/a4.mp3'},
+            // {id: 'a4o', src: './data/a4.ogg'},
+            // {id: 'a5m', src: './data/a5.mp3'},
+            // {id: 'a5o', src: './data/a5.ogg'},
+            // {id: 'a6m', src: './data/a6.mp3'},
+            // {id: 'a6o', src: './data/a6.ogg'}
+            // {id: 'blueyellow', src: './data/blueyellow.wav'},
+            {id: 'bg', src: '/examples/img/bg.jpg'}
         ],
-        finishedLoading
+        function (d) {
+            console.log('all done', d);
+            alert(1)
+            // safari
+            // var sound = enableWebAudioSound();
+            // sound.play(d.a1m, {loop: true});
+            // console.warn(sound);
+        }
     );
 
-    bufferLoader.load();
+    document.querySelector('#play').addEventListener('click', function (e) {
+        // alert(99);
+        // android
+        // var snd = new Audio();
+        // // snd.src = './data/a5.mp3';
+        // snd.src = './data/a5.ogg';
+        // // snd.src = './data/blueyellow.wav';
+        // var sound = enableHTML5Sound();
+        // sound.play(snd);
+        // safari
+        var sound = enableWebAudioSound();
+        sound.play(ig.resources.blueyellow, {loop: true});
+        // console.warn(sound);
+    })
+
+    // var BUFFERS_TO_LOAD = {
+    //     a1m: './data/a1.mp3',
+    //     a1o: './data/a1.ogg',
+    //     a2m: './data/a2.mp3',
+    //     a2o: './data/a2.ogg',
+    //     a3m: './data/a3.mp3',
+    //     a3o: './data/a3.ogg',
+    //     a4m: './data/a4.mp3',
+    //     a4o: './data/a4.ogg',
+    //     a5m: './data/a5.mp3',
+    //     a5o: './data/a5.ogg',
+    //     a6m: './data/a6.mp3',
+    //     a6o: './data/a6.ogg'
+    // };
+
+    // var sound = new Howl({
+    //     urls: ['./data/a1.mp3', './data/a1.ogg'],
+    //     autoplay: true
+    // }).play();
+
+    // console.warn(sound);
+
+    // document.querySelector('#play').addEventListener('click', function (e) {
+    //     alert(1);
+    //     sound.stop().play();
+    // })
+
+
+    // var hasWebAudio = (typeof AudioContext !== 'undefined') || (typeof webkitAudioContext !== 'undefined');
+    // var audioContext;
+    // if (hasWebAudio) {
+    //     if (typeof AudioContext !== 'undefined') {
+    //         audioContext = new AudioContext();
+    //     }
+    //     else {
+    //         audioContext = new window.webkitAudioContext();
+    //     }
+    // }
+
+    // // android qq 浏览器 audioContext = undefined
+    // // alert(audioContext);
+
+    // function enableSound() {
+    //     if (hasWebAudio) {
+    //         enableWebAudioSound();
+    //     }
+    //     else {
+    //         enableHTML5Sound();
+    //     }
+    // }
+
+    // function enableHTML5Sound() {
+    //     var h5Sound = {
+    //         channels: [],
+    //         channelMax: 10,
+    //         active: {},
+    //         play: function() {}
+    //     };
+    //     h5Sound.type = "HTML5";
+
+    //     for (var i = 0; i < h5Sound.channelMax; i++) {
+    //         h5Sound.channels[i] = {};
+    //         h5Sound.channels[i]['channel'] = new Audio();
+    //         h5Sound.channels[i]['finished'] = -1;
+    //     }
+
+    //     h5Sound.play = function (s,options) {
+    //         var now = new Date().getTime();
+    //         if (h5Sound.active[s] && h5Sound.active[s] > now) {
+    //             return;
+    //         }
+
+    //         if (options && options['debounce']) {
+    //             h5Sound.active[s] = now + options['debounce'];
+    //         }
+    //         else {
+    //             delete h5Sound.active[s];
+    //         }
+
+    //         for (var i = 0; i < h5Sound.channels.length; i++) {
+    //             if (!h5Sound.channels[i]['loop'] && h5Sound.channels[i]['finished'] < now) {
+    //                 h5Sound.channels[i]['channel'].src = s.src;
+    //                 if(options && options['loop']) {
+    //                     h5Sound.channels[i]['loop'] = true;
+    //                     h5Sound.channels[i]['channel'].loop = true;
+    //                 }
+    //                 else {
+    //                     s.duration = 40;
+    //                     h5Sound.channels[i]['finished'] = now + s.duration*1000;
+    //                 }
+    //                 h5Sound.channels[i]['channel'].load();
+    //                 h5Sound.channels[i]['channel'].play();
+    //                 break;
+    //             }
+    //         }
+    //     };
+
+    //     h5Sound.stop = function (s) {
+    //         var src = s ? s.src : null;
+    //         var tm = new Date().getTime();
+    //         for (var i = 0; i < h5Sound.channels.length; i++) {
+    //             if ((!src || h5Sound.channels[i]['channel'].src === src) &&
+    //                 (h5Sound.channels[i]['loop'] || h5Sound.channels[i]['finished'] >= tm)
+    //             ) {
+    //                 h5Sound.channels[i]['channel'].pause();
+    //                 h5Sound.channels[i]['loop'] = false;
+    //             }
+    //         }
+    //     };
+
+    //     return h5Sound;
+    // }
+
+    // function finishedLoading(bufferList) {
+    //     // var sound = enableWebAudioSound();
+    //     // sound.play(bufferList[0]); // safari mobile 不行
+
+    //     // var sound = enableHTML5Sound();
+    //     // sound.play(bufferList[0]);
+
+    //     // var snd = new Audio();
+    //     // snd.src = './data/a5.ogg';
+    //     // var sound = enableHTML5Sound();
+    //     // sound.play(snd);
+
+    //     document.querySelector('#play').addEventListener('click', function (e) {
+    //         // alert(99);
+    //         // android
+    //         // var snd = new Audio();
+    //         // // snd.src = './data/a5.mp3';
+    //         // snd.src = './data/a5.ogg';
+    //         // // snd.src = './data/blueyellow.wav';
+    //         // var sound = enableHTML5Sound();
+    //         // sound.play(snd);
+    //         alert(11)
+    //         // safari
+    //         var sound = enableWebAudioSound();
+    //         sound.play(bufferList[0], {loop: true});
+    //         console.warn(sound);
+    //     })
+    // }
+
+    // function BufferLoader(context, urlList, callback) {
+    //     this.context = context;
+    //     this.urlList = urlList;
+    //     this.onload = callback;
+    //     this.bufferList = new Array();
+    //     this.loadCount = 0;
+    // }
+
+    // BufferLoader.prototype.loadBuffer = function(url, index) {
+    //     // Load buffer asynchronously
+    //     var request = new XMLHttpRequest();
+    //     request.open("GET", url, true);
+    //     request.responseType = "arraybuffer";
+
+    //     var loader = this;
+
+    //     request.onload = function() {
+    //         loader.context.decodeAudioData(
+    //             request.response,
+    //             function(buffer) {
+    //                 if (!buffer) {
+    //                     alert('error decoding file data: ' + url);
+    //                     return;
+    //                 }
+    //                 loader.bufferList[index] = buffer;
+    //                 if (++loader.loadCount == loader.urlList.length) {
+    //                     loader.onload(loader.bufferList);
+    //                 }
+    //             },
+    //             function (error) {
+    //                 console.error('decodeAudioData error', error);
+    //             }
+    //         );
+    //     }
+
+    //     request.onerror = function() {
+    //         alert('BufferLoader: XHR error');
+    //     }
+
+    //     request.send();
+    // }
+
+    // BufferLoader.prototype.load = function() {
+    //     for (var i = 0; i < this.urlList.length; i++) {
+    //         this.loadBuffer(this.urlList[i], i);
+    //     }
+    // }
+
+    // var bufferLoader = new BufferLoader(
+    //     audioContext,
+    //     [
+    //       './data/a5.mp3',
+    //       // './data/blueyellow.wav',
+    //     ],
+    //     finishedLoading
+    // );
+
+    // bufferLoader.load();
+
+
+
+
+
 
     /*var context;
     var bufferLoader;
