@@ -2488,7 +2488,7 @@ define('ig/Stage', [
                 bgPos = 'center';
                 break;
             case 'full':
-                bgSize = this.cssWidth + 'px ' + this.cssHeight + 'px';
+                bgSize = '100% 100%';
                 break;
             }
             if (imgUrl) {

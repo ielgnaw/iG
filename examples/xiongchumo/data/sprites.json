@@ -1,0 +1,37 @@
+{
+    "bg": {
+        "sX": 0,
+        "sY": 0,
+        "cols": 5,
+        "rows": 1,
+        "total": 5,
+        "tileW": 320,
+        "tileH": 416,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+
+    "normalRun": {
+        "sX": 0,
+        "sY": 180,
+        "cols": 6,
+        "rows": 1,
+        "total": 6,
+        "tileW": 48,
+        "tileH": 125,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+
+    "bear": {
+        "sX": 0,
+        "sY": 0,
+        "cols": 5,
+        "rows": 1,
+        "total": 5,
+        "tileW": 135,
+        "tileH": 180,
+        "offsetX": 0,
+        "offsetY": 0
+    }
+}

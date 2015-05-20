@@ -109,7 +109,8 @@ window.onload = function () {
                 rows: playerData.rows,
                 offsetX: playerData.offsetX,
                 offsetY: playerData.offsetY,
-                ticksPerFrame: 1
+                ticksPerFrame: 1,
+                debug: 1
             });
 
             stage.addDisplayObject(player);
@@ -135,7 +136,8 @@ window.onload = function () {
                     offsetX: boxData.offsetX,
                     offsetY: boxData.offsetY,
                     vX: util.randomInt(-5, -20),
-                    ticksPerFrame: 1
+                    ticksPerFrame: 1,
+                    debug: 1
                 });
 
                 box.update = function () {

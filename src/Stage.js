@@ -185,7 +185,8 @@ define(function (require) {
                     break;
                 // 拉伸
                 case 'full':
-                    bgSize = this.cssWidth + 'px ' + this.cssHeight + 'px';
+                    // bgSize = parseInt(this.cssWidth, 10) + 'px ' + parseInt(this.cssHeight, 10) + 'px';
+                    bgSize = '100% 100%';
                     break;
             }
 
