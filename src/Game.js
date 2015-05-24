@@ -637,6 +637,8 @@ define(function (require) {
 
         this.ratioX = this.width / STANDARD_WIDTH;
         this.ratioY = this.height / STANDARD_HEIGHT;
+        this.ratioWidth = this.width / parseInt(this.cssWidth, 10);
+        this.ratioHeight = this.height / parseInt(this.cssHeight, 10);
 
         return this;
     }

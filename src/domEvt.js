@@ -80,6 +80,7 @@ define(function (require) {
         var maxZIndex = -1;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
+
             if (curDisplayObject.mouseEnable
                 && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
                 if (curDisplayObject.zIndex >= maxZIndex) {
@@ -193,6 +194,8 @@ define(function (require) {
     exports.addEvent = function () {
         var me = this;
         var elem = me.element;
+        var ratioWidth = me.stage.gameOwner.ratioWidth;
+        var ratioHeight = me.stage.gameOwner.ratioHeight;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
                 // e.preventDefault();
@@ -205,9 +208,9 @@ define(function (require) {
 
                 var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
                 var y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
-
-                me.x = x - me.offsetX;
-                me.y = y - me.offsetY;
+                // console.warn(me);
+                me.x = (x - me.offsetX) * ratioWidth;
+                me.y = (y - me.offsetY) * ratioHeight;
                 me.stage.fire(name, {
                     data: {
                         x: me.x,

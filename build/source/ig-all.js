@@ -2370,6 +2370,8 @@ define('ig/Game', [
         }, false);
         this.ratioX = this.width / STANDARD_WIDTH;
         this.ratioY = this.height / STANDARD_HEIGHT;
+        this.ratioWidth = this.width / parseInt(this.cssWidth, 10);
+        this.ratioHeight = this.height / parseInt(this.cssHeight, 10);
         return this;
     }
     function setOffCanvas() {
@@ -3375,6 +3377,8 @@ define('ig/domEvt', [
     exports.addEvent = function () {
         var me = this;
         var elem = me.element;
+        var ratioWidth = me.stage.gameOwner.ratioWidth;
+        var ratioHeight = me.stage.gameOwner.ratioHeight;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
                 if (i === 0) {
@@ -3384,8 +3388,8 @@ define('ig/domEvt', [
                 }
                 var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
                 var y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
-                me.x = x - me.offsetX;
-                me.y = y - me.offsetY;
+                me.x = (x - me.offsetX) * ratioWidth;
+                me.y = (y - me.offsetY) * ratioHeight;
                 me.stage.fire(name, {
                     data: {
                         x: me.x,
