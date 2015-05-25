@@ -24,7 +24,9 @@ window.onload = function () {
         [
             {id: 'bgImg', src: '../img/xiongchumo/bg.jpg'},
             {id: 'spritesImg', src: '../img/xiongchumo/sprites.png'},
-            {id: 'spritesData', src: './data/sprites.json'}
+            {id: 'spritesImg1', src: '../img/xiongchumo/sprites1.png'},
+            {id: 'spritesData', src: './data/sprites.json'},
+            {id: 'spritesData1', src: './data/sprites1.json'},
         ],
         function (d) {
 
@@ -53,7 +55,6 @@ window.onload = function () {
                 }
             });
 
-
             var bgData = d.spritesData.bg;
             var bgSpriteSheet = new ig.SpriteSheet({
                 name: 'bg',
@@ -79,6 +80,37 @@ window.onload = function () {
             });
 
             stage.addDisplayObject(bgSpriteSheet);
+
+            var treeBranchData = d.spritesData1.treeBranch;
+            var treeBranchSheet = new ig.SpriteSheet({
+                name: 'treeBranch_',
+                image: d.spritesImg1,
+                x: 46,
+                // x: 100,
+                // x: util.randomInt(46, 223),
+                y: 300,
+                sX: treeBranchData.sX,
+                sY: treeBranchData.sY,
+                total: treeBranchData.total,
+                tileW: treeBranchData.tileW,
+                tileH: treeBranchData.tileH,
+                cols: treeBranchData.cols,
+                rows: treeBranchData.rows,
+                zIndex: 4,
+                // debug: 1,
+                ticksPerFrame: 4,
+                captureFunc: function (d) {
+                    // console.warn(d);
+                    // console.warn(this);
+                },
+                moveFunc: function (d) {
+                    // this.move(d.x, d.y);
+                }
+            });
+
+            stage.addDisplayObject(treeBranchSheet);
+            return;
+
 
             var normalRunData = d.spritesData.normalRun;
             var playerSheet = new ig.SpriteSheet({
@@ -151,7 +183,39 @@ window.onload = function () {
                 exec: function (requestId) {
                     createPinecone(requestId);
                 }
-            })
+            });
+
+            var treeBranchData = d.spritesData.treeBranch;
+            console.warn(treeBranchData);
+            var treeBranchSheet = new ig.SpriteSheet({
+                name: 'treeBranch_',
+                image: d.spritesImg,
+                // x: 46,
+                x: 0,
+                // x: util.randomInt(46, 223),
+                y: 100,
+                sX: treeBranchData.sX,
+                sY: treeBranchData.sY,
+                total: treeBranchData.total,
+                tileW: treeBranchData.tileW,
+                tileH: treeBranchData.tileH,
+                cols: treeBranchData.cols,
+                rows: treeBranchData.rows,
+                zIndex: 4,
+                ticksPerFrame: 3,
+                // debug: 1,
+                // scaleX: 0.8,
+                // scaleY: 0.8,
+                captureFunc: function (d) {
+                    // console.warn(d);
+                    // console.warn(this);
+                },
+                moveFunc: function (d) {
+                    // this.move(d.x, d.y);
+                }
+            });
+
+            stage.addDisplayObject(treeBranchSheet);
 
             /**
              * 创建松果精灵
@@ -244,7 +308,6 @@ window.onload = function () {
                                     bearSheet.y += 2;
                                     bearSheet.scaleX += 0.1;
                                     bearSheet.scaleY += 0.1;
-                                    console.warn(bearSheet.y.toFixed(0));
                                 }
                                 else {
                                     console.warn('被吃了');
