@@ -81,21 +81,50 @@ window.onload = function () {
 
             stage.addDisplayObject(bgSpriteSheet);
 
-            var treeBranchData = d.spritesData1.treeBranch;
-            var treeBranchSheet = new ig.SpriteSheet({
-                name: 'treeBranch_',
+            // var treeBranchData = d.spritesData1.treeBranch;
+            // var treeBranchSheet = new ig.SpriteSheet({
+            //     name: 'treeBranch_',
+            //     image: d.spritesImg1,
+            //     x: 46,
+            //     // x: 100,
+            //     // x: util.randomInt(46, 223),
+            //     y: 300,
+            //     sX: treeBranchData.sX,
+            //     sY: treeBranchData.sY,
+            //     total: treeBranchData.total,
+            //     tileW: treeBranchData.tileW,
+            //     tileH: treeBranchData.tileH,
+            //     cols: treeBranchData.cols,
+            //     rows: treeBranchData.rows,
+            //     zIndex: 4,
+            //     // debug: 1,
+            //     ticksPerFrame: 4,
+            //     captureFunc: function (d) {
+            //         // console.warn(d);
+            //         // console.warn(this);
+            //     },
+            //     moveFunc: function (d) {
+            //         // this.move(d.x, d.y);
+            //     }
+            // });
+
+            // stage.addDisplayObject(treeBranchSheet);
+
+            var treeBranchBreakData = d.spritesData1.treeBranchBreak;
+            var treeBranchBreakSheet = new ig.SpriteSheet({
+                name: 'treeBranchBreak_',
                 image: d.spritesImg1,
                 x: 46,
                 // x: 100,
                 // x: util.randomInt(46, 223),
                 y: 300,
-                sX: treeBranchData.sX,
-                sY: treeBranchData.sY,
-                total: treeBranchData.total,
-                tileW: treeBranchData.tileW,
-                tileH: treeBranchData.tileH,
-                cols: treeBranchData.cols,
-                rows: treeBranchData.rows,
+                sX: treeBranchBreakData.sX,
+                sY: treeBranchBreakData.sY,
+                total: treeBranchBreakData.total,
+                tileW: treeBranchBreakData.tileW,
+                tileH: treeBranchBreakData.tileH,
+                cols: treeBranchBreakData.cols,
+                rows: treeBranchBreakData.rows,
                 zIndex: 4,
                 // debug: 1,
                 ticksPerFrame: 4,
@@ -108,7 +137,7 @@ window.onload = function () {
                 }
             });
 
-            stage.addDisplayObject(treeBranchSheet);
+            stage.addDisplayObject(treeBranchBreakSheet);
             return;
 
 
