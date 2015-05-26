@@ -104,9 +104,9 @@ window.onload = function () {
             });
 
             treeBranchSheet.update = function (dt) {
-                this.scaleX -= 0.01;
-                this.scaleY -= 0.01;
-                this.y -= 3;
+                this.scaleX -= 0.007;
+                this.scaleY -= 0.007;
+                this.y -= 2;
 
                 // pineconeCollide.call(this);
             };
