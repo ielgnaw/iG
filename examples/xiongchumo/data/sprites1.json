@@ -9,16 +9,5 @@
         "tileH": 45,
         "offsetX": 0,
         "offsetY": 0
-    },
-    "treeBranchBreak": {
-        "sX": 0,
-        "sY": 235,
-        "cols": 4,
-        "rows": 1,
-        "total": 4,
-        "tileW": 190,
-        "tileH": 36,
-        "offsetX": 0,
-        "offsetY": 0
     }
 }

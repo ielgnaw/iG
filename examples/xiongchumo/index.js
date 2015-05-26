@@ -81,63 +81,151 @@ window.onload = function () {
 
             stage.addDisplayObject(bgSpriteSheet);
 
-            // var treeBranchData = d.spritesData1.treeBranch;
-            // var treeBranchSheet = new ig.SpriteSheet({
-            //     name: 'treeBranch_',
-            //     image: d.spritesImg1,
-            //     x: 46,
-            //     // x: 100,
-            //     // x: util.randomInt(46, 223),
-            //     y: 300,
-            //     sX: treeBranchData.sX,
-            //     sY: treeBranchData.sY,
-            //     total: treeBranchData.total,
-            //     tileW: treeBranchData.tileW,
-            //     tileH: treeBranchData.tileH,
-            //     cols: treeBranchData.cols,
-            //     rows: treeBranchData.rows,
-            //     zIndex: 4,
-            //     // debug: 1,
-            //     ticksPerFrame: 4,
-            //     captureFunc: function (d) {
-            //         // console.warn(d);
-            //         // console.warn(this);
-            //     },
-            //     moveFunc: function (d) {
-            //         // this.move(d.x, d.y);
-            //     }
-            // });
-
-            // stage.addDisplayObject(treeBranchSheet);
-
-            var treeBranchBreakData = d.spritesData1.treeBranchBreak;
-            var treeBranchBreakSheet = new ig.SpriteSheet({
-                name: 'treeBranchBreak_',
+            var treeBranchData = d.spritesData1.treeBranch;
+            var treeBranchSheet = new ig.SpriteSheet({
+                name: 'treeBranch_',
                 image: d.spritesImg1,
-                x: 46,
+                x: 38,
                 // x: 100,
                 // x: util.randomInt(46, 223),
-                y: 300,
-                sX: treeBranchBreakData.sX,
-                sY: treeBranchBreakData.sY,
-                total: treeBranchBreakData.total,
-                tileW: treeBranchBreakData.tileW,
-                tileH: treeBranchBreakData.tileH,
-                cols: treeBranchBreakData.cols,
-                rows: treeBranchBreakData.rows,
+                y: game.height - treeBranchData.tileH - 10,
+                sX: treeBranchData.sX,
+                sY: treeBranchData.sY,
+                total: treeBranchData.total,
+                tileW: treeBranchData.tileW,
+                tileH: treeBranchData.tileH,
+                cols: treeBranchData.cols,
+                rows: treeBranchData.rows,
                 zIndex: 4,
                 // debug: 1,
-                ticksPerFrame: 4,
-                captureFunc: function (d) {
-                    // console.warn(d);
-                    // console.warn(this);
-                },
-                moveFunc: function (d) {
-                    // this.move(d.x, d.y);
-                }
+                scaleX: 1.2,
+                scaleY: 1.2,
+                ticksPerFrame: 6
             });
 
-            stage.addDisplayObject(treeBranchBreakSheet);
+            treeBranchSheet.update = function (dt) {
+                this.scaleX -= 0.01;
+                this.scaleY -= 0.01;
+                this.y -= 3;
+
+                // pineconeCollide.call(this);
+            };
+
+            stage.addDisplayObject(treeBranchSheet);
+
+            /**
+             * 创建撞碎的树枝
+             */
+            function createBreakTreeBranch(opts) {
+                opts = util.extend(true, {
+                    duration: 1000
+                }, opts);
+                var bitmap1 = new ig.Bitmap({
+                    name: 'bitmap1',
+                    x: 80,
+                    y: 235,
+                    sX: 67,
+                    sY: 519,
+                    width: 110,
+                    height: 25,
+                    sWidth: 110,
+                    sHeight: 25,
+                    image: d.spritesImg1,
+                    // debug: true,
+                    zIndex: 4,
+                });
+                stage.addDisplayObject(bitmap1);
+
+                var bitmap2 = new ig.Bitmap({
+                    name: 'bitmap2',
+                    x: 100,
+                    y: 270,
+                    sX: 20,
+                    sY: 540,
+                    width: 166,
+                    height: 35,
+                    sWidth: 166,
+                    sHeight: 35,
+                    image: d.spritesImg1,
+                    // debug: true,
+                    zIndex: 4,
+                });
+                stage.addDisplayObject(bitmap2);
+
+                var bitmap3 = new ig.Bitmap({
+                    name: 'bitmap3',
+                    x: 100,
+                    y: 210,
+                    sX: 15,
+                    sY: 592,
+                    width: 180,
+                    height: 25,
+                    sWidth: 180,
+                    sHeight: 25,
+                    image: d.spritesImg1,
+                    // debug: 1,
+                    zIndex: 4,
+                });
+                stage.addDisplayObject(bitmap3);
+
+                var bitmap4 = new ig.Bitmap({
+                    name: 'bitmap4',
+                    x: 150,
+                    y: 250,
+                    sX: 38,
+                    sY: 622,
+                    width: 157,
+                    height: 32,
+                    sWidth: 157,
+                    sHeight: 32,
+                    image: d.spritesImg1,
+                    // debug: 1,
+                    zIndex: 4,
+                });
+                stage.addDisplayObject(bitmap4);
+
+                bitmap1.setAnimate({
+                    target: {
+                        alpha: 0
+                    },
+                    duration: opts.duration,
+                    completeFunc: function (evt) {
+                        evt.data.source.changeStatus(STATUS.DESTROYED);
+                    }
+                });
+                bitmap2.setAnimate({
+                    target: {
+                        alpha: 0
+                    },
+                    duration: opts.duration,
+                    completeFunc: function (evt) {
+                        evt.data.source.changeStatus(STATUS.DESTROYED);
+                    }
+                });
+                bitmap3.setAnimate({
+                    target: {
+                        alpha: 0
+                    },
+                    duration: opts.duration,
+                    completeFunc: function (evt) {
+                        evt.data.source.changeStatus(STATUS.DESTROYED);
+                    }
+                });
+                bitmap4.setAnimate({
+                    target: {
+                        alpha: 0
+                    },
+                    duration: opts.duration,
+                    completeFunc: function (evt) {
+                        evt.data.source.changeStatus(STATUS.DESTROYED);
+                    }
+                });
+            }
+
+            createBreakTreeBranch({
+                duration: 500
+            });
+
             return;
 
 
