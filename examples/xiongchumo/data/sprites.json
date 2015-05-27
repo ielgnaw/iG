@@ -17,7 +17,18 @@
         "rows": 1,
         "total": 6,
         "tileW": 48,
-        "tileH": 125,
+        "tileH": 120,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "tripRun": {
+        "sX": 288,
+        "sY": 180,
+        "cols": 12,
+        "rows": 1,
+        "total": 6,
+        "tileW": 55,
+        "tileH": 120,
         "offsetX": 0,
         "offsetY": 0
     },

@@ -67,169 +67,13 @@ window.onload = function () {
                 cols: bgData.cols,
                 rows: bgData.rows,
                 zIndex: 1,
-                ticksPerFrame: 1.5,
-                vX: 1,
-                vY: 1,
-                captureFunc: function (d) {
-                    // console.warn(d);
-                    // console.warn(this);
-                },
-                moveFunc: function (d) {
-                    // this.move(d.x, d.y);
-                }
+                ticksPerFrame: 1.5
             });
 
             stage.addDisplayObject(bgSpriteSheet);
 
-            var treeBranchData = d.spritesData1.treeBranch;
-            var treeBranchSheet = new ig.SpriteSheet({
-                name: 'treeBranch_',
-                image: d.spritesImg1,
-                x: 38,
-                // x: 100,
-                // x: util.randomInt(46, 223),
-                y: game.height - treeBranchData.tileH - 10,
-                sX: treeBranchData.sX,
-                sY: treeBranchData.sY,
-                total: treeBranchData.total,
-                tileW: treeBranchData.tileW,
-                tileH: treeBranchData.tileH,
-                cols: treeBranchData.cols,
-                rows: treeBranchData.rows,
-                zIndex: 4,
-                // debug: 1,
-                scaleX: 1.2,
-                scaleY: 1.2,
-                ticksPerFrame: 6
-            });
-
-            treeBranchSheet.update = function (dt) {
-                this.scaleX -= 0.007;
-                this.scaleY -= 0.007;
-                this.y -= 2;
-
-                // pineconeCollide.call(this);
-            };
-
-            stage.addDisplayObject(treeBranchSheet);
-
-            /**
-             * 创建撞碎的树枝
-             */
-            function createBreakTreeBranch(opts) {
-                opts = util.extend(true, {
-                    duration: 1000
-                }, opts);
-                var bitmap1 = new ig.Bitmap({
-                    name: 'bitmap1',
-                    x: 80,
-                    y: 235,
-                    sX: 67,
-                    sY: 519,
-                    width: 110,
-                    height: 25,
-                    sWidth: 110,
-                    sHeight: 25,
-                    image: d.spritesImg1,
-                    // debug: true,
-                    zIndex: 4,
-                });
-                stage.addDisplayObject(bitmap1);
-
-                var bitmap2 = new ig.Bitmap({
-                    name: 'bitmap2',
-                    x: 100,
-                    y: 270,
-                    sX: 20,
-                    sY: 540,
-                    width: 166,
-                    height: 35,
-                    sWidth: 166,
-                    sHeight: 35,
-                    image: d.spritesImg1,
-                    // debug: true,
-                    zIndex: 4,
-                });
-                stage.addDisplayObject(bitmap2);
-
-                var bitmap3 = new ig.Bitmap({
-                    name: 'bitmap3',
-                    x: 100,
-                    y: 210,
-                    sX: 15,
-                    sY: 592,
-                    width: 180,
-                    height: 25,
-                    sWidth: 180,
-                    sHeight: 25,
-                    image: d.spritesImg1,
-                    // debug: 1,
-                    zIndex: 4,
-                });
-                stage.addDisplayObject(bitmap3);
-
-                var bitmap4 = new ig.Bitmap({
-                    name: 'bitmap4',
-                    x: 150,
-                    y: 250,
-                    sX: 38,
-                    sY: 622,
-                    width: 157,
-                    height: 32,
-                    sWidth: 157,
-                    sHeight: 32,
-                    image: d.spritesImg1,
-                    // debug: 1,
-                    zIndex: 4,
-                });
-                stage.addDisplayObject(bitmap4);
-
-                bitmap1.setAnimate({
-                    target: {
-                        alpha: 0
-                    },
-                    duration: opts.duration,
-                    completeFunc: function (evt) {
-                        evt.data.source.changeStatus(STATUS.DESTROYED);
-                    }
-                });
-                bitmap2.setAnimate({
-                    target: {
-                        alpha: 0
-                    },
-                    duration: opts.duration,
-                    completeFunc: function (evt) {
-                        evt.data.source.changeStatus(STATUS.DESTROYED);
-                    }
-                });
-                bitmap3.setAnimate({
-                    target: {
-                        alpha: 0
-                    },
-                    duration: opts.duration,
-                    completeFunc: function (evt) {
-                        evt.data.source.changeStatus(STATUS.DESTROYED);
-                    }
-                });
-                bitmap4.setAnimate({
-                    target: {
-                        alpha: 0
-                    },
-                    duration: opts.duration,
-                    completeFunc: function (evt) {
-                        evt.data.source.changeStatus(STATUS.DESTROYED);
-                    }
-                });
-            }
-
-            createBreakTreeBranch({
-                duration: 500
-            });
-
-            return;
-
-
             var normalRunData = d.spritesData.normalRun;
+
             var playerSheet = new ig.SpriteSheet({
                 name: 'player',
                 image: d.spritesImg,
@@ -243,12 +87,13 @@ window.onload = function () {
                 cols: normalRunData.cols,
                 rows: normalRunData.rows,
                 zIndex: 2,
-                ticksPerFrame: 3,
-                // debug: 1,
+                ticksPerFrame: 4,
+                debug: 1,
                 moveFunc: function (d) {
                     if (d.x > 46 && d.x < 223) {
                         this.move(d.x, this.y);
                     }
+                    console.warn(this.y);
                 }
             });
 
@@ -272,13 +117,6 @@ window.onload = function () {
                 scaleX: 0.1,
                 scaleY: 0.1,
                 // debug: 1,
-                captureFunc: function (d) {
-                    // console.warn(d);
-                    // console.warn(this);
-                },
-                moveFunc: function (d) {
-                    // this.move(d.x, d.y);
-                }
             });
 
             stage.addDisplayObject(bearSheet);
@@ -289,10 +127,7 @@ window.onload = function () {
                     scaleY: 1.2,
                     y: 25
                 },
-                duration: 2000,
-                completeFunc: function (evt) {
-                    // evt.data.source.changeStatus(STATUS.DESTROYED);
-                }
+                duration: 2000
             });
 
             ig.loop({
@@ -301,38 +136,6 @@ window.onload = function () {
                     createPinecone(requestId);
                 }
             });
-
-            var treeBranchData = d.spritesData.treeBranch;
-            console.warn(treeBranchData);
-            var treeBranchSheet = new ig.SpriteSheet({
-                name: 'treeBranch_',
-                image: d.spritesImg,
-                // x: 46,
-                x: 0,
-                // x: util.randomInt(46, 223),
-                y: 100,
-                sX: treeBranchData.sX,
-                sY: treeBranchData.sY,
-                total: treeBranchData.total,
-                tileW: treeBranchData.tileW,
-                tileH: treeBranchData.tileH,
-                cols: treeBranchData.cols,
-                rows: treeBranchData.rows,
-                zIndex: 4,
-                ticksPerFrame: 3,
-                // debug: 1,
-                // scaleX: 0.8,
-                // scaleY: 0.8,
-                captureFunc: function (d) {
-                    // console.warn(d);
-                    // console.warn(this);
-                },
-                moveFunc: function (d) {
-                    // this.move(d.x, d.y);
-                }
-            });
-
-            stage.addDisplayObject(treeBranchSheet);
 
             /**
              * 创建松果精灵
@@ -376,16 +179,46 @@ window.onload = function () {
                 };
 
                 stage.addDisplayObject(pineconeSheet);
+            }
 
-                /**
-                 * 松果的碰撞
-                 */
-                function pineconeCollide() {
-                    // 在 player 可以接松果的范围内，即松果还没有滚动到 player 后面
-                    if (this.y > playerSheet.y + playerSheet.tileH - this.tileH) {
-                        if (this.collidesWith(playerSheet) && !this.isCollide) {
+
+            /**
+             * 松果的碰撞
+             */
+            function pineconeCollide() {
+                // 在 player 可以接松果的范围内，即松果还没有滚动到 player 后面
+                if (this.y > playerSheet.y + playerSheet.tileH - this.tileH) {
+                    if (this.collidesWith(playerSheet) && !this.isCollide) {
+                        this.isCollide = true;
+                        this.changeFrame(d.spritesData.pineconeWithPlayer);
+                        this.setAnimate({
+                            target: {
+                                scaleX: 2,
+                                scaleY: 2,
+                                alpha: 0
+                            },
+                            duration: 400,
+                            completeFunc: function (evt) {
+                                evt.data.source.changeStatus(STATUS.DESTROYED);
+                            }
+                        });
+                        var yStr = bearSheet.y.toFixed(0);
+                        if (yStr > 12) {
+                            if (yStr <= 30) {
+                                playerSheet.changeFrame(d.spritesData.normalRun);
+                            }
+                            bearSheet.y -= 2;
+                            bearSheet.scaleX -= 0.1;
+                            bearSheet.scaleY -= 0.1;
+                        }
+                    }
+                }
+                // 如果 player 没有碰到松果，那么熊一定会碰到
+                else {
+                    if (this.y < bearSheet.y + bearSheet.tileH - this.tileH) {
+                        if (this.collidesWith(bearSheet) && !this.isCollide) {
                             this.isCollide = true;
-                            this.changeFrame(d.spritesData.pineconeWithPlayer);
+                            this.changeFrame(d.spritesData.pineconeWithBear);
                             this.setAnimate({
                                 target: {
                                     scaleX: 2,
@@ -397,44 +230,188 @@ window.onload = function () {
                                     evt.data.source.changeStatus(STATUS.DESTROYED);
                                 }
                             });
-                            if (bearSheet.y.toFixed(0) > 8) {
-                                bearSheet.y -= 2;
-                                bearSheet.scaleX -= 0.1;
-                                bearSheet.scaleY -= 0.1;
-                            }
-                        }
-                    }
-                    // 如果 player 没有碰到松果，那么熊一定会碰到
-                    else {
-                        if (this.y < bearSheet.y + bearSheet.tileH - this.tileH) {
-                            if (this.collidesWith(bearSheet) && !this.isCollide) {
-                                this.isCollide = true;
-                                this.changeFrame(d.spritesData.pineconeWithBear);
-                                this.setAnimate({
-                                    target: {
-                                        scaleX: 2,
-                                        scaleY: 2,
-                                        alpha: 0
-                                    },
-                                    duration: 400,
-                                    completeFunc: function (evt) {
-                                        evt.data.source.changeStatus(STATUS.DESTROYED);
-                                    }
-                                });
-                                if (bearSheet.y.toFixed(0) < 32) {
-                                    bearSheet.y += 2;
-                                    bearSheet.scaleX += 0.1;
-                                    bearSheet.scaleY += 0.1;
+                            var yStr = bearSheet.y.toFixed(0);
+                            if (yStr < 32) {
+                                if (yStr > 26) {
+                                    playerSheet.changeFrame(d.spritesData.tripRun);
                                 }
                                 else {
-                                    console.warn('被吃了');
+                                    playerSheet.changeFrame(d.spritesData.normalRun);
                                 }
+                                bearSheet.y += 2;
+                                bearSheet.scaleX += 0.1;
+                                bearSheet.scaleY += 0.1;
+                            }
+                            else {
+                                console.warn('被吃了');
                             }
                         }
                     }
                 }
-
             }
+
+            var treeBranchData = d.spritesData1.treeBranch;
+            var treeBranchSheet = new ig.SpriteSheet({
+                name: 'treeBranch_',
+                image: d.spritesImg1,
+                x: 38,
+                y: game.height - treeBranchData.tileH - 10,
+                sX: treeBranchData.sX,
+                sY: treeBranchData.sY,
+                total: treeBranchData.total,
+                tileW: treeBranchData.tileW,
+                tileH: treeBranchData.tileH,
+                cols: treeBranchData.cols,
+                rows: treeBranchData.rows,
+                zIndex: 4,
+                debug: 1,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                ticksPerFrame: 6
+            });
+
+            treeBranchSheet.update = function (dt) {
+                this.scaleX -= 0.007;
+                this.scaleY -= 0.007;
+                this.y -= 2;
+            };
+
+            stage.addDisplayObject(treeBranchSheet);
+
+            // treeBranchSheet.setAnimate({
+            //     target: {
+            //         alpha: 0
+            //     },
+            //     duration: 200,
+            //     completeFunc: function (evt) {
+            //         createBreakTreeBranch({
+            //             duration: 1000,
+            //             xBase: treeBranchSheet.x,
+            //             yBase: treeBranchSheet.y
+            //         });
+            //         evt.data.source.changeStatus(STATUS.DESTROYED);
+            //     }
+            // });
+
+            // /**
+            //  * 创建撞碎的树枝
+            //  */
+            // function createBreakTreeBranch(opts) {
+            //     treeBranchSheet.changeStatus(STATUS.DESTROYED);
+            //     opts = util.extend(true, {
+            //         duration: 1000,
+            //         xBase: 0,
+            //         yBase: 0
+            //     }, opts);
+            //     var bitmap1 = new ig.Bitmap({
+            //         name: 'bitmap1',
+            //         // x: 80,
+            //         // y: 235,
+            //         x: opts.xBase,
+            //         y: opts.yBase,
+            //         sX: 67,
+            //         sY: 519,
+            //         width: 110,
+            //         height: 25,
+            //         sWidth: 110,
+            //         sHeight: 25,
+            //         image: d.spritesImg1,
+            //         // debug: true,
+            //         zIndex: 4,
+            //     });
+            //     stage.addDisplayObject(bitmap1);
+
+            //     var bitmap2 = new ig.Bitmap({
+            //         name: 'bitmap2',
+            //         // x: 100,
+            //         // y: 270,
+            //         x: opts.xBase + 20,
+            //         y: opts.yBase + 35,
+            //         sX: 20,
+            //         sY: 540,
+            //         width: 166,
+            //         height: 35,
+            //         sWidth: 166,
+            //         sHeight: 35,
+            //         image: d.spritesImg1,
+            //         // debug: true,
+            //         zIndex: 4,
+            //     });
+            //     stage.addDisplayObject(bitmap2);
+
+            //     var bitmap3 = new ig.Bitmap({
+            //         name: 'bitmap3',
+            //         // x: 100,
+            //         // y: 210,
+            //         x: opts.xBase + 20,
+            //         y: opts.yBase - 25,
+            //         sX: 15,
+            //         sY: 592,
+            //         width: 180,
+            //         height: 25,
+            //         sWidth: 180,
+            //         sHeight: 25,
+            //         image: d.spritesImg1,
+            //         zIndex: 4,
+            //     });
+            //     stage.addDisplayObject(bitmap3);
+
+            //     var bitmap4 = new ig.Bitmap({
+            //         name: 'bitmap4',
+            //         // x: 150,
+            //         // y: 250,
+            //         x: opts.xBase + 70,
+            //         y: opts.yBase + 15,
+            //         sX: 38,
+            //         sY: 622,
+            //         width: 157,
+            //         height: 32,
+            //         sWidth: 157,
+            //         sHeight: 32,
+            //         image: d.spritesImg1,
+            //         // debug: 1,
+            //         zIndex: 4,
+            //     });
+            //     stage.addDisplayObject(bitmap4);
+
+            //     bitmap1.setAnimate({
+            //         target: {
+            //             alpha: 0
+            //         },
+            //         duration: opts.duration,
+            //         completeFunc: function (evt) {
+            //             evt.data.source.changeStatus(STATUS.DESTROYED);
+            //         }
+            //     });
+            //     bitmap2.setAnimate({
+            //         target: {
+            //             alpha: 0
+            //         },
+            //         duration: opts.duration,
+            //         completeFunc: function (evt) {
+            //             evt.data.source.changeStatus(STATUS.DESTROYED);
+            //         }
+            //     });
+            //     bitmap3.setAnimate({
+            //         target: {
+            //             alpha: 0
+            //         },
+            //         duration: opts.duration,
+            //         completeFunc: function (evt) {
+            //             evt.data.source.changeStatus(STATUS.DESTROYED);
+            //         }
+            //     });
+            //     bitmap4.setAnimate({
+            //         target: {
+            //             alpha: 0
+            //         },
+            //         duration: opts.duration + 10, // 这个的时间稍微加长一点，那么这个动画完成即四个都完成了
+            //         completeFunc: function (evt) {
+            //             evt.data.source.changeStatus(STATUS.DESTROYED);
+            //             console.warn(1);
+            //         }
+            //     });
+            // }
 
         }
     );
