@@ -28,43 +28,39 @@
             <canvas id="time-based-canvas" width="600" height="100"></canvas>
             <button id="time-based-start">开始</button>
         </div>
+        <button id="all-start">all start</button>
         <script>
-            /**
-             * requestAnimationFrame polyfill
-             */
-            window.requestAnimationFrame = (function () {
-                return window.requestAnimationFrame
-                    || window.webkitRequestAnimationFrame
-                    || window.mozRequestAnimationFrame
-                    || window.msRequestAnimationFrame
-                    || window.oRequestAnimationFrame
-                    || function (callback, elem) {
-                            var me = this;
-                            var start;
-                            var finish;
-                            setTimeout(function () {
-                                start = +new Date();
-                                callback(start);
-                                finish = +new Date();
-                                me.timeout = 1000 / 60 - (finish - start);
-                            }, me.timeout);
-                        };
-            })();
+            // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+            // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 
-            /**
-             * cancelAnimationFrame polyfill
-             */
-            window.cancelAnimationFrame = (function () {
-                return window.cancelAnimationFrame
-                        || window.webkitCancelAnimationFrame
-                        || window.webkitCancelRequestAnimationFrame
-                        || window.mozCancelAnimationFrame
-                        || window.mozCancelRequestAnimationFrame
-                        || window.msCancelAnimationFrame
-                        || window.msCancelRequestAnimationFrame
-                        || window.oCancelAnimationFrame
-                        || window.oCancelRequestAnimationFrame
-                        || window.clearTimeout;
+            // requestAnimationFrame polyfill by Erik Möller
+            // fixes from Paul Irish and Tino Zijdel
+            (function () {
+                var lastTime = 0;
+                var vendors = ['ms', 'moz', 'webkit', 'o'];
+                for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                    window.cancelAnimationFrame =
+                      window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+                }
+
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function (callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = setTimeout(function () {
+                            callback(currTime + timeToCall);
+                        }, timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function (id) {
+                        clearTimeout(id);
+                    };
+                }
             })();
 
             function Circle(opts) {
@@ -96,7 +92,7 @@
                 this.ctx.fill();
             };
 
-            var allTicksPerFrame = 10;
+            var allTicksPerFrame = 0;
 
             function frameBasedStart() {
                 var STANDARD_FPS = 60;
@@ -105,7 +101,7 @@
                 var circle = new Circle({
                     x: 15,
                     y: 30,
-                    vx: 5,
+                    vx: 10,
                     vy: 0,
                     radius: 15,
                     ctx: document.querySelector('#frame-based-canvas').getContext('2d'),
@@ -156,7 +152,7 @@
                 var circle = new Circle({
                     x: 15,
                     y: 30,
-                    vx: 5,
+                    vx: 10,
                     vy: 0,
                     radius: 15,
                     ctx: document.querySelector('#time-based-canvas').getContext('2d'),
@@ -201,6 +197,12 @@
             document.querySelector('#time-based-start').onclick = function () {
                 timeBasedStart();
             }
+
+            document.querySelector('#all-start').onclick = function () {
+                frameBasedStart();
+                timeBasedStart();
+            }
+
         </script>
     </body>
 </html>
