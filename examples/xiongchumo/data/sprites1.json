@@ -9,5 +9,16 @@
         "tileH": 45,
         "offsetX": 0,
         "offsetY": 0
+    },
+    "jumpRun": {
+        "sX": 0,
+        "sY": 358,
+        "cols": 3,
+        "rows": 1,
+        "total": 3,
+        "tileW": 89,
+        "tileH": 113,
+        "offsetX": 0,
+        "offsetY": 0
     }
 }

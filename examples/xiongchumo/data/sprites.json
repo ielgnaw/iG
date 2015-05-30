@@ -21,7 +21,7 @@
         "offsetX": 0,
         "offsetY": 0
     },
-    "tripRun": {
+    "dangerRun": {
         "sX": 288,
         "sY": 180,
         "cols": 12,
@@ -29,6 +29,17 @@
         "total": 6,
         "tileW": 55,
         "tileH": 120,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "tripRun": {
+        "sX": 618,
+        "sY": 200,
+        "cols": 13,
+        "rows": 1,
+        "total": 1,
+        "tileW": 55,
+        "tileH": 100,
         "offsetX": 0,
         "offsetY": 0
     },
