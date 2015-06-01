@@ -10,6 +10,8 @@ window.onload = function () {
         this.y = opts.y;
         this.vx = opts.vx;
         this.vy = opts.vy;
+        this.ax = opts.ax;
+        this.ay = opts.ay;
         this.radius = opts.radius;
         this.ctx = opts.ctx;
         this.fps = opts.fps;
@@ -23,14 +25,16 @@ window.onload = function () {
         this.ctx.fill();
     };
 
-    Circle.prototype.update = function (dt) {
+    Circle.prototype.step = function (dt) {
         // this.x += this.vx * dt * this.fps / 1000;
         // this.y += this.vy * dt * this.fps / 1000;
 
-        this.vx += this.ax * dt;
-        this.vy += this.ay * dt;
-        this.x += this.vx * dt; //  * (1 * 60)/ 1000;
-        this.y += this.vy * dt; //  * 1 / 100;
+        this.vx += this.ax * dt;// * (this.fps / 1000);
+        this.vy += this.ay * dt;// * (this.fps / 1000);
+
+        // 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
+        this.x += this.vx * dt;// * (this.fps / 1000);
+        this.y += this.vy * dt;// * (this.fps / 1000);
 
         if (this.x - this.radius <= 0 || this.x + this.radius >= this.ctx.canvas.width) {
             this.vx = -this.vx;
@@ -49,7 +53,7 @@ window.onload = function () {
         y: 30,
         vx: 10,
         vy: 0,
-        ax: 1,
+        ax: 0,
         ay: 0,
         radius: 15,
         ctx: document.querySelector('#time-based-canvas').getContext('2d'),
@@ -58,14 +62,14 @@ window.onload = function () {
 
     document.querySelector('#time-based-start').onclick = function () {
         ig.loop({
-            update: function (dt) {
-                circle.update(dt);
+            step: function (dt) {
+                circle.step(dt);
             },
             render: function () {
                 circle.draw();
                 // console.warn('render');
             },
-            ticksPerFrame: 0
+            ticksPerFrame: 3
         });
     }
 }

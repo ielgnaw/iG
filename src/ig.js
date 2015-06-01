@@ -68,6 +68,13 @@ define(function (require) {
     };
 
     /**
+     * 标准 fps
+     *
+     * @type {number}
+     */
+    exports.STANDARD_FPS = 30;
+
+    /**
      * 利用 requestAnimationFrame 来循环
      *
      * @param {Object} opts 参数对象
@@ -79,31 +86,48 @@ define(function (require) {
      */
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
-            fps: 60,
-            exec: util.noop,
+            fps: exports.STANDARD_FPS,
+            step: util.noop,
+            render: util.noop,
             ticksPerFrame: 0
         }, opts);
 
         var requestId;
         var now;
-        var delta;
         var then = Date.now();
-        var interval = 1000 / conf.fps;
         var tickUpdateCount = 0;
+        var passed = 0;
+
+        // 毫秒
+        var dt = 1000 / exports.STANDARD_FPS;
+
+        var acc = 0;
 
         (function tick() {
             requestId = window.requestAnimationFrame(tick);
-            now = Date.now();
-            delta = now - then;
-            if (delta > interval) {
-                then = now - (delta % interval);
-                tickUpdateCount++;
-                if (tickUpdateCount > conf.ticksPerFrame) {
-                    tickUpdateCount = 0;
-                    conf.exec(requestId);
+
+            tickUpdateCount++;
+            if (tickUpdateCount > conf.ticksPerFrame) {
+                tickUpdateCount = 0;
+                // console.warn( dt * (exports.STANDARD_FPS / 1000));
+                now = Date.now();
+                passed = now - then;
+                then = now;
+
+                acc += passed; // 累积过去的时间
+                while (acc >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
+                    // 如果这里直接写成 conf.step(dt)，
+                    // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
+                    // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
+                    conf.step(dt * (exports.STANDARD_FPS / 1000)); // 分片更新时间
+
+                    acc -= dt;
                 }
+
+                conf.render();
             }
         })();
+
     };
 
     return exports;
