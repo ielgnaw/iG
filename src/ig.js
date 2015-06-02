@@ -72,7 +72,7 @@ define(function (require) {
      *
      * @type {number}
      */
-    exports.STANDARD_FPS = 30;
+    exports.STANDARD_FPS = 60;
 
     /**
      * 利用 requestAnimationFrame 来循环
@@ -98,7 +98,7 @@ define(function (require) {
         var tickUpdateCount = 0;
         var passed = 0;
 
-        // 毫秒
+        // 毫秒，固定的
         var dt = 1000 / exports.STANDARD_FPS;
 
         var acc = 0;
@@ -107,15 +107,15 @@ define(function (require) {
             requestId = window.requestAnimationFrame(tick);
 
             tickUpdateCount++;
+
             if (tickUpdateCount > conf.ticksPerFrame) {
                 tickUpdateCount = 0;
-                // console.warn( dt * (exports.STANDARD_FPS / 1000));
                 now = Date.now();
                 passed = now - then;
                 then = now;
 
-                acc += passed; // 累积过去的时间
-                while (acc >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
+                acc += passed; // 过去的时间的
+                while (acc >= dt) { // 时间大于固定的 dt 才能更新
                     // 如果这里直接写成 conf.step(dt)，
                     // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
                     // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离

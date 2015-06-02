@@ -67,9 +67,8 @@ window.onload = function () {
             },
             render: function () {
                 circle.draw();
-                // console.warn('render');
             },
-            ticksPerFrame: 3
+            ticksPerFrame: 0
         });
     }
 }
