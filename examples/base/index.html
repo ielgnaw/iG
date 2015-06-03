@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>animation</title>
+        <title>base</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="HandheldFriendly" content="True">
@@ -50,41 +50,19 @@
 
             canvas {
                 border: 1px solid #ddd;
-                display: block;
-                margin-bottom: 10px;
             }
 
             div {
                 margin: 10px;
-            }
-            div a {
-                color: #000;
-                display: inline-block;
-                text-decoration: none;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-                padding: 5px;
-                text-align: center;
-                font-size: 14px;
-                margin: 5px;
-            }
-            div a:hover {
-                background: #5580dd;
-                color: #fff;
             }
         </style>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
         <div>
-            <canvas></canvas>
-            <a href="#" id="simple">简单动画</a>
-            <a href="#" id="simple-repeat">简单动画（重复）</a>
-            <a href="#" id="anims">动画组</a>
-            <a href="#" id="anims-repeat">动画组（重复）</a>
-            <a href="#" id="range">范围</a>
-            <a href="#" id="range-repeat">范围（重复）</a>
-            <!-- <a href="#" data="toggle">toggle</a> -->
+            <span>timed-based:</span>
+            <canvas id="time-based-canvas"></canvas>
+            <button id="time-based-start">开始</button>
         </div>
         <script src="./index.js"></script>
     </body>

@@ -7,16 +7,10 @@
 
 define(function (require) {
 
+    var ig = require('./ig');
     var util = require('./util');
     var Event = require('./Event');
     var easing = require('./easing');
-
-    /**
-     * 默认的 fps
-     *
-     * @type {number}
-     */
-    var DEFAULT_FPS = 60;
 
     /**
      * 名字标示
@@ -55,8 +49,10 @@ define(function (require) {
             repeat: false,
             // 间隔时间，根据这个时间和 fps 计算帧数
             duration: 1000,
-            // fps
-            fps: DEFAULT_FPS
+            // 跳帧的个数，可以用来设置延迟
+            // 如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
+            // 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
+            jumpFrames: 0
         }, opts);
 
         this.setup();
@@ -77,24 +73,26 @@ define(function (require) {
         setup: function () {
             this.paused = false;
             this.repeatCount = 0;
-            this.then = Date.now();
-            this.interval = 1000 / this.fps;
             this.curFrame = 0;
             this.curState = {};
             this.initState = {};
-            this.frames = Math.ceil(this.duration * this.fps / 1000);
+            this.frames = Math.ceil(this.duration * ig.STANDARD_FPS / 1000);
 
             var source = this.source;
             var target = this.target;
             var range = this.range;
 
+            var numericSourceVal = 0;
+            var numericRangeVal = 0;
             if (range) {
                 for (var j in range) {
                     if (range.hasOwnProperty(j)) {
+                        numericSourceVal = parseFloat(source[j]);
+                        numericRangeVal = parseFloat(range[j]);
                         this.curState[j] = {
-                            from: parseFloat(parseFloat(source[j]) - parseFloat(range[j])),
-                            cur: parseFloat(source[j]),
-                            to: parseFloat(parseFloat(source[j]) + parseFloat(range[j]))
+                            from: parseFloat(numericSourceVal - numericRangeVal),
+                            cur: numericSourceVal,
+                            to: parseFloat(numericSourceVal + numericRangeVal)
                         };
                     }
                 }
@@ -148,7 +146,14 @@ define(function (require) {
                 this.stop();
             }
             this.paused = false;
-            this.step();
+            // this.step();
+            var me = this;
+            ig.loop({
+                step: function (dt, requestID) {
+                    me.step.call(me, dt, requestID);
+                },
+                jumpFrames: me.jumpFrames
+            });
             return this;
         },
 
@@ -209,7 +214,14 @@ define(function (require) {
             this.stop();
             this.curFrame++;
             this.curFrame = this.curFrame > this.frames ? this.frames : this.curFrame;
-            this.step.call(this);
+            // this.step.call(this);
+            var me = this;
+            ig.loop({
+                step: function (dt, requestID) {
+                    me.step.call(me, dt, requestID);
+                },
+                jumpFrames: me.jumpFrames
+            });
             return this;
         },
 
@@ -222,7 +234,14 @@ define(function (require) {
             this.stop();
             this.curFrame--;
             this.curFrame = this.curFrame < 0 ? 0 : this.curFrame;
-            this.step.call(this);
+            // this.step.call(this);
+            var me = this;
+            ig.loop({
+                step: function (dt, requestID) {
+                    me.step.call(me, dt, requestID);
+                },
+                jumpFrames: me.jumpFrames
+            });
             return this;
         },
 
@@ -250,7 +269,14 @@ define(function (require) {
         gotoAndStop: function (frame) {
             this.stop();
             this.curFrame = frame;
-            this.step.call(this);
+            // // this.step.call(this);
+            // var me = this;
+            // ig.loop({
+            //     step: function (dt, requestID) {
+            //         me.step.call(me, dt, requestID);
+            //     },
+            //     jumpFrames: me.jumpFrames
+            // });
             return this;
         },
 
@@ -310,49 +336,27 @@ define(function (require) {
          * 每一帧执行
          */
         /* eslint-disable fecs-max-statements */
-        step: function () {
+        step: function (dt, requestID) {
             var me = this;
-
-            me.requestID = window.requestAnimationFrame(
-                (function (context) {
-                    return function () {
-                        me.step.call(me);
-                    };
-                })(me)
-            );
-
-            if (me.paused) {
-                return;
-            }
-
-            me.now = Date.now();
-            me.delta = me.now - me.then;
-
-            if (me.delta <= me.interval) {
-                return;
-            }
-
+            me.requestID = requestID;
             me.fire('step', {
                 data: {
                     source: me.source,
-                    instance: me
+                    animInstance: me
                 }
             });
-            me.then = me.now - (me.delta % me.interval);
+
             var ds;
             for (var i in me.curState) {
                 if (me.curState.hasOwnProperty(i)) {
                     ds = me.tween(
                         me.curFrame,
-                        // me.curState[i].from,
-                        // me.curState[i].to - me.curState[i].from,
                         me.curState[i].cur,
                         me.curState[i].to - me.curState[i].cur,
                         me.frames
                     ).toFixed(2);
                     me.source[i] = parseFloat(ds);
                 }
-                // console.warn(me.source[i]);
             }
             me.curFrame++;
 
@@ -380,7 +384,7 @@ define(function (require) {
                         me.fire('repeat', {
                             data: {
                                 source: me.source,
-                                instance: me,
+                                animInstance: me,
                                 repeatCount: me.repeatCount / 2
                             }
                         });
@@ -393,7 +397,7 @@ define(function (require) {
                     me.fire('groupComplete', {
                         data: {
                             source: me.source,
-                            instance: me
+                            animInstance: me
                         }
                     });
                     // 说明动画组还没有执行完
@@ -421,7 +425,7 @@ define(function (require) {
                             me.fire('repeat', {
                                 data: {
                                     source: me.source,
-                                    instance: me,
+                                    animInstance: me,
                                     repeatCount: me.repeatCount
                                 }
                             });
@@ -432,7 +436,7 @@ define(function (require) {
                             me.fire('complete', {
                                 data: {
                                     source: me.source,
-                                    instance: me
+                                    animInstance: me
                                 }
                             });
                         }
@@ -446,7 +450,7 @@ define(function (require) {
                         me.fire('repeat', {
                             data: {
                                 source: me.source,
-                                instance: me,
+                                animInstance: me,
                                 repeatCount: me.repeatCount
                             }
                         });
@@ -457,7 +461,7 @@ define(function (require) {
                         me.fire('complete', {
                             data: {
                                 source: me.source,
-                                instance: me
+                                animInstance: me
                             }
                         });
                     }

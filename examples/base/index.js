@@ -62,13 +62,13 @@ window.onload = function () {
 
     document.querySelector('#time-based-start').onclick = function () {
         ig.loop({
-            step: function (dt) {
+            step: function (dt, requestID) {
                 circle.step(dt);
             },
-            render: function () {
+            exec: function () {
                 circle.draw();
             },
-            ticksPerFrame: 0
+            jumpFrames: 0
         });
     }
 }

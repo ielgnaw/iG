@@ -1,152 +1,200 @@
-
 'use strict';
 
 /* global ig */
+
 window.onload = function () {
-    var Animation = ig.Animation;
-    var easing = ig.easing;
-    var util = ig.util;
-    var div = document.querySelector('#target');
-    var width = div.style.width;
-    var left = div.style.left;
-    var height = div.style.height;
-    var opacity = div.style.opacity;
+    function Circle(opts) {
+        this.x = opts.x;
+        this.y = opts.y;
+        this.vx = opts.vx;
+        this.vy = opts.vy;
+        this.ax = opts.ax;
+        this.ay = opts.ay;
+        this.radius = opts.radius;
+        this.ctx = opts.ctx;
+    }
+
+    Circle.prototype.draw = function () {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        this.ctx.beginPath();
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+        this.ctx.fill();
+    };
+
+    Circle.prototype.step = function (dt) {
+        this.vx += this.ax * dt;
+        this.vy += this.ay * dt;
+
+        // 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        if (this.x - this.radius <= 0 || this.x + this.radius >= this.ctx.canvas.width) {
+            this.vx = -this.vx;
+        }
+        if (this.y - this.radius <= 0 || this.y + this.radius >= this.ctx.canvas.height) {
+            this.vy = -this.vy;
+        }
+    }
+
+    var canvas = document.querySelector('canvas');
+    var ctx = canvas.getContext('2d');
+    var canvasWidth = canvas.width;
+    var canvasHeight = canvas.height;
+
+    var circle;
+    resetCircle();
+
+    function resetCircle() {
+        circle = null;
+        circle = new Circle({
+            x: 100,
+            y: 30,
+            vx: 10,
+            vy: 0,
+            ax: 0,
+            ay: 0,
+            radius: 15,
+            ctx: ctx
+        });
+        circle.draw();
+    }
 
     var anim;
-
-    document.querySelector('.control').onclick = function (e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var target = e.target || e.srcElement;
-
-        var opts = {
-            fps: 60,
-            duration: 1000,
-            source: {
-                width: width,
-                left: left,
-                height: height,
-                opacity: opacity
-            }
-        };
-
-        var isStop = true;
-
-        if (target.tagName.toLowerCase() === 'a') {
-            var type = target.getAttribute('data');
-
-            if (type !== 'toggle') {
-                switch (type) {
-                    case 'simple':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            target: {
-                                left: 300,
-                                width: 150,
-                                height: 200,
-                                opacity: 0.3
-                            }
-                        });
-                        break;
-                    case 'simpleRepeat':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            repeat: 1,
-                            target: {
-                                left: 300,
-                                width: 150,
-                                height: 200,
-                                opacity: 0.3
-                            }
-                        });
-                        break;
-                    case 'anims':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            target: [
-                                {
-                                    left: 300,
-                                    width: 150,
-                                },
-                                {
-                                    height: 200,
-                                    opacity: 0.3
-                                }
-                            ]
-                        });
-                        break;
-                    case 'animsRepeat':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            repeat: 1,
-                            target: [
-                                {
-                                    left: 300,
-                                    width: 150,
-                                },
-                                {
-                                    height: 200,
-                                    opacity: 0.3
-                                }
-                            ]
-                        });
-                        break;
-                    case 'range':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            range: {
-                                left: 100,
-                                width: 40
-                            }
-                        });
-                        break;
-                    case 'rangeRepeat':
-                        if (anim) {
-                            anim.destroy();
-                        }
-                        util.extend(opts, {
-                            repeat: 1,
-                            range: {
-                                left: 100,
-                                width: 40
-                            }
-                        });
-                        break;
-                    default:
-                }
-
-                anim = new Animation(opts).play().on('step', function (d) {
-                    div.style.left = d.data.source.left + 'px';
-                    div.style.width = d.data.source.width + 'px';
-                    div.style.height = d.data.source.height + 'px';
-                    div.style.opacity = d.data.source.opacity;
-                }).on('repeat', function (d) {
-                    console.warn('repeat');
-                }).on('groupComplete', function (d) {
-                    console.warn('groupComplete');
-                }).on('complete', function (d) {
-                    console.warn('all complete');
-                });
-            }
-            else {
-                if (anim) {
-                    anim.togglePause();
-                    // anim.pause();
-                    // setTimeout(function () {
-                    //     anim.resume();
-                    // }, 4000);
-                }
-            }
+    document.querySelector('#simple').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
         }
-    };
+        anim = new ig.Animation({
+            source: circle,
+            target: {
+                x: 200
+            }
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('complete', function (d) {
+            console.warn('all complete');
+        });
+    }
+    document.querySelector('#simple-repeat').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
+        }
+        anim = new ig.Animation({
+            source: circle,
+            repeat: 1,
+            target: {
+                x: 200
+            },
+            jumpFrames: 0
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('repeat', function (e) {
+        });
+
+        // ig.loop({
+        //     step: function (dt, requestID) {
+        //         // console.error(requestID);
+        //     },
+        //     render: function () {
+        //     },
+        //     jumpFrames: 0
+        // });
+
+        // setTimeout(function () {
+        //     console.warn('stop');
+        //     anim.stop();
+        // }, 3000);
+    }
+    document.querySelector('#anims').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
+        }
+        anim = new ig.Animation({
+            source: circle,
+            target: [
+                {
+                    x: 200
+                },
+                {
+                    y: 100
+                }
+            ]
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('groupComplete', function (e) {
+        }).on('complete', function (e) {
+            console.warn('all complete');
+        });
+    }
+    document.querySelector('#anims-repeat').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
+        }
+        anim = new ig.Animation({
+            source: circle,
+            repeat: 1,
+            target: [
+                {
+                    x: 200
+                },
+                {
+                    y: 100
+                }
+            ]
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('groupComplete', function (e) {
+        }).on('repeat', function (e) {
+        });
+    }
+    document.querySelector('#range').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
+        }
+        anim = new ig.Animation({
+            source: circle,
+            range: {
+                x: 30,
+                y: 10
+            }
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('repeat', function (e) {
+        });
+    }
+    document.querySelector('#range-repeat').onclick = function () {
+        resetCircle();
+        if (anim) {
+            anim.destroy();
+        }
+        anim = new ig.Animation({
+            source: circle,
+            repeat: 1,
+            range: {
+                x: 30,
+                y: 10
+            }
+        });
+        anim.play().on('step', function (e) {
+            circle.x = e.data.source.x;
+            circle.draw();
+        }).on('repeat', function (e) {
+        });
+    }
 };

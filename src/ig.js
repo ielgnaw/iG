@@ -78,53 +78,53 @@ define(function (require) {
      * 利用 requestAnimationFrame 来循环
      *
      * @param {Object} opts 参数对象
-     * @param {number} opts.fps fps
+     * @param {Function} opts.step 每帧中切分出来的每个时间片里执行的函数
      * @param {Function} opts.exec 每帧执行的函数
-     * @param {number} opts.ticksPerFrame 控制执行的速度
-     *                                    如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
-     *                                    如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
+     * @param {number} opts.jumpFrames 跳帧的个数，可以用来设置延迟
+     *                                 如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
+     *                                 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
      */
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
-            fps: exports.STANDARD_FPS,
             step: util.noop,
-            render: util.noop,
-            ticksPerFrame: 0
+            exec: util.noop,
+            jumpFrames: 0
         }, opts);
 
-        var requestId;
+        var requestID;
         var now;
         var then = Date.now();
-        var tickUpdateCount = 0;
+        var frameUpdateCount = 0;
         var passed = 0;
 
-        // 毫秒，固定的
+        // 毫秒，固定的时间片
         var dt = 1000 / exports.STANDARD_FPS;
 
         var acc = 0;
 
         (function tick() {
-            requestId = window.requestAnimationFrame(tick);
+            requestID = window.requestAnimationFrame(tick);
 
-            tickUpdateCount++;
+            frameUpdateCount++;
 
-            if (tickUpdateCount > conf.ticksPerFrame) {
-                tickUpdateCount = 0;
+            if (frameUpdateCount > conf.jumpFrames) {
+                frameUpdateCount = 0;
+
                 now = Date.now();
                 passed = now - then;
                 then = now;
 
-                acc += passed; // 过去的时间的
+                acc += passed; // 过去的时间的累积
                 while (acc >= dt) { // 时间大于固定的 dt 才能更新
                     // 如果这里直接写成 conf.step(dt)，
                     // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
                     // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
-                    conf.step(dt * (exports.STANDARD_FPS / 1000)); // 分片更新时间
+                    conf.step(dt * (exports.STANDARD_FPS / 1000), requestID); // 分片更新时间
 
                     acc -= dt;
                 }
 
-                conf.render();
+                conf.exec();
             }
         })();
 
