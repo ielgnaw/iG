@@ -97,7 +97,7 @@
             function frameBasedStart() {
                 var STANDARD_FPS = 60;
                 var interval = 1 / STANDARD_FPS;
-                var fps = 60;
+                var fps = 30;
                 var circle = new Circle({
                     x: 15,
                     y: 30,
@@ -148,7 +148,7 @@
             function timeBasedStart() {
                 var STANDARD_FPS = 60;
                 var interval = 1 / STANDARD_FPS;
-                var fps = 60;
+                var fps = 30;
                 var circle = new Circle({
                     x: 15,
                     y: 30,
@@ -170,7 +170,6 @@
 
                 (function tick() {
                     requestId = window.requestAnimationFrame(tick);
-
                     tickUpdateCount++;
                     if (tickUpdateCount > ticksPerFrame) {
                         tickUpdateCount = 0;

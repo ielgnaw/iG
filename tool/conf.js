@@ -10,6 +10,7 @@ exports.modules = {
 
         {name: 'ig/Event'},
         {name: 'ig/Vector', refName: 'Vector'},
+        {name: 'ig/Matrix', refName: 'Matrix'},
         {name: 'ig/Animation', refName: 'Animation'}
 
 
