@@ -130,7 +130,8 @@ define('ig', ['ig/ig'], function (main) {return main;});
 'use strict';
 define('ig/ig', [
     'require',
-    './util'
+    './util',
+    './config'
 ], function (require) {
     (function () {
         var lastTime = 0;
@@ -162,15 +163,22 @@ define('ig/ig', [
         }
     }());
     var util = require('./util');
+    var config = require('./config');
     var exports = {};
-    exports.STATUS = {
+    exports.setConfig = config.setConfig;
+    exports.getConfig = config.getConfig;
+    exports.setConfig('status', {
         NORMAL: 1,
         NOT_RENDER: 2,
         NOT_UPDATE: 3,
         NOT_RU: 4,
         DESTROYED: 5
-    };
-    exports.STANDARD_FPS = 60;
+    });
+    exports.setConfig('width', 320);
+    exports.setConfig('height', 480);
+    exports.setConfig('maxWidth', 5000);
+    exports.setConfig('maxHeight', 5000);
+    exports.setConfig('fps', 60);
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
@@ -1023,6 +1031,22 @@ define('ig/dep/howler', ['require'], function (require) {
         Howler: Howler,
         Howl: Howl
     };
+});define('ig/config', ['require'], function (require) {
+    var config = {};
+    var exports = {};
+    exports.setConfig = function (key, value) {
+        if (key) {
+            config[key] = value;
+        }
+        return config;
+    };
+    exports.getConfig = function (key) {
+        if (!key) {
+            return config;
+        }
+        return config[key];
+    };
+    return exports;
 });'use strict';
 define('ig/util', ['require'], function (require) {
     var DEG2RAD_OPERAND = Math.PI / 180;
@@ -1114,6 +1138,80 @@ define('ig/util', ['require'], function (require) {
         subClass.prototype.constructor = subClass;
         subClass.superClass = superClass.prototype;
         return subClass;
+    };
+    exports.throttle = function (func, wait, options) {
+        var context;
+        var args;
+        var result;
+        var timeout = null;
+        var previous = 0;
+        if (!options) {
+            options = {};
+        }
+        var later = function () {
+            previous = options.leading === false ? 0 : Date.now();
+            timeout = null;
+            result = func.apply(context, args);
+            if (!timeout) {
+                context = args = null;
+            }
+        };
+        return function () {
+            var now = Date.now();
+            if (!previous && options.leading === false) {
+                previous = now;
+            }
+            var remaining = wait - (now - previous);
+            context = this;
+            args = arguments;
+            if (remaining <= 0 || remaining > wait) {
+                clearTimeout(timeout);
+                timeout = null;
+                previous = now;
+                result = func.apply(context, args);
+                if (!timeout) {
+                    context = args = null;
+                }
+            } else if (!timeout && options.trailing !== false) {
+                timeout = setTimeout(later, remaining);
+            }
+            return result;
+        };
+    };
+    exports.debounce = function (func, wait, immediate) {
+        var timeout;
+        var args;
+        var context;
+        var timestamp;
+        var result;
+        var later = function () {
+            var last = Date.now() - timestamp;
+            if (last < wait && last >= 0) {
+                timeout = setTimeout(later, wait - last);
+            } else {
+                timeout = null;
+                if (!immediate) {
+                    result = func.apply(context, args);
+                    if (!timeout) {
+                        context = args = null;
+                    }
+                }
+            }
+        };
+        return function () {
+            context = this;
+            args = arguments;
+            timestamp = Date.now();
+            var callNow = immediate && !timeout;
+            if (!timeout) {
+                timeout = setTimeout(later, wait);
+            }
+            if (callNow) {
+                result = func.apply(context, args);
+                context = args = null;
+            }
+            return result;
+        };
     };
     exports.deg2Rad = function (deg) {
         return deg * DEG2RAD_OPERAND;
@@ -1559,7 +1657,7 @@ define('ig/env', [
     var exports = {
         browser: env.browser,
         os: env.os,
-        supportOrientation: typeof window.orientation == 'number' && typeof window.onorientationchange == 'object',
+        supportOrientation: typeof window.orientation === 'number' && typeof window.onorientationchange === 'object',
         supportTouch: 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch,
         supportGeolocation: navigator.geolocation != null,
         isAndroid: env.os.android,
@@ -2147,11 +2245,504 @@ define('ig/Animation', [
     };
     util.inherits(Animation, Event);
     return Animation;
+});'use strict';
+define('ig/DisplayObject', [
+    'require',
+    './ig',
+    './Event',
+    './util',
+    './Animation',
+    './Matrix'
+], function (require) {
+    var ig = require('./ig');
+    var Event = require('./Event');
+    var util = require('./util');
+    var Animation = require('./Animation');
+    var Matrix = require('./Matrix');
+    var STATUS = ig.STATUS;
+    var GUID_KEY = 0;
+    function DisplayObject(opts) {
+        util.extend(true, this, {
+            name: 'ig_displayobject_' + GUID_KEY++,
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+            cx: 0,
+            cy: 0,
+            radius: 0,
+            xScale: 1,
+            yScale: 1,
+            angle: 0,
+            alpha: 1,
+            zIndex: 0,
+            fillStyle: 'transparent',
+            strokeStyle: 'transparent',
+            image: null,
+            vx: 0,
+            vy: 0,
+            ax: 0,
+            ay: 0,
+            xFriction: 1,
+            yFriction: 1,
+            children: [],
+            status: STATUS.NORMAL,
+            mouseEnable: true,
+            captureFunc: util.noop,
+            moveFunc: util.noop,
+            releaseFunc: util.noop,
+            debug: false
+        }, opts);
+        this.matrix = new Matrix();
+        this.setPosX(this.x);
+        this.setPosY(this.y);
+        return this;
+    }
+    DisplayObject.prototype = {
+        constructor: DisplayObject,
+        changeStatus: function (status) {
+            this.status = status || this.status;
+            return this;
+        },
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
+        setPosX: function (x) {
+            this.x = x || 0;
+            return this;
+        },
+        setPosY: function (y) {
+            this.y = y || 0;
+            return this;
+        },
+        setAccelerationX: function (ax) {
+            this.ax = ax || this.ax;
+            return this;
+        },
+        setAccelerationY: function (ay) {
+            this.ay = ay || this.ay;
+            return this;
+        },
+        setFrictionX: function (xFriction) {
+            this.xFriction = xFriction || this.xFriction;
+            return this;
+        },
+        setFrictionY: function (yFriction) {
+            this.yFriction = yFriction || this.yFriction;
+            return this;
+        },
+        rotate: function (angle) {
+            var offCtx = this.stageOwner.offCtx;
+            offCtx.save();
+            offCtx.rotate(util.deg2Rad(angle || this.angle));
+            offCtx.restore();
+            return this;
+        },
+        setAnimate: function (opts) {
+            var me = this;
+            var animOpts = util.extend(true, {}, { source: me }, opts);
+            var stepFunc = util.getType(animOpts.stepFunc) === 'function' ? animOpts.stepFunc : util.noop;
+            var repeatFunc = util.getType(animOpts.repeatFunc) === 'function' ? animOpts.repeatFunc : util.noop;
+            var groupCompleteFunc = util.getType(animOpts.groupCompleteFunc) === 'function' ? animOpts.groupCompleteFunc : util.noop;
+            var completeFunc = util.getType(animOpts.completeFunc) === 'function' ? animOpts.completeFunc : util.noop;
+            this.animate = new Animation(animOpts).play().on('step', function (d) {
+                stepFunc(d);
+            }).on('repeat', function (d) {
+                repeatFunc(d);
+            }).on('groupComplete', function (d) {
+                groupCompleteFunc(d);
+            }).on('complete', function (d) {
+                completeFunc(d);
+            });
+            return this;
+        },
+        stopAnimate: function () {
+            this.animate && this.animate.stop();
+            return this;
+        },
+        destroyAnimate: function () {
+            this.animate && this.animate.destroy();
+            return this;
+        },
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
+            return this;
+        },
+        moveStep: function () {
+            this.vx += this.ax;
+            this.vx *= this.xFriction;
+            this.x += this.vx;
+            this.vy += this.ay;
+            this.vy *= this.yFriction;
+            this.y += this.vy;
+            return this;
+        },
+        _update: function () {
+            return this;
+        },
+        update: function () {
+            return this;
+        },
+        render: function (offCtx) {
+            return this;
+        },
+        hitTestPoint: function (x, y) {
+            return false;
+        },
+        destroy: function () {
+            this.status = STATUS.DESTROYED;
+        }
+    };
+    util.inherits(DisplayObject, Event);
+    return DisplayObject;
+});define('ig/resourceLoader', [
+    'require',
+    './ig',
+    './util',
+    './dep/howler'
+], function (require) {
+    var ig = require('./ig');
+    var util = require('./util');
+    var Howl = require('./dep/howler').Howl;
+    var defaultResourceTypes = {
+        png: 'Image',
+        jpg: 'Image',
+        gif: 'Image',
+        jpeg: 'Image',
+        ogg: 'Audio',
+        wav: 'Audio',
+        m4a: 'Audio',
+        mp3: 'Audio'
+    };
+    function getFileExt(fileName) {
+        var segments = fileName.split('.');
+        return segments[segments.length - 1].toLowerCase();
+    }
+    var exports = {};
+    ig.resources = exports.resources = {};
+    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var fileExt = getFileExt(_src);
+        var req = new XMLHttpRequest();
+        req.onreadystatechange = function () {
+            if (req.readyState === 4) {
+                if (req.status === 200) {
+                    if (fileExt === 'json') {
+                        _callback(_id, JSON.parse(req.responseText));
+                    } else {
+                        _callback(_id, req.responseText);
+                    }
+                } else {
+                    _errorCallback(_src);
+                }
+            }
+        };
+        req.open('GET', _src, true);
+        req.send(null);
+    };
+    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
+        var _id;
+        var _src;
+        var _callback;
+        var _errorCallback;
+        var argLength = arguments.length;
+        switch (argLength) {
+        case 1:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = util.noop;
+            break;
+        case 2:
+            _id = _src = arguments[0];
+            _callback = _errorCallback = arguments[1];
+            break;
+        case 3:
+            _id = _src = arguments[0];
+            _callback = arguments[1];
+            _errorCallback = arguments[2];
+            break;
+        default:
+            _id = arguments[0];
+            _src = arguments[1];
+            _callback = arguments[2];
+            _errorCallback = arguments[3];
+        }
+        var img = new Image();
+        img.addEventListener('load', function (e) {
+            _callback(_id, img);
+        });
+        img.addEventListener('error', function (e) {
+            _errorCallback(_src);
+        });
+        img.src = _src;
+    };
+    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
+        var me = this;
+        opts = opts || {};
+        if (!Array.isArray(resource)) {
+            resource = [resource];
+        }
+        var loadError = false;
+        var errorCallback = function (item) {
+            loadError = true;
+            (opts.errorCallback || function (errItem) {
+                alert('Loading Error: ' + errItem);
+                throw new Error('Loading Error: ' + errItem);
+            }).call(me, item);
+        };
+        var processCallback = opts.processCallback || util.noop;
+        var totalCount = resource.length;
+        var remainingCount = totalCount;
+        var loadOneCallback = function (id, obj) {
+            if (loadError) {
+                return;
+            }
+            if (!ig.resources[id]) {
+                ig.resources[id] = obj;
+            }
+            remainingCount--;
+            processCallback(totalCount - remainingCount, totalCount);
+            if (remainingCount === 0 && callback) {
+                callback.call(me, ig.resources);
+            }
+        };
+        var customResourceTypes = opts.customResourceTypes || {};
+        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+        for (var i = 0; i < totalCount; i++) {
+            var curResource = resource[i];
+            var resourceId;
+            var resourceSrc;
+            if (util.getType(curResource) === 'object') {
+                resourceId = curResource.id;
+                resourceSrc = curResource.src;
+            } else {
+                resourceId = resourceSrc = curResource;
+            }
+            if (!ig.resources.hasOwnProperty(resourceId)) {
+                if (util.getType(resourceSrc) === 'array') {
+                    (function (rId, r) {
+                        var howlOpts = {
+                            urls: resourceSrc,
+                            onload: function () {
+                                loadOneCallback(rId, this);
+                            },
+                            onloaderror: function () {
+                                errorCallback(this._src);
+                            }
+                        };
+                        new Howl(util.extend(true, {}, howlOpts, r.opts || {}));
+                    }(resourceId, curResource));
+                } else {
+                    var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                    if (!invokeMethod) {
+                        invokeMethod = me.loadOther;
+                    }
+                    invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
+                }
+            } else {
+                loadOneCallback(resourceId, ig.resources[resourceId]);
+            }
+        }
+    };
+    return exports;
+});'use strict';
+define('ig/Game', [
+    'require',
+    './ig',
+    './Event',
+    './util',
+    './env',
+    './resourceLoader'
+], function (require) {
+    var ig = require('./ig');
+    var Event = require('./Event');
+    var util = require('./util');
+    var env = require('./env');
+    var resourceLoader = require('./resourceLoader');
+    var CONFIG = ig.getConfig();
+    var GUID_KEY = 0;
+    function Game(opts) {
+        util.extend(true, this, {
+            name: 'ig_game_' + GUID_KEY++,
+            canvas: null,
+            maximize: false,
+            scaleFit: true,
+            fps: CONFIG.fps,
+            width: CONFIG.width,
+            height: CONFIG.height,
+            maxWidth: CONFIG.maxWidth,
+            maxHeight: CONFIG.maxHeight,
+            horizontalPageScroll: null
+        }, opts);
+        if (!this.canvas) {
+            throw new Error('Game initialize must be require a canvas param');
+        }
+        this.paused = false;
+        this.stageStack = [];
+        this.stages = {};
+        this._ = {};
+        this.resources = resourceLoader.resources;
+        initGame.call(this);
+        console.warn(this);
+        return this;
+    }
+    function initGame() {
+        this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        var width = parseInt(this.canvas.width, 10);
+        var height = parseInt(this.canvas.height, 10);
+        var maxWidth = this.maxWidth;
+        var maxHeight = this.maxHeight;
+        if (this.maximize) {
+            document.body.style.padding = 0;
+            document.body.style.margin = 0;
+            var horizontalPageScroll;
+            var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
+            if (horizontalPageScrollType === 'number') {
+                horizontalPageScroll = this.horizontalPageScroll;
+            } else if (horizontalPageScrollType === 'boolean') {
+                horizontalPageScroll = 17;
+            } else {
+                horizontalPageScroll = 0;
+            }
+            width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
+            height = Math.min(window.innerHeight - 5, maxHeight);
+        }
+        if (env.supportTouch) {
+            this.canvas.style.height = height * 2 + 'px';
+            window.scrollTo(0, 1);
+            width = Math.min(window.innerWidth, maxWidth);
+            height = Math.min(window.innerHeight, maxHeight);
+        }
+        this.ctx = this.canvas.getContext('2d');
+        this.cssWidth = this.canvas.style.height = height + 'px';
+        this.cssHeight = this.canvas.style.width = width + 'px';
+        this.width = this.canvas.width = width;
+        this.height = this.canvas.height = height;
+        this.canvas.style.position = 'relative';
+        setOffCanvas.call(this);
+        var canvasParent = this.canvas.parentNode;
+        canvasParent.style.width = width + 'px';
+        canvasParent.style.margin = '0 auto';
+        canvasParent.style.position = 'relative';
+        var getRatio = function () {
+            if (this.scaleFit) {
+                fitScreen.call(this);
+            }
+            this.xRatio = this.width / CONFIG.width;
+            this.yRatio = this.height / CONFIG.height;
+            this.cssXRatio = this.width / parseInt(this.cssWidth, 10);
+            this.cssYRatio = this.height / parseInt(this.cssHeight, 10);
+            console.warn(this);
+        };
+        getRatio.call(this);
+        var me = this;
+        window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
+            setTimeout(function () {
+                window.scrollTo(0, 1);
+                getRatio.call(me);
+            }, 0);
+        }, false);
+        return this;
+    }
+    function setOffCanvas() {
+        if (!this.offCanvas) {
+            this.offCanvas = document.createElement('canvas');
+            this.offCtx = this.offCanvas.getContext('2d');
+        }
+        this.offCanvas.width = this.canvas.width;
+        this.offCanvas.style.width = this.canvas.style.width;
+        this.offCanvas.height = this.canvas.height;
+        this.offCanvas.style.height = this.canvas.style.height;
+    }
+    function fitScreen() {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var winRatio = winWidth / winHeight;
+        var gameRatio = this.canvas.width / this.canvas.height;
+        var scaleRatio = gameRatio < winRatio ? winHeight / this.canvas.height : winWidth / this.canvas.width;
+        var scaleWidth = this.canvas.width * scaleRatio;
+        var scaleHeight = this.canvas.height * scaleRatio;
+        this.canvas.style.width = scaleWidth + 'px';
+        this.canvas.style.height = scaleHeight + 'px';
+        if (this.canvas.parentNode) {
+            this.canvas.parentNode.style.width = scaleWidth + 'px';
+            this.canvas.parentNode.style.height = scaleHeight + 'px';
+        }
+        if (gameRatio >= winRatio) {
+            var topPos = (winHeight - scaleHeight) / 2;
+            this.canvas.style.top = topPos + 'px';
+        }
+        this.width = this.canvas.width;
+        this.cssWidth = this.canvas.style.width;
+        this.height = this.canvas.height;
+        this.cssHeight = this.canvas.style.height;
+        this.scaleRatio = scaleRatio;
+        setOffCanvas.call(this);
+    }
+    util.inherits(Game, Event);
+    return Game;
 });
 var ig = require('ig');
 
 
 var modName = 'ig/dep/howler';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/config';
 var refName = '';
 var folderName = '';
 
@@ -2307,6 +2898,72 @@ else {
 
 var modName = 'ig/Animation';
 var refName = 'Animation';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/DisplayObject';
+var refName = 'DisplayObject';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/resourceLoader';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Game';
+var refName = 'Game';
 var folderName = '';
 
 var tmp;
