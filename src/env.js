@@ -225,7 +225,9 @@ define(function (require) {
                 ig.audioContext = new window.AudioContext();
             }
             else {
+                /* eslint-disable new-cap */
                 ig.audioContext = new window.webkitAudioContext();
+                /* eslint-enable new-cap */
             }
         }
 
@@ -272,7 +274,7 @@ define(function (require) {
     var exports = {
         browser: env.browser,
         os: env.os,
-        supportOrientation: (typeof window.orientation == 'number' && typeof window.onorientationchange == 'object'),
+        supportOrientation: (typeof window.orientation === 'number' && typeof window.onorientationchange === 'object'),
         supportTouch: ('ontouchstart' in window) || window.DocumentTouch && document instanceof window.DocumentTouch,
         supportGeolocation: (navigator.geolocation != null),
         isAndroid: env.os.android,

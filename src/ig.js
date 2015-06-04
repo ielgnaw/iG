@@ -15,10 +15,10 @@ define(function (require) {
     (function () {
         var lastTime = 0;
         var vendors = ['ms', 'moz', 'webkit', 'o'];
-        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
             window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-            window.cancelAnimationFrame =
-              window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+            window.cancelAnimationFrame
+                = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
         }
 
         if (!window.requestAnimationFrame) {
@@ -41,8 +41,13 @@ define(function (require) {
     })();
 
     var util = require('./util');
+    var config = require('./config');
 
     var exports = {};
+
+    exports.setConfig = config.setConfig;
+
+    exports.getConfig = config.getConfig;
 
     /**
      * displayObject 的各种状态
@@ -54,7 +59,7 @@ define(function (require) {
      *
      * @type {Object}
      */
-    exports.STATUS = {
+    exports.setConfig('status', {
         // 可见，每帧需要更新，各种状态都正常
         NORMAL: 1,
         // 不可见，每帧需要更新，各种状态都正常
@@ -65,14 +70,42 @@ define(function (require) {
         NOT_RU: 4,
         // 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
         DESTROYED: 5
-    };
+    });
+
+    /**
+     * 游戏窗口宽度的默认值
+     *
+     * @type {number}
+     */
+    exports.setConfig('width', 320);
+
+    /**
+     * 游戏窗口高度的默认值
+     *
+     * @type {number}
+     */
+    exports.setConfig('height', 480);
+
+    /**
+     * 游戏窗口最大宽度的默认值
+     *
+     * @type {number}
+     */
+    exports.setConfig('maxWidth', 5000);
+
+    /**
+     * 游戏窗口最大高度的默认值
+     *
+     * @type {number}
+     */
+    exports.setConfig('maxHeight', 5000);
 
     /**
      * 标准 fps
      *
      * @type {number}
      */
-    exports.STANDARD_FPS = 60;
+    exports.setConfig('fps', 60);
 
     /**
      * 利用 requestAnimationFrame 来循环
@@ -120,7 +153,6 @@ define(function (require) {
                     // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
                     // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
                     conf.step(dt * (exports.STANDARD_FPS / 1000), requestID); // 分片更新时间
-
                     acc -= dt;
                 }
 

@@ -4,6 +4,8 @@ exports.modules = {
     parts: [
         {name: 'ig/dep/howler'},
 
+        {name: 'ig/config'},
+
         {name: 'ig/util', refName: 'util'},
         {name: 'ig/easing', refName: 'easing'},
         {name: 'ig/env', refName: 'env'},
@@ -11,7 +13,10 @@ exports.modules = {
         {name: 'ig/Event'},
         {name: 'ig/Vector', refName: 'Vector'},
         {name: 'ig/Matrix', refName: 'Matrix'},
-        {name: 'ig/Animation', refName: 'Animation'}
+        {name: 'ig/Animation', refName: 'Animation'},
+        {name: 'ig/DisplayObject', refName: 'DisplayObject'},
+        {name: 'ig/resourceLoader'},
+        {name: 'ig/Game', refName: 'Game'}
 
 
         // refName 指要挂载到 window.ig 这个全局空间上的名字
