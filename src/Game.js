@@ -79,9 +79,7 @@ define(function (require) {
         // 私有属性
         this._ = {};
 
-        // this.resource 同时指向 resourceLoader.resource 以及 ig.resource
-        // this.resource = resourceLoader.resource;
-
+        // 当前 Game 实例的 resourceLoader
         this.resourceLoader = new ResourceLoader();
 
         initGame.call(this);
@@ -139,7 +137,7 @@ define(function (require) {
     };
 
     /**
-     * 当前 game 实例的资源的预加载
+     * 当前 Game 实例的资源的预加载
      */
     function preLoadResource() {
         var me = this;
