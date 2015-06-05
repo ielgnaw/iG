@@ -53,41 +53,14 @@ define(function (require) {
          * @param {Function} errorCallback 加载失败回调
          */
         loadImage: function (id, src, callback, errorCallback) {
-            var _id;
-            var _src;
-            var _callback;
-            var _errorCallback;
-
-            var argLength = arguments.length;
-            switch (argLength) {
-                case 1:
-                    _id = _src = arguments[0];
-                    _callback = _errorCallback = util.noop;
-                    break;
-                case 2:
-                    _id = _src = arguments[0];
-                    _callback = _errorCallback = arguments[1];
-                    break;
-                case 3:
-                    _id = _src = arguments[0];
-                    _callback = arguments[1];
-                    _errorCallback = arguments[2];
-                    break;
-                default:
-                    _id = arguments[0];
-                    _src = arguments[1];
-                    _callback = arguments[2];
-                    _errorCallback = arguments[3];
-            }
-
             var img = new Image();
             img.addEventListener('load', function (e) {
-                _callback(_id, img);
+                callback(id, img);
             });
             img.addEventListener('error', function (e) {
-                _errorCallback(_src);
+                errorCallback(src);
             });
-            img.src = _src;
+            img.src = src;
         },
 
         /**
@@ -99,53 +72,26 @@ define(function (require) {
          * @param {Function} errorCallback 加载失败回调
          */
         loadOther: function (id, src, callback, errorCallback) {
-            var _id;
-            var _src;
-            var _callback;
-            var _errorCallback;
-
-            var argLength = arguments.length;
-            switch (argLength) {
-                case 1:
-                    _id = _src = arguments[0];
-                    _callback = _errorCallback = util.noop;
-                    break;
-                case 2:
-                    _id = _src = arguments[0];
-                    _callback = _errorCallback = arguments[1];
-                    break;
-                case 3:
-                    _id = _src = arguments[0];
-                    _callback = arguments[1];
-                    _errorCallback = arguments[2];
-                    break;
-                default:
-                    _id = arguments[0];
-                    _src = arguments[1];
-                    _callback = arguments[2];
-                    _errorCallback = arguments[3];
-            }
-
-            var fileExt = getFileExt(_src);
+            var fileExt = getFileExt(src);
             var req = new XMLHttpRequest();
 
             req.onreadystatechange = function () {
                 if (req.readyState === 4) {
                     if (req.status === 200) {
                         if (fileExt === 'json') {
-                            _callback(_id, JSON.parse(req.responseText));
+                            callback(id, JSON.parse(req.responseText));
                         }
                         else {
-                            _callback(_id, req.responseText);
+                            callback(id, req.responseText);
                         }
                     }
                     else {
-                        _errorCallback(_src);
+                        errorCallback(src);
                     }
                 }
             };
 
-            req.open('GET', _src, true);
+            req.open('GET', src, true);
             req.send(null);
         },
 
