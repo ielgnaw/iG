@@ -7,10 +7,10 @@
 
 define(function (require) {
 
+    var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var Animation = require('./Animation');
-    var ig = require('./ig');
     var Matrix = require('./Matrix');
 
     var STATUS = ig.STATUS;
@@ -33,23 +33,24 @@ define(function (require) {
      * @param {number} opts.y 纵坐标 0
      * @param {number} opts.width 宽度，默认 0
      * @param {number} opts.height 高度，默认 0
-     * @param {number} opts.cX 中心店横坐标，默认 0
-     * @param {number} opts.cY 中心店纵坐标 0
+     * @param {number} opts.cx 中心点横坐标，默认 0
+     * @param {number} opts.cy 中心点纵坐标 0
      * @param {number} opts.radius 半径，默认 0，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
-     * @param {number} opts.scaleX 横轴缩放倍数，默认 1
-     * @param {number} opts.scaleY 纵轴缩放倍数，默认 1
+     * @param {number} opts.xScale 横轴缩放倍数，默认 1
+     * @param {number} opts.yScale 纵轴缩放倍数，默认 1
      * @param {number} opts.angle 旋转角度，这里使用的是角度，canvas 使用的是弧度，默认 1
      * @param {number} opts.alpha 透明度，默认 1
      * @param {number} opts.zIndex 层叠关系，类似 css z-index 概念，默认 0
      * @param {string} opts.fillStyle fill 的样式，如果没有，就用 ctx 的默认的
      * @param {string} opts.strokeStyle stroke 的样式，如果没有，就用 ctx 的默认的
      * @param {Image} opts.image image 图像，这个参数是一个 image 对象
-     * @param {number} opts.vX 横轴速度，默认 0
-     * @param {number} opts.vY 纵轴速度，默认 0
-     * @param {number} opts.aX 横轴加速度，默认 0
-     * @param {number} opts.aY 纵轴加速度，默认 0
-     * @param {number} opts.frictionX 横轴摩擦力，默认 1
-     * @param {number} opts.frictionY 纵轴摩擦力，默认 1
+     * @param {number} opts.vx 横轴速度，默认 0
+     * @param {number} opts.vy 纵轴速度，默认 0
+     * @param {number} opts.ax 横轴加速度，默认 0
+     * @param {number} opts.ay 纵轴加速度，默认 0
+     * @param {number} opts.xFriction 横轴摩擦力，默认 1
+     * @param {number} opts.yFriction 纵轴摩擦力，默认 1
+     * @param {Array} opts.children 子精灵
      * @param {number} opts.status 当前显示兑现的状态，默认为 1
      *                            1: 可见，每帧需要更新，各种状态都正常
      *                            2: 不可见，每帧需要更新，各种状态都正常
@@ -74,15 +75,15 @@ define(function (require) {
             // 高度
             height: 0,
             // 中心点横坐标
-            cX: 0,
+            cx: 0,
             // 中心点纵坐标
-            cY: 0,
+            cy: 0,
             // 半径
             radius: 0,
             // 横轴缩放倍数
-            scaleX: 1,
+            xScale: 1,
             // 纵轴缩放倍数
-            scaleY: 1,
+            yScale: 1,
             // 旋转角度
             angle: 0,
             // 透明度
@@ -95,18 +96,20 @@ define(function (require) {
             strokeStyle: 'transparent',
             // image 图像
             image: null,
-            // 横轴速度，x += vX
-            vX: 0,
-            // 纵轴速度，y += vY
-            vY: 0,
-            // 横轴加速度，vX += aX
-            aX: 0,
-            // 纵轴加速度，vY += aY
-            aY: 0,
-            // 横轴摩擦力，vX *= frictionX
-            frictionX: 1,
-            // 纵轴摩擦力，vY *= frictionY
-            frictionY: 1,
+            // 横轴速度，x += vx
+            vx: 0,
+            // 纵轴速度，y += vy
+            vy: 0,
+            // 横轴加速度，vx += ax
+            ax: 0,
+            // 纵轴加速度，vy += ay
+            ay: 0,
+            // 横轴摩擦力，vx *= xFriction
+            xFriction: 1,
+            // 纵轴摩擦力，vy *= yFriction
+            yFriction: 1,
+            // 子精灵
+            children: [],
             // 状态
             status: STATUS.NORMAL,
             // 是否允许鼠标 / touch 操作
@@ -124,9 +127,6 @@ define(function (require) {
             // 开始 debug 模式即绘制这个 DisplayObject 实例的时候会带上边框
             debug: false
         }, opts);
-
-        // 子精灵
-        this.children = [];
 
         // 当前 DisplayObject 实例的变换矩阵
         this.matrix = new Matrix();
@@ -232,7 +232,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setAccelerationX: function (ax) {
-            this.aX = ax || this.aX;
+            this.ax = ax || this.ax;
             return this;
         },
 
@@ -244,64 +244,31 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setAccelerationY: function (ay) {
-            this.aY = ay || this.aY;
+            this.ay = ay || this.ay;
             return this;
         },
 
         /**
          * 设置横轴摩擦力
          *
-         * @param {number} frictionX 横轴摩擦力
+         * @param {number} xFriction 横轴摩擦力
          *
          * @return {Object} DisplayObject 实例
          */
-        setFrictionX: function (frictionX) {
-            this.frictionX = frictionX || this.frictionX;
+        setFrictionX: function (xFriction) {
+            this.xFriction = xFriction || this.xFriction;
             return this;
         },
 
         /**
          * 设置纵轴摩擦力
          *
-         * @param {number} frictionY 横轴摩擦力
+         * @param {number} yFriction 横轴摩擦力
          *
          * @return {Object} DisplayObject 实例
          */
-        setFrictionY: function (frictionY) {
-            this.frictionY = frictionY || this.frictionY;
-            return this;
-        },
-
-        /**
-         * 移动
-         * x, y 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
-         *
-         * @param {number} x 横轴要移动的距离
-         * @param {number} y 纵轴要移动的距离
-         *
-         * @return {Object} DisplayObject 实例
-         */
-        move: function (x, y) {
-            this.x += x;
-            this.y += y;
-            return this;
-        },
-
-        /**
-         * 移动一步
-         * 速度 += 加速度
-         * 坐标 += 速度
-         *
-         * @return {Object} DisplayObject 实例
-         */
-        moveStep: function () {
-            this.vX += this.aX;
-            this.vX *= this.frictionX;
-            this.x += this.vX;
-
-            this.vY += this.aY;
-            this.vY *= this.frictionY;
-            this.y += this.vY;
+        setFrictionY: function (yFriction) {
+            this.yFriction = yFriction || this.yFriction;
             return this;
         },
 
@@ -334,10 +301,7 @@ define(function (require) {
                 true,
                 {},
                 {
-                    fps: 60,
-                    duration: 1000,
-                    source: me,
-                    target: {}
+                    source: me
                 },
                 opts
             );
@@ -388,6 +352,39 @@ define(function (require) {
          */
         destroyAnimate: function () {
             this.animate && this.animate.destroy();
+            return this;
+        },
+
+        /**
+         * 移动
+         * x, y 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
+         *
+         * @param {number} x 横轴要移动的距离
+         * @param {number} y 纵轴要移动的距离
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
+            return this;
+        },
+
+        /**
+         * 移动一步
+         * 速度 += 加速度
+         * 坐标 += 速度
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        moveStep: function () {
+            this.vx += this.ax;
+            this.vx *= this.xFriction;
+            this.x += this.vx;
+
+            this.vy += this.ay;
+            this.vy *= this.yFriction;
+            this.y += this.vy;
             return this;
         },
 

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>time-based</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            canvas {
+                /*margin: 100px;*/
+                border: 1px solid #ddd;
+            }
+            div {
+                margin: 10px;
+            }
+
+        </style>
+        <script src="https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superplus/js/lib/jquery-1.10.2_d88366fd.js"></script>
+    </head>
+    <body>
+        <div>
+            <span>frame-based:</span>
+            <canvas id="frame-based-canvas" width="600" height="100"></canvas>
+            <button id="frame-based-start">开始</button>
+        </div>
+
+        <script>
+            // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+            // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+
+            // requestAnimationFrame polyfill by Erik Möller
+            // fixes from Paul Irish and Tino Zijdel
+            (function () {
+                var lastTime = 0;
+                var vendors = ['ms', 'moz', 'webkit', 'o'];
+                for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                    window.cancelAnimationFrame =
+                      window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+                }
+
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function (callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = setTimeout(function () {
+                            callback(currTime + timeToCall);
+                        }, timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function (id) {
+                        clearTimeout(id);
+                    };
+                }
+            })();
+
+            function Circle(opts) {
+                this.x = opts.x;
+                this.y = opts.y;
+                this.vx = opts.vx;
+                this.vy = opts.vy;
+                this.ax = opts.ax;
+                this.ay = opts.ay;
+                this.radius = opts.radius;
+                this.ctx = opts.ctx;
+                this.fps = opts.fps;
+            }
+
+            Circle.prototype.draw = function () {
+                this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+                this.ctx.beginPath();
+                this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+                this.ctx.fill();
+            };
+
+            Circle.prototype.update = function (dt) {
+                // this.x += this.vx * dt * this.fps / 1000;
+                // this.y += this.vy * dt * this.fps / 1000;
+                this.step(dt);
+
+            }
+
+            Circle.prototype.step = function (dt) {
+                // this.x += this.vx * dt * this.fps / 1000;
+                // this.y += this.vy * dt * this.fps / 1000;
+                this.vx += this.ax * dt;
+                this.vy += this.ay * dt;
+
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+
+                if (this.x - this.radius <= 0 || this.x + this.radius >= this.ctx.canvas.width) {
+                    this.vx = -this.vx;
+                }
+                if (this.y - this.radius <= 0 || this.y + this.radius >= this.ctx.canvas.height) {
+                    this.vy = -this.vy;
+                }
+            }
+
+            var circle = new Circle({
+                x: 15,
+                y: 30,
+                vx: 500,
+                vy: 0,
+                ax: 5,
+                ay: 0,
+                radius: 15,
+                ctx: document.querySelector('#frame-based-canvas').getContext('2d'),
+                // fps: fps
+            });
+
+            var CC = {
+                frameTimeLimit: 100
+            };
+            CC.scheduleFrame = function (callback) {
+                return window.requestAnimationFrame(callback);
+            };
+            CC.cancelFrame = function(loop) {
+                window.cancelAnimationFrame(loop);
+            }
+
+            CC.gameLoop = function (callback) {
+                CC.lastGameLoopFrame = new Date().getTime();
+
+                CC.loop = true;
+
+                CC._loopFrame = 0;
+
+                CC.gameLoopCallbackWrapper = function() {
+                    var now = new Date().getTime();
+                    CC._loopFrame++;
+                    CC.loop = CC.scheduleFrame(CC.gameLoopCallbackWrapper);
+                    var dt = now - CC.lastGameLoopFrame;
+                    if (dt > CC.frameTimeLimit) {
+                        dt = CC.frameTimeLimit;
+                    }
+                    // console.warn(dt);
+                    callback.apply(CC, [dt / 1000]);
+                    CC.lastGameLoopFrame = now;
+                };
+
+                CC.scheduleFrame(CC.gameLoopCallbackWrapper);
+                return CC;
+            };
+
+            CC.pauseGame = function() {
+                if (CC.loop) {
+                    CC.cancelFrame(CC.loop);
+                }
+                CC.loop = null;
+            };
+
+            CC.unpauseGame = function() {
+                if (!CC.loop) {
+                    CC.lastGameLoopFrame = new Date().getTime();
+                    CC.loop = CC.scheduleFrame(CC.gameLoopCallbackWrapper);
+                }
+            };
+
+            function stageStepLoop(dt) {
+                if (dt < 0) {
+                    dt = 1.0 / 60;
+                }
+                if (dt > 1 / 15) {
+                    dt  = 1.0 / 15;
+                }
+                stageStep(dt);
+            }
+
+            function stageStep(dt) {
+                stageUpdateSprites(dt);
+            }
+
+            function stageUpdateSprites(dt) {
+                circle.update(dt);
+                // console.warn(dt);
+            }
+
+            function stageGameLoop(dt) {
+                stageStepLoop(dt);
+                stageRenderLoop();
+            }
+
+            function stageRenderLoop() {
+                circle.draw();
+            }
+
+            document.querySelector('#frame-based-start').onclick = function () {
+                CC.gameLoop(stageGameLoop);
+            }
+        </script>
+    </body>
+</html>

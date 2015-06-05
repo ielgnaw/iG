@@ -2405,13 +2405,11 @@ define('ig/DisplayObject', [
     };
     util.inherits(DisplayObject, Event);
     return DisplayObject;
-});define('ig/resourceLoader', [
+});define('ig/ResourceLoader', [
     'require',
-    './ig',
     './util',
     './dep/howler'
 ], function (require) {
-    var ig = require('./ig');
     var util = require('./util');
     var Howl = require('./dep/howler').Howl;
     var defaultResourceTypes = {
@@ -2424,160 +2422,169 @@ define('ig/DisplayObject', [
         m4a: 'Audio',
         mp3: 'Audio'
     };
+    function ResourceLoader() {
+        this.asset = {};
+        return this;
+    }
+    ResourceLoader.prototype = {
+        constructor: ResourceLoader,
+        loadImage: function (id, src, callback, errorCallback) {
+            var _id;
+            var _src;
+            var _callback;
+            var _errorCallback;
+            var argLength = arguments.length;
+            switch (argLength) {
+            case 1:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = util.noop;
+                break;
+            case 2:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = arguments[1];
+                break;
+            case 3:
+                _id = _src = arguments[0];
+                _callback = arguments[1];
+                _errorCallback = arguments[2];
+                break;
+            default:
+                _id = arguments[0];
+                _src = arguments[1];
+                _callback = arguments[2];
+                _errorCallback = arguments[3];
+            }
+            var img = new Image();
+            img.addEventListener('load', function (e) {
+                _callback(_id, img);
+            });
+            img.addEventListener('error', function (e) {
+                _errorCallback(_src);
+            });
+            img.src = _src;
+        },
+        loadOther: function (id, src, callback, errorCallback) {
+            var _id;
+            var _src;
+            var _callback;
+            var _errorCallback;
+            var argLength = arguments.length;
+            switch (argLength) {
+            case 1:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = util.noop;
+                break;
+            case 2:
+                _id = _src = arguments[0];
+                _callback = _errorCallback = arguments[1];
+                break;
+            case 3:
+                _id = _src = arguments[0];
+                _callback = arguments[1];
+                _errorCallback = arguments[2];
+                break;
+            default:
+                _id = arguments[0];
+                _src = arguments[1];
+                _callback = arguments[2];
+                _errorCallback = arguments[3];
+            }
+            var fileExt = getFileExt(_src);
+            var req = new XMLHttpRequest();
+            req.onreadystatechange = function () {
+                if (req.readyState === 4) {
+                    if (req.status === 200) {
+                        if (fileExt === 'json') {
+                            _callback(_id, JSON.parse(req.responseText));
+                        } else {
+                            _callback(_id, req.responseText);
+                        }
+                    } else {
+                        _errorCallback(_src);
+                    }
+                }
+            };
+            req.open('GET', _src, true);
+            req.send(null);
+        },
+        loadResource: function (resource, callback, opts) {
+            var me = this;
+            opts = opts || {};
+            if (!Array.isArray(resource)) {
+                resource = [resource];
+            }
+            var loadError = false;
+            var errorCallback = function (item) {
+                loadError = true;
+                (opts.errorCallback || function (errItem) {
+                    alert('Loading Error: ' + errItem);
+                    throw new Error('Loading Error: ' + errItem);
+                }).call(me, item);
+            };
+            var processCallback = opts.processCallback || util.noop;
+            var totalCount = resource.length;
+            var remainingCount = totalCount;
+            var loadOneCallback = function (id, obj) {
+                if (loadError) {
+                    return;
+                }
+                if (!me.asset[id]) {
+                    me.asset[id] = obj;
+                }
+                remainingCount--;
+                processCallback(totalCount - remainingCount, totalCount);
+                if (remainingCount === 0 && callback) {
+                    callback.call(me, me.asset);
+                }
+            };
+            var customResourceTypes = opts.customResourceTypes || {};
+            var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+            for (var i = 0; i < totalCount; i++) {
+                (function (index) {
+                    setTimeout(function () {
+                        var curResource = resource[index];
+                        var resourceId;
+                        var resourceSrc;
+                        if (util.getType(curResource) === 'object') {
+                            resourceId = curResource.id;
+                            resourceSrc = curResource.src;
+                        } else {
+                            resourceId = resourceSrc = curResource;
+                        }
+                        if (!me.asset.hasOwnProperty(resourceId)) {
+                            if (util.getType(resourceSrc) === 'array') {
+                                (function (rId, r) {
+                                    var howlOpts = {
+                                        urls: resourceSrc,
+                                        onload: function () {
+                                            loadOneCallback(rId, this);
+                                        },
+                                        onloaderror: function () {
+                                            errorCallback(this._src);
+                                        }
+                                    };
+                                    new Howl(util.extend(true, {}, howlOpts, r.opts || {}));
+                                }(resourceId, curResource));
+                            } else {
+                                var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
+                                if (!invokeMethod) {
+                                    invokeMethod = me.loadOther;
+                                }
+                                invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
+                            }
+                        } else {
+                            loadOneCallback(resourceId, me.asset[resourceId]);
+                        }
+                    }, (index + 1) * 300);
+                }(i));
+            }
+        }
+    };
     function getFileExt(fileName) {
         var segments = fileName.split('.');
         return segments[segments.length - 1].toLowerCase();
     }
-    var exports = {};
-    ig.resources = exports.resources = {};
-    ig.loadOther = exports.loadOther = function (id, src, callback, errorCallback) {
-        var _id;
-        var _src;
-        var _callback;
-        var _errorCallback;
-        var argLength = arguments.length;
-        switch (argLength) {
-        case 1:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = util.noop;
-            break;
-        case 2:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = arguments[1];
-            break;
-        case 3:
-            _id = _src = arguments[0];
-            _callback = arguments[1];
-            _errorCallback = arguments[2];
-            break;
-        default:
-            _id = arguments[0];
-            _src = arguments[1];
-            _callback = arguments[2];
-            _errorCallback = arguments[3];
-        }
-        var fileExt = getFileExt(_src);
-        var req = new XMLHttpRequest();
-        req.onreadystatechange = function () {
-            if (req.readyState === 4) {
-                if (req.status === 200) {
-                    if (fileExt === 'json') {
-                        _callback(_id, JSON.parse(req.responseText));
-                    } else {
-                        _callback(_id, req.responseText);
-                    }
-                } else {
-                    _errorCallback(_src);
-                }
-            }
-        };
-        req.open('GET', _src, true);
-        req.send(null);
-    };
-    ig.loadImage = exports.loadImage = function (id, src, callback, errorCallback) {
-        var _id;
-        var _src;
-        var _callback;
-        var _errorCallback;
-        var argLength = arguments.length;
-        switch (argLength) {
-        case 1:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = util.noop;
-            break;
-        case 2:
-            _id = _src = arguments[0];
-            _callback = _errorCallback = arguments[1];
-            break;
-        case 3:
-            _id = _src = arguments[0];
-            _callback = arguments[1];
-            _errorCallback = arguments[2];
-            break;
-        default:
-            _id = arguments[0];
-            _src = arguments[1];
-            _callback = arguments[2];
-            _errorCallback = arguments[3];
-        }
-        var img = new Image();
-        img.addEventListener('load', function (e) {
-            _callback(_id, img);
-        });
-        img.addEventListener('error', function (e) {
-            _errorCallback(_src);
-        });
-        img.src = _src;
-    };
-    ig.loadResource = exports.loadResource = function (resource, callback, opts) {
-        var me = this;
-        opts = opts || {};
-        if (!Array.isArray(resource)) {
-            resource = [resource];
-        }
-        var loadError = false;
-        var errorCallback = function (item) {
-            loadError = true;
-            (opts.errorCallback || function (errItem) {
-                alert('Loading Error: ' + errItem);
-                throw new Error('Loading Error: ' + errItem);
-            }).call(me, item);
-        };
-        var processCallback = opts.processCallback || util.noop;
-        var totalCount = resource.length;
-        var remainingCount = totalCount;
-        var loadOneCallback = function (id, obj) {
-            if (loadError) {
-                return;
-            }
-            if (!ig.resources[id]) {
-                ig.resources[id] = obj;
-            }
-            remainingCount--;
-            processCallback(totalCount - remainingCount, totalCount);
-            if (remainingCount === 0 && callback) {
-                callback.call(me, ig.resources);
-            }
-        };
-        var customResourceTypes = opts.customResourceTypes || {};
-        var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
-        for (var i = 0; i < totalCount; i++) {
-            var curResource = resource[i];
-            var resourceId;
-            var resourceSrc;
-            if (util.getType(curResource) === 'object') {
-                resourceId = curResource.id;
-                resourceSrc = curResource.src;
-            } else {
-                resourceId = resourceSrc = curResource;
-            }
-            if (!ig.resources.hasOwnProperty(resourceId)) {
-                if (util.getType(resourceSrc) === 'array') {
-                    (function (rId, r) {
-                        var howlOpts = {
-                            urls: resourceSrc,
-                            onload: function () {
-                                loadOneCallback(rId, this);
-                            },
-                            onloaderror: function () {
-                                errorCallback(this._src);
-                            }
-                        };
-                        new Howl(util.extend(true, {}, howlOpts, r.opts || {}));
-                    }(resourceId, curResource));
-                } else {
-                    var invokeMethod = me['load' + resourceTypes[getFileExt(resourceSrc)]];
-                    if (!invokeMethod) {
-                        invokeMethod = me.loadOther;
-                    }
-                    invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
-                }
-            } else {
-                loadOneCallback(resourceId, ig.resources[resourceId]);
-            }
-        }
-    };
-    return exports;
+    return ResourceLoader;
 });'use strict';
 define('ig/Game', [
     'require',
@@ -2585,13 +2592,13 @@ define('ig/Game', [
     './Event',
     './util',
     './env',
-    './resourceLoader'
+    './ResourceLoader'
 ], function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
-    var resourceLoader = require('./resourceLoader');
+    var ResourceLoader = require('./ResourceLoader');
     var CONFIG = ig.getConfig();
     var GUID_KEY = 0;
     function Game(opts) {
@@ -2600,6 +2607,7 @@ define('ig/Game', [
             canvas: null,
             maximize: false,
             scaleFit: true,
+            resource: [],
             fps: CONFIG.fps,
             width: CONFIG.width,
             height: CONFIG.height,
@@ -2614,10 +2622,40 @@ define('ig/Game', [
         this.stageStack = [];
         this.stages = {};
         this._ = {};
-        this.resources = resourceLoader.resources;
+        this.resourceLoader = new ResourceLoader();
         initGame.call(this);
-        console.warn(this);
         return this;
+    }
+    Game.prototype = {
+        constructor: Game,
+        start: function () {
+            preLoadResource.call(this);
+        },
+        loadOther: function (id, src, callback, errorCallback) {
+            this.resourceLoader.loadOther(id, src, callback, errorCallback);
+        },
+        loadImage: function (id, src, callback, errorCallback) {
+            this.resourceLoader.loadImage(id, src, callback, errorCallback);
+        },
+        loadResource: function (resource, callback, opts) {
+            this.resourceLoader.loadResource(resource, callback, opts);
+        }
+    };
+    function preLoadResource() {
+        var me = this;
+        me.loadResource(me.resource, function (data) {
+            me.asset = data;
+            me.fire('loadResDone');
+        }, {
+            processCallback: function (loadedCount, total) {
+                me.fire('loadResProcess', {
+                    data: {
+                        loadedCount: loadedCount,
+                        total: total
+                    }
+                });
+            }
+        });
     }
     function initGame() {
         this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
@@ -2667,7 +2705,6 @@ define('ig/Game', [
             this.yRatio = this.height / CONFIG.height;
             this.cssXRatio = this.width / parseInt(this.cssWidth, 10);
             this.cssYRatio = this.height / parseInt(this.cssHeight, 10);
-            console.warn(this);
         };
         getRatio.call(this);
         var me = this;
@@ -2940,7 +2977,7 @@ else {
     }
 }
 
-var modName = 'ig/resourceLoader';
+var modName = 'ig/ResourceLoader';
 var refName = '';
 var folderName = '';
 
