@@ -265,23 +265,4 @@ define(function (require) {
     }
 
     return ResourceLoader;
-
-    /**
-     * 模块导出对象
-     * resources, loadOther, loadImage, loadResource 同时挂载在 ig 和 exports 上
-     * 挂载在 ig 上为了方便全局调用，挂载在 exports 上是为了内部模块直接引用 resourceLoader 模块
-     *
-     * @type {Object}
-     */
-    // var exports = {};
-
-    // *
-    //  * 缓存已经 load 成功的资源
-    //  *
-    //  * @type {Object}
-
-    // ig.resources = exports.resources = {};
-
-
-    // return exports;
 });
