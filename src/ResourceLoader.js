@@ -150,19 +150,19 @@ define(function (require) {
             for (var i = 0; i < totalCount; i++) {
                 /* jshint loopfunc:true */
                 (function (index) {
-                    setTimeout(function () {
-                        var curResource = resource[index];
-                        var resourceId;
-                        var resourceSrc;
-                        if (util.getType(curResource) === 'object') {
-                            resourceId = curResource.id;
-                            resourceSrc = curResource.src;
-                        }
-                        else {
-                            resourceId = resourceSrc = curResource;
-                        }
+                    var curResource = resource[index];
+                    var resourceId;
+                    var resourceSrc;
+                    if (util.getType(curResource) === 'object') {
+                        resourceId = curResource.id;
+                        resourceSrc = curResource.src;
+                    }
+                    else {
+                        resourceId = resourceSrc = curResource;
+                    }
 
-                        if (!me.asset.hasOwnProperty(resourceId)) {
+                    if (!me.asset.hasOwnProperty(resourceId)) {
+                        setTimeout(function () {
                             if (util.getType(resourceSrc) === 'array') {
                                 /* jshint nonew: false */
                                 (function (rId, r) {
@@ -188,11 +188,11 @@ define(function (require) {
                                     resourceId, resourceSrc, loadOneCallback, errorCallback
                                 );
                             }
-                        }
-                        else {
-                            loadOneCallback(resourceId, me.asset[resourceId]);
-                        }
-                    }, (index + 1) * 300);
+                        }, (index + 1) * 300);
+                    }
+                    else {
+                        loadOneCallback(resourceId, me.asset[resourceId]);
+                    }
                 })(i);
             }
         }

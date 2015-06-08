@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>time-based</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            canvas {
+                /*margin: 100px;*/
+                border: 1px solid #ddd;
+            }
+            div {
+                margin: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <span>frame-based:</span>
+            <canvas id="frame-based-canvas" width="600" height="100"></canvas>
+            <button id="frame-based-start">开始</button>
+        </div>
+        <div>
+            <span>timed-based:</span>
+            <canvas id="time-based-canvas" width="600" height="100"></canvas>
+            <button id="time-based-start">开始</button>
+        </div>
+        <button id="all-start">all start</button>
+        <script>
+            // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+            // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+
+            // requestAnimationFrame polyfill by Erik Möller
+            // fixes from Paul Irish and Tino Zijdel
+            (function () {
+                var lastTime = 0;
+                var vendors = ['ms', 'moz', 'webkit', 'o'];
+                for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+                    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+                    window.cancelAnimationFrame =
+                      window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+                }
+
+                if (!window.requestAnimationFrame) {
+                    window.requestAnimationFrame = function (callback, element) {
+                        var currTime = new Date().getTime();
+                        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                        var id = setTimeout(function () {
+                            callback(currTime + timeToCall);
+                        }, timeToCall);
+                        lastTime = currTime + timeToCall;
+                        return id;
+                    };
+                }
+
+                if (!window.cancelAnimationFrame) {
+                    window.cancelAnimationFrame = function (id) {
+                        clearTimeout(id);
+                    };
+                }
+            })();
+
+            function Circle(opts) {
+                this.x = opts.x;
+                this.y = opts.y;
+                this.vx = opts.vx;
+                this.vy = opts.vy;
+                this.radius = opts.radius;
+                this.ctx = opts.ctx;
+                this.fps = opts.fps;
+            }
+
+            Circle.prototype.update = function (dt) {
+                this.x += this.vx * dt * this.fps / 1000;
+                this.y += this.vy * dt * this.fps / 1000;
+
+                if (this.x - this.radius <= 0 || this.x + this.radius >= this.ctx.canvas.width) {
+                    this.vx = -this.vx;
+                }
+                if (this.y - this.radius <= 0 || this.y + this.radius >= this.ctx.canvas.height) {
+                    this.vy = -this.vy;
+                }
+            }
+
+            Circle.prototype.draw = function () {
+                this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+                this.ctx.beginPath();
+                this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+                this.ctx.fill();
+            };
+
+            var allTicksPerFrame = 0;
+
+            function frameBasedStart() {
+                var STANDARD_FPS = 60;
+                var interval = 1 / STANDARD_FPS;
+                var fps = 30;
+                var circle = new Circle({
+                    x: 15,
+                    y: 30,
+                    vx: 10,
+                    vy: 0,
+                    radius: 15,
+                    ctx: document.querySelector('#frame-based-canvas').getContext('2d'),
+                    fps: fps
+                });
+
+                circle.update = function () {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x - this.radius <= 0 || this.x + this.radius >= this.ctx.canvas.width) {
+                        this.vx = -this.vx;
+                    }
+                    if (this.y - this.radius <= 0 || this.y + this.radius >= this.ctx.canvas.height) {
+                        this.vy = -this.vy;
+                    }
+                };
+
+                var requestId;
+                var now;
+                var passed;
+                var then = Date.now();
+                var tickUpdateCount = 0;
+                var ticksPerFrame = allTicksPerFrame;
+
+                var accumulator = 0;
+
+                (function tick() {
+                    requestId = window.requestAnimationFrame(tick);
+
+                    tickUpdateCount++;
+                    if (tickUpdateCount > ticksPerFrame) {
+                        tickUpdateCount = 0;
+                        now = Date.now();
+                        passed = now - then;
+                        then = now;
+
+                        circle.update();
+                        circle.draw();
+                    }
+                })();
+            }
+
+            function timeBasedStart() {
+                var STANDARD_FPS = 60;
+                var interval = 1 / STANDARD_FPS;
+                var fps = 30;
+                var circle = new Circle({
+                    x: 15,
+                    y: 30,
+                    vx: 10,
+                    vy: 0,
+                    radius: 15,
+                    ctx: document.querySelector('#time-based-canvas').getContext('2d'),
+                    fps: fps
+                });
+
+                var requestId;
+                var now;
+                var passed;
+                var then = Date.now();
+                var tickUpdateCount = 0;
+                var ticksPerFrame = allTicksPerFrame;
+
+                var accumulator = 0;
+
+                (function tick() {
+                    requestId = window.requestAnimationFrame(tick);
+                    tickUpdateCount++;
+                    if (tickUpdateCount > ticksPerFrame) {
+                        tickUpdateCount = 0;
+                        now = Date.now();
+                        passed = now - then;
+                        then = now;
+
+                        accumulator += passed;
+                        while (accumulator >= interval) {
+                            circle.update(interval);
+                            accumulator -= interval;
+                        }
+
+                        circle.draw();
+                    }
+                })();
+            }
+
+
+            document.querySelector('#frame-based-start').onclick = function () {
+                frameBasedStart();
+            }
+
+            document.querySelector('#time-based-start').onclick = function () {
+                timeBasedStart();
+            }
+
+            document.querySelector('#all-start').onclick = function () {
+                frameBasedStart();
+                timeBasedStart();
+            }
+
+        </script>
+    </body>
+</html>

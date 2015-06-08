@@ -190,7 +190,8 @@ define('ig/ig', [
         var then = Date.now();
         var frameUpdateCount = 0;
         var passed = 0;
-        var dt = 1000 / exports.STANDARD_FPS;
+        var fps = exports.getConfig('fps') || 60;
+        var dt = 1000 / fps;
         var acc = 0;
         (function tick() {
             requestID = window.requestAnimationFrame(tick);
@@ -202,7 +203,7 @@ define('ig/ig', [
                 then = now;
                 acc += passed;
                 while (acc >= dt) {
-                    conf.step(dt * (exports.STANDARD_FPS / 1000), requestID);
+                    conf.step(dt * (fps / 1000), requestID);
                     acc -= dt;
                 }
                 conf.exec();
@@ -1213,6 +1214,20 @@ define('ig/util', ['require'], function (require) {
             return result;
         };
     };
+    exports.getImgAsset = function (img, gameAsset, gameResource) {
+        if (gameAsset[img]) {
+            return gameAsset[img];
+        }
+        for (var i = 0, len = gameResource.length; i < len; i++) {
+            if (exports.getType(gameResource[i]) === 'string' && gameResource[i] === img) {
+                return gameResource[i];
+            }
+            if (exports.getType(gameResource[i]) === 'object' && gameResource[i].src === img) {
+                return gameAsset[gameResource[i].id];
+            }
+        }
+        return null;
+    };
     exports.deg2Rad = function (deg) {
         return deg * DEG2RAD_OPERAND;
     };
@@ -1940,6 +1955,7 @@ define('ig/Animation', [
     var util = require('./util');
     var Event = require('./Event');
     var easing = require('./easing');
+    var CONFIG = ig.getConfig();
     var GUID_KEY = 0;
     function Animation(opts) {
         util.extend(true, this, {
@@ -1963,7 +1979,7 @@ define('ig/Animation', [
             this.curFrame = 0;
             this.curState = {};
             this.initState = {};
-            this.frames = Math.ceil(this.duration * ig.STANDARD_FPS / 1000);
+            this.frames = Math.ceil(this.duration * (CONFIG.fps || 60) / 1000);
             var source = this.source;
             var target = this.target;
             var range = this.range;
@@ -2491,17 +2507,17 @@ define('ig/DisplayObject', [
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
             for (var i = 0; i < totalCount; i++) {
                 (function (index) {
-                    setTimeout(function () {
-                        var curResource = resource[index];
-                        var resourceId;
-                        var resourceSrc;
-                        if (util.getType(curResource) === 'object') {
-                            resourceId = curResource.id;
-                            resourceSrc = curResource.src;
-                        } else {
-                            resourceId = resourceSrc = curResource;
-                        }
-                        if (!me.asset.hasOwnProperty(resourceId)) {
+                    var curResource = resource[index];
+                    var resourceId;
+                    var resourceSrc;
+                    if (util.getType(curResource) === 'object') {
+                        resourceId = curResource.id;
+                        resourceSrc = curResource.src;
+                    } else {
+                        resourceId = resourceSrc = curResource;
+                    }
+                    if (!me.asset.hasOwnProperty(resourceId)) {
+                        setTimeout(function () {
                             if (util.getType(resourceSrc) === 'array') {
                                 (function (rId, r) {
                                     var howlOpts = {
@@ -2522,10 +2538,10 @@ define('ig/DisplayObject', [
                                 }
                                 invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
                             }
-                        } else {
-                            loadOneCallback(resourceId, me.asset[resourceId]);
-                        }
-                    }, (index + 1) * 300);
+                        }, (index + 1) * 300);
+                    } else {
+                        loadOneCallback(resourceId, me.asset[resourceId]);
+                    }
                 }(i));
             }
         }
@@ -2542,12 +2558,14 @@ define('ig/Game', [
     './Event',
     './util',
     './env',
+    './Stage',
     './ResourceLoader'
 ], function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
+    var Stage = require('./Stage');
     var ResourceLoader = require('./ResourceLoader');
     var CONFIG = ig.getConfig();
     var GUID_KEY = 0;
@@ -2578,8 +2596,52 @@ define('ig/Game', [
     }
     Game.prototype = {
         constructor: Game,
-        start: function () {
-            preLoadResource.call(this);
+        stop: function () {
+            window.cancelAnimationFrame(this._.requestID);
+            this._.requestID = null;
+            return this;
+        },
+        start: function (startStageName, startCallback) {
+            var _startStageName = '';
+            var _startCallback = util.noop;
+            this.canStart = false;
+            var argLength = arguments.length;
+            switch (argLength) {
+            case 1:
+                if (util.getType(arguments[0]) === 'function') {
+                    _startCallback = arguments[0];
+                } else {
+                    _startStageName = arguments[0];
+                    _startCallback = util.noop;
+                }
+                break;
+            case 2:
+                _startStageName = arguments[0];
+                _startCallback = arguments[1];
+                break;
+            default:
+            }
+            preLoadResource.call(this, function () {
+                this.stop();
+                this.paused = false;
+                if (_startStageName && this.stages[_startStageName]) {
+                    var stageStack = this.stageStack;
+                    var candidateIndex = -1;
+                    for (var i = 0, len = stageStack.length; i < len; i++) {
+                        if (stageStack[i].name === _startStageName) {
+                            candidateIndex = i;
+                            break;
+                        }
+                    }
+                    this.swapStage(candidateIndex, 0);
+                } else {
+                    _startStageName = this.getCurrentStage().name;
+                }
+                var curStage = this.getStageByName(_startStageName);
+                curStage && _gameStartExec.call(this, curStage);
+                util.getType(_startCallback) === 'function' && _startCallback.call(this);
+            });
+            return this;
         },
         loadOther: function (id, src, callback, errorCallback) {
             var _id;
@@ -2639,12 +2701,180 @@ define('ig/Game', [
         },
         loadResource: function (resource, callback, opts) {
             this.resourceLoader.loadResource(resource, callback, opts);
+        },
+        createStage: function (stageOpts) {
+            stageOpts = util.extend(true, {}, {
+                canvas: this.canvas,
+                offCanvas: this.offCanvas,
+                game: this
+            }, stageOpts);
+            var stage = new Stage(stageOpts);
+            this.pushStage(stage);
+            return stage;
+        },
+        pushStage: function (stage) {
+            if (!this.getStageByName(stage.name)) {
+                stage.game = this;
+                this.stageStack.push(stage);
+                this.stages[stage.name] = stage;
+                this.sortStageIndex();
+            }
+        },
+        popStage: function () {
+            var stage = this.stageStack.pop();
+            if (stage) {
+                delete this.stages[stage.name];
+                this.sortStageIndex();
+            }
+        },
+        sortStageIndex: function () {
+            var stageStack = this.stageStack;
+            for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
+                stageStack[i].zIndex = j;
+            }
+        },
+        removeStageByName: function (name) {
+            var st = this.getStageByName(name);
+            if (st) {
+                delete this.stages[st.name];
+                var stageStack = this.stageStack;
+                util.removeArrByCondition(stageStack, function (s) {
+                    return s.name === name;
+                });
+                this.sortStageIndex();
+            }
+        },
+        getCurrentStage: function () {
+            return this.stageStack[0];
+        },
+        getStageStack: function () {
+            return this.stageStack;
+        },
+        getStageByName: function (name) {
+            return this.stages[name];
+        },
+        changeStage: function (stageName) {
+            if (stageName) {
+                var stageStack = this.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === stageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                this.swapStage(candidateIndex, 0);
+            }
+        },
+        swapStageByName: function (fromName, toName) {
+            var stageStack = this.stageStack;
+            var length = stageStack.length;
+            var fromIndex = -1;
+            var toIndex = -1;
+            for (var i = 0; i < length; i++) {
+                if (stageStack[i].name === fromName) {
+                    fromIndex = i;
+                }
+                if (stageStack[i].name === toName) {
+                    toIndex = i;
+                }
+            }
+            if (fromIndex !== -1 && toIndex !== -1) {
+                return this.swapStage(fromIndex, toIndex);
+            }
+            return this;
+        },
+        swapStage: function (from, to) {
+            var stageStack = this.stageStack;
+            var len = stageStack.length;
+            if (from >= 0 && from <= len - 1 && to >= 0 && to <= len - 1) {
+                var sc = stageStack[from];
+                stageStack[from] = stageStack[to];
+                stageStack[to] = sc;
+                this.sortStageIndex();
+            }
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            return this;
+        },
+        getStageIndex: function (stage) {
+            return stage.zIndex;
+        },
+        clearAllStage: function () {
+            var stageStack = this.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].destroy();
+            }
+            this.stages = {};
+            this.stageStack = [];
         }
     };
-    function preLoadResource() {
+    function _stageBg(stage) {
+        stage.setBgColor(stage.bgColor);
+        var asset = this.asset;
+        var bgImg = util.getImgAsset(stage.bgImg, game);
+        if (asset[stage.bgImg]) {
+            bgImg = asset[stage.bgImg];
+        } else {
+            var resource = this.resource;
+            for (var i = 0, len = resource.length; i < len; i++) {
+                if (util.getType(resource[i]) === 'string' && resource[i] === stage.bgImg) {
+                    bgImg = resource[i];
+                    break;
+                }
+                if (util.getType(resource[i]) === 'object' && resource[i].src === stage.bgImg) {
+                    bgImg = asset[resource[i].id];
+                }
+            }
+        }
+        if (bgImg) {
+            stage.setBgImg(bgImg, stage.bgImgRepeatPattern);
+        }
+    }
+    function _stageParallax(stage) {
+        var parallaxList = stage.parallaxList;
+        stage.setParallax(parallaxList);
+    }
+    function _stageStartExec(stage) {
+        _stageBg.call(this, stage);
+        _stageParallax.call(this, stage);
+    }
+    function _gameStartExec(stage) {
+        _stageStartExec.call(this, stage);
+        var realFPS = 0;
+        var realDt = 0;
+        var realFPSStart = Date.now();
+        var me = this;
+        ig.loop({
+            step: function (dt, requestID) {
+                if (!me.paused) {
+                    if (realDt > 1000) {
+                        realDt = 0;
+                        realFPSStart = Date.now();
+                        me.fire('gameFPS', { data: { fps: realFPS } });
+                        realFPS = 0;
+                    } else {
+                        realDt = Date.now() - realFPSStart;
+                        ++realFPS;
+                    }
+                    me.fire('beforeGameStep');
+                    stage.step(dt, requestID);
+                    me.fire('afterGameStep');
+                }
+            },
+            exec: function () {
+                if (!me.paused) {
+                    me.fire('beforeGameRender');
+                    stage.render();
+                    me.fire('afterGameRender');
+                }
+            }
+        });
+    }
+    function preLoadResource(callback) {
         var me = this;
         me.loadResource(me.resource, function (data) {
             me.asset = data;
+            callback.call(me);
             me.fire('loadResDone');
         }, {
             processCallback: function (loadedCount, total) {
@@ -2753,6 +2983,279 @@ define('ig/Game', [
     }
     util.inherits(Game, Event);
     return Game;
+});'use strict';
+define('ig/Stage', [
+    'require',
+    './ig',
+    './Event',
+    './util',
+    './domEvt'
+], function (require) {
+    var ig = require('./ig');
+    var Event = require('./Event');
+    var util = require('./util');
+    var domEvt = require('./domEvt');
+    var GUID_KEY = 0;
+    function Stage(opts) {
+        util.extend(true, this, {
+            name: 'ig_stage_' + GUID_KEY++,
+            canvas: opts.canvas,
+            ctx: opts.canvas.getContext('2d'),
+            offCanvas: opts.offCanvas,
+            offCtx: opts.offCanvas.getContext('2d'),
+            width: opts.game.width,
+            height: opts.game.height,
+            cssWidth: opts.game.cssWidth,
+            cssHeight: opts.game.cssHeight,
+            bgColor: 'transparent',
+            bgImg: '',
+            bgImgRepeatPattern: '',
+            parallaxList: [],
+            captureFunc: util.noop,
+            moveFunc: util.noop,
+            releaseFunc: util.noop
+        }, opts);
+        this.displayObjectList = [];
+        this.displayObjects = {};
+        initMouseEvent.call(this);
+        return this;
+    }
+    Stage.prototype = {
+        constructor: Stage,
+        setCaptureFunc: function (func) {
+            this.captureFunc = func || util.noop;
+            return this;
+        },
+        setMoveFunc: function (func) {
+            this.moveFunc = func || util.noop;
+            return this;
+        },
+        setReleaseFunc: function (func) {
+            this.releaseFunc = func || util.noop;
+            return this;
+        },
+        clear: function () {
+            this.offCtx.clearRect(0, 0, this.width, this.height);
+            return this;
+        },
+        getIndex: function () {
+            return this.zIndex;
+        },
+        setBgColor: function (color) {
+            this.bgColor = color;
+            this.canvas.style.backgroundColor = this.bgColor || 'transparent';
+            return this;
+        },
+        setBgImg: function (img, bgImgRepeatPattern) {
+            var imgUrl;
+            if (util.getType(img) === 'htmlimageelement') {
+                imgUrl = img.src;
+            } else if (util.getType(img) === 'string') {
+                imgUrl = img;
+            }
+            var bgRepeat = '';
+            var bgPos = '';
+            var bgSize = '';
+            switch (bgImgRepeatPattern) {
+            case 'center':
+                bgRepeat = 'no-repeat';
+                bgPos = 'center';
+                break;
+            case 'full':
+                bgSize = '100% 100%';
+                break;
+            }
+            if (imgUrl) {
+                this.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
+                this.canvas.style.backgroundRepeat = bgRepeat;
+                this.canvas.style.backgroundPosition = bgPos;
+                this.canvas.style.backgroundSize = bgSize;
+            } else {
+                this.canvas.style.backgroundImage = '';
+                this.canvas.style.backgroundRepeat = '';
+                this.canvas.style.backgroundPosition = '';
+                this.canvas.style.backgroundSize = '';
+            }
+            return this;
+        },
+        setParallax: function (parallaxList) {
+            if (!Array.isArray(parallaxList)) {
+                parallaxList = [parallaxList];
+            }
+            var asset = this.game.asset;
+            console.warn(asset, 'asset');
+            for (var i = 0, len = parallaxList.length; i < len; i++) {
+                var parallax = parallaxList[i];
+                console.warn(parallax, 3);
+            }
+            return this;
+        },
+        step: function (dt, requestID) {
+            this.fire('beforeStageStep');
+            this.fire('afterStageStep');
+        },
+        render: function () {
+            this.fire('beforeStageRender');
+            this.clear();
+            this.offCtx.save();
+            this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+            this.fire('afterStageRender');
+        }
+    };
+    function initMouseEvent() {
+        bindMouseEvent.call(this);
+        domEvt.initMouse(this);
+        return this;
+    }
+    function bindMouseEvent() {
+        var me = this;
+        domEvt.events.forEach(function (name, i) {
+            var invokeMethod = domEvt.fireEvt[name];
+            if (invokeMethod) {
+                me.on(name, invokeMethod);
+            }
+        });
+        return me;
+    }
+    util.inherits(Stage, Event);
+    return Stage;
+});'use strict';
+define('ig/domEvt', [
+    'require',
+    './util',
+    './env'
+], function (require) {
+    var util = require('./util');
+    var env = require('./env');
+    var TOUCH_EVENTS = [
+        'touchstart',
+        'touchmove',
+        'touchend'
+    ];
+    var MOUSE_EVENTS = [
+        'mousedown',
+        'mousemove',
+        'mouseup'
+    ];
+    var holdSprites = [];
+    function inHoldSprites(displayObjectName) {
+        for (var i = 0, len = holdSprites.length; i < len; i++) {
+            if (holdSprites[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
+    }
+    var subX = 0;
+    var subY = 0;
+    var exports = {};
+    exports.events = env.supportTouch ? TOUCH_EVENTS : MOUSE_EVENTS;
+    exports.fireEvt = {};
+    exports.fireEvt.touchstart = exports.fireEvt.mousedown = function (e) {
+        var target = e.target;
+        if (util.getType(target.captureFunc) === 'function') {
+            target.captureFunc.call(target, e.data);
+        }
+        var displayObjectList = target.displayObjectList;
+        var candidateDisplayObject;
+        var maxZIndex = -1;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.mouseEnable && curDisplayObject.hitTestPoint(e.data.x, e.data.y)) {
+                if (curDisplayObject.zIndex >= maxZIndex) {
+                    maxZIndex = curDisplayObject.zIndex;
+                    candidateDisplayObject = curDisplayObject;
+                }
+            }
+        }
+        if (candidateDisplayObject) {
+            e.data.curStage = target;
+            candidateDisplayObject.isCapture = true;
+            subX = e.data.x - candidateDisplayObject.x;
+            subY = e.data.y - candidateDisplayObject.y;
+            candidateDisplayObject.captureFunc.call(candidateDisplayObject, e.data);
+        }
+        return target;
+    };
+    exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
+        var target = e.target;
+        if (util.getType(target.moveFunc) === 'function') {
+            target.moveFunc.call(target, e.data);
+        }
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
+                holdSprites.push(curDisplayObject);
+            }
+            e.data.holdSprites = holdSprites;
+            if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
+                e.data.curStage = target;
+                e.data.x = e.data.x - subX;
+                e.data.y = e.data.y - subY;
+                curDisplayObject.moveFunc.call(curDisplayObject, e.data);
+            }
+        }
+        return target;
+    };
+    exports.fireEvt.touchend = exports.fireEvt.mouseup = function (e) {
+        var target = e.target;
+        if (util.getType(target.releaseFunc) === 'function') {
+            target.releaseFunc.call(target, e.data);
+        }
+        var displayObjectList = target.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var curDisplayObject = displayObjectList[i];
+            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+                curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
+                curDisplayObject.isCapture = false;
+            }
+        }
+        subX = 0;
+        subY = 0;
+        holdSprites = [];
+        return target;
+    };
+    exports.initMouse = function (stage) {
+        this.stage = stage;
+        this.element = stage.canvas;
+        this.x = 0;
+        this.y = 0;
+        this.isDown = false;
+        var offset = util.getElementOffset(this.element);
+        this.offsetX = offset.x;
+        this.offsetY = offset.y;
+        this.addEvent();
+        return this;
+    };
+    exports.addEvent = function () {
+        var me = this;
+        var elem = me.element;
+        var ratioWidth = me.stage.game.cssXRatio;
+        var ratioHeight = me.stage.game.cssYRatio;
+        me.events.forEach(function (name, i) {
+            elem.addEventListener(name, function (e) {
+                if (i === 0) {
+                    me.isDown = true;
+                } else if (i === 2) {
+                    me.isDown = false;
+                }
+                var x = e.changedTouches ? e.changedTouches[0].pageX : e.pageX;
+                var y = e.changedTouches ? e.changedTouches[0].pageY : e.pageY;
+                me.x = (x - me.offsetX) * ratioWidth;
+                me.y = (y - me.offsetY) * ratioHeight;
+                me.stage.fire(name, {
+                    data: {
+                        x: me.x,
+                        y: me.y,
+                        isDown: me.isDown,
+                        domEvent: e
+                    }
+                });
+            });
+        });
+    };
+    return exports;
 });
 var ig = require('ig');
 
@@ -3001,6 +3504,50 @@ else {
 
 var modName = 'ig/Game';
 var refName = 'Game';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Stage';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/domEvt';
+var refName = '';
 var folderName = '';
 
 var tmp;

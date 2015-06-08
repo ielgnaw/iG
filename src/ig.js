@@ -129,15 +129,15 @@ define(function (require) {
         var then = Date.now();
         var frameUpdateCount = 0;
         var passed = 0;
+        var fps = exports.getConfig('fps') || 60;
 
         // 毫秒，固定的时间片
-        var dt = 1000 / exports.STANDARD_FPS;
+        var dt = 1000 / fps;
 
         var acc = 0;
 
         (function tick() {
             requestID = window.requestAnimationFrame(tick);
-
             frameUpdateCount++;
 
             if (frameUpdateCount > conf.jumpFrames) {
@@ -152,10 +152,9 @@ define(function (require) {
                     // 如果这里直接写成 conf.step(dt)，
                     // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
                     // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
-                    conf.step(dt * (exports.STANDARD_FPS / 1000), requestID); // 分片更新时间
+                    conf.step(dt * (fps / 1000), requestID); // 分片更新时间
                     acc -= dt;
                 }
-
                 conf.exec();
             }
         })();

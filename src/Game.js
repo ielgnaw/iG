@@ -13,8 +13,8 @@ define(function (require) {
     var Event = require('./Event');
     var util = require('./util');
     var env = require('./env');
+    var Stage = require('./Stage');
     var ResourceLoader = require('./ResourceLoader');
-    // console.warn(resourceLoader);
 
     var CONFIG = ig.getConfig();
 
@@ -46,7 +46,7 @@ define(function (require) {
             maximize: false,
             // 屏幕大小变化自动适应
             scaleFit: true,
-            // 游戏的资源，初始化 game 的时候，这里面是待加载的资源，加载完成后，这里面放的是加载好的
+            // 游戏的资源，这里面是待加载的资源
             resource: [],
             // fps
             fps: CONFIG.fps,
@@ -93,9 +93,81 @@ define(function (require) {
          */
         constructor: Game,
 
-        start: function () {
-            // console.warn(1);
-            preLoadResource.call(this);
+        /**
+         * 停止游戏
+         *
+         * @return {Object} Game 实例
+         */
+        stop: function () {
+            window.cancelAnimationFrame(this._.requestID);
+            this._.requestID = null;
+            return this;
+        },
+
+        /**
+         * 游戏开始
+         *
+         * @param {string} startStageName 游戏开始时指定的场景名
+         * @param {Function} startCallback 游戏开始的回调函数
+         *
+         * @return {Object} Game 实例
+         */
+        start: function (startStageName, startCallback) {
+            var _startStageName = '';
+            var _startCallback = util.noop;
+            this.canStart = false;
+
+            var argLength = arguments.length;
+            switch (argLength) {
+                case 1:
+                    if (util.getType(arguments[0]) === 'function') {
+                        _startCallback = arguments[0];
+                    }
+                    else {
+                        _startStageName = arguments[0];
+                        _startCallback = util.noop;
+                    }
+                    break;
+                case 2:
+                    _startStageName = arguments[0];
+                    _startCallback = arguments[1];
+                    break;
+                default:
+            }
+
+            // 资源加载完成后，做引擎内部的 start 工作
+            preLoadResource.call(this, function () {
+                // 启动前先停止
+                this.stop();
+
+                this.paused = false;
+
+                // 存在启动的 stage，那么游戏开始时就要用这个 stage 启动
+                // 需要把这个 stage 移动到 stageStack 的第 0 个，因为 render 时获取场景是通过 getCurrentStage 来获取的
+                if (_startStageName && this.stages[_startStageName]) {
+                    var stageStack = this.stageStack;
+                    var candidateIndex = -1;
+                    for (var i = 0, len = stageStack.length; i < len; i++) {
+                        if (stageStack[i].name === _startStageName) {
+                            candidateIndex = i;
+                            break;
+                        }
+                    }
+                    this.swapStage(candidateIndex, 0);
+                }
+                // 不存在，那么启动的场景就是第一个场景
+                else {
+                    _startStageName = this.getCurrentStage().name;
+                }
+
+                var curStage = this.getStageByName(_startStageName);
+                curStage && _gameStartExec.call(this, curStage);
+
+                util.getType(_startCallback) === 'function' && _startCallback.call(this);
+
+            });
+
+            return this;
         },
 
         /**
@@ -186,18 +258,326 @@ define(function (require) {
          */
         loadResource: function (resource, callback, opts) {
             this.resourceLoader.loadResource(resource, callback, opts);
+        },
+
+        /**
+         * 创建一个场景
+         *
+         * @param {Object} stageOpts 创建场景所需的参数
+         *
+         * @return {Object} 创建的场景对象
+         */
+        createStage: function (stageOpts) {
+            stageOpts = util.extend(true, {},
+                {
+                    canvas: this.canvas,
+                    offCanvas: this.offCanvas,
+                    game: this
+                },
+                stageOpts
+            );
+
+            var stage = new Stage(stageOpts);
+            this.pushStage(stage);
+            return stage;
+        },
+
+        /**
+         * 添加场景，场景入栈
+         *
+         * @param {Object} stage 场景对象
+         */
+        pushStage: function (stage) {
+            if (!this.getStageByName(stage.name)) {
+                stage.game = this;
+                this.stageStack.push(stage);
+                this.stages[stage.name] = stage;
+                this.sortStageIndex();
+            }
+        },
+
+        /**
+         * 场景出栈
+         */
+        popStage: function () {
+            var stage = this.stageStack.pop();
+            if (stage) {
+                delete this.stages[stage.name];
+                this.sortStageIndex();
+            }
+        },
+
+        /**
+         * 场景排序
+         */
+        sortStageIndex: function () {
+            var stageStack = this.stageStack;
+            // for (var i = 0, len = stageStack.length; i < len; i++) {
+            for (var i = stageStack.length - 1, j = 0; i >= 0; i--, j++) {
+                stageStack[i].zIndex = j;
+            }
+        },
+
+        /**
+         * 根据名字移除一个场景，它和 popStage 的区别是
+         * popStage 清除的是栈顶的那一个
+         *
+         * @param {string} name 场景名字
+         */
+        removeStageByName: function (name) {
+            var st = this.getStageByName(name);
+            if (st) {
+                delete this.stages[st.name];
+                var stageStack = this.stageStack;
+                util.removeArrByCondition(stageStack, function (s) {
+                    return s.name === name;
+                });
+                this.sortStageIndex();
+            }
+        },
+
+        /**
+         * 获取当前场景，栈的第一个为当前场景
+         *
+         * @return {Object} 场景对象
+         */
+        getCurrentStage: function () {
+            // return this.stageStack[this.stageStack.length - 1];
+            return this.stageStack[0];
+        },
+
+        /**
+         * 获取当前游戏里面的所有场景
+         *
+         * @return {Array} 所有场景集合
+         */
+        getStageStack: function () {
+            return this.stageStack;
+        },
+
+        /**
+         * 根据场景名字获取场景对象
+         *
+         * @param {string} name 场景名字
+         *
+         * @return {Object} 场景对象
+         */
+        getStageByName: function (name) {
+            return this.stages[name];
+        },
+
+        /**
+         * 根据名字切换场景
+         *
+         * @param {string} stageName 场景名字
+         */
+        changeStage: function (stageName) {
+            if (stageName) {
+                var stageStack = this.stageStack;
+                var candidateIndex = -1;
+                for (var i = 0, len = stageStack.length; i < len; i++) {
+                    if (stageStack[i].name === stageName) {
+                        candidateIndex = i;
+                        break;
+                    }
+                }
+                this.swapStage(candidateIndex, 0);
+            }
+        },
+
+        /**
+         * 根据场景名称交换场景
+         *
+         * @param {string} fromName 起始场景的名称
+         * @param {string} toName 目标场景的名称
+         *
+         * @return {Object} Game 实例
+         */
+        swapStageByName: function (fromName, toName) {
+            var stageStack = this.stageStack;
+            var length = stageStack.length;
+            var fromIndex = -1;
+            var toIndex = -1;
+            for (var i = 0; i < length; i++) {
+                if (stageStack[i].name === fromName) {
+                    fromIndex = i;
+                }
+                if (stageStack[i].name === toName) {
+                    toIndex = i;
+                }
+            }
+
+            if (fromIndex !== -1 && toIndex !== -1) {
+                return this.swapStage(fromIndex, toIndex);
+            }
+
+            return this;
+        },
+
+        /**
+         * 根据位置交换场景
+         *
+         * @param {number} from 起始位置
+         * @param {number} to 目标位置
+         *
+         * @return {Object} Game 实例
+         */
+        swapStage: function (from, to) {
+            var stageStack = this.stageStack;
+            var len = stageStack.length;
+            if (from >= 0 && from <= len - 1
+                    && to >= 0 && to <= len - 1
+            ) {
+                var sc = stageStack[from];
+                stageStack[from] = stageStack[to];
+                stageStack[to] = sc;
+                this.sortStageIndex();
+            }
+
+            // 变换场景时，需要清除 this.canvas
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            return this;
+        },
+
+        /**
+         * 获取场景的 zIndex，场景的排序实际上就是变化 zIndex
+         *
+         * @param {Object} stage 场景对象
+         *
+         * @return {number} zIndex
+         */
+        getStageIndex: function (stage) {
+            return stage.zIndex;
+        },
+
+        /**
+         * 清除所有场景
+         */
+        clearAllStage: function () {
+            var stageStack = this.stageStack;
+            for (var i = 0, len = stageStack.length; i < len; i++) {
+                stageStack[i].destroy();
+            }
+            this.stages = {};
+            this.stageStack = [];
         }
     };
 
     /**
-     * 当前 Game 实例的资源的预加载
+     * stage 背景颜色和背景图片的处理
+     * 设置启动场景的背景颜色、图片等等
+     *
+     * @param {Object} stage 启动的场景对象
      */
-    function preLoadResource() {
+    function _stageBg(stage) {
+        stage.setBgColor(stage.bgColor);
+
+        var asset = this.asset;
+        var bgImg = util.getImgAsset(stage.bgImg, asset, );
+
+        if (asset[stage.bgImg]) {
+            bgImg = asset[stage.bgImg];
+        }
+        else {
+            var resource = this.resource;
+            for (var i = 0, len = resource.length; i < len; i++) {
+                if (util.getType(resource[i]) === 'string' && resource[i] === stage.bgImg) {
+                    bgImg = resource[i];
+                    break;
+                }
+
+                if (util.getType(resource[i]) === 'object'
+                    && resource[i].src === stage.bgImg
+                ) {
+                    bgImg = asset[resource[i].id];
+                }
+            }
+        }
+
+        if (bgImg) {
+            stage.setBgImg(bgImg, stage.bgImgRepeatPattern);
+        }
+    }
+
+    /**
+     * stage 背景时差滚动的处理
+     * 设置启动场景的背景颜色、图片等等
+     *
+     * @param {Object} stage 启动的场景对象
+     */
+    function _stageParallax(stage) {
+        var parallaxList = stage.parallaxList;
+        stage.setParallax(parallaxList);
+    }
+
+    /**
+     * stage 启动的执行方法
+     * 设置启动场景的背景颜色、图片等等
+     *
+     * @param {Object} stage 启动的场景对象
+     */
+    function _stageStartExec(stage) {
+        _stageBg.call(this, stage);
+        _stageParallax.call(this, stage);
+    }
+
+    /**
+     * game 启动的执行方法
+     *
+     * @param {Object} stage 启动的场景对象
+     */
+    function _gameStartExec(stage) {
+        _stageStartExec.call(this, stage);
+
+        var realFPS = 0;
+        var realDt = 0;
+        var realFPSStart = Date.now();
+
+        var me = this;
+        ig.loop({
+            step: function (dt, requestID) {
+                if (!me.paused) {
+                    if (realDt > 1000) {
+                        realDt = 0;
+                        realFPSStart = Date.now();
+                        me.fire('gameFPS', {
+                            data: {
+                                fps: realFPS
+                            }
+                        });
+                        realFPS = 0;
+                    }
+                    else {
+                        realDt = Date.now() - realFPSStart;
+                        ++realFPS;
+                    }
+                    me.fire('beforeGameStep');
+                    stage.step(dt, requestID);
+                    me.fire('afterGameStep');
+                }
+            },
+            exec: function () {
+                if (!me.paused) {
+                    me.fire('beforeGameRender');
+                    stage.render();
+                    me.fire('afterGameRender');
+                }
+            }
+        });
+    }
+
+    /**
+     * 当前 Game 实例的资源的预加载
+     *
+     * @param {Function} callback 加载完成后的回调函数（引擎内部的回调函数）
+     */
+    function preLoadResource(callback) {
         var me = this;
         me.loadResource(
             me.resource,
             function (data) {
                 me.asset = data;
+                callback.call(me);
                 me.fire('loadResDone');
             },
             {
@@ -206,7 +586,7 @@ define(function (require) {
                         data: {
                             loadedCount: loadedCount,
                             total: total
-                       }
+                        }
                     });
                 }
             }

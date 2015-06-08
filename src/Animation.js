@@ -12,6 +12,8 @@ define(function (require) {
     var Event = require('./Event');
     var easing = require('./easing');
 
+    var CONFIG = ig.getConfig();
+
     /**
      * 名字标示
      *
@@ -76,7 +78,7 @@ define(function (require) {
             this.curFrame = 0;
             this.curState = {};
             this.initState = {};
-            this.frames = Math.ceil(this.duration * ig.STANDARD_FPS / 1000);
+            this.frames = Math.ceil(this.duration * (CONFIG.fps || 60) / 1000);
 
             var source = this.source;
             var target = this.target;

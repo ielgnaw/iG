@@ -290,6 +290,34 @@ define(function (require) {
     };
 
     /**
+     * 检测图片 id 或者路径是否在 game.asset 中即是否加载完成
+     *
+     * @param {string} img 图片 id 或者路径
+     * @param {Object} gameAsset 游戏资源，加载后的
+     * @param {Array} gameResource 游戏资源，初始化设置的
+     *
+     * @return {?Object} 返回已经加载的资源，如果没有找到，返回 null
+     */
+    exports.getImgAsset = function (img, gameAsset, gameResource) {
+        if (gameAsset[img]) {
+            return gameAsset[img];
+        }
+        for (var i = 0, len = gameResource.length; i < len; i++) {
+            if (exports.getType(gameResource[i]) === 'string' && gameResource[i] === img) {
+                return gameResource[i];
+            }
+
+            if (exports.getType(gameResource[i]) === 'object'
+                && gameResource[i].src === img
+            ) {
+                return gameAsset[gameResource[i].id];
+            }
+        }
+
+        return null;
+    };
+
+    /**
      * 根据角度计算弧度
      * 弧度 = 角度 * Math.PI / 180
      *
