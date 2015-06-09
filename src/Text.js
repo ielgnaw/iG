@@ -108,11 +108,6 @@ define(function (require) {
 
             // console.warn(this.bounds.width * 0.5, this.bounds.height * 0.5);
             offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
-            // offCtx.fillText(
-            //     this.content,
-            //     this.x,// - this.bounds.width * 0.5,
-            //     this.y// - this.bounds.height * 0.5
-            // );
 
             this.debugRender(offCtx);
             offCtx.restore();
