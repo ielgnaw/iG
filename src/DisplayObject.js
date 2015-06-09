@@ -13,7 +13,9 @@ define(function (require) {
     var Animation = require('./Animation');
     var Matrix = require('./Matrix');
 
-    var STATUS = ig.STATUS;
+    var CONFIG = ig.getConfig();
+
+    var STATUS = CONFIG.status;
 
     /**
      * 名字标示
@@ -96,17 +98,17 @@ define(function (require) {
             strokeStyle: 'transparent',
             // image 图像
             image: null,
-            // 横轴速度，x += vx
+            // 横轴速度，x += vx * dt
             vx: 0,
-            // 纵轴速度，y += vy
+            // 纵轴速度，y += vy * dt
             vy: 0,
-            // 横轴加速度，vx += ax
+            // 横轴加速度，vx += ax * dt
             ax: 0,
-            // 纵轴加速度，vy += ay
+            // 纵轴加速度，vy += ay * dt
             ay: 0,
-            // 横轴摩擦力，vx *= xFriction
+            // 横轴摩擦力，vx *= xFriction * dt
             xFriction: 1,
-            // 纵轴摩擦力，vy *= yFriction
+            // 纵轴摩擦力，vy *= yFriction * dt
             yFriction: 1,
             // 子精灵
             children: [],
@@ -281,9 +283,9 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         rotate: function (angle) {
-            var offCtx = this.stageOwner.offCtx;
+            var offCtx = this.stage.offCtx;
             offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.angle));
+            offCtx.rotate(util.deg2Rad(angle || this.angle || 0));
             offCtx.restore();
             return this;
         },
@@ -356,68 +358,24 @@ define(function (require) {
         },
 
         /**
+         * 销毁
+         */
+        destroy: function () {
+            this.status = STATUS.DESTROYED;
+        },
+
+        /**
          * 移动
-         * x, y 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
+         * dx, dy 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
          *
-         * @param {number} x 横轴要移动的距离
-         * @param {number} y 纵轴要移动的距离
-         *
-         * @return {Object} DisplayObject 实例
-         */
-        move: function (x, y) {
-            this.x += x;
-            this.y += y;
-            return this;
-        },
-
-        /**
-         * 移动一步
-         * 速度 += 加速度
-         * 坐标 += 速度
+         * @param {number} dx 横轴要移动的距离
+         * @param {number} dy 纵轴要移动的距离
          *
          * @return {Object} DisplayObject 实例
          */
-        moveStep: function () {
-            this.vx += this.ax;
-            this.vx *= this.xFriction;
-            this.x += this.vx;
-
-            this.vy += this.ay;
-            this.vy *= this.yFriction;
-            this.y += this.vy;
-            return this;
-        },
-
-        /**
-         * 内部的每帧更新，这个方法应该是由子类重写的
-         * 例如精灵表，如果调用者重写了 update 那么精灵表就不会切换帧了
-         * `SubClass.superClass.update.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
-         *
-         * @override
-         */
-        _update: function () {
-            return this;
-        },
-
-        /**
-         * 每帧更新，这个方法应该是由子类重写的
-         * `SubClass.superClass.update.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
-         *
-         * @override
-         */
-        update: function () {
-            return this;
-        },
-
-        /**
-         * 每帧渲染，这个方法应该是由子类重写的
-         * `SubClass.superClass.render.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
-         *
-         * @override
-         *
-         * @param {Object} offCtx 离屏 canvas 2d context 对象
-         */
-        render: function (offCtx) {
+        move: function (dx, dy) {
+            this.x += dx;
+            this.y += dy;
             return this;
         },
 
@@ -436,11 +394,63 @@ define(function (require) {
         },
 
         /**
-         * 销毁
+         * 内部的每帧更新，这个方法应该是由引擎内部的子类重写的，不应由开发者自定义的类重写
+         * 例如精灵表，如果调用者重写了 step 那么精灵表就不会切换帧了
+         * `SubClass.superClass.step.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
+         *
+         * @override
+         *
+         * @param {number} dt 毫秒，固定的时间片
+         * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+         * @param {number} requestID requestAnimationFrame 标识
          */
-        destroy: function () {
-            this.status = STATUS.DESTROYED;
+        _step: function (dt, stepCount, requestID) {
+            return this;
+        },
+
+        /**
+         * 每帧更新，这个方法应该是由子类重写的
+         * `SubClass.superClass.update.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
+         *
+         * @override
+         *
+         * @param {number} dt 毫秒，固定的时间片
+         * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+         * @param {number} requestID requestAnimationFrame 标识
+         */
+        step: function (dt, stepCount, requestID) {
+            return this;
+        },
+
+        /**
+         * 每帧渲染，这个方法应该是由子类重写的
+         * `SubClass.superClass.render.apply(sub, arguments);` 可以在子类的实现中要调用此父类方法
+         *
+         * @override
+         *
+         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         */
+        render: function (offCtx) {
+            return this;
         }
+
+        /**
+         * 移动一步
+         * 速度 += 加速度
+         * 坐标 += 速度
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        // moveStep: function () {
+        //     this.vx += this.ax;
+        //     this.vx *= this.xFriction;
+        //     this.x += this.vx;
+
+        //     this.vy += this.ay;
+        //     this.vy *= this.yFriction;
+        //     this.y += this.vy;
+        //     return this;
+        // },
     };
 
     util.inherits(DisplayObject, Event);

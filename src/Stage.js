@@ -10,8 +10,12 @@ define(function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
-    // var DisplayObject = require('./DisplayObject');
+    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
+
+    var CONFIG = ig.getConfig();
+
+    var STATUS = CONFIG.status;
 
     /**
      * 作为 repeat 时的新图片
@@ -163,7 +167,8 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         clear: function () {
-            this.offCtx.clearRect(0, 0, this.width, this.height);
+            // this.offCtx.clearRect(0, 0, this.width, this.height);
+            this.ctx.clearRect(0, 0, this.width, this.height);
             return this;
         },
 
@@ -296,7 +301,7 @@ define(function (require) {
                     )
                 );
             }
-            console.warn(this.parallaxList);
+
             return this;
         },
 
@@ -310,31 +315,8 @@ define(function (require) {
         step: function (dt, stepCount, requestID) {
             this.fire('beforeStageStep');
             updateParallax.call(this, dt, stepCount, requestID);
+            updateSprite.call(this, dt, stepCount, requestID);
             this.fire('afterStageStep');
-            // console.warn(dt, requestID);
-            // if (dt < 0) {
-            //     dt = 1.0 / 60;
-            // }
-
-            // if (dt > 1 / 15) {
-            //     dt  = 1.0 / 15;
-            // }
-
-            // updateParallax.call(this, totalFrameCounter);
-
-            // var displayObjectList = this.displayObjectList;
-            // var len = displayObjectList.length;
-            // var displayObjectStatus;
-            // for (var i = 0; i < len; i++) {
-            //     var curDisplay = displayObjectList[i];
-            //     if (curDisplay) {
-            //         displayObjectStatus = curDisplay.status;
-            //         if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
-            //             curDisplay._update(dt);
-            //             curDisplay.update(dt);
-            //         }
-            //     }
-            // }
         },
 
         /**
@@ -352,33 +334,173 @@ define(function (require) {
             this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
 
             renderParallax.call(this);
-
-            // renderParallax.call(this);
-            // this.sortDisplayObject();
-            // var displayObjectList = this.displayObjectList;
-            // var len = displayObjectList.length;
-            // var displayObjectStatus;
-
-            // for (var i = 0; i < len; i++) {
-            //     var curDisplay = displayObjectList[i];
-            //     if (curDisplay) {
-            //         displayObjectStatus = curDisplay.status;
-            //         if (displayObjectStatus === STATUS.DESTROYED) {
-            //             this.removeDisplayObject(curDisplay);
-            //         }
-            //         else if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
-            //             curDisplay.render(this.offCtx);
-            //         }
-            //     }
-            // }
+            renderSprite.call(this, execCount);
 
             this.offCtx.restore();
+
             this.ctx.drawImage(this.offCanvas, 0, 0);
 
             this.fire('afterStageRender');
         },
 
+        /**
+         * 创建一个 displayObject
+         *
+         * @param {Object} displayObjOpts 创建 displayObject 所需的参数
+         *
+         * @return {Object} 创建的 displayObject 对象
+         */
+        createDisplayObject: function (displayObjOpts) {
+            var displayObj = new DisplayObject(displayObjOpts);
+            this.addDisplayObject(displayObj);
+            return displayObj;
+        },
+
+        /**
+         * 向场景中添加一个 DisplayObject 实例
+         *
+         * @param {Object} displayObj DisplayObject 实例
+         *
+         * @return {Object} Stage 实例
+         */
+        addDisplayObject: function (displayObj) {
+            if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
+                displayObj.stage = this;
+                this.displayObjectList.push(displayObj);
+                this.displayObjects[displayObj.name] = displayObj;
+            }
+            return this;
+        },
+
+        /**
+         * 根据名字获取 displayObject 对象
+         *
+         * @param {string} name displayObject 名字
+         *
+         * @return {Object} displayObject 对象
+         */
+        getDisplayObjectByName: function (name) {
+            return this.displayObjects[name];
+        },
+
+        /**
+         * 获取当前场景里面的所有 displayObject
+         *
+         * @return {Array} 所有 displayObject 集合
+         */
+        getDisplayObjectList: function () {
+            return this.displayObjectList;
+        },
+
+        /**
+         * 排序场景中的 displayObject
+         */
+        sortDisplayObject: function () {
+            this.displayObjectList.sort(function (o1, o2) {
+                return o1.zIndex - o2.zIndex;
+            });
+        },
+
+        /**
+         * 移除 displayObject
+         *
+         * @param {Object} displayObj displayObject 对象
+         *
+         * @return {Object} Stage 实例
+         */
+        removeDisplayObject: function (displayObj) {
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
+            return this;
+        },
+
+        /**
+         * 根据 name 移除 displayObject
+         *
+         * @param {string} name displayObject 的名字
+         *
+         * @return {Object} Stage 实例
+         */
+        removeDisplayObjectByName: function (name) {
+            var candidateObj = this.displayObjects[name];
+            if (candidateObj) {
+                delete this.displayObjects[candidateObj.name];
+                var displayObjectList = this.displayObjectList;
+                util.removeArrByCondition(displayObjectList, function (o) {
+                    return o.name === name;
+                });
+            }
+            return this;
+        },
+
+        /**
+         * 清除所有 displayObject
+         */
+        clearAllDisplayObject: function () {
+            this.displayObjectList = [];
+            this.displayObjects = {};
+        },
+
+        /**
+         * 销毁
+         */
+        destroy: function () {
+            this.clearAllDisplayObject();
+            this.clearEvents();
+        }
     };
+
+    /**
+     * 渲染场景里面的精灵
+     *
+     * @param {number} execCount 每帧执行的函数的计数器
+     */
+    function renderSprite(execCount) {
+        this.sortDisplayObject();
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.NORMAL
+                    || displayObjectStatus === STATUS.NOT_UPDATE
+                ) {
+                    curDisplay.render(this.offCtx, execCount);
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新当前场景里面的精灵
+     *
+     * @param {number} dt 毫秒，固定的时间片
+     * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+     * @param {number} requestID requestAnimationFrame 标识
+     */
+    function updateSprite(dt, stepCount, requestID) {
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.DESTROYED) {
+                    this.removeDisplayObject(curDisplay);
+                }
+                if (displayObjectStatus === STATUS.NORMAL
+                    || displayObjectStatus === STATUS.NOT_RENDER
+                ) {
+                    curDisplay._step(dt, stepCount, requestID);
+                    curDisplay.step(dt, stepCount, requestID);
+                    // curDisplay.update(dt);
+                }
+            }
+        }
+    }
 
     /**
       * 更新视差滚动

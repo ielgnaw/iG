@@ -15,6 +15,7 @@ exports.modules = {
         {name: 'ig/Matrix', refName: 'Matrix'},
         {name: 'ig/Animation', refName: 'Animation'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'},
+        {name: 'ig/Text', refName: 'Text'},
         {name: 'ig/ResourceLoader'},
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage'},
@@ -23,15 +24,7 @@ exports.modules = {
 
         // refName 指要挂载到 window.ig 这个全局空间上的名字
         // 如果无 refName 配置，意味着该模板只是 ig 内部调用的，不会被挂载在 window 上
-        // {name: 'ig/util', refName: 'util'},     // window.ig.util
-        // {name: 'ig/Event', refName: 'Event'},   // window.ig.Event
-        // {name: 'ig/env', refName: 'env'},  // window.ig.env
-        // {name: 'ig/Game', refName: 'Game'}, // window.ig.Game
-        // {name: 'ig/Stage'},
-        // {name: 'ig/DisplayObject', refName: 'DisplayObject'}, // window.ig.FrameMonitor
         // {name: 'ig/SpriteSheet', refName: 'SpriteSheet'}, // window.ig.SpriteSheet
-        // {name: 'ig/resourceLoader'},
-        // {name: 'ig/Stage'},
 
         // {name: 'ig/Shape/Ball', refName: 'Ball', folder: 'Shape'}, // window.ig.Shape.Ball
 
@@ -42,11 +35,7 @@ exports.modules = {
         // {name: 'ig/collision'},
 
         // {name: 'ig/geom/polygon', folder: 'geom'},
-        // {name: 'ig/domEvt'},
         // {name: 'ig/Bitmap', refName: 'Bitmap'},
-        // {name: 'ig/Text', refName: 'Text'},
-        // {name: 'ig/easing', refName: 'easing'},
-        // {name: 'ig/Animation', refName: 'Animation'}
     ]
 };
 

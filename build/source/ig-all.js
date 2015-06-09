@@ -2279,7 +2279,8 @@ define('ig/DisplayObject', [
     var util = require('./util');
     var Animation = require('./Animation');
     var Matrix = require('./Matrix');
-    var STATUS = ig.STATUS;
+    var CONFIG = ig.getConfig();
+    var STATUS = CONFIG.status;
     var GUID_KEY = 0;
     function DisplayObject(opts) {
         util.extend(true, this, {
@@ -2361,9 +2362,9 @@ define('ig/DisplayObject', [
             return this;
         },
         rotate: function (angle) {
-            var offCtx = this.stageOwner.offCtx;
+            var offCtx = this.stage.offCtx;
             offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.angle));
+            offCtx.rotate(util.deg2Rad(angle || this.angle || 0));
             offCtx.restore();
             return this;
         },
@@ -2393,38 +2394,118 @@ define('ig/DisplayObject', [
             this.animate && this.animate.destroy();
             return this;
         },
-        move: function (x, y) {
-            this.x += x;
-            this.y += y;
-            return this;
+        destroy: function () {
+            this.status = STATUS.DESTROYED;
         },
-        moveStep: function () {
-            this.vx += this.ax;
-            this.vx *= this.xFriction;
-            this.x += this.vx;
-            this.vy += this.ay;
-            this.vy *= this.yFriction;
-            this.y += this.vy;
-            return this;
-        },
-        _update: function () {
-            return this;
-        },
-        update: function () {
-            return this;
-        },
-        render: function (offCtx) {
+        move: function (dx, dy) {
+            this.x += dx;
+            this.y += dy;
             return this;
         },
         hitTestPoint: function (x, y) {
             return false;
         },
-        destroy: function () {
-            this.status = STATUS.DESTROYED;
+        _step: function (dt, stepCount, requestID) {
+            return this;
+        },
+        step: function (dt, stepCount, requestID) {
+            return this;
+        },
+        render: function (offCtx) {
+            return this;
         }
     };
     util.inherits(DisplayObject, Event);
     return DisplayObject;
+});'use strict';
+define('ig/Text', [
+    'require',
+    './util',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
+    function Text(opts) {
+        DisplayObject.call(this, opts);
+        util.extend(true, this, {
+            content: '',
+            size: 30,
+            isBold: false,
+            fontFamily: 'sans-serif'
+        }, opts);
+        var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
+        this.bounds = {
+            x: this.x,
+            y: this.y,
+            width: obj.width,
+            height: obj.height
+        };
+        this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
+        return this;
+    }
+    Text.prototype = {
+        constructor: Text,
+        changeContent: function (content) {
+            this.content = content;
+            var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
+            this.bounds = {
+                x: this.x,
+                y: this.y,
+                width: obj.width,
+                height: obj.height
+            };
+            return this;
+        },
+        getContent: function () {
+            return this.content;
+        },
+        render: function (offCtx, execCount) {
+            offCtx.save();
+            offCtx.fillStyle = this.fillStyle;
+            offCtx.globalAlpha = this.alpha;
+            offCtx.font = this.font;
+            this.matrix.reset();
+            this.matrix.translate(this.x, this.y);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.xScale, this.yScale);
+            var m = this.matrix.m;
+            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
+            this.debugRender(offCtx);
+            offCtx.restore();
+            return this;
+        },
+        debugRender: function (offCtx) {
+            if (this.debug) {
+                offCtx.save();
+                var m = this.matrix.reset().m;
+                this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height - 10);
+                offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                offCtx.strokeStyle = 'black';
+                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                offCtx.restore();
+            }
+        }
+    };
+    function measureText(text, isBold, fontFamily, size) {
+        var div = document.createElement('div');
+        div.innerHTML = text;
+        div.style.position = 'absolute';
+        div.style.top = '-1000px';
+        div.style.left = '-1000px';
+        div.style.fontFamily = fontFamily;
+        div.style.fontWeight = isBold ? 'bold' : 'normal';
+        div.style.fontSize = size + 'pt';
+        document.body.appendChild(div);
+        var ret = {
+            width: div.offsetWidth,
+            height: div.offsetHeight
+        };
+        document.body.removeChild(div);
+        return ret;
+    }
+    util.inherits(Text, DisplayObject);
+    return Text;
 });define('ig/ResourceLoader', [
     'require',
     './util',
@@ -2975,12 +3056,16 @@ define('ig/Stage', [
     './ig',
     './Event',
     './util',
+    './DisplayObject',
     './domEvt'
 ], function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
+    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
+    var CONFIG = ig.getConfig();
+    var STATUS = CONFIG.status;
     var newImage4ParallaxRepeat = new Image();
     var GUID_KEY = 0;
     function Stage(opts) {
@@ -3023,7 +3108,7 @@ define('ig/Stage', [
             return this;
         },
         clear: function () {
-            this.offCtx.clearRect(0, 0, this.width, this.height);
+            this.ctx.clearRect(0, 0, this.width, this.height);
             return this;
         },
         getIndex: function () {
@@ -3093,12 +3178,12 @@ define('ig/Stage', [
                     ay: 0
                 }, parallaxOpt));
             }
-            console.warn(this.parallaxList);
             return this;
         },
         step: function (dt, stepCount, requestID) {
             this.fire('beforeStageStep');
             updateParallax.call(this, dt, stepCount, requestID);
+            updateSprite.call(this, dt, stepCount, requestID);
             this.fire('afterStageStep');
         },
         render: function (execCount) {
@@ -3107,11 +3192,92 @@ define('ig/Stage', [
             this.offCtx.save();
             this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
             renderParallax.call(this);
+            renderSprite.call(this, execCount);
             this.offCtx.restore();
             this.ctx.drawImage(this.offCanvas, 0, 0);
             this.fire('afterStageRender');
+        },
+        createDisplayObject: function (displayObjOpts) {
+            var displayObj = new DisplayObject(displayObjOpts);
+            this.addDisplayObject(displayObj);
+            return displayObj;
+        },
+        addDisplayObject: function (displayObj) {
+            if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
+                displayObj.stage = this;
+                this.displayObjectList.push(displayObj);
+                this.displayObjects[displayObj.name] = displayObj;
+            }
+            return this;
+        },
+        getDisplayObjectByName: function (name) {
+            return this.displayObjects[name];
+        },
+        getDisplayObjectList: function () {
+            return this.displayObjectList;
+        },
+        sortDisplayObject: function () {
+            this.displayObjectList.sort(function (o1, o2) {
+                return o1.zIndex - o2.zIndex;
+            });
+        },
+        removeDisplayObject: function (displayObj) {
+            displayObj && this.removeDisplayObjectByName(displayObj.name);
+            return this;
+        },
+        removeDisplayObjectByName: function (name) {
+            var candidateObj = this.displayObjects[name];
+            if (candidateObj) {
+                delete this.displayObjects[candidateObj.name];
+                var displayObjectList = this.displayObjectList;
+                util.removeArrByCondition(displayObjectList, function (o) {
+                    return o.name === name;
+                });
+            }
+            return this;
+        },
+        clearAllDisplayObject: function () {
+            this.displayObjectList = [];
+            this.displayObjects = {};
+        },
+        destroy: function () {
+            this.clearAllDisplayObject();
+            this.clearEvents();
         }
     };
+    function renderSprite(execCount) {
+        this.sortDisplayObject();
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
+                    curDisplay.render(this.offCtx, execCount);
+                }
+            }
+        }
+    }
+    function updateSprite(dt, stepCount, requestID) {
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.DESTROYED) {
+                    this.removeDisplayObject(curDisplay);
+                }
+                if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
+                    curDisplay._step(dt, stepCount, requestID);
+                    curDisplay.step(dt, stepCount, requestID);
+                }
+            }
+        }
+    }
     function updateParallax(dt, stepCount, requestID) {
         var parallaxList = this.parallaxList;
         var len = parallaxList.length;
@@ -3569,6 +3735,28 @@ else {
 
 var modName = 'ig/DisplayObject';
 var refName = 'DisplayObject';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Text';
+var refName = 'Text';
 var folderName = '';
 
 var tmp;
