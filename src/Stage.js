@@ -14,6 +14,13 @@ define(function (require) {
     var domEvt = require('./domEvt');
 
     /**
+     * 作为 repeat 时的新图片
+     *
+     * @type {Image}
+     */
+    var newImage4ParallaxRepeat = new Image();
+
+    /**
      * 名字标示
      *
      * @type {number}
@@ -55,7 +62,7 @@ define(function (require) {
             bgImg: '',
             // 背景图片重复的模式，center: 居中; full: 拉伸; 默认平铺
             bgImgRepeatPattern: '',
-            // 时差滚动，默认空数组，一个合法的配置如下：
+            // 视差滚动的配置，默认空数组，一个合法的配置如下：
             // [
             //      {
             //          image: 'bg', // 图片 id 或者路径
@@ -78,8 +85,7 @@ define(function (require) {
             //          ay: 0 // 纵轴加速度，vy += ay
             //      }
             // ]
-            parallaxList: [],
-
+            parallaxOpts: [],
             // 对应 mousedown 和 touchstart 事件
             // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
             captureFunc: util.noop,
@@ -96,6 +102,9 @@ define(function (require) {
 
         // 当前场景中的所有可显示对象，对象，方便读取
         this.displayObjects = {};
+
+        // 当前场景的视差滚动的存储
+        this.parallaxList = [];
 
         // 初始化 mouse 和 touch 事件
         initMouseEvent.call(this);
@@ -190,15 +199,6 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         setBgImg: function (img, bgImgRepeatPattern) {
-            var imgUrl;
-
-            if (util.getType(img) === 'htmlimageelement') {
-                imgUrl = img.src;
-            }
-            else if (util.getType(img) === 'string') {
-                imgUrl = img;
-            }
-
             var bgRepeat = '';
             var bgPos = '';
             var bgSize = '';
@@ -215,17 +215,26 @@ define(function (require) {
                     break;
             }
 
-            if (imgUrl) {
-                this.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-                this.canvas.style.backgroundRepeat = bgRepeat;
-                this.canvas.style.backgroundPosition = bgPos;
-                this.canvas.style.backgroundSize = bgSize;
+            this.canvas.style.backgroundRepeat = bgRepeat;
+            this.canvas.style.backgroundPosition = bgPos;
+            this.canvas.style.backgroundSize = bgSize;
+
+            if (util.getType(img) === 'htmlimageelement') {
+                this.canvas.style.backgroundImage = 'url(' + img.src + ')';
             }
-            else {
-                this.canvas.style.backgroundImage = '';
-                this.canvas.style.backgroundRepeat = '';
-                this.canvas.style.backgroundPosition = '';
-                this.canvas.style.backgroundSize = '';
+            else if (util.getType(img) === 'string') {
+                var asset = this.game.asset;
+                var resource = this.game.resource;
+                var bgImg = util.getImgAsset(img, asset, resource);
+                if (bgImg) {
+                    this.canvas.style.backgroundImage = 'url(' + bgImg.src + ')';
+                }
+                else {
+                    this.canvas.style.backgroundImage = '';
+                    this.canvas.style.backgroundRepeat = '';
+                    this.canvas.style.backgroundPosition = '';
+                    this.canvas.style.backgroundSize = '';
+                }
             }
 
             return this;
@@ -234,63 +243,73 @@ define(function (require) {
         /**
          * 设置时差滚动
          *
-         * @param {Array.<Object>} opts 配置项
-         * @param {HTMLImageElement} opts[i].image 图片
-         * @param {string} opts[i].repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
-         * @param {number} opts[i].animInterval opts[i].anims 的循环间隔，
-         *                                   这个间隔不是指的时间间隔，当 totalFrameCounter % opts[i].animInterval === 0 时触发
-         * @param {Array} opts[i].anims 动画组，如果设置了次属性，那么会根据这个属性里面的值来切换动画
-         *                           例如: opts[i].anims = [{aX: 1, aY: 1}, {aX: -1, aY: -1}]，那么首先会执行 opts[i].anims[0] 的变化，
-         *                           在 totalFrameCounter % animInterval === 0 后，会执行 opts[i].anims[1] ，如此循环
-         *                           如果 opts[i].animInterval 没有设置，则取默认值 10000
+         * @param {Array.<Object>} parallaxOpts 配置项
+         * @param {HTMLImageElement} parallaxOpts[i].image 图片
+         * @param {string} parallaxOpts[i].repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
+         * @param {number} parallaxOpts[i].animInterval parallaxOpts[i].anims 的循环间隔，
+         *                                              这个间隔不是指的时间间隔，
+         *                                              当 totalFrameCounter % parallaxOpts[i].animInterval === 0 时触发
+         * @param {Array} parallaxOpts[i].anims 动画组，如果设置了次属性，那么会根据这个属性里面的值来切换动画
+         *                           例如: parallaxOpts[i].anims = [{aX: 1, aY: 1}, {aX: -1, aY: -1}]，
+         *                           那么首先会执行 parallaxOpts[i].anims[0] 的变化，
+         *                           在 totalFrameCounter % animInterval === 0 后，会执行 parallaxOpts[i].anims[1] ，
+         *                           如此循环，如果 parallaxOpts[i].animInterval 没有设置，则取默认值 10000
          *
          * @return {Object} Stage 实例
          */
-        setParallax: function (parallaxList) {
-            if (!Array.isArray(parallaxList)) {
-                parallaxList = [parallaxList];
+        setParallax: function (parallaxOpts) {
+            if (!Array.isArray(parallaxOpts)) {
+                parallaxOpts = [parallaxOpts];
             }
 
             var asset = this.game.asset;
-            console.warn(asset, 'asset');
-            for (var i = 0, len = parallaxList.length; i < len; i++) {
-                var parallax = parallaxList[i];
-                console.warn(parallax, 3);
+            var resource = this.game.resource;
+
+            for (var i = 0, len = parallaxOpts.length; i < len; i++) {
+                var parallaxOpt = parallaxOpts[i];
+
+                var imageAsset = util.getImgAsset(parallaxOpt.image, asset, resource);
+                if (!imageAsset) {
+                    throw new Error('Parallax must be require a image param');
+                }
+
+                parallaxOpt.repeat
+                    = (parallaxOpt.repeat && ['repeat', 'repeat-x', 'repeat-y'].indexOf(parallaxOpt.repeat) !== -1)
+                        ? parallaxOpt.repeat
+                        : 'no-repeat';
+
+                this.parallaxList.push(
+                    util.extend(
+                        true,
+                        {
+                            imageAsset: imageAsset
+                        },
+                        {
+                            x: 0, // 横坐标
+                            y: 0, // 纵坐标
+                            vx: 0, // 横轴速度，x += vx
+                            vy: 0, // 纵轴速度，y += vy
+                            ax: 0, // 横轴加速度，vx += ax
+                            ay: 0 // 纵轴加速度，vy += ay
+                        },
+                        parallaxOpt
+                    )
+                );
             }
-            // opts = opts || {};
-
-            // if (!opts.image) {
-            //     throw new Error('Parallax must be require a image param');
-            // }
-
-            // opts.repeat = (opts.repeat && ['repeat', 'repeat-x', 'repeat-y'].indexOf(opts.repeat) !== -1)
-            //     ? opts.repeat : 'no-repeat';
-
-            // // 视差滚动的场景才会有这个属性
-            // this.parallaxList = util.extend(
-            //     {},
-            //     {
-            //         x: 0, // 横坐标
-            //         y: 0, // 纵坐标
-            //         vX: 0, // 横轴速度，x += vX
-            //         vY: 0, // 纵轴速度，y += vY
-            //         aX: 0, // 横轴加速度，vX += aX
-            //         aY: 0 // 纵轴加速度，vY += aY
-            //     },
-            //     opts
-            // );
-
+            console.warn(this.parallaxList);
             return this;
         },
 
         /**
          * 场景的更新，需要更新场景里面的所有精灵
          *
-         * @param {number} totalFrameCounter 游戏的总帧数计数器
-         * @param {number} dt delta
+         * @param {number} dt 毫秒，固定的时间片
+         * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+         * @param {number} requestID requestAnimationFrame 标识
          */
-        step: function (dt, requestID) {
+        step: function (dt, stepCount, requestID) {
             this.fire('beforeStageStep');
+            updateParallax.call(this, dt, stepCount, requestID);
             this.fire('afterStageStep');
             // console.warn(dt, requestID);
             // if (dt < 0) {
@@ -321,14 +340,18 @@ define(function (require) {
         /**
          * 场景的渲染，需要渲染场景里面的所有精灵
          * 在 render 的时候销毁 status = STATUS.DESTROYED 的 displayObject
+         *
+         * @param {number} execCount 每帧执行的函数的计数器
          */
-        render: function () {
+        render: function (execCount) {
             this.fire('beforeStageRender');
 
             this.clear();
 
             this.offCtx.save();
             this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+
+            renderParallax.call(this);
 
             // renderParallax.call(this);
             // this.sortDisplayObject();
@@ -349,12 +372,164 @@ define(function (require) {
             //     }
             // }
 
-            // this.offCtx.restore();
-            // this.ctx.drawImage(this.offCanvas, 0, 0);
+            this.offCtx.restore();
+            this.ctx.drawImage(this.offCanvas, 0, 0);
 
             this.fire('afterStageRender');
         },
 
+    };
+
+    /**
+      * 更新视差滚动
+      *
+      * @param {number} dt 毫秒，固定的时间片
+      * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+      * @param {number} requestID requestAnimationFrame 标识
+      */
+    function updateParallax(dt, stepCount, requestID) {
+        var parallaxList = this.parallaxList;
+        var len = parallaxList.length;
+        if (!parallaxList || !len) {
+            return;
+        }
+
+        for (var i = 0; i < len; i++) {
+            var parallax = parallaxList[i];
+            if (parallax.anims && util.getType(parallax.anims) === 'array') {
+                parallax.animInterval = parallax.animInterval || 10000;
+                if (!parallax.curAnim) {
+                    parallax.curAnim = parallax.anims[0];
+                }
+
+                if (stepCount % parallax.animInterval === 0) {
+                    if (parallax.time === void 0) {
+                        parallax.time = 0;
+                    }
+
+                    parallax.time++;
+
+                    if (parallax.time === parallax.anims.length) {
+                        parallax.time = 0;
+                    }
+
+                    parallax.curAnim = parallax.anims[parallax.time];
+                }
+            }
+            else {
+                parallax.curAnim = {
+                    ax: parallax.ax * dt,
+                    ay: parallax.ay * dt
+                };
+            }
+
+            parallax.vx = (parallax.vx * dt + parallax.curAnim.ax) % parallax.imageAsset.width;
+            parallax.vy = (parallax.vy * dt + parallax.curAnim.ay) % parallax.imageAsset.height;
+        }
+    }
+
+    /**
+     * 渲染视差滚动
+     */
+    function renderParallax() {
+        var parallaxList = this.parallaxList;
+        var len = parallaxList.length;
+        if (!parallaxList || !len) {
+            return;
+        }
+
+        var offCtx = this.offCtx;
+
+        for (var i = 0; i < len; i++) {
+            var parallax = parallaxList[i];
+            if (parallax.repeat !== 'no-repeat') {
+                renderParallaxRepeatImage.call(parallax, offCtx);
+            }
+            // console.warn(this.game.yRatio);
+            var imageWidth = parallax.imageAsset.width;
+            var imageHeight = parallax.imageAsset.height;
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    // 从左上角开始画下一个块
+                    var newPos = {
+                        x: parallax.x + x,
+                        y: parallax.y + y
+                    };
+
+                    // 剩余的绘制空间
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+
+                    if (x === 0) {
+                        newScrollPos.x = parallax.vx;
+                    }
+
+                    if (y === 0) {
+                        newScrollPos.y = parallax.vy;
+                    }
+                    drawArea = renderParallaxScroll.call(
+                        parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight
+                    );
+                    // console.warn(drawArea);
+                }
+            }
+        }
+    }
+
+    /**
+     * 绘制视差滚动滚动的区域
+     *
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
+     * @param {Object} newPos 新的绘制的起点坐标对象
+     * @param {Object} newArea 新绘制区域的大小对象
+     * @param {Object} newScrollPos 滚动的区域起点的坐标对象
+     * @param {number} imageWidth 图片宽度
+     * @param {number} imageHeight 图片高度
+     *
+     * @return {Object} 待绘制区域的宽高
+     */
+    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+
+        offCtx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
+
+        return {
+            width: width,
+            height: height
+        };
+    }
+
+    /**
+     * 绘制 repeat, repeat-x, repeat-y
+     *
+     * @param {Object} offCtx 离屏 canvas 2d context 对象
+     */
+    function renderParallaxRepeatImage(offCtx) {
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(this.imageAsset, this.repeat);
+        offCtx.fillRect(this.x, this.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
+
+        if (!newImage4ParallaxRepeat.src) {
+            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            this.imageAsset = newImage4ParallaxRepeat;
+        }
     }
 
     /**

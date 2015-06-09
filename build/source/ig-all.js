@@ -174,8 +174,8 @@ define('ig/ig', [
         NOT_RU: 4,
         DESTROYED: 5
     });
-    exports.setConfig('width', 320);
-    exports.setConfig('height', 480);
+    exports.setConfig('width', 383);
+    exports.setConfig('height', 550);
     exports.setConfig('maxWidth', 5000);
     exports.setConfig('maxHeight', 5000);
     exports.setConfig('fps', 60);
@@ -185,14 +185,16 @@ define('ig/ig', [
             exec: util.noop,
             jumpFrames: 0
         }, opts);
-        var requestID;
-        var now;
-        var then = Date.now();
-        var frameUpdateCount = 0;
-        var passed = 0;
         var fps = exports.getConfig('fps') || 60;
         var dt = 1000 / fps;
+        var requestID;
+        var passed = 0;
+        var frameUpdateCount = 0;
+        var now;
+        var then = Date.now();
         var acc = 0;
+        var stepCount = 0;
+        var execCount = 0;
         (function tick() {
             requestID = window.requestAnimationFrame(tick);
             frameUpdateCount++;
@@ -203,10 +205,12 @@ define('ig/ig', [
                 then = now;
                 acc += passed;
                 while (acc >= dt) {
-                    conf.step(dt * (fps / 1000), requestID);
+                    stepCount++;
+                    conf.step(dt * (fps / 1000), stepCount, requestID);
                     acc -= dt;
                 }
-                conf.exec();
+                execCount++;
+                conf.exec(execCount);
             }
         }());
     };
@@ -2810,29 +2814,11 @@ define('ig/Game', [
     };
     function _stageBg(stage) {
         stage.setBgColor(stage.bgColor);
-        var asset = this.asset;
-        var bgImg = util.getImgAsset(stage.bgImg, game);
-        if (asset[stage.bgImg]) {
-            bgImg = asset[stage.bgImg];
-        } else {
-            var resource = this.resource;
-            for (var i = 0, len = resource.length; i < len; i++) {
-                if (util.getType(resource[i]) === 'string' && resource[i] === stage.bgImg) {
-                    bgImg = resource[i];
-                    break;
-                }
-                if (util.getType(resource[i]) === 'object' && resource[i].src === stage.bgImg) {
-                    bgImg = asset[resource[i].id];
-                }
-            }
-        }
-        if (bgImg) {
-            stage.setBgImg(bgImg, stage.bgImgRepeatPattern);
-        }
+        stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
     }
     function _stageParallax(stage) {
-        var parallaxList = stage.parallaxList;
-        stage.setParallax(parallaxList);
+        var parallaxOpts = stage.parallaxOpts;
+        stage.setParallax(parallaxOpts);
     }
     function _stageStartExec(stage) {
         _stageBg.call(this, stage);
@@ -2845,7 +2831,7 @@ define('ig/Game', [
         var realFPSStart = Date.now();
         var me = this;
         ig.loop({
-            step: function (dt, requestID) {
+            step: function (dt, stepCount, requestID) {
                 if (!me.paused) {
                     if (realDt > 1000) {
                         realDt = 0;
@@ -2857,14 +2843,14 @@ define('ig/Game', [
                         ++realFPS;
                     }
                     me.fire('beforeGameStep');
-                    stage.step(dt, requestID);
+                    stage.step(dt, stepCount, requestID);
                     me.fire('afterGameStep');
                 }
             },
-            exec: function () {
+            exec: function (execCount) {
                 if (!me.paused) {
                     me.fire('beforeGameRender');
-                    stage.render();
+                    stage.render(execCount);
                     me.fire('afterGameRender');
                 }
             }
@@ -2995,6 +2981,7 @@ define('ig/Stage', [
     var Event = require('./Event');
     var util = require('./util');
     var domEvt = require('./domEvt');
+    var newImage4ParallaxRepeat = new Image();
     var GUID_KEY = 0;
     function Stage(opts) {
         util.extend(true, this, {
@@ -3010,13 +2997,14 @@ define('ig/Stage', [
             bgColor: 'transparent',
             bgImg: '',
             bgImgRepeatPattern: '',
-            parallaxList: [],
+            parallaxOpts: [],
             captureFunc: util.noop,
             moveFunc: util.noop,
             releaseFunc: util.noop
         }, opts);
         this.displayObjectList = [];
         this.displayObjects = {};
+        this.parallaxList = [];
         initMouseEvent.call(this);
         return this;
     }
@@ -3047,12 +3035,6 @@ define('ig/Stage', [
             return this;
         },
         setBgImg: function (img, bgImgRepeatPattern) {
-            var imgUrl;
-            if (util.getType(img) === 'htmlimageelement') {
-                imgUrl = img.src;
-            } else if (util.getType(img) === 'string') {
-                imgUrl = img;
-            }
             var bgRepeat = '';
             var bgPos = '';
             var bgSize = '';
@@ -3065,43 +3047,170 @@ define('ig/Stage', [
                 bgSize = '100% 100%';
                 break;
             }
-            if (imgUrl) {
-                this.canvas.style.backgroundImage = 'url(' + imgUrl + ')';
-                this.canvas.style.backgroundRepeat = bgRepeat;
-                this.canvas.style.backgroundPosition = bgPos;
-                this.canvas.style.backgroundSize = bgSize;
-            } else {
-                this.canvas.style.backgroundImage = '';
-                this.canvas.style.backgroundRepeat = '';
-                this.canvas.style.backgroundPosition = '';
-                this.canvas.style.backgroundSize = '';
+            this.canvas.style.backgroundRepeat = bgRepeat;
+            this.canvas.style.backgroundPosition = bgPos;
+            this.canvas.style.backgroundSize = bgSize;
+            if (util.getType(img) === 'htmlimageelement') {
+                this.canvas.style.backgroundImage = 'url(' + img.src + ')';
+            } else if (util.getType(img) === 'string') {
+                var asset = this.game.asset;
+                var resource = this.game.resource;
+                var bgImg = util.getImgAsset(img, asset, resource);
+                if (bgImg) {
+                    this.canvas.style.backgroundImage = 'url(' + bgImg.src + ')';
+                } else {
+                    this.canvas.style.backgroundImage = '';
+                    this.canvas.style.backgroundRepeat = '';
+                    this.canvas.style.backgroundPosition = '';
+                    this.canvas.style.backgroundSize = '';
+                }
             }
             return this;
         },
-        setParallax: function (parallaxList) {
-            if (!Array.isArray(parallaxList)) {
-                parallaxList = [parallaxList];
+        setParallax: function (parallaxOpts) {
+            if (!Array.isArray(parallaxOpts)) {
+                parallaxOpts = [parallaxOpts];
             }
             var asset = this.game.asset;
-            console.warn(asset, 'asset');
-            for (var i = 0, len = parallaxList.length; i < len; i++) {
-                var parallax = parallaxList[i];
-                console.warn(parallax, 3);
+            var resource = this.game.resource;
+            for (var i = 0, len = parallaxOpts.length; i < len; i++) {
+                var parallaxOpt = parallaxOpts[i];
+                var imageAsset = util.getImgAsset(parallaxOpt.image, asset, resource);
+                if (!imageAsset) {
+                    throw new Error('Parallax must be require a image param');
+                }
+                parallaxOpt.repeat = parallaxOpt.repeat && [
+                    'repeat',
+                    'repeat-x',
+                    'repeat-y'
+                ].indexOf(parallaxOpt.repeat) !== -1 ? parallaxOpt.repeat : 'no-repeat';
+                this.parallaxList.push(util.extend(true, { imageAsset: imageAsset }, {
+                    x: 0,
+                    y: 0,
+                    vx: 0,
+                    vy: 0,
+                    ax: 0,
+                    ay: 0
+                }, parallaxOpt));
             }
+            console.warn(this.parallaxList);
             return this;
         },
-        step: function (dt, requestID) {
+        step: function (dt, stepCount, requestID) {
             this.fire('beforeStageStep');
+            updateParallax.call(this, dt, stepCount, requestID);
             this.fire('afterStageStep');
         },
-        render: function () {
+        render: function (execCount) {
             this.fire('beforeStageRender');
             this.clear();
             this.offCtx.save();
             this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+            renderParallax.call(this);
+            this.offCtx.restore();
+            this.ctx.drawImage(this.offCanvas, 0, 0);
             this.fire('afterStageRender');
         }
     };
+    function updateParallax(dt, stepCount, requestID) {
+        var parallaxList = this.parallaxList;
+        var len = parallaxList.length;
+        if (!parallaxList || !len) {
+            return;
+        }
+        for (var i = 0; i < len; i++) {
+            var parallax = parallaxList[i];
+            if (parallax.anims && util.getType(parallax.anims) === 'array') {
+                parallax.animInterval = parallax.animInterval || 10000;
+                if (!parallax.curAnim) {
+                    parallax.curAnim = parallax.anims[0];
+                }
+                if (stepCount % parallax.animInterval === 0) {
+                    if (parallax.time === void 0) {
+                        parallax.time = 0;
+                    }
+                    parallax.time++;
+                    if (parallax.time === parallax.anims.length) {
+                        parallax.time = 0;
+                    }
+                    parallax.curAnim = parallax.anims[parallax.time];
+                }
+            } else {
+                parallax.curAnim = {
+                    ax: parallax.ax * dt,
+                    ay: parallax.ay * dt
+                };
+            }
+            parallax.vx = (parallax.vx * dt + parallax.curAnim.ax) % parallax.imageAsset.width;
+            parallax.vy = (parallax.vy * dt + parallax.curAnim.ay) % parallax.imageAsset.height;
+        }
+    }
+    function renderParallax() {
+        var parallaxList = this.parallaxList;
+        var len = parallaxList.length;
+        if (!parallaxList || !len) {
+            return;
+        }
+        var offCtx = this.offCtx;
+        for (var i = 0; i < len; i++) {
+            var parallax = parallaxList[i];
+            if (parallax.repeat !== 'no-repeat') {
+                renderParallaxRepeatImage.call(parallax, offCtx);
+            }
+            var imageWidth = parallax.imageAsset.width;
+            var imageHeight = parallax.imageAsset.height;
+            var drawArea = {
+                width: 0,
+                height: 0
+            };
+            for (var y = 0; y < imageHeight; y += drawArea.height) {
+                for (var x = 0; x < imageWidth; x += drawArea.width) {
+                    var newPos = {
+                        x: parallax.x + x,
+                        y: parallax.y + y
+                    };
+                    var newArea = {
+                        width: imageWidth - x,
+                        height: imageHeight - y
+                    };
+                    var newScrollPos = {
+                        x: 0,
+                        y: 0
+                    };
+                    if (x === 0) {
+                        newScrollPos.x = parallax.vx;
+                    }
+                    if (y === 0) {
+                        newScrollPos.y = parallax.vy;
+                    }
+                    drawArea = renderParallaxScroll.call(parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                }
+            }
+        }
+    }
+    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+        var xOffset = Math.abs(newScrollPos.x) % imageWidth;
+        var yOffset = Math.abs(newScrollPos.y) % imageHeight;
+        var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
+        var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
+        var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
+        var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
+        offCtx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
+        return {
+            width: width,
+            height: height
+        };
+    }
+    function renderParallaxRepeatImage(offCtx) {
+        offCtx.save();
+        offCtx.fillStyle = offCtx.createPattern(this.imageAsset, this.repeat);
+        offCtx.fillRect(this.x, this.y, offCtx.canvas.width, offCtx.canvas.height);
+        offCtx.restore();
+        if (!newImage4ParallaxRepeat.src) {
+            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            this.imageAsset = newImage4ParallaxRepeat;
+        }
+    }
     function initMouseEvent() {
         bindMouseEvent.call(this);
         domEvt.initMouse(this);

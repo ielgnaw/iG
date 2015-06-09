@@ -471,32 +471,7 @@ define(function (require) {
      */
     function _stageBg(stage) {
         stage.setBgColor(stage.bgColor);
-
-        var asset = this.asset;
-        var bgImg = util.getImgAsset(stage.bgImg, asset, );
-
-        if (asset[stage.bgImg]) {
-            bgImg = asset[stage.bgImg];
-        }
-        else {
-            var resource = this.resource;
-            for (var i = 0, len = resource.length; i < len; i++) {
-                if (util.getType(resource[i]) === 'string' && resource[i] === stage.bgImg) {
-                    bgImg = resource[i];
-                    break;
-                }
-
-                if (util.getType(resource[i]) === 'object'
-                    && resource[i].src === stage.bgImg
-                ) {
-                    bgImg = asset[resource[i].id];
-                }
-            }
-        }
-
-        if (bgImg) {
-            stage.setBgImg(bgImg, stage.bgImgRepeatPattern);
-        }
+        stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
     }
 
     /**
@@ -506,8 +481,8 @@ define(function (require) {
      * @param {Object} stage 启动的场景对象
      */
     function _stageParallax(stage) {
-        var parallaxList = stage.parallaxList;
-        stage.setParallax(parallaxList);
+        var parallaxOpts = stage.parallaxOpts;
+        stage.setParallax(parallaxOpts);
     }
 
     /**
@@ -535,7 +510,7 @@ define(function (require) {
 
         var me = this;
         ig.loop({
-            step: function (dt, requestID) {
+            step: function (dt, stepCount, requestID) {
                 if (!me.paused) {
                     if (realDt > 1000) {
                         realDt = 0;
@@ -552,14 +527,14 @@ define(function (require) {
                         ++realFPS;
                     }
                     me.fire('beforeGameStep');
-                    stage.step(dt, requestID);
+                    stage.step(dt, stepCount, requestID);
                     me.fire('afterGameStep');
                 }
             },
-            exec: function () {
+            exec: function (execCount) {
                 if (!me.paused) {
                     me.fire('beforeGameRender');
-                    stage.render();
+                    stage.render(execCount);
                     me.fire('afterGameRender');
                 }
             }

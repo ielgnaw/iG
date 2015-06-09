@@ -77,14 +77,16 @@ define(function (require) {
      *
      * @type {number}
      */
-    exports.setConfig('width', 320);
+    // exports.setConfig('width', 320);
+    exports.setConfig('width', 383);
 
     /**
      * 游戏窗口高度的默认值
      *
      * @type {number}
      */
-    exports.setConfig('height', 480);
+    // exports.setConfig('height', 480);
+    exports.setConfig('height', 550);
 
     /**
      * 游戏窗口最大宽度的默认值
@@ -124,17 +126,23 @@ define(function (require) {
             jumpFrames: 0
         }, opts);
 
-        var requestID;
-        var now;
-        var then = Date.now();
-        var frameUpdateCount = 0;
-        var passed = 0;
         var fps = exports.getConfig('fps') || 60;
-
         // 毫秒，固定的时间片
         var dt = 1000 / fps;
 
+        var requestID;
+
+        var passed = 0;
+        var frameUpdateCount = 0;
+        var now;
+        var then = Date.now();
         var acc = 0;
+
+        // 每帧中切分出来的每个时间片里执行的函数的计数器
+        var stepCount = 0;
+
+        // 每帧执行的函数的计数器
+        var execCount = 0;
 
         (function tick() {
             requestID = window.requestAnimationFrame(tick);
@@ -149,13 +157,15 @@ define(function (require) {
 
                 acc += passed; // 过去的时间的累积
                 while (acc >= dt) { // 时间大于固定的 dt 才能更新
+                    stepCount++;
                     // 如果这里直接写成 conf.step(dt)，
                     // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
                     // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
-                    conf.step(dt * (fps / 1000), requestID); // 分片更新时间
+                    conf.step(dt * (fps / 1000), stepCount, requestID); // 分片更新时间
                     acc -= dt;
                 }
-                conf.exec();
+                execCount++;
+                conf.exec(execCount);
             }
         })();
 
