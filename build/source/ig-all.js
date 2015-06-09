@@ -2292,8 +2292,8 @@ define('ig/DisplayObject', [
             cx: 0,
             cy: 0,
             radius: 0,
-            xScale: 1,
-            yScale: 1,
+            scaleX: 1,
+            scaleY: 1,
             angle: 0,
             alpha: 1,
             zIndex: 0,
@@ -2304,8 +2304,8 @@ define('ig/DisplayObject', [
             vy: 0,
             ax: 0,
             ay: 0,
-            xFriction: 1,
-            yFriction: 1,
+            frictionX: 1,
+            frictionY: 1,
             children: [],
             status: STATUS.NORMAL,
             mouseEnable: true,
@@ -2314,6 +2314,7 @@ define('ig/DisplayObject', [
             releaseFunc: util.noop,
             debug: false
         }, opts);
+        this._ = {};
         this.matrix = new Matrix();
         this.setPosX(this.x);
         this.setPosY(this.y);
@@ -2338,11 +2339,16 @@ define('ig/DisplayObject', [
             return this;
         },
         setPosX: function (x) {
-            this.x = x || 0;
+            this.x = x || this.x;
             return this;
         },
         setPosY: function (y) {
-            this.y = y || 0;
+            this.y = y || this.y;
+            return this;
+        },
+        setPos: function (x, y) {
+            this.x = x || this.x;
+            this.y = y || this.y;
             return this;
         },
         setAccelerationX: function (ax) {
@@ -2353,19 +2359,42 @@ define('ig/DisplayObject', [
             this.ay = ay || this.ay;
             return this;
         },
-        setFrictionX: function (xFriction) {
-            this.xFriction = xFriction || this.xFriction;
+        setAcceleration: function (ax, ay) {
+            this.ax = ax || this.ax;
+            this.ay = ay || this.ay;
             return this;
         },
-        setFrictionY: function (yFriction) {
-            this.yFriction = yFriction || this.yFriction;
+        setFrictionX: function (frictionX) {
+            this.frictionX = frictionX || this.frictionX;
+            return this;
+        },
+        setFrictionY: function (frictionY) {
+            this.frictionY = frictionY || this.frictionY;
+            return this;
+        },
+        setFriction: function (frictionX, frictionY) {
+            this.frictionX = frictionX || this.frictionX;
+            this.frictionY = frictionY || this.frictionY;
+            return this;
+        },
+        setScaleX: function (scaleX) {
+            this.scaleX = scaleX || this.scaleX;
+            return this;
+        },
+        setScaleY: function (scaleY) {
+            this.scaleY = scaleY || this.scaleY;
+            return this;
+        },
+        setScale: function (scaleX, scaleY) {
+            this.scaleX = scaleX || this.scaleX;
+            this.scaleY = scaleY || this.scaleY;
             return this;
         },
         rotate: function (angle) {
-            var offCtx = this.stage.offCtx;
-            offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.angle || 0));
-            offCtx.restore();
+            var ctx = this.stage.ctx;
+            ctx.save();
+            ctx.rotate(util.deg2Rad(angle || this.angle || 0));
+            ctx.restore();
             return this;
         },
         setAnimate: function (opts) {
@@ -2411,7 +2440,7 @@ define('ig/DisplayObject', [
         step: function (dt, stepCount, requestID) {
             return this;
         },
-        render: function (offCtx) {
+        render: function (ctx) {
             return this;
         }
     };
@@ -2431,7 +2460,8 @@ define('ig/Text', [
             content: '',
             size: 30,
             isBold: false,
-            fontFamily: 'sans-serif'
+            fontFamily: 'sans-serif',
+            useCache: true
         }, opts);
         var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
         this.bounds = {
@@ -2441,6 +2471,13 @@ define('ig/Text', [
             height: obj.height
         };
         this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
+        if (this.useCache) {
+            this.cacheCanvas = document.createElement('canvas');
+            this.cacheCtx = this.cacheCanvas.getContext('2d');
+            this.cacheCanvas.width = this.bounds.width;
+            this.cacheCanvas.height = this.bounds.height;
+            this.cache();
+        }
         return this;
     }
     Text.prototype = {
@@ -2459,31 +2496,44 @@ define('ig/Text', [
         getContent: function () {
             return this.content;
         },
-        render: function (offCtx, execCount) {
-            offCtx.save();
-            offCtx.fillStyle = this.fillStyle;
-            offCtx.globalAlpha = this.alpha;
-            offCtx.font = this.font;
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.fillStyle = this.fillStyle;
+            this.cacheCtx.globalAlpha = this.alpha;
+            this.cacheCtx.font = this.font;
+            this.cacheCtx.fillText(this.content, 0, this.bounds.height);
+            this.cacheCtx.restore();
+            return this;
+        },
+        render: function (ctx, execCount) {
+            ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.globalAlpha = this.alpha;
+            ctx.font = this.font;
             this.matrix.reset();
             this.matrix.translate(this.x, this.y);
             this.matrix.rotate(this.angle);
-            this.matrix.scale(this.xScale, this.yScale);
+            this.matrix.scale(this.scaleX, this.scaleY);
             var m = this.matrix.m;
-            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-            offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
-            this.debugRender(offCtx);
-            offCtx.restore();
+            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            if (this.useCache) {
+                ctx.drawImage(this.cacheCanvas, -this.bounds.width / 2, -this.bounds.height / 2);
+            } else {
+                ctx.fillText(this.content, -this.bounds.width / 2, this.bounds.height / 2);
+            }
+            this.debugRender(ctx);
+            ctx.restore();
             return this;
         },
-        debugRender: function (offCtx) {
+        debugRender: function (ctx) {
             if (this.debug) {
-                offCtx.save();
+                ctx.save();
                 var m = this.matrix.reset().m;
-                this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height - 10);
-                offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                offCtx.strokeStyle = 'black';
-                offCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                offCtx.restore();
+                this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height * 0.5);
+                ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                ctx.restore();
             }
         }
     };
@@ -2989,7 +3039,6 @@ define('ig/Game', [
         this.width = this.canvas.width = width;
         this.height = this.canvas.height = height;
         this.canvas.style.position = 'relative';
-        setOffCanvas.call(this);
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
         canvasParent.style.margin = '0 auto';
@@ -3012,16 +3061,6 @@ define('ig/Game', [
             }, 0);
         }, false);
         return this;
-    }
-    function setOffCanvas() {
-        if (!this.offCanvas) {
-            this.offCanvas = document.createElement('canvas');
-            this.offCtx = this.offCanvas.getContext('2d');
-        }
-        this.offCanvas.width = this.canvas.width;
-        this.offCanvas.style.width = this.canvas.style.width;
-        this.offCanvas.height = this.canvas.height;
-        this.offCanvas.style.height = this.canvas.style.height;
     }
     function fitScreen() {
         var winWidth = window.innerWidth;
@@ -3046,7 +3085,6 @@ define('ig/Game', [
         this.height = this.canvas.height;
         this.cssHeight = this.canvas.style.height;
         this.scaleRatio = scaleRatio;
-        setOffCanvas.call(this);
     }
     util.inherits(Game, Event);
     return Game;
@@ -3073,8 +3111,6 @@ define('ig/Stage', [
             name: 'ig_stage_' + GUID_KEY++,
             canvas: opts.canvas,
             ctx: opts.canvas.getContext('2d'),
-            offCanvas: opts.offCanvas,
-            offCtx: opts.offCanvas.getContext('2d'),
             width: opts.game.width,
             height: opts.game.height,
             cssWidth: opts.game.cssWidth,
@@ -3189,12 +3225,11 @@ define('ig/Stage', [
         render: function (execCount) {
             this.fire('beforeStageRender');
             this.clear();
-            this.offCtx.save();
-            this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+            this.ctx.save();
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             renderParallax.call(this);
             renderSprite.call(this, execCount);
-            this.offCtx.restore();
-            this.ctx.drawImage(this.offCanvas, 0, 0);
+            this.ctx.restore();
             this.fire('afterStageRender');
         },
         createDisplayObject: function (displayObjOpts) {
@@ -3255,7 +3290,7 @@ define('ig/Stage', [
             if (curDisplay) {
                 displayObjectStatus = curDisplay.status;
                 if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
-                    curDisplay.render(this.offCtx, execCount);
+                    curDisplay.render(this.ctx, execCount);
                 }
             }
         }
@@ -3317,11 +3352,11 @@ define('ig/Stage', [
         if (!parallaxList || !len) {
             return;
         }
-        var offCtx = this.offCtx;
+        var ctx = this.ctx;
         for (var i = 0; i < len; i++) {
             var parallax = parallaxList[i];
             if (parallax.repeat !== 'no-repeat') {
-                renderParallaxRepeatImage.call(parallax, offCtx);
+                renderParallaxRepeatImage.call(parallax, ctx);
             }
             var imageWidth = parallax.imageAsset.width;
             var imageHeight = parallax.imageAsset.height;
@@ -3349,31 +3384,31 @@ define('ig/Stage', [
                     if (y === 0) {
                         newScrollPos.y = parallax.vy;
                     }
-                    drawArea = renderParallaxScroll.call(parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
+                    drawArea = renderParallaxScroll.call(parallax, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight);
                 }
             }
         }
     }
-    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+    function renderParallaxScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
         var xOffset = Math.abs(newScrollPos.x) % imageWidth;
         var yOffset = Math.abs(newScrollPos.y) % imageHeight;
         var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
         var top = newScrollPos.y < 0 ? imageHeight - yOffset : yOffset;
         var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
         var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
-        offCtx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
+        ctx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
         return {
             width: width,
             height: height
         };
     }
-    function renderParallaxRepeatImage(offCtx) {
-        offCtx.save();
-        offCtx.fillStyle = offCtx.createPattern(this.imageAsset, this.repeat);
-        offCtx.fillRect(this.x, this.y, offCtx.canvas.width, offCtx.canvas.height);
-        offCtx.restore();
+    function renderParallaxRepeatImage(ctx) {
+        ctx.save();
+        ctx.fillStyle = ctx.createPattern(this.imageAsset, this.repeat);
+        ctx.fillRect(this.x, this.y, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
         if (!newImage4ParallaxRepeat.src) {
-            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            newImage4ParallaxRepeat.src = ctx.canvas.toDataURL();
             this.imageAsset = newImage4ParallaxRepeat;
         }
     }

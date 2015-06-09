@@ -31,7 +31,9 @@ define(function (require) {
             // 是否粗体
             isBold: false,
             // 字体
-            fontFamily: 'sans-serif'
+            fontFamily: 'sans-serif',
+            // 是否使用缓存
+            useCache: true
         }, opts);
 
         var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
@@ -48,6 +50,13 @@ define(function (require) {
             + 'pt '
             + this.fontFamily;
 
+        if (this.useCache) {
+            this.cacheCanvas = document.createElement('canvas');
+            this.cacheCtx = this.cacheCanvas.getContext('2d');
+            this.cacheCanvas.width = this.bounds.width;
+            this.cacheCanvas.height = this.bounds.height;
+            this.cache();
+        }
         return this;
     }
 
@@ -86,31 +95,55 @@ define(function (require) {
         },
 
         /**
+         * 缓存，把需要重复绘制的画面数据进行缓存起来，减少调用 canvas API 的消耗
+         *
+         * @return {Object} 当前 Text 实例
+         */
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.fillStyle = this.fillStyle;
+            this.cacheCtx.globalAlpha = this.alpha;
+            this.cacheCtx.font = this.font;
+            this.cacheCtx.fillText(this.content, 0, this.bounds.height);
+            this.cacheCtx.restore();
+            return this;
+        },
+
+        /**
          * 渲染当前 Text 实例
          *
-         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         * @param {Object} ctx canvas 2d context 对象
          * @param {number} execCount 每帧执行的函数的计数器
          *
          * @return {Object} 当前 Text 实例
          */
-        render: function (offCtx, execCount) {
-            offCtx.save();
-            offCtx.fillStyle = this.fillStyle;
-            offCtx.globalAlpha = this.alpha;
-            offCtx.font = this.font;
+        render: function (ctx, execCount) {
+            ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.globalAlpha = this.alpha;
+            ctx.font = this.font;
 
             this.matrix.reset();
             this.matrix.translate(this.x, this.y);
             this.matrix.rotate(this.angle);
-            this.matrix.scale(this.xScale, this.yScale);
+            this.matrix.scale(this.scaleX, this.scaleY);
             var m = this.matrix.m;
-            offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
-            // console.warn(this.bounds.width * 0.5, this.bounds.height * 0.5);
-            offCtx.fillText(this.content, -this.bounds.width * 0.5, -this.bounds.height * 0.5);
+            if (this.useCache) {
+                ctx.drawImage(this.cacheCanvas, -this.bounds.width / 2, -this.bounds.height / 2);
+            }
+            else {
+                ctx.fillText(this.content, -this.bounds.width / 2, this.bounds.height / 2);
+            }
 
-            this.debugRender(offCtx);
-            offCtx.restore();
+            this.debugRender(ctx);
+            ctx.restore();
+
+            // ctx.fillStyle = 'black';
+            // ctx.fillRect(100, 0, 1, 1000);
+            // ctx.fillRect(0, 100, 1000, 1);
+
             return this;
         },
 
@@ -118,27 +151,27 @@ define(function (require) {
          * debug 时渲染边界盒，多边形使用最大最小顶点法来渲染边界盒
          * 碰撞时，根据此边界盒判断
          *
-         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         * @param {Object} ctx canvas 2d context 对象
          */
-        debugRender: function (offCtx) {
+        debugRender: function (ctx) {
             if (this.debug) {
-                offCtx.save();
-
+                ctx.save();
                 var m = this.matrix.reset().m;
                 this.matrix.translate(
                     -this.bounds.x - this.bounds.width * 0.5,
-                    -this.bounds.y - this.bounds.height - 10
+                    -this.bounds.y - this.bounds.height * 0.5
                 );
-                offCtx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                offCtx.strokeStyle = 'black';
-                offCtx.strokeRect(
+                ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(
                     this.bounds.x,
                     this.bounds.y,
                     this.bounds.width,
                     this.bounds.height
                 );
 
-                offCtx.restore();
+                ctx.restore();
             }
         }
     };

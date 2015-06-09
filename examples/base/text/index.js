@@ -54,9 +54,9 @@ window.onload = function () {
     // var text1 = stage1.createDisplayObject({
     var text1 = new ig.Text({
         name: 'text1',
-        content: 'caonidaye',
-        x: 150,
-        y: 150,
+        content: 'oh no....',
+        x: 200,
+        y: 200,
         // scaleX: 0.5,
         // scaleY: 0.5,
         size: 20,
@@ -64,14 +64,35 @@ window.onload = function () {
         angle: 0,
         debug: 1,
         zIndex: 100,
-        fillStyle: '#f00'
+        fillStyle: '#f00',
+        // useCache: false
     });
     stage1.addDisplayObject(text1);
 
     text1.step = function (dt, stepCount) {
         this.angle++;
+
+        // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
+        // this.scaleX += 0.01;
+        // this.scaleY += 0.01;
         // console.warn(dt);
     };
+
+    var text12 = new ig.Text({
+        name: 'text12',
+        content: '卧槽。。。',
+        x: 200,
+        y: 400,
+        // scaleX: 0.5,
+        // scaleY: 0.5,
+        size: 20,
+        isBold: true,
+        angle: 0,
+        debug: 1,
+        zIndex: 100,
+        fillStyle: '#f0f'
+    });
+    stage1.addDisplayObject(text12);
 
     game1.start('asdda', function () {
         console.warn('startCallback');

@@ -38,8 +38,8 @@ define(function (require) {
      * @param {number} opts.cx 中心点横坐标，默认 0
      * @param {number} opts.cy 中心点纵坐标 0
      * @param {number} opts.radius 半径，默认 0，矩形也可以有半径，这时半径是为了当前矩形做圆周运动的辅助
-     * @param {number} opts.xScale 横轴缩放倍数，默认 1
-     * @param {number} opts.yScale 纵轴缩放倍数，默认 1
+     * @param {number} opts.scaleX 横轴缩放倍数，默认 1
+     * @param {number} opts.scaleY 纵轴缩放倍数，默认 1
      * @param {number} opts.angle 旋转角度，这里使用的是角度，canvas 使用的是弧度，默认 1
      * @param {number} opts.alpha 透明度，默认 1
      * @param {number} opts.zIndex 层叠关系，类似 css z-index 概念，默认 0
@@ -50,8 +50,8 @@ define(function (require) {
      * @param {number} opts.vy 纵轴速度，默认 0
      * @param {number} opts.ax 横轴加速度，默认 0
      * @param {number} opts.ay 纵轴加速度，默认 0
-     * @param {number} opts.xFriction 横轴摩擦力，默认 1
-     * @param {number} opts.yFriction 纵轴摩擦力，默认 1
+     * @param {number} opts.frictionX 横轴摩擦力，默认 1
+     * @param {number} opts.frictionY 纵轴摩擦力，默认 1
      * @param {Array} opts.children 子精灵
      * @param {number} opts.status 当前显示兑现的状态，默认为 1
      *                            1: 可见，每帧需要更新，各种状态都正常
@@ -83,9 +83,9 @@ define(function (require) {
             // 半径
             radius: 0,
             // 横轴缩放倍数
-            xScale: 1,
+            scaleX: 1,
             // 纵轴缩放倍数
-            yScale: 1,
+            scaleY: 1,
             // 旋转角度
             angle: 0,
             // 透明度
@@ -106,10 +106,10 @@ define(function (require) {
             ax: 0,
             // 纵轴加速度，vy += ay * dt
             ay: 0,
-            // 横轴摩擦力，vx *= xFriction * dt
-            xFriction: 1,
-            // 纵轴摩擦力，vy *= yFriction * dt
-            yFriction: 1,
+            // 横轴摩擦力，vx *= frictionX * dt
+            frictionX: 1,
+            // 纵轴摩擦力，vy *= frictionY * dt
+            frictionY: 1,
             // 子精灵
             children: [],
             // 状态
@@ -129,6 +129,9 @@ define(function (require) {
             // 开始 debug 模式即绘制这个 DisplayObject 实例的时候会带上边框
             debug: false
         }, opts);
+
+        // 私有属性
+        this._ = {};
 
         // 当前 DisplayObject 实例的变换矩阵
         this.matrix = new Matrix();
@@ -210,7 +213,7 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setPosX: function (x) {
-            this.x = x || 0;
+            this.x = x || this.x;
             return this;
         },
 
@@ -222,7 +225,21 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         setPosY: function (y) {
-            this.y = y || 0;
+            this.y = y || this.y;
+            return this;
+        },
+
+        /**
+         * 设置位置，即设置 x, y
+         *
+         * @param {number} x 横坐标
+         * @param {number} y 纵坐标
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setPos: function (x, y) {
+            this.x = x || this.x;
+            this.y = y || this.y;
             return this;
         },
 
@@ -251,26 +268,92 @@ define(function (require) {
         },
 
         /**
-         * 设置横轴摩擦力
+         * 设置横轴和纵轴加速度
          *
-         * @param {number} xFriction 横轴摩擦力
+         * @param {number} ax 横向加速度大小
+         * @param {number} ay 纵向加速度大小
          *
          * @return {Object} DisplayObject 实例
          */
-        setFrictionX: function (xFriction) {
-            this.xFriction = xFriction || this.xFriction;
+        setAcceleration: function (ax, ay) {
+            this.ax = ax || this.ax;
+            this.ay = ay || this.ay;
+            return this;
+        },
+
+        /**
+         * 设置横轴摩擦力
+         *
+         * @param {number} frictionX 横轴摩擦力
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setFrictionX: function (frictionX) {
+            this.frictionX = frictionX || this.frictionX;
             return this;
         },
 
         /**
          * 设置纵轴摩擦力
          *
-         * @param {number} yFriction 横轴摩擦力
+         * @param {number} frictionY 横轴摩擦力
          *
          * @return {Object} DisplayObject 实例
          */
-        setFrictionY: function (yFriction) {
-            this.yFriction = yFriction || this.yFriction;
+        setFrictionY: function (frictionY) {
+            this.frictionY = frictionY || this.frictionY;
+            return this;
+        },
+
+        /**
+         * 设置横轴纵轴摩擦力
+         *
+         * @param {number} frictionX 横轴摩擦力
+         * @param {number} frictionY 横轴摩擦力
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setFriction: function (frictionX, frictionY) {
+            this.frictionX = frictionX || this.frictionX;
+            this.frictionY = frictionY || this.frictionY;
+            return this;
+        },
+
+        /**
+         * 设置横轴缩放倍数
+         *
+         * @param {number} scaleX 横轴缩放倍数
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setScaleX: function (scaleX) {
+            this.scaleX = scaleX || this.scaleX;
+            return this;
+        },
+
+        /**
+         * 设置纵轴缩放倍数
+         *
+         * @param {number} scaleY 纵轴缩放倍数
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setScaleY: function (scaleY) {
+            this.scaleY = scaleY || this.scaleY;
+            return this;
+        },
+
+        /**
+         * 设置横轴和纵轴缩放倍数
+         *
+         * * @param {number} scaleX 横轴缩放倍数
+         * @param {number} scaleY 纵轴缩放倍数
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setScale: function (scaleX, scaleY) {
+            this.scaleX = scaleX || this.scaleX;
+            this.scaleY = scaleY || this.scaleY;
             return this;
         },
 
@@ -283,10 +366,14 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         rotate: function (angle) {
-            var offCtx = this.stage.offCtx;
-            offCtx.save();
-            offCtx.rotate(util.deg2Rad(angle || this.angle || 0));
-            offCtx.restore();
+            // var offCtx = this.stage.offCtx;
+            // offCtx.save();
+            // offCtx.rotate(util.deg2Rad(angle || this.angle || 0));
+            // offCtx.restore();
+            var ctx = this.stage.ctx;
+            ctx.save();
+            ctx.rotate(util.deg2Rad(angle || this.angle || 0));
+            ctx.restore();
             return this;
         },
 
@@ -428,9 +515,9 @@ define(function (require) {
          *
          * @override
          *
-         * @param {Object} offCtx 离屏 canvas 2d context 对象
+         * @param {Object} ctx canvas 2d context 对象
          */
-        render: function (offCtx) {
+        render: function (ctx) {
             return this;
         }
 
@@ -443,11 +530,11 @@ define(function (require) {
          */
         // moveStep: function () {
         //     this.vx += this.ax;
-        //     this.vx *= this.xFriction;
+        //     this.vx *= this.frictionX;
         //     this.x += this.vx;
 
         //     this.vy += this.ay;
-        //     this.vy *= this.yFriction;
+        //     this.vy *= this.frictionY;
         //     this.y += this.vy;
         //     return this;
         // },

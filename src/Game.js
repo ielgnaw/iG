@@ -620,7 +620,7 @@ define(function (require) {
         this.height = this.canvas.height = height;
         this.canvas.style.position = 'relative';
 
-        setOffCanvas.call(this);
+        // setOffCanvas.call(this);
 
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
@@ -661,17 +661,17 @@ define(function (require) {
     /**
      * 设置离屏 canvas
      */
-    function setOffCanvas() {
-        if (!this.offCanvas) {
-            this.offCanvas = document.createElement('canvas');
-            this.offCtx = this.offCanvas.getContext('2d');
-        }
+    // function setOffCanvas() {
+    //     if (!this.offCanvas) {
+    //         this.offCanvas = document.createElement('canvas');
+    //         this.offCtx = this.offCanvas.getContext('2d');
+    //     }
 
-        this.offCanvas.width = this.canvas.width;
-        this.offCanvas.style.width = this.canvas.style.width;
-        this.offCanvas.height = this.canvas.height;
-        this.offCanvas.style.height = this.canvas.style.height;
-    }
+    //     this.offCanvas.width = this.canvas.width;
+    //     this.offCanvas.style.width = this.canvas.style.width;
+    //     this.offCanvas.height = this.canvas.height;
+    //     this.offCanvas.style.height = this.canvas.style.height;
+    // }
 
     /**
      * 屏幕适配
@@ -707,7 +707,7 @@ define(function (require) {
         // 这个 scaleRatio 是指屏幕适配的 ratio
         this.scaleRatio = scaleRatio;
 
-        setOffCanvas.call(this);
+        // setOffCanvas.call(this);
     }
 
     util.inherits(Game, Event);

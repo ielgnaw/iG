@@ -48,10 +48,10 @@ define(function (require) {
             canvas: opts.canvas,
             // canvas context 2d
             ctx: opts.canvas.getContext('2d'),
-            // 离屏 canvas
-            offCanvas: opts.offCanvas,
-            // 离屏 canvas context
-            offCtx: opts.offCanvas.getContext('2d'),
+            // // 离屏 canvas
+            // offCanvas: opts.offCanvas,
+            // // 离屏 canvas context
+            // offCtx: opts.offCanvas.getContext('2d'),
             // 场景的宽度，实际上是游戏的宽度即 canvas.width
             width: opts.game.width,
             // 场景的高度，实际上是游戏的高度即 canvas.height
@@ -330,15 +330,15 @@ define(function (require) {
 
             this.clear();
 
-            this.offCtx.save();
-            this.offCtx.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+            this.ctx.save();
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             renderParallax.call(this);
             renderSprite.call(this, execCount);
 
-            this.offCtx.restore();
+            this.ctx.restore();
 
-            this.ctx.drawImage(this.offCanvas, 0, 0);
+            // this.ctx.drawImage(this.canvas, 0, 0);
 
             this.fire('afterStageRender');
         },
@@ -467,7 +467,7 @@ define(function (require) {
                 if (displayObjectStatus === STATUS.NORMAL
                     || displayObjectStatus === STATUS.NOT_UPDATE
                 ) {
-                    curDisplay.render(this.offCtx, execCount);
+                    curDisplay.render(this.ctx, execCount);
                 }
             }
         }
@@ -560,12 +560,12 @@ define(function (require) {
             return;
         }
 
-        var offCtx = this.offCtx;
+        var ctx = this.ctx;
 
         for (var i = 0; i < len; i++) {
             var parallax = parallaxList[i];
             if (parallax.repeat !== 'no-repeat') {
-                renderParallaxRepeatImage.call(parallax, offCtx);
+                renderParallaxRepeatImage.call(parallax, ctx);
             }
             // console.warn(this.game.yRatio);
             var imageWidth = parallax.imageAsset.width;
@@ -601,7 +601,7 @@ define(function (require) {
                         newScrollPos.y = parallax.vy;
                     }
                     drawArea = renderParallaxScroll.call(
-                        parallax, offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight
+                        parallax, ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight
                     );
                     // console.warn(drawArea);
                 }
@@ -612,7 +612,7 @@ define(function (require) {
     /**
      * 绘制视差滚动滚动的区域
      *
-     * @param {Object} offCtx 离屏 canvas 2d context 对象
+     * @param {Object} ctx canvas 2d context 对象
      * @param {Object} newPos 新的绘制的起点坐标对象
      * @param {Object} newArea 新绘制区域的大小对象
      * @param {Object} newScrollPos 滚动的区域起点的坐标对象
@@ -621,7 +621,7 @@ define(function (require) {
      *
      * @return {Object} 待绘制区域的宽高
      */
-    function renderParallaxScroll(offCtx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
+    function renderParallaxScroll(ctx, newPos, newArea, newScrollPos, imageWidth, imageHeight) {
         var xOffset = Math.abs(newScrollPos.x) % imageWidth;
         var yOffset = Math.abs(newScrollPos.y) % imageHeight;
         var left = newScrollPos.x < 0 ? imageWidth - xOffset : xOffset;
@@ -629,7 +629,7 @@ define(function (require) {
         var width = newArea.width < imageWidth - left ? newArea.width : imageWidth - left;
         var height = newArea.height < imageHeight - top ? newArea.height : imageHeight - top;
 
-        offCtx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
+        ctx.drawImage(this.imageAsset, left, top, width, height, newPos.x, newPos.y, width, height);
 
         return {
             width: width,
@@ -640,16 +640,16 @@ define(function (require) {
     /**
      * 绘制 repeat, repeat-x, repeat-y
      *
-     * @param {Object} offCtx 离屏 canvas 2d context 对象
+     * @param {Object} ctx canvas 2d context 对象
      */
-    function renderParallaxRepeatImage(offCtx) {
-        offCtx.save();
-        offCtx.fillStyle = offCtx.createPattern(this.imageAsset, this.repeat);
-        offCtx.fillRect(this.x, this.y, offCtx.canvas.width, offCtx.canvas.height);
-        offCtx.restore();
+    function renderParallaxRepeatImage(ctx) {
+        ctx.save();
+        ctx.fillStyle = ctx.createPattern(this.imageAsset, this.repeat);
+        ctx.fillRect(this.x, this.y, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
 
         if (!newImage4ParallaxRepeat.src) {
-            newImage4ParallaxRepeat.src = offCtx.canvas.toDataURL();
+            newImage4ParallaxRepeat.src = ctx.canvas.toDataURL();
             this.imageAsset = newImage4ParallaxRepeat;
         }
     }
