@@ -350,18 +350,18 @@ define(function (require) {
          *
          * @return {Object} 创建的 displayObject 对象
          */
-        createDisplayObject: function (displayObjOpts) {
-            var displayObj = new DisplayObject(displayObjOpts);
-            this.addDisplayObject(displayObj);
-            return displayObj;
-        },
+        // createDisplayObject: function (displayObjOpts) {
+        //     var displayObj = new DisplayObject(displayObjOpts);
+        //     this.addDisplayObject(displayObj);
+        //     return displayObj;
+        // },
 
         /**
-         * 向场景中添加一个 DisplayObject 实例
+         * 向场景中添加一个新创建 DisplayObject 实例
          *
          * @param {Object} displayObj DisplayObject 实例
          *
-         * @return {Object} Stage 实例
+         * @return {Object} 创建的 displayObject 对象
          */
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
@@ -369,7 +369,7 @@ define(function (require) {
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
             }
-            return this;
+            return displayObj;
         },
 
         /**

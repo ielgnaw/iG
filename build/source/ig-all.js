@@ -3232,18 +3232,13 @@ define('ig/Stage', [
             this.ctx.restore();
             this.fire('afterStageRender');
         },
-        createDisplayObject: function (displayObjOpts) {
-            var displayObj = new DisplayObject(displayObjOpts);
-            this.addDisplayObject(displayObj);
-            return displayObj;
-        },
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
                 displayObj.stage = this;
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
             }
-            return this;
+            return displayObj;
         },
         getDisplayObjectByName: function (name) {
             return this.displayObjects[name];
