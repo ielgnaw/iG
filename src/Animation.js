@@ -78,6 +78,7 @@ define(function (require) {
             this.curFrame = 0;
             this.curState = {};
             this.initState = {};
+
             this.frames = Math.ceil(this.duration * (CONFIG.fps || 60) / 1000);
 
             var source = this.source;
@@ -151,8 +152,8 @@ define(function (require) {
             // this.step();
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -219,8 +220,8 @@ define(function (require) {
             // this.step.call(this);
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -239,8 +240,8 @@ define(function (require) {
             // this.step.call(this);
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -274,8 +275,8 @@ define(function (require) {
             // // this.step.call(this);
             // var me = this;
             // ig.loop({
-            //     step: function (dt, requestID) {
-            //         me.step.call(me, dt, requestID);
+            //     step: function (dt, stepCount, requestID) {
+            //         me.step.call(me, dt, stepCount, requestID);
             //     },
             //     jumpFrames: me.jumpFrames
             // });
@@ -336,9 +337,13 @@ define(function (require) {
 
         /**
          * 每一帧执行
+         *
+         * @param {number} dt 毫秒，固定的时间片
+         * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
+         * @param {number} requestID requestAnimationFrame 标识
          */
         /* eslint-disable fecs-max-statements */
-        step: function (dt, requestID) {
+        step: function (dt, stepCount, requestID) {
             var me = this;
             me.requestID = requestID;
             me.fire('step', {
@@ -362,7 +367,7 @@ define(function (require) {
             }
             me.curFrame++;
 
-            if (me.curFrame < me.frames) {
+            if (me.curFrame <= me.frames + 1) {
                 return;
             }
 

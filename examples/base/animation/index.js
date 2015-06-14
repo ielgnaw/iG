@@ -73,6 +73,7 @@ window.onload = function () {
             }
         });
         anim.play().on('step', function (e) {
+            console.warn(e.data.source);
             circle.x = e.data.source.x;
             circle.draw();
         }).on('complete', function (d) {

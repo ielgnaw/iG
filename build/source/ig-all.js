@@ -2044,8 +2044,8 @@ define('ig/Animation', [
             this.paused = false;
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -2077,8 +2077,8 @@ define('ig/Animation', [
             this.curFrame = this.curFrame > this.frames ? this.frames : this.curFrame;
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -2090,8 +2090,8 @@ define('ig/Animation', [
             this.curFrame = this.curFrame < 0 ? 0 : this.curFrame;
             var me = this;
             ig.loop({
-                step: function (dt, requestID) {
-                    me.step.call(me, dt, requestID);
+                step: function (dt, stepCount, requestID) {
+                    me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
             });
@@ -2149,7 +2149,7 @@ define('ig/Animation', [
             }
             return this;
         },
-        step: function (dt, requestID) {
+        step: function (dt, stepCount, requestID) {
             var me = this;
             me.requestID = requestID;
             me.fire('step', {
@@ -2166,7 +2166,7 @@ define('ig/Animation', [
                 }
             }
             me.curFrame++;
-            if (me.curFrame < me.frames) {
+            if (me.curFrame <= me.frames + 1) {
                 return;
             }
             if (me.range && !me.rangeExec) {
