@@ -12,17 +12,17 @@ window.onload = function () {
         name: 'test-game1',
         maximize: 1,
         resource: [
-            {id: 'bg', src: '/examples/img/base/bg.jpg'},
-            {id: 'bg1', src: '/examples/img/base/bg1.png'},
-            {id: 'bg2', src: '/examples/img/base/bg2.png'},
-            {id: 'bg3', src: '/examples/img/base/bg3.png'},
+            // {id: 'bg', src: '/examples/img/base/bg.jpg'},
+            // {id: 'bg1', src: '/examples/img/base/bg1.png'},
+            // {id: 'bg2', src: '/examples/img/base/bg2.png'},
+            // {id: 'bg3', src: '/examples/img/base/bg3.png'},
             {id: 'playBut', src: '/examples/img/base/playBut.png'},
-            {id: 'test2', src: '/examples/img/base/2.png'},
+            // {id: 'test2', src: '/examples/img/base/2.png'},
             {id: 'runnerBox', src: '/examples/img/base/runner-box.png'},
-            {id: 'testData', src: './data/test.json'},
-            {id: 'text', src: './data/text.text'},
-            {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
-            '/examples/img/base/boom.png'
+            // {id: 'testData', src: './data/test.json'},
+            // {id: 'text', src: './data/text.text'},
+            // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
+            // '/examples/img/base/boom.png'
         ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
@@ -50,8 +50,8 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
-            // console.warn(bitmap1.hitTestPoint(e.x, e.y));
-            console.warn(text1.hitTestPoint(e.x, e.y));
+            console.warn(bitmap1.hitTestPoint(e.x, e.y));
+            // console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
 
@@ -68,11 +68,15 @@ window.onload = function () {
             // width: 80,
             // height: 80,
             mouseEnable: true,
+            moveFunc: function (d) {
+                // console.warn(d);
+                this.move(d.x, d.y);
+            },
         })
     );
 
     bitmap1.step = function (dt, stepCount) {
-        // this.angle += 1;
+        this.angle += 0.5;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;
@@ -93,12 +97,16 @@ window.onload = function () {
             debug: 1,
             zIndex: 100,
             fillStyle: '#f00',
+            moveFunc: function (d) {
+                // console.warn(d);
+                this.move(d.x, d.y);
+            },
             // useCache: false
         })
     );
 
     text1.step = function (dt, stepCount) {
-        // this.angle += 1;
+        this.angle += 1;
     };
 
     game1.start('asdda', function () {

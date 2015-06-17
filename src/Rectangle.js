@@ -108,8 +108,8 @@ define(function (require) {
          * @return {Object} Rectangle 实例
          */
         move: function (x, y) {
-            this.x += x;
-            this.y += y;
+            this.x = x;
+            this.y = y;
 
             this.generatePoints();
             this.getBounds();

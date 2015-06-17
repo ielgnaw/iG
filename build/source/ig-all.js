@@ -2427,8 +2427,8 @@ define('ig/DisplayObject', [
             this.status = STATUS.DESTROYED;
         },
         move: function (x, y) {
-            this.x += x;
-            this.y += y;
+            this.x = x;
+            this.y = y;
             return this;
         },
         hitTestPoint: function (x, y) {
@@ -3780,8 +3780,8 @@ define('ig/Rectangle', [
             return this;
         },
         move: function (x, y) {
-            this.x += x;
-            this.y += y;
+            this.x = x;
+            this.y = y;
             this.generatePoints();
             this.getBounds();
             return this;
