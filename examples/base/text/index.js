@@ -68,9 +68,14 @@ window.onload = function () {
             fillStyle: '#f00',
             // useCache: false,
             captureFunc: function (e) {
+                // console.warn(text1);
                 // console.warn(e);
                 // console.warn(text1.hitTestPoint(e.x, e.y));
-            }
+            },
+            moveFunc: function (d) {
+                // console.warn(d);
+                this.move(d.x, d.y);
+            },
         })
     );
 
@@ -81,6 +86,10 @@ window.onload = function () {
         // this.scaleY += 0.01;
         // console.warn(dt);
     };
+
+    setTimeout(function () {
+        // text1.changeContent('我们我们我们我们');
+    }, 5000);
 
     // var text2 = stage1.addDisplayObject(
     //     new ig.Text({

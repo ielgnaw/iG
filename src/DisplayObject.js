@@ -453,16 +453,16 @@ define(function (require) {
 
         /**
          * 移动
-         * dx, dy 是指要移动的横轴、纵轴距离，而不是终点的横纵坐标
+         * x, y 是指要移动到的横轴、纵轴目标位置即终点坐标
          *
-         * @param {number} dx 横轴要移动的距离
-         * @param {number} dy 纵轴要移动的距离
+         * @param {number} x 终点横坐标
+         * @param {number} y 终点纵坐标
          *
          * @return {Object} DisplayObject 实例
          */
-        move: function (dx, dy) {
-            this.x += dx;
-            this.y += dy;
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
             return this;
         },
 

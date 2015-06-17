@@ -2426,9 +2426,9 @@ define('ig/DisplayObject', [
         destroy: function () {
             this.status = STATUS.DESTROYED;
         },
-        move: function (dx, dy) {
-            this.x += dx;
-            this.y += dy;
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
             return this;
         },
         hitTestPoint: function (x, y) {
@@ -2474,17 +2474,31 @@ define('ig/Text', [
         this.height = this.bounds.height;
         this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
         if (this.useCache) {
-            this.cacheCanvas = document.createElement('canvas');
-            this.cacheCtx = this.cacheCanvas.getContext('2d');
-            this.cacheCanvas.width = this.bounds.width;
-            this.cacheCanvas.height = this.bounds.height;
-            this.cache();
+            this.initCacheCanvas();
         }
-        this.generatePoints();
         return this;
     }
     Text.prototype = {
         constructor: Text,
+        initCacheCanvas: function () {
+            if (!this.cacheCanvas) {
+                this.cacheCanvas = document.createElement('canvas');
+                this.cacheCtx = this.cacheCanvas.getContext('2d');
+            }
+            this.cacheCanvas.width = this.bounds.width;
+            this.cacheCanvas.height = this.bounds.height;
+            this.cache();
+            return this;
+        },
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.fillStyle = this.fillStyle;
+            this.cacheCtx.globalAlpha = this.alpha;
+            this.cacheCtx.font = this.font;
+            this.cacheCtx.fillText(this.content, 0, this.bounds.height);
+            this.cacheCtx.restore();
+            return this;
+        },
         generatePoints: function () {
             this.points = [
                 {
@@ -2524,18 +2538,16 @@ define('ig/Text', [
                 width: obj.width,
                 height: obj.height
             };
+            this.initCacheCanvas();
             return this;
         },
         getContent: function () {
             return this.content;
         },
-        cache: function () {
-            this.cacheCtx.save();
-            this.cacheCtx.fillStyle = this.fillStyle;
-            this.cacheCtx.globalAlpha = this.alpha;
-            this.cacheCtx.font = this.font;
-            this.cacheCtx.fillText(this.content, 0, this.bounds.height);
-            this.cacheCtx.restore();
+        move: function (x, y) {
+            this.x = this.bounds.x = x;
+            this.y = this.bounds.y = y;
+            this.generatePoints();
             return this;
         },
         render: function (ctx, execCount) {
@@ -2551,12 +2563,13 @@ define('ig/Text', [
             var m = this.matrix.m;
             ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
             this.generatePoints();
-            ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height);
+            if (this.useCache) {
+                ctx.drawImage(this.cacheCanvas, this.bounds.x, this.bounds.y);
+            } else {
+                ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height);
+            }
             this.debugRender(ctx);
             ctx.restore();
-            ctx.fillStyle = 'black';
-            ctx.fillRect(200, 0, 1, 1000);
-            ctx.fillRect(0, 200, 1000, 1);
             return this;
         },
         createPath: function (ctx) {
@@ -3766,9 +3779,9 @@ define('ig/Rectangle', [
             ctx.closePath();
             return this;
         },
-        move: function (dx, dy) {
-            this.x += dx;
-            this.y += dy;
+        move: function (x, y) {
+            this.x += x;
+            this.y += y;
             this.generatePoints();
             this.getBounds();
             return this;
