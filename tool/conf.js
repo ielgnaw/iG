@@ -16,10 +16,14 @@ exports.modules = {
         {name: 'ig/Animation', refName: 'Animation'},
         {name: 'ig/DisplayObject', refName: 'DisplayObject'},
         {name: 'ig/Text', refName: 'Text'},
+        {name: 'ig/Bitmap', refName: 'Bitmap'},
         {name: 'ig/ResourceLoader'},
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage'},
-        {name: 'ig/domEvt'}
+        {name: 'ig/domEvt'},
+
+        {name: 'ig/Projection'},
+        {name: 'ig/Rectangle'}
 
 
         // refName 指要挂载到 window.ig 这个全局空间上的名字
@@ -35,7 +39,6 @@ exports.modules = {
         // {name: 'ig/collision'},
 
         // {name: 'ig/geom/polygon', folder: 'geom'},
-        // {name: 'ig/Bitmap', refName: 'Bitmap'},
     ]
 };
 

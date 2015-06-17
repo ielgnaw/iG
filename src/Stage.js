@@ -10,7 +10,6 @@ define(function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
-    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
 
     var CONFIG = ig.getConfig();
@@ -366,6 +365,7 @@ define(function (require) {
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
                 displayObj.stage = this;
+                displayObj.game = this.game;
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
             }
@@ -450,30 +450,6 @@ define(function (require) {
     };
 
     /**
-     * 渲染场景里面的精灵
-     *
-     * @param {number} execCount 每帧执行的函数的计数器
-     */
-    function renderSprite(execCount) {
-        this.sortDisplayObject();
-        var displayObjectList = this.displayObjectList;
-        var len = displayObjectList.length;
-        var displayObjectStatus;
-
-        for (var i = 0; i < len; i++) {
-            var curDisplay = displayObjectList[i];
-            if (curDisplay) {
-                displayObjectStatus = curDisplay.status;
-                if (displayObjectStatus === STATUS.NORMAL
-                    || displayObjectStatus === STATUS.NOT_UPDATE
-                ) {
-                    curDisplay.render(this.ctx, execCount);
-                }
-            }
-        }
-    }
-
-    /**
      * 更新当前场景里面的精灵
      *
      * @param {number} dt 毫秒，固定的时间片
@@ -496,7 +472,30 @@ define(function (require) {
                 ) {
                     curDisplay._step(dt, stepCount, requestID);
                     curDisplay.step(dt, stepCount, requestID);
-                    // curDisplay.update(dt);
+                }
+            }
+        }
+    }
+
+    /**
+     * 渲染场景里面的精灵
+     *
+     * @param {number} execCount 每帧执行的函数的计数器
+     */
+    function renderSprite(execCount) {
+        this.sortDisplayObject();
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.NORMAL
+                    || displayObjectStatus === STATUS.NOT_UPDATE
+                ) {
+                    curDisplay.render(this.ctx, execCount);
                 }
             }
         }

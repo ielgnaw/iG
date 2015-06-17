@@ -70,7 +70,7 @@ window.onload = function () {
     );
 
     text1.step = function (dt, stepCount) {
-        this.angle += 30;
+        this.angle += 10;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;

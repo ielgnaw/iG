@@ -485,6 +485,20 @@ define(function (require) {
         stage.setParallax(parallaxOpts);
     }
 
+    function _displayObjectAsset(stage) {
+        var asset = this.asset;
+        var resource = this.resource;
+        var displayObjectList = stage.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var displayObject = displayObjectList[i];
+            var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
+            if (!imageAsset) {
+                throw new Error(displayObject.name + ' image is not in game.asset');
+            }
+            displayObject.asset = imageAsset;
+        }
+    }
+
     /**
      * stage 启动的执行方法
      * 设置启动场景的背景颜色、图片等等
@@ -494,6 +508,7 @@ define(function (require) {
     function _stageStartExec(stage) {
         _stageBg.call(this, stage);
         _stageParallax.call(this, stage);
+        _displayObjectAsset.call(this, stage);
     }
 
     /**

@@ -2531,7 +2531,7 @@ define('ig/Text', [
                 var m = this.matrix.reset().m;
                 this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height * 0.5);
                 ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-                ctx.strokeStyle = 'black';
+                ctx.strokeStyle = 'green';
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.restore();
             }
@@ -2556,6 +2556,51 @@ define('ig/Text', [
     }
     util.inherits(Text, DisplayObject);
     return Text;
+});'use strict';
+define('ig/Bitmap', [
+    'require',
+    './util',
+    './Rectangle'
+], function (require) {
+    var util = require('./util');
+    var Rectangle = require('./Rectangle');
+    function Bitmap(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('Bitmap must be require a image param');
+        }
+        Rectangle.call(this, opts);
+        util.extend(true, this, {
+            width: 0,
+            height: 0,
+            sx: 0,
+            sy: 0,
+            sWidth: 0,
+            sHeight: 0
+        }, opts);
+        return this;
+    }
+    Bitmap.prototype = {
+        constructor: Bitmap,
+        render: function (ctx) {
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            if (this.width === 0) {
+                this.width = this.asset.width;
+            }
+            if (this.height === 0) {
+                this.height = this.asset.height;
+            }
+            Bitmap.superClass.render.apply(this, arguments);
+            var m = this.matrix.m;
+            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
+            ctx.restore();
+            return this;
+        }
+    };
+    util.inherits(Bitmap, Rectangle);
+    return Bitmap;
 });define('ig/ResourceLoader', [
     'require',
     './util',
@@ -2951,9 +2996,23 @@ define('ig/Game', [
         var parallaxOpts = stage.parallaxOpts;
         stage.setParallax(parallaxOpts);
     }
+    function _displayObjectAsset(stage) {
+        var asset = this.asset;
+        var resource = this.resource;
+        var displayObjectList = stage.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            var displayObject = displayObjectList[i];
+            var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
+            if (!imageAsset) {
+                throw new Error(displayObject.name + ' image is not in game.asset');
+            }
+            displayObject.asset = imageAsset;
+        }
+    }
     function _stageStartExec(stage) {
         _stageBg.call(this, stage);
         _stageParallax.call(this, stage);
+        _displayObjectAsset.call(this, stage);
     }
     function _gameStartExec(stage) {
         _stageStartExec.call(this, stage);
@@ -3094,13 +3153,11 @@ define('ig/Stage', [
     './ig',
     './Event',
     './util',
-    './DisplayObject',
     './domEvt'
 ], function (require) {
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
-    var DisplayObject = require('./DisplayObject');
     var domEvt = require('./domEvt');
     var CONFIG = ig.getConfig();
     var STATUS = CONFIG.status;
@@ -3235,6 +3292,7 @@ define('ig/Stage', [
         addDisplayObject: function (displayObj) {
             if (displayObj && !this.getDisplayObjectByName(displayObj.name)) {
                 displayObj.stage = this;
+                displayObj.game = this.game;
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
             }
@@ -3275,21 +3333,6 @@ define('ig/Stage', [
             this.clearEvents();
         }
     };
-    function renderSprite(execCount) {
-        this.sortDisplayObject();
-        var displayObjectList = this.displayObjectList;
-        var len = displayObjectList.length;
-        var displayObjectStatus;
-        for (var i = 0; i < len; i++) {
-            var curDisplay = displayObjectList[i];
-            if (curDisplay) {
-                displayObjectStatus = curDisplay.status;
-                if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
-                    curDisplay.render(this.ctx, execCount);
-                }
-            }
-        }
-    }
     function updateSprite(dt, stepCount, requestID) {
         var displayObjectList = this.displayObjectList;
         var len = displayObjectList.length;
@@ -3304,6 +3347,21 @@ define('ig/Stage', [
                 if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_RENDER) {
                     curDisplay._step(dt, stepCount, requestID);
                     curDisplay.step(dt, stepCount, requestID);
+                }
+            }
+        }
+    }
+    function renderSprite(execCount) {
+        this.sortDisplayObject();
+        var displayObjectList = this.displayObjectList;
+        var len = displayObjectList.length;
+        var displayObjectStatus;
+        for (var i = 0; i < len; i++) {
+            var curDisplay = displayObjectList[i];
+            if (curDisplay) {
+                displayObjectStatus = curDisplay.status;
+                if (displayObjectStatus === STATUS.NORMAL || displayObjectStatus === STATUS.NOT_UPDATE) {
+                    curDisplay.render(this.ctx, execCount);
                 }
             }
         }
@@ -3561,6 +3619,205 @@ define('ig/domEvt', [
         });
     };
     return exports;
+});define('ig/Projection', ['require'], function (require) {
+    function Projection(min, max) {
+        this.min = min;
+        this.max = max;
+    }
+    Projection.prototype = {
+        constructor: Projection,
+        overlaps: function (projection) {
+            return this.max > projection.min && this.min < projection.max;
+        },
+        getOverlap: function (projection) {
+            var overlap;
+            if (!this.overlaps(projection)) {
+                return 0;
+            }
+            if (this.max > projection.max) {
+                overlap = projection.max - this.min;
+            } else {
+                overlap = this.max - projection.min;
+            }
+            return overlap;
+        }
+    };
+    return Projection;
+});'use strict';
+define('ig/Rectangle', [
+    'require',
+    './util',
+    './Vector',
+    './Projection',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var Vector = require('./Vector');
+    var Projection = require('./Projection');
+    var DisplayObject = require('./DisplayObject');
+    function Rectangle(opts) {
+        DisplayObject.call(this, opts);
+        return this;
+    }
+    Rectangle.prototype = {
+        constructor: Rectangle,
+        generatePoints: function () {
+            this.points = [
+                {
+                    x: this.x,
+                    y: this.y
+                },
+                {
+                    x: this.x + this.width,
+                    y: this.y
+                },
+                {
+                    x: this.x + this.width,
+                    y: this.y + this.height
+                },
+                {
+                    x: this.x,
+                    y: this.y + this.height
+                }
+            ];
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.points[i].x, this.points[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+            this.cx = this.x + this.width / 2;
+            this.cy = this.y + this.height / 2;
+            return this;
+        },
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            return this;
+        },
+        move: function (dx, dy) {
+            this.x += dx;
+            this.y += dy;
+            this.generatePoints();
+            this.getBounds();
+            return this;
+        },
+        render: function (ctx) {
+            ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(ctx);
+            ctx.fill();
+            ctx.stroke();
+            this.debugRender(ctx);
+            ctx.restore();
+            return this;
+        },
+        getBounds: function () {
+            var points = this.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.bounds = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        },
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stageOwner;
+            return this.isPointInPath(stage.ctx, x, y);
+        },
+        getAxes: function () {
+            var v1 = new Vector();
+            var v2 = new Vector();
+            var axes = [];
+            var points = this.points;
+            for (var i = 0, len = points.length - 1; i < len; i++) {
+                v1.x = points[i].x;
+                v1.y = points[i].y;
+                v2.x = points[i + 1].x;
+                v2.y = points[i + 1].y;
+                axes.push(v1.edge(v2).normal());
+            }
+            return axes;
+        },
+        project: function (axis) {
+            var scalars = [];
+            var v = new Vector();
+            var points = this.points;
+            for (var i = 0, len = points.length; i < len; i++) {
+                var point = points[i];
+                v.x = point.x;
+                v.y = point.y;
+                scalars.push(v.dot(axis));
+            }
+            return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
+        },
+        collidesWith: function (rectangle) {
+            return !(this.x + this.width < rectangle.x || rectangle.x + rectangle.width < this.x || this.y + this.height < rectangle.y || rectangle.y + rectangle.height < this.y);
+        },
+        separationOnAxes: function (axes, rectangle) {
+            for (var i = 0, len = axes.length; i < len; i++) {
+                var axis = axes[i];
+                var projection1 = rectangle.project(axis);
+                var projection2 = this.project(axis);
+                if (!projection1.overlaps(projection2)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        debugRender: function (ctx) {
+            if (this.debug) {
+                ctx.save();
+                ctx.strokeStyle = 'green';
+                ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                ctx.restore();
+            }
+        }
+    };
+    util.inherits(Rectangle, DisplayObject);
+    return Rectangle;
 });
 var ig = require('ig');
 
@@ -3807,6 +4064,28 @@ else {
     }
 }
 
+var modName = 'ig/Bitmap';
+var refName = 'Bitmap';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
 var modName = 'ig/ResourceLoader';
 var refName = '';
 var folderName = '';
@@ -3874,6 +4153,50 @@ else {
 }
 
 var modName = 'ig/domEvt';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Projection';
+var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Rectangle';
 var refName = '';
 var folderName = '';
 
