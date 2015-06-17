@@ -13,14 +13,14 @@ window.onload = function () {
         maximize: 1,
         resource: [
             {id: 'bg', src: '/examples/img/base/bg.jpg'},
-            {id: 'bg1', src: '/examples/img/base/bg1.png'},
-            {id: 'bg2', src: '/examples/img/base/bg2.png'},
-            {id: 'bg3', src: '/examples/img/base/bg3.png'},
-            {id: 'test2', src: '/examples/img/base/2.png'},
-            {id: 'testData', src: './data/test.json'},
-            {id: 'text', src: './data/text.text'},
-            {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
-            '/examples/img/base/boom.png'
+            // {id: 'bg1', src: '/examples/img/base/bg1.png'},
+            // {id: 'bg2', src: '/examples/img/base/bg2.png'},
+            // {id: 'bg3', src: '/examples/img/base/bg3.png'},
+            // {id: 'test2', src: '/examples/img/base/2.png'},
+            // {id: 'testData', src: './data/test.json'},
+            // {id: 'text', src: './data/text.text'},
+            // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
+            // '/examples/img/base/boom.png'
         ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
@@ -48,6 +48,7 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
+            console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
 
@@ -61,39 +62,43 @@ window.onload = function () {
             // scaleY: 0.5,
             size: 20,
             isBold: true,
-            angle: 0,
+            angle: 60,
             debug: 1,
             zIndex: 100,
             fillStyle: '#f00',
-            // useCache: false
+            // useCache: false,
+            captureFunc: function (e) {
+                // console.warn(e);
+                // console.warn(text1.hitTestPoint(e.x, e.y));
+            }
         })
     );
 
     text1.step = function (dt, stepCount) {
-        this.angle += 10;
+        this.angle += 1;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;
         // console.warn(dt);
     };
 
-    var text2 = stage1.addDisplayObject(
-        new ig.Text({
-            name: 'text2',
-            content: '卧槽。。。',
-            x: 200,
-            y: 400,
-            // scaleX: 0.5,
-            // scaleY: 0.5,
-            size: 20,
-            isBold: true,
-            angle: 0,
-            debug: 1,
-            zIndex: 100,
-            fillStyle: '#f0f',
-            // useCache: false
-        })
-    );
+    // var text2 = stage1.addDisplayObject(
+    //     new ig.Text({
+    //         name: 'text2',
+    //         content: '卧槽。。。',
+    //         x: 200,
+    //         y: 400,
+    //         // scaleX: 0.5,
+    //         // scaleY: 0.5,
+    //         size: 20,
+    //         isBold: true,
+    //         angle: 0,
+    //         debug: 1,
+    //         zIndex: 100,
+    //         fillStyle: '#f0f',
+    //         // useCache: false
+    //     })
+    // );
 
     game1.start('asdda', function () {
         console.warn('startCallback');

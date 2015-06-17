@@ -18,6 +18,7 @@ window.onload = function () {
             {id: 'bg3', src: '/examples/img/base/bg3.png'},
             {id: 'playBut', src: '/examples/img/base/playBut.png'},
             {id: 'test2', src: '/examples/img/base/2.png'},
+            {id: 'runnerBox', src: '/examples/img/base/runner-box.png'},
             {id: 'testData', src: './data/test.json'},
             {id: 'text', src: './data/text.text'},
             {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
@@ -49,43 +50,56 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
+            // console.warn(bitmap1.hitTestPoint(e.x, e.y));
+            console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
 
     var bitmap1 = stage1.addDisplayObject(
         new ig.Bitmap({
             name: 'bitmap1',
-            // image: '/examples/img/base/playBut.png',
-            image: 'playBut',
-            sWidth: 110,
-            sHeight: 110,
+            // image: '/examples/img/base/2.png',
+            image: 'runnerBox',
+            // sWidth: 110,
+            // sHeight: 110,
             debug: 1,
-            x: 50,
-            y: 50
+            x: 150,
+            y: 150,
+            // width: 80,
+            // height: 80,
+            mouseEnable: true,
         })
     );
 
-    // var text1 = stage1.addDisplayObject(
-    //     new ig.Text({
-    //         name: 'text1',
-    //         content: 'oh no....',
-    //         x: 200,
-    //         y: 200,
-    //         // scaleX: 0.5,
-    //         // scaleY: 0.5,
-    //         size: 20,
-    //         isBold: true,
-    //         angle: 0,
-    //         debug: 1,
-    //         zIndex: 100,
-    //         fillStyle: '#f00',
-    //         // useCache: false
-    //     })
-    // );
+    bitmap1.step = function (dt, stepCount) {
+        // this.angle += 1;
+        // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
+        // this.scaleX += 0.01;
+        // this.scaleY += 0.01;
+        // console.warn(dt);
+    };
 
-    // text1.step = function (dt, stepCount) {
-    //     this.angle += 10;
-    // };
+    var text1 = stage1.addDisplayObject(
+        new ig.Text({
+            name: 'text1',
+            content: 'oh no....',
+            x: 200,
+            y: 400,
+            // scaleX: 0.5,
+            // scaleY: 0.5,
+            size: 20,
+            isBold: true,
+            angle: 0,
+            debug: 1,
+            zIndex: 100,
+            fillStyle: '#f00',
+            // useCache: false
+        })
+    );
+
+    text1.step = function (dt, stepCount) {
+        // this.angle += 1;
+    };
 
     game1.start('asdda', function () {
         console.warn('startCallback');

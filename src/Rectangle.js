@@ -238,7 +238,7 @@ define(function (require) {
          * @return {boolean} 是否相交
          */
         hitTestPoint: function (x, y) {
-            var stage = this.stageOwner;
+            var stage = this.stage;
             return this.isPointInPath(stage.ctx, x, y);
         },
 

@@ -44,6 +44,9 @@ define(function (require) {
             height: obj.height
         };
 
+        this.width = this.bounds.width;
+        this.height = this.bounds.height;
+
         this.font = ''
             + (this.isBold ? 'bold ' : '')
             + this.size
@@ -57,6 +60,9 @@ define(function (require) {
             this.cacheCanvas.height = this.bounds.height;
             this.cache();
         }
+
+        this.generatePoints();
+
         return this;
     }
 
@@ -65,6 +71,46 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: Text,
+
+        /**
+         * 生成 points
+         *
+         * @return {Object} Rectangle 实例
+         */
+        generatePoints: function () {
+            this.points = [
+                {
+                    x: this.bounds.x,
+                    y: this.bounds.y
+                },
+                {
+                    x: this.bounds.x + this.bounds.width,
+                    y: this.bounds.y
+                },
+                {
+                    x: this.bounds.x + this.bounds.width,
+                    y: this.bounds.y + this.bounds.height
+                },
+                {
+                    x: this.bounds.x,
+                    y: this.bounds.y + this.bounds.height
+                }
+            ];
+
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.points[i].x, this.points[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+
+            // this.originalPoints = util.extend(true, [], this.points);
+
+            this.cx = this.bounds.x + this.bounds.width / 2;
+            this.cy = this.bounds.y + this.bounds.height / 2;
+            return this;
+        },
 
         /**
          * 改变内容
@@ -124,27 +170,85 @@ define(function (require) {
             ctx.font = this.font;
 
             this.matrix.reset();
-            this.matrix.translate(this.x, this.y);
+            this.matrix.translate(this.cx, this.cy);
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
             var m = this.matrix.m;
             ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
-            if (this.useCache) {
-                ctx.drawImage(this.cacheCanvas, -this.bounds.width / 2, -this.bounds.height / 2);
-            }
-            else {
-                ctx.fillText(this.content, -this.bounds.width / 2, this.bounds.height / 2);
-            }
+            this.generatePoints();
+            // if (this.useCache) {
+            //     ctx.drawImage(this.cacheCanvas, -this.bounds.width / 2, -this.bounds.height / 2);
+            // }
+            // else {
+            //     ctx.fillText(this.content, -this.bounds.width / 2, this.bounds.height / 2);
+            // }
+            ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height);
+            // ctx.fillText(this.content, 100, 100);
 
             this.debugRender(ctx);
             ctx.restore();
 
-            // ctx.fillStyle = 'black';
-            // ctx.fillRect(100, 0, 1, 1000);
-            // ctx.fillRect(0, 100, 1000, 1);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(200, 0, 1, 1000);
+            ctx.fillRect(0, 200, 1000, 1);
 
             return this;
+        },
+
+        /**
+         * 创建路径，只是创建路径，并没有画出来
+         *
+         * @param {Object} ctx canvas 2d context 对象
+         *
+         * @return {Object} Rectangle 实例
+         */
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+
+            return this;
+        },
+
+        /**
+         * 判断点是否在多边形内
+         * 由于在游戏里，大部分都是贴图，形状只是用来辅助的
+         * 因此这里忽略了 isPointInPath 方法获取 lineWidth 上的点的问题
+         * 小游戏就简单使用 cnavas context 的 isPointInPath 方法
+         *
+         * @param {Object} ctx canvas 2d context 对象
+         * @param {number} x 横坐标
+         * @param {number} y 纵坐标
+         *
+         * @return {boolean} 结果
+         */
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+
+        /**
+         * 某个点是否和当前 Text 实例相交
+         *
+         * @param {number} x 点的横坐标
+         * @param {number} y 点的纵坐标
+         *
+         * @return {boolean} 是否相交
+         */
+        hitTestPoint: function (x, y) {
+            var stage = this.stage;
+            return this.isPointInPath(stage.ctx, x, y);
         },
 
         /**
@@ -156,17 +260,17 @@ define(function (require) {
         debugRender: function (ctx) {
             if (this.debug) {
                 ctx.save();
-                var m = this.matrix.reset().m;
-                this.matrix.translate(
-                    -this.bounds.x - this.bounds.width * 0.5,
-                    -this.bounds.y - this.bounds.height * 0.5
-                );
-                ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+                // var m = this.matrix.reset().m;
+                // this.matrix.translate(
+                //     -this.bounds.x - this.bounds.width * 0.5,
+                //     -this.bounds.y - this.bounds.height * 0.5
+                // );
+                // ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
 
                 ctx.strokeStyle = 'green';
                 ctx.strokeRect(
-                    this.bounds.x,
-                    this.bounds.y,
+                    this.bounds.x, // - this.bounds.width / 2,
+                    this.bounds.y, // - this.bounds.height / 2,
                     this.bounds.width,
                     this.bounds.height
                 );

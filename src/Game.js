@@ -491,11 +491,15 @@ define(function (require) {
         var displayObjectList = stage.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var displayObject = displayObjectList[i];
-            var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
-            if (!imageAsset) {
-                throw new Error(displayObject.name + ' image is not in game.asset');
+            // 只检测需要图片的 DisplayObject 例如 bitmap, spriteSheet 等
+            // 像 text 等构造函数里面不需要 image 参数的就不检测了
+            if (displayObject instanceof ig.Bitmap) {
+                var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
+                if (!imageAsset) {
+                    throw new Error(displayObject.name + ' image is not in game.asset');
+                }
+                displayObject.asset = imageAsset;
             }
-            displayObject.asset = imageAsset;
         }
     }
 

@@ -2470,6 +2470,8 @@ define('ig/Text', [
             width: obj.width,
             height: obj.height
         };
+        this.width = this.bounds.width;
+        this.height = this.bounds.height;
         this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
         if (this.useCache) {
             this.cacheCanvas = document.createElement('canvas');
@@ -2478,10 +2480,41 @@ define('ig/Text', [
             this.cacheCanvas.height = this.bounds.height;
             this.cache();
         }
+        this.generatePoints();
         return this;
     }
     Text.prototype = {
         constructor: Text,
+        generatePoints: function () {
+            this.points = [
+                {
+                    x: this.bounds.x,
+                    y: this.bounds.y
+                },
+                {
+                    x: this.bounds.x + this.bounds.width,
+                    y: this.bounds.y
+                },
+                {
+                    x: this.bounds.x + this.bounds.width,
+                    y: this.bounds.y + this.bounds.height
+                },
+                {
+                    x: this.bounds.x,
+                    y: this.bounds.y + this.bounds.height
+                }
+            ];
+            for (var i = 0, len = this.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.points[i].x, this.points[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+            this.cx = this.bounds.x + this.bounds.width / 2;
+            this.cy = this.bounds.y + this.bounds.height / 2;
+            return this;
+        },
         changeContent: function (content) {
             this.content = content;
             var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
@@ -2511,26 +2544,46 @@ define('ig/Text', [
             ctx.globalAlpha = this.alpha;
             ctx.font = this.font;
             this.matrix.reset();
-            this.matrix.translate(this.x, this.y);
+            this.matrix.translate(this.cx, this.cy);
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
             var m = this.matrix.m;
             ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-            if (this.useCache) {
-                ctx.drawImage(this.cacheCanvas, -this.bounds.width / 2, -this.bounds.height / 2);
-            } else {
-                ctx.fillText(this.content, -this.bounds.width / 2, this.bounds.height / 2);
-            }
+            this.generatePoints();
+            ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height);
             this.debugRender(ctx);
             ctx.restore();
+            ctx.fillStyle = 'black';
+            ctx.fillRect(200, 0, 1, 1000);
+            ctx.fillRect(0, 200, 1000, 1);
             return this;
+        },
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            return this;
+        },
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stage;
+            return this.isPointInPath(stage.ctx, x, y);
         },
         debugRender: function (ctx) {
             if (this.debug) {
                 ctx.save();
-                var m = this.matrix.reset().m;
-                this.matrix.translate(-this.bounds.x - this.bounds.width * 0.5, -this.bounds.y - this.bounds.height * 0.5);
-                ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
                 ctx.strokeStyle = 'green';
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.restore();
@@ -2588,8 +2641,14 @@ define('ig/Bitmap', [
             if (this.width === 0) {
                 this.width = this.asset.width;
             }
+            if (this.sWidth === 0) {
+                this.sWidth = this.asset.width;
+            }
             if (this.height === 0) {
                 this.height = this.asset.height;
+            }
+            if (this.sHeight === 0) {
+                this.sHeight = this.asset.height;
             }
             Bitmap.superClass.render.apply(this, arguments);
             var m = this.matrix.m;
@@ -3002,11 +3061,13 @@ define('ig/Game', [
         var displayObjectList = stage.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var displayObject = displayObjectList[i];
-            var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
-            if (!imageAsset) {
-                throw new Error(displayObject.name + ' image is not in game.asset');
+            if (displayObject instanceof ig.Bitmap) {
+                var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
+                if (!imageAsset) {
+                    throw new Error(displayObject.name + ' image is not in game.asset');
+                }
+                displayObject.asset = imageAsset;
             }
-            displayObject.asset = imageAsset;
         }
     }
     function _stageStartExec(stage) {
@@ -3764,7 +3825,7 @@ define('ig/Rectangle', [
             return ctx.isPointInPath(x, y);
         },
         hitTestPoint: function (x, y) {
-            var stage = this.stageOwner;
+            var stage = this.stage;
             return this.isPointInPath(stage.ctx, x, y);
         },
         getAxes: function () {

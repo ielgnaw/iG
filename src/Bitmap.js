@@ -65,8 +65,16 @@ define(function (require) {
                 this.width = this.asset.width;
             }
 
+            if (this.sWidth === 0) {
+                this.sWidth = this.asset.width;
+            }
+
             if (this.height === 0) {
                 this.height = this.asset.height;
+            }
+
+            if (this.sHeight === 0) {
+                this.sHeight = this.asset.height;
             }
 
             Bitmap.superClass.render.apply(this, arguments);
