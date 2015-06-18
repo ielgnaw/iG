@@ -2652,9 +2652,43 @@ define('ig/Bitmap', [
     }
     Bitmap.prototype = {
         constructor: Bitmap,
+        initCacheCanvas: function () {
+            if (!this.cacheCanvas) {
+                this.cacheCanvas = document.createElement('canvas');
+                this.cacheCtx = this.cacheCanvas.getContext('2d');
+            }
+            this.cacheCanvas.width = this.width;
+            this.cacheCanvas.height = this.height;
+            this.cache();
+            return this;
+        },
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, 0, 0, this.cacheCanvas.width, this.cacheCanvas.height);
+            this.cacheCtx.restore();
+            return this;
+        },
         render: function (ctx) {
             ctx.save();
-            ctx.globalAlpha = this.alpha;
+            _setInitDimension.call(this);
+            Bitmap.superClass.render.apply(this, arguments);
+            this.matrix.setCtxTransform(ctx);
+            if (this.useCache) {
+                if (!this._.execCache) {
+                    this._.execCache = true;
+                    this.initCacheCanvas();
+                }
+                ctx.drawImage(this.cacheCanvas, this.x, this.y);
+            } else {
+                ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
+            }
+            ctx.restore();
+            return this;
+        }
+    };
+    function _setInitDimension() {
+        if (!this._.isInitDimension) {
+            this._.isInitDimension = true;
             if (this.width === 0) {
                 this.width = this.asset.width;
             }
@@ -2667,13 +2701,8 @@ define('ig/Bitmap', [
             if (this.sHeight === 0) {
                 this.sHeight = this.asset.height;
             }
-            Bitmap.superClass.render.apply(this, arguments);
-            this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
-            ctx.restore();
-            return this;
         }
-    };
+    }
     util.inherits(Bitmap, Rectangle);
     return Bitmap;
 });define('ig/ResourceLoader', [

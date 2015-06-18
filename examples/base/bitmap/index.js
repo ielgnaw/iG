@@ -50,8 +50,8 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
-            // console.warn(bitmap1.hitTestPoint(e.x, e.y));
-            console.warn(text1.hitTestPoint(e.x, e.y));
+            console.warn(bitmap1.hitTestPoint(e.x, e.y));
+            // console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
 
@@ -65,10 +65,11 @@ window.onload = function () {
             debug: 1,
             x: 150,
             y: 150,
-            // width: 80,
-            // height: 80,
+            width: 80,
+            height: 80,
             mouseEnable: true,
             moveFunc: function (d) {
+                d.domEvent.preventDefault();
                 // console.warn(d);
                 this.move(d.x, d.y);
             },
@@ -77,6 +78,7 @@ window.onload = function () {
 
     bitmap1.step = function (dt, stepCount) {
         this.angle += 1;
+        // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;
