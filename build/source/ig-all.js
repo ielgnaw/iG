@@ -2705,6 +2705,53 @@ define('ig/Bitmap', [
     }
     util.inherits(Bitmap, Rectangle);
     return Bitmap;
+});'use strict';
+define('ig/BitmapPolygon', [
+    'require',
+    './util',
+    './Polygon'
+], function (require) {
+    var util = require('./util');
+    var Polygon = require('./Polygon');
+    function BitmapPolygon(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('BitmapPolygon must be require a image param');
+        }
+        util.extend(true, this, {
+            sx: 0,
+            sy: 0,
+            sWidth: 0,
+            sHeight: 0
+        }, opts);
+        Polygon.call(this, opts);
+        return this;
+    }
+    BitmapPolygon.prototype = {
+        constructor: BitmapPolygon,
+        render: function (ctx) {
+            ctx.save();
+            _setInitDimension.call(this);
+            BitmapPolygon.superClass.render.apply(this, arguments);
+            this.matrix.setCtxTransform(ctx);
+            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+            ctx.restore();
+            return this;
+        }
+    };
+    function _setInitDimension() {
+        if (!this._.isInitDimension) {
+            this._.isInitDimension = true;
+            if (this.sWidth === 0) {
+                this.sWidth = this.asset.width;
+            }
+            if (this.sHeight === 0) {
+                this.sHeight = this.asset.height;
+            }
+        }
+    }
+    util.inherits(BitmapPolygon, Polygon);
+    return BitmapPolygon;
 });define('ig/ResourceLoader', [
     'require',
     './util',
@@ -3106,7 +3153,7 @@ define('ig/Game', [
         var displayObjectList = stage.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var displayObject = displayObjectList[i];
-            if (displayObject instanceof ig.Bitmap) {
+            if (displayObject instanceof ig.Bitmap || displayObject instanceof ig.BitmapPolygon) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
                     throw new Error(displayObject.name + ' image is not in game.asset');
@@ -3895,6 +3942,7 @@ define('ig/Rectangle', [
             return this;
         },
         render: function (ctx) {
+            ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
@@ -3909,12 +3957,217 @@ define('ig/Rectangle', [
             ctx.fill();
             ctx.stroke();
             this.debugRender(ctx);
+            ctx.restore();
+            return this;
+        },
+        debugRender: function (ctx) {
+            if (this.debug) {
+                ctx.save();
+                ctx.strokeStyle = '#0f0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+                ctx.strokeStyle = '#f00';
+                ctx.beginPath();
+                ctx.moveTo(this.points[0].x, this.points[0].y);
+                for (var i = 0; i < this.points.length; i++) {
+                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                }
+                ctx.lineTo(this.points[0].x, this.points[0].y);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+    };
+    util.inherits(Rectangle, DisplayObject);
+    return Rectangle;
+});'use strict';
+define('ig/Polygon', [
+    'require',
+    './util',
+    './Vector',
+    './Projection',
+    './DisplayObject'
+], function (require) {
+    var util = require('./util');
+    var Vector = require('./Vector');
+    var Projection = require('./Projection');
+    var DisplayObject = require('./DisplayObject');
+    function Polygon(opts) {
+        DisplayObject.call(this, opts);
+        util.extend(true, this, { points: [] }, opts);
+        for (var i = 0, len = this.points.length; i < len; i++) {
+            var point = this.points[i];
+            this.points[i] = {
+                x: point.x + this.x,
+                y: point.y + this.y
+            };
+        }
+        this.origin = {
+            x: this.x,
+            y: this.y,
+            points: util.extend(true, [], this.points),
+            persistencePoints: util.extend(true, [], this.points)
+        };
+        this.getBounds();
+        this.cx = this.bounds.x + this.bounds.width / 2;
+        this.cy = this.bounds.y + this.bounds.height / 2;
+        return this;
+    }
+    Polygon.prototype = {
+        constructor: Polygon,
+        generatePoints: function () {
+            for (var i = 0, len = this.origin.points.length; i < len; i++) {
+                var transformPoint = this.matrix.transformPoint(this.origin.points[i].x, this.origin.points[i].y);
+                this.points[i] = {
+                    x: transformPoint.x,
+                    y: transformPoint.y
+                };
+            }
+            return this;
+        },
+        getBounds: function () {
+            var points = this.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.bounds = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        },
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            return this;
+        },
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stage;
+            return this.isPointInPath(stage.ctx, x, y);
+        },
+        getAxes: function () {
+            var v1 = new Vector();
+            var v2 = new Vector();
+            var axes = [];
+            var points = this.points;
+            for (var i = 0, len = points.length - 1; i < len; i++) {
+                v1.x = points[i].x;
+                v1.y = points[i].y;
+                v2.x = points[i + 1].x;
+                v2.y = points[i + 1].y;
+                axes.push(v1.edge(v2).normal());
+            }
+            return axes;
+        },
+        project: function (axis) {
+            var scalars = [];
+            var v = new Vector();
+            var points = this.points;
+            for (var i = 0, len = points.length; i < len; i++) {
+                var point = points[i];
+                v.x = point.x;
+                v.y = point.y;
+                scalars.push(v.dot(axis));
+            }
+            return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
+        },
+        collidesWith: function (polygon) {
+            var axes = this.getAxes().concat(polygon.getAxes());
+            return !this.separationOnAxes(axes, polygon);
+        },
+        separationOnAxes: function (axes, polygon) {
+            for (var i = 0, len = axes.length; i < len; i++) {
+                var axis = axes[i];
+                var projection1 = polygon.project(axis);
+                var projection2 = this.project(axis);
+                if (!projection1.overlaps(projection2)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        move: function (x, y) {
+            this.x = x;
+            this.y = y;
+            for (var j = 0, len = this.origin.persistencePoints.length; j < len; j++) {
+                this.origin.points[j] = {
+                    x: this.origin.persistencePoints[j].x + x - this.origin.x,
+                    y: this.origin.persistencePoints[j].y + y - this.origin.y
+                };
+            }
+            var points = this.origin.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, pLen = points.length; i < pLen; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.cx = minX + (maxX - minX) / 2;
+            this.cy = minY + (maxY - minY) / 2;
+            return this;
+        },
+        render: function (ctx) {
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(ctx);
+            ctx.fill();
+            ctx.stroke();
             return this;
         },
         debugRender: function (ctx) {
             if (this.debug) {
                 ctx.strokeStyle = '#0f0';
-                ctx.lineWidth = 2;
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.strokeStyle = '#f00';
                 ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -3926,8 +4179,8 @@ define('ig/Rectangle', [
             }
         }
     };
-    util.inherits(Rectangle, DisplayObject);
-    return Rectangle;
+    util.inherits(Polygon, DisplayObject);
+    return Polygon;
 });
 var ig = require('ig');
 
@@ -4196,6 +4449,28 @@ else {
     }
 }
 
+var modName = 'ig/BitmapPolygon';
+var refName = 'BitmapPolygon';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
 var modName = 'ig/ResourceLoader';
 var refName = '';
 var folderName = '';
@@ -4307,6 +4582,28 @@ else {
 }
 
 var modName = 'ig/Rectangle';
+var refName = 'Rectangle';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Polygon';
 var refName = '';
 var folderName = '';
 

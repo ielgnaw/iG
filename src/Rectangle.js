@@ -13,9 +13,7 @@ define(function (require) {
     var DisplayObject = require('./DisplayObject');
 
     /**
-     * 矩形，这个类不暴露在 ig 上，不可能通过这个类直接实例化，都是通过这个类的子类来实例化
-     * 因此这个类的 render 以及 debugRender 方法中不需要 ctx.save 了
-     * ctx.save 是由这个类的子类来做的
+     * 矩形
      *
      * @constructor
      *
@@ -25,9 +23,6 @@ define(function (require) {
      */
     function Rectangle(opts) {
         DisplayObject.call(this, opts);
-
-        // this.generatePoints();
-        // this.getBounds();
         return this;
     }
 
@@ -69,8 +64,6 @@ define(function (require) {
                     y: transformPoint.y
                 };
             }
-
-            // this.originalPoints = util.extend(true, [], this.points);
 
             this.cx = this.x + this.width / 2;
             this.cy = this.y + this.height / 2;
@@ -303,7 +296,7 @@ define(function (require) {
          * @return {Object} 当前 Rectangle 实例
          */
         render: function (ctx) {
-            // ctx.save();
+            ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
@@ -323,7 +316,7 @@ define(function (require) {
 
             this.debugRender(ctx);
 
-            // ctx.restore();
+            ctx.restore();
             return this;
         },
 
@@ -335,7 +328,7 @@ define(function (require) {
          */
         debugRender: function (ctx) {
             if (this.debug) {
-                // ctx.save();
+                ctx.save();
 
                 ctx.strokeStyle = '#0f0';
                 ctx.lineWidth = 2;
@@ -347,14 +340,16 @@ define(function (require) {
                 );
 
                 ctx.strokeStyle = '#f00';
+                ctx.beginPath();
                 ctx.moveTo(this.points[0].x, this.points[0].y);
                 for (var i = 0; i < this.points.length; i++) {
                     ctx.lineTo(this.points[i].x, this.points[i].y);
                 }
                 ctx.lineTo(this.points[0].x, this.points[0].y);
+                ctx.closePath();
                 ctx.stroke();
 
-                // ctx.restore();
+                ctx.restore();
             }
         }
     };

@@ -485,6 +485,11 @@ define(function (require) {
         stage.setParallax(parallaxOpts);
     }
 
+    /**
+     * 给 stage 里的 displayObject 设置 asset
+     *
+     * @param {Object} stage 场景对象
+     */
     function _displayObjectAsset(stage) {
         var asset = this.asset;
         var resource = this.resource;
@@ -493,7 +498,9 @@ define(function (require) {
             var displayObject = displayObjectList[i];
             // 只检测需要图片的 DisplayObject 例如 bitmap, spriteSheet 等
             // 像 text 等构造函数里面不需要 image 参数的就不检测了
-            if (displayObject instanceof ig.Bitmap) {
+            if (displayObject instanceof ig.Bitmap
+                || displayObject instanceof ig.BitmapPolygon
+            ) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
                     throw new Error(displayObject.name + ' image is not in game.asset');
