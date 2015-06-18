@@ -50,8 +50,8 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
-            console.warn(bitmap1.hitTestPoint(e.x, e.y));
-            // console.warn(text1.hitTestPoint(e.x, e.y));
+            // console.warn(bitmap1.hitTestPoint(e.x, e.y));
+            console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
 
@@ -76,7 +76,7 @@ window.onload = function () {
     );
 
     bitmap1.step = function (dt, stepCount) {
-        this.angle += 0.5;
+        this.angle += 1;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;

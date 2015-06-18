@@ -37,7 +37,10 @@ define(function (require) {
             sx: 0,
             sy: 0,
             sWidth: 0,
-            sHeight: 0
+            sHeight: 0,
+
+            // 是否使用缓存
+            useCache: true
         }, opts);
 
         return this;
@@ -79,8 +82,7 @@ define(function (require) {
 
             Bitmap.superClass.render.apply(this, arguments);
 
-            var m = this.matrix.m;
-            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            this.matrix.setCtxTransform(ctx);
 
             ctx.drawImage(
                 this.asset,

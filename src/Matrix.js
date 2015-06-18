@@ -160,6 +160,16 @@ define(function (require) {
                 x: px,
                 y: py
             };
+        },
+
+        /**
+         * 设置 ctx 的完整 transform
+         *
+         * @param {Object} ctx canvas 2d context 对象
+         */
+        setCtxTransform: function (ctx) {
+            var m = this.m;
+            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
         }
     };
 

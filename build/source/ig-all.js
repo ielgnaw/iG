@@ -1944,6 +1944,10 @@ define('ig/Matrix', [
                 x: px,
                 y: py
             };
+        },
+        setCtxTransform: function (ctx) {
+            var m = this.m;
+            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
         }
     };
     return Matrix;
@@ -2529,6 +2533,28 @@ define('ig/Text', [
             this.cy = this.bounds.y + this.bounds.height / 2;
             return this;
         },
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+            return this;
+        },
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+        hitTestPoint: function (x, y) {
+            var stage = this.stage;
+            return this.isPointInPath(stage.ctx, x, y);
+        },
         changeContent: function (content) {
             this.content = content;
             var obj = measureText(this.content, this.isBold, this.fontFamily, this.size);
@@ -2560,8 +2586,7 @@ define('ig/Text', [
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
-            var m = this.matrix.m;
-            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            this.matrix.setCtxTransform(ctx);
             this.generatePoints();
             if (this.useCache) {
                 ctx.drawImage(this.cacheCanvas, this.bounds.x, this.bounds.y);
@@ -2572,32 +2597,10 @@ define('ig/Text', [
             ctx.restore();
             return this;
         },
-        createPath: function (ctx) {
-            var points = this.points;
-            var len = points.length;
-            if (!len) {
-                return;
-            }
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (var i = 0; i < len; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.closePath();
-            return this;
-        },
-        isPointInPath: function (ctx, x, y) {
-            this.createPath(ctx);
-            return ctx.isPointInPath(x, y);
-        },
-        hitTestPoint: function (x, y) {
-            var stage = this.stage;
-            return this.isPointInPath(stage.ctx, x, y);
-        },
         debugRender: function (ctx) {
             if (this.debug) {
                 ctx.save();
-                ctx.strokeStyle = 'green';
+                ctx.strokeStyle = '#0f0';
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.restore();
             }
@@ -2642,7 +2645,8 @@ define('ig/Bitmap', [
             sx: 0,
             sy: 0,
             sWidth: 0,
-            sHeight: 0
+            sHeight: 0,
+            useCache: true
         }, opts);
         return this;
     }
@@ -2664,8 +2668,7 @@ define('ig/Bitmap', [
                 this.sHeight = this.asset.height;
             }
             Bitmap.superClass.render.apply(this, arguments);
-            var m = this.matrix.m;
-            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            this.matrix.setCtxTransform(ctx);
             ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
             ctx.restore();
             return this;
@@ -3765,46 +3768,6 @@ define('ig/Rectangle', [
             this.cy = this.y + this.height / 2;
             return this;
         },
-        createPath: function (ctx) {
-            var points = this.points;
-            var len = points.length;
-            if (!len) {
-                return;
-            }
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (var i = 0; i < len; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.closePath();
-            return this;
-        },
-        move: function (x, y) {
-            this.x = x;
-            this.y = y;
-            this.generatePoints();
-            this.getBounds();
-            return this;
-        },
-        render: function (ctx) {
-            ctx.save();
-            ctx.fillStyle = this.fillStyle;
-            ctx.strokeStyle = this.strokeStyle;
-            ctx.globalAlpha = this.alpha;
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
-            this.generatePoints();
-            this.getBounds();
-            this.createPath(ctx);
-            ctx.fill();
-            ctx.stroke();
-            this.debugRender(ctx);
-            ctx.restore();
-            return this;
-        },
         getBounds: function () {
             var points = this.points;
             var minX = Number.MAX_VALUE;
@@ -3831,6 +3794,20 @@ define('ig/Rectangle', [
                 width: maxX - minX,
                 height: maxY - minY
             };
+            return this;
+        },
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
             return this;
         },
         isPointInPath: function (ctx, x, y) {
@@ -3881,12 +3858,42 @@ define('ig/Rectangle', [
             }
             return false;
         },
+        move: function (x, y) {
+            this.x = x;
+            this.y = y;
+            this.generatePoints();
+            this.getBounds();
+            return this;
+        },
+        render: function (ctx) {
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(ctx);
+            ctx.fill();
+            ctx.stroke();
+            this.debugRender(ctx);
+            return this;
+        },
         debugRender: function (ctx) {
             if (this.debug) {
-                ctx.save();
-                ctx.strokeStyle = 'green';
+                ctx.strokeStyle = '#0f0';
+                ctx.lineWidth = 2;
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                ctx.restore();
+                ctx.strokeStyle = '#f00';
+                ctx.moveTo(this.points[0].x, this.points[0].y);
+                for (var i = 0; i < this.points.length; i++) {
+                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                }
+                ctx.lineTo(this.points[0].x, this.points[0].y);
+                ctx.stroke();
             }
         }
     };

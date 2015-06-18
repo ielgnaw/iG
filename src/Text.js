@@ -136,6 +136,60 @@ define(function (require) {
         },
 
         /**
+         * 创建路径，只是创建路径，并没有画出来
+         *
+         * @param {Object} ctx canvas 2d context 对象
+         *
+         * @return {Object} Text 实例
+         */
+        createPath: function (ctx) {
+            var points = this.points;
+            var len = points.length;
+            if (!len) {
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 0; i < len; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.closePath();
+
+            return this;
+        },
+
+        /**
+         * 判断点是否在多边形内
+         * 由于在游戏里，大部分都是贴图，形状只是用来辅助的
+         * 因此这里忽略了 isPointInPath 方法获取 lineWidth 上的点的问题
+         * 小游戏就简单使用 cnavas context 的 isPointInPath 方法
+         *
+         * @param {Object} ctx canvas 2d context 对象
+         * @param {number} x 横坐标
+         * @param {number} y 纵坐标
+         *
+         * @return {boolean} 结果
+         */
+        isPointInPath: function (ctx, x, y) {
+            this.createPath(ctx);
+            return ctx.isPointInPath(x, y);
+        },
+
+        /**
+         * 某个点是否和当前 Text 实例相交
+         *
+         * @param {number} x 点的横坐标
+         * @param {number} y 点的纵坐标
+         *
+         * @return {boolean} 是否相交
+         */
+        hitTestPoint: function (x, y) {
+            var stage = this.stage;
+            return this.isPointInPath(stage.ctx, x, y);
+        },
+
+        /**
          * 改变内容
          *
          * @param {string} content 内容
@@ -201,8 +255,7 @@ define(function (require) {
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
-            var m = this.matrix.m;
-            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
+            this.matrix.setCtxTransform(ctx);
 
             this.generatePoints();
 
@@ -224,60 +277,6 @@ define(function (require) {
         },
 
         /**
-         * 创建路径，只是创建路径，并没有画出来
-         *
-         * @param {Object} ctx canvas 2d context 对象
-         *
-         * @return {Object} Text 实例
-         */
-        createPath: function (ctx) {
-            var points = this.points;
-            var len = points.length;
-            if (!len) {
-                return;
-            }
-
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (var i = 0; i < len; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.closePath();
-
-            return this;
-        },
-
-        /**
-         * 判断点是否在多边形内
-         * 由于在游戏里，大部分都是贴图，形状只是用来辅助的
-         * 因此这里忽略了 isPointInPath 方法获取 lineWidth 上的点的问题
-         * 小游戏就简单使用 cnavas context 的 isPointInPath 方法
-         *
-         * @param {Object} ctx canvas 2d context 对象
-         * @param {number} x 横坐标
-         * @param {number} y 纵坐标
-         *
-         * @return {boolean} 结果
-         */
-        isPointInPath: function (ctx, x, y) {
-            this.createPath(ctx);
-            return ctx.isPointInPath(x, y);
-        },
-
-        /**
-         * 某个点是否和当前 Text 实例相交
-         *
-         * @param {number} x 点的横坐标
-         * @param {number} y 点的纵坐标
-         *
-         * @return {boolean} 是否相交
-         */
-        hitTestPoint: function (x, y) {
-            var stage = this.stage;
-            return this.isPointInPath(stage.ctx, x, y);
-        },
-
-        /**
          * debug 时渲染边界盒，多边形使用最大最小顶点法来渲染边界盒
          * 碰撞时，根据此边界盒判断
          *
@@ -287,7 +286,7 @@ define(function (require) {
             if (this.debug) {
                 ctx.save();
 
-                ctx.strokeStyle = 'green';
+                ctx.strokeStyle = '#0f0';
                 ctx.strokeRect(
                     this.bounds.x,
                     this.bounds.y,

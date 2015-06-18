@@ -13,7 +13,7 @@ define(function (require) {
     var config = {};
 
     /**
-     * 模块到处对象
+     * 模块导出对象
      *
      * @type {Object}
      */
