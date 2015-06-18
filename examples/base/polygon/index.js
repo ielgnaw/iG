@@ -35,6 +35,7 @@ window.onload = function () {
             x: 150,
             y: 150,
             angle: 30,
+            fillStyle: 'blue',
             // width: 80,
             // height: 80,
             points: [
@@ -43,16 +44,20 @@ window.onload = function () {
                     y: 0
                 },
                 {
-                    x: 64,
+                    x: 128,
                     y: 0
                 },
                 {
-                    x: 64,
-                    y: 32
+                    x: 128,
+                    y: 64
                 },
                 {
                     x: 0,
-                    y: 32
+                    y: 64
+                },
+                {
+                    x: -32,
+                    y: 64
                 }
             ],
             mouseEnable: true,

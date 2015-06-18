@@ -37,6 +37,8 @@ define(function (require) {
 
         Polygon.call(this, opts);
 
+        this.getOriginBounds();
+
         return this;
     }
 
@@ -54,20 +56,36 @@ define(function (require) {
          * @return {Object} 当前 BitmapPolygon 实例
          */
         render: function (ctx) {
+            _setInitDimension.call(this);
             ctx.save();
 
-            _setInitDimension.call(this);
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
 
-            BitmapPolygon.superClass.render.apply(this, arguments);
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
-            // console.warn(this.x, this.y, this.width, this.height);
+
             ctx.drawImage(
                 this.asset,
                 this.sx, this.sy, this.sWidth, this.sHeight,
-                this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height
+                this.originBounds.x, this.originBounds.y, this.originBounds.width, this.originBounds.height
             );
 
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(ctx);
+
+            ctx.fill();
+            ctx.stroke();
+
             ctx.restore();
+
+            this.debugRender(ctx);
 
             return this;
         }
@@ -91,7 +109,6 @@ define(function (require) {
             }
         }
     }
-
 
     util.inherits(BitmapPolygon, Polygon);
 

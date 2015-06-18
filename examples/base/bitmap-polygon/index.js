@@ -84,8 +84,13 @@ window.onload = function () {
                 {
                     x: 0,
                     y: 32
+                },
+                {
+                    x: -16,
+                    y: 32
                 }
             ],
+
             mouseEnable: true,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();

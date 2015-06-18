@@ -80,7 +80,7 @@ define(function (require) {
         },
 
         /**
-         * 最大最小顶点法来获取边界盒
+         * 最大最小顶点法来获取边界盒 points
          *
          * @return {Object} Polygon 实例
          */
@@ -108,6 +108,44 @@ define(function (require) {
             }
 
             this.bounds = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+
+            return this;
+        },
+
+        /**
+         * 最大最小顶点法来获取边界盒 origin.points
+         *
+         * @return {Object} Polygon 实例
+         */
+        getOriginBounds: function () {
+            var points = this.origin.points;
+
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+
+            this.originBounds = {
                 x: minX,
                 y: minY,
                 width: maxX - minX,
@@ -293,6 +331,8 @@ define(function (require) {
             this.cx = minX + (maxX - minX) / 2;
             this.cy = minY + (maxY - minY) / 2;
 
+            this.getOriginBounds();
+
             return this;
         },
 
@@ -373,9 +413,9 @@ define(function (require) {
             ctx.fill();
             ctx.stroke();
 
-            this.debugRender(ctx);
-
             ctx.restore();
+
+            this.debugRender(ctx);
 
             return this;
         },
@@ -390,8 +430,8 @@ define(function (require) {
             if (this.debug) {
                 ctx.save();
 
-                // ctx.strokeStyle = 'black';
                 ctx.strokeStyle = '#0f0';
+                ctx.lineWidth = 2;
                 ctx.strokeRect(
                     this.bounds.x,
                     this.bounds.y,

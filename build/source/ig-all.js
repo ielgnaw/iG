@@ -2725,17 +2725,31 @@ define('ig/BitmapPolygon', [
             sHeight: 0
         }, opts);
         Polygon.call(this, opts);
+        this.getOriginBounds();
         return this;
     }
     BitmapPolygon.prototype = {
         constructor: BitmapPolygon,
         render: function (ctx) {
-            ctx.save();
             _setInitDimension.call(this);
-            BitmapPolygon.superClass.render.apply(this, arguments);
+            ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            this.matrix.rotate(this.angle);
+            this.matrix.scale(this.scaleX, this.scaleY);
+            this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
+            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.originBounds.x, this.originBounds.y, this.originBounds.width, this.originBounds.height);
+            this.generatePoints();
+            this.getBounds();
+            this.createPath(ctx);
+            ctx.fill();
+            ctx.stroke();
             ctx.restore();
+            this.debugRender(ctx);
             return this;
         }
     };
@@ -3964,8 +3978,8 @@ define('ig/Rectangle', [
             this.createPath(ctx);
             ctx.fill();
             ctx.stroke();
-            this.debugRender(ctx);
             ctx.restore();
+            this.debugRender(ctx);
             return this;
         },
         debugRender: function (ctx) {
@@ -4055,6 +4069,34 @@ define('ig/Polygon', [
                 }
             }
             this.bounds = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        },
+        getOriginBounds: function () {
+            var points = this.origin.points;
+            var minX = Number.MAX_VALUE;
+            var maxX = Number.MIN_VALUE;
+            var minY = Number.MAX_VALUE;
+            var maxY = Number.MIN_VALUE;
+            for (var i = 0, len = points.length; i < len; i++) {
+                if (points[i].x < minX) {
+                    minX = points[i].x;
+                }
+                if (points[i].x > maxX) {
+                    maxX = points[i].x;
+                }
+                if (points[i].y < minY) {
+                    minY = points[i].y;
+                }
+                if (points[i].y > maxY) {
+                    maxY = points[i].y;
+                }
+            }
+            this.originBounds = {
                 x: minX,
                 y: minY,
                 width: maxX - minX,
@@ -4155,6 +4197,7 @@ define('ig/Polygon', [
             }
             this.cx = minX + (maxX - minX) / 2;
             this.cy = minY + (maxY - minY) / 2;
+            this.getOriginBounds();
             return this;
         },
         render: function (ctx) {
@@ -4172,14 +4215,15 @@ define('ig/Polygon', [
             this.createPath(ctx);
             ctx.fill();
             ctx.stroke();
-            this.debugRender(ctx);
             ctx.restore();
+            this.debugRender(ctx);
             return this;
         },
         debugRender: function (ctx) {
             if (this.debug) {
                 ctx.save();
                 ctx.strokeStyle = '#0f0';
+                ctx.lineWidth = 2;
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.strokeStyle = '#f00';
                 ctx.beginPath();

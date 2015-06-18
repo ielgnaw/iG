@@ -314,9 +314,8 @@ define(function (require) {
             ctx.fill();
             ctx.stroke();
 
-            this.debugRender(ctx);
-
             ctx.restore();
+            this.debugRender(ctx);
             return this;
         },
 
