@@ -3141,7 +3141,9 @@ define('ig/Game', [
     };
     function _stageBg(stage) {
         stage.setBgColor(stage.bgColor);
-        stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
+        if (stage.bgImg) {
+            stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
+        }
     }
     function _stageParallax(stage) {
         var parallaxOpts = stage.parallaxOpts;
@@ -3201,20 +3203,26 @@ define('ig/Game', [
     }
     function preLoadResource(callback) {
         var me = this;
-        me.loadResource(me.resource, function (data) {
-            me.asset = data;
+        if (Array.isArray(me.resource) && me.resource.length) {
+            me.loadResource(me.resource, function (data) {
+                me.asset = data;
+                callback.call(me);
+                me.fire('loadResDone');
+            }, {
+                processCallback: function (loadedCount, total) {
+                    me.fire('loadResProcess', {
+                        data: {
+                            loadedCount: loadedCount,
+                            total: total
+                        }
+                    });
+                }
+            });
+        } else {
+            me.asset = {};
             callback.call(me);
             me.fire('loadResDone');
-        }, {
-            processCallback: function (loadedCount, total) {
-                me.fire('loadResProcess', {
-                    data: {
-                        loadedCount: loadedCount,
-                        total: total
-                    }
-                });
-            }
-        });
+        }
     }
     function initGame() {
         this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
@@ -4150,6 +4158,7 @@ define('ig/Polygon', [
             return this;
         },
         render: function (ctx) {
+            ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
@@ -4163,19 +4172,25 @@ define('ig/Polygon', [
             this.createPath(ctx);
             ctx.fill();
             ctx.stroke();
+            this.debugRender(ctx);
+            ctx.restore();
             return this;
         },
         debugRender: function (ctx) {
             if (this.debug) {
+                ctx.save();
                 ctx.strokeStyle = '#0f0';
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.strokeStyle = '#f00';
+                ctx.beginPath();
                 ctx.moveTo(this.points[0].x, this.points[0].y);
                 for (var i = 0; i < this.points.length; i++) {
                     ctx.lineTo(this.points[i].x, this.points[i].y);
                 }
                 ctx.lineTo(this.points[0].x, this.points[0].y);
+                ctx.closePath();
                 ctx.stroke();
+                ctx.restore();
             }
         }
     };
@@ -4604,7 +4619,7 @@ else {
 }
 
 var modName = 'ig/Polygon';
-var refName = '';
+var refName = 'Polygon';
 var folderName = '';
 
 var tmp;

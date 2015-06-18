@@ -1,0 +1,10 @@
+{
+    "smarty": "./Smarty",
+    "default": {
+        "tplData": {
+            "feRoot": "http://192.168.1.106:8848",
+            "baseUrl": "http://192.168.1.106:8848"
+        },
+        "extData": {}
+    }
+}

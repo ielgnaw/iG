@@ -25,7 +25,7 @@ exports.modules = {
 
         {name: 'ig/Projection'},
         {name: 'ig/Rectangle', refName: 'Rectangle'},
-        {name: 'ig/Polygon'}
+        {name: 'ig/Polygon', refName: 'Polygon'}
 
 
         // refName 指要挂载到 window.ig 这个全局空间上的名字

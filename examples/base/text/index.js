@@ -11,17 +11,17 @@ window.onload = function () {
         canvas: canvas,
         name: 'test-game1',
         maximize: 1,
-        resource: [
-            {id: 'bg', src: '/examples/img/base/bg.jpg'},
-            // {id: 'bg1', src: '/examples/img/base/bg1.png'},
-            // {id: 'bg2', src: '/examples/img/base/bg2.png'},
-            // {id: 'bg3', src: '/examples/img/base/bg3.png'},
-            // {id: 'test2', src: '/examples/img/base/2.png'},
-            // {id: 'testData', src: './data/test.json'},
-            // {id: 'text', src: './data/text.text'},
-            // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
-            // '/examples/img/base/boom.png'
-        ]
+        // resource: [
+        //     {id: 'bg', src: '/examples/img/base/bg.jpg'},
+        //     // {id: 'bg1', src: '/examples/img/base/bg1.png'},
+        //     // {id: 'bg2', src: '/examples/img/base/bg2.png'},
+        //     // {id: 'bg3', src: '/examples/img/base/bg3.png'},
+        //     // {id: 'test2', src: '/examples/img/base/2.png'},
+        //     // {id: 'testData', src: './data/test.json'},
+        //     // {id: 'text', src: './data/text.text'},
+        //     // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
+        //     // '/examples/img/base/boom.png'
+        // ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
             = 'loadProcess: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%'

@@ -471,7 +471,9 @@ define(function (require) {
      */
     function _stageBg(stage) {
         stage.setBgColor(stage.bgColor);
-        stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
+        if (stage.bgImg) {
+            stage.setBgImg(stage.bgImg, stage.bgImgRepeatPattern);
+        }
     }
 
     /**
@@ -574,24 +576,31 @@ define(function (require) {
      */
     function preLoadResource(callback) {
         var me = this;
-        me.loadResource(
-            me.resource,
-            function (data) {
-                me.asset = data;
-                callback.call(me);
-                me.fire('loadResDone');
-            },
-            {
-                processCallback: function (loadedCount, total) {
-                    me.fire('loadResProcess', {
-                        data: {
-                            loadedCount: loadedCount,
-                            total: total
-                        }
-                    });
+        if (Array.isArray(me.resource) && me.resource.length) {
+            me.loadResource(
+                me.resource,
+                function (data) {
+                    me.asset = data;
+                    callback.call(me);
+                    me.fire('loadResDone');
+                },
+                {
+                    processCallback: function (loadedCount, total) {
+                        me.fire('loadResProcess', {
+                            data: {
+                                loadedCount: loadedCount,
+                                total: total
+                            }
+                        });
+                    }
                 }
-            }
-        );
+            );
+        }
+        else {
+            me.asset = {};
+            callback.call(me);
+            me.fire('loadResDone');
+        }
     }
 
     /**
