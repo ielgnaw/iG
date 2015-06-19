@@ -66,9 +66,9 @@ window.onload = function () {
             debug: 1,
             x: 150,
             y: 150,
-            angle: 30,
-            // width: 64,
-            // height: 32,
+            // angle: 30,
+            // width: 60,
+            // height: 40,
             points: [
                 {
                     x: 10,
@@ -118,7 +118,7 @@ window.onload = function () {
     );
 
     bitmap1.step = function (dt, stepCount) {
-        // this.angle += 1;
+        this.angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;

@@ -58,7 +58,7 @@ define(function (require) {
         /**
          * 初始化缓存 canvas
          *
-         * @return {Object} Text 实例
+         * @return {Object} Bitmap 实例
          */
         initCacheCanvas: function () {
             if (!this.cacheCanvas) {
@@ -74,7 +74,7 @@ define(function (require) {
         /**
          * 缓存，把需要重复绘制的画面数据进行缓存起来，减少调用 canvas API 的消耗
          *
-         * @return {Object} Text 实例
+         * @return {Object} Bitmap 实例
          */
         cache: function () {
             this.cacheCtx.save();
@@ -95,10 +95,9 @@ define(function (require) {
          * @return {Object} 当前 Bitmap 实例
          */
         render: function (ctx) {
-            // console.warn(2);
-            ctx.save();
-
             _setInitDimension.call(this);
+
+            ctx.save();
 
             Bitmap.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);

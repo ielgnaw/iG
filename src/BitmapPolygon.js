@@ -35,7 +35,10 @@ define(function (require) {
             sx: 0,
             sy: 0,
             sWidth: 0,
-            sHeight: 0
+            sHeight: 0,
+
+            // 是否使用缓存
+            useCache: true
         }, opts);
 
         Polygon.call(this, opts);
@@ -52,6 +55,38 @@ define(function (require) {
         constructor: BitmapPolygon,
 
         /**
+         * 初始化缓存 canvas
+         *
+         * @return {Object} Bitmap 实例
+         */
+        initCacheCanvas: function () {
+            if (!this.cacheCanvas) {
+                this.cacheCanvas = document.createElement('canvas');
+                this.cacheCtx = this.cacheCanvas.getContext('2d');
+            }
+            this.cacheCanvas.width = this.width;
+            this.cacheCanvas.height = this.height;
+            this.cache();
+            return this;
+        },
+
+        /**
+         * 缓存，把需要重复绘制的画面数据进行缓存起来，减少调用 canvas API 的消耗
+         *
+         * @return {Object} Bitmap 实例
+         */
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.drawImage(
+                this.asset,
+                this.sx, this.sy, this.sWidth, this.sHeight,
+                0, 0, this.width, this.height
+            );
+            this.cacheCtx.restore();
+            return this;
+        },
+
+        /**
          * 渲染当前 BitmapPolygon 实例
          *
          * @param {Object} ctx canvas 2d context 对象
@@ -60,6 +95,7 @@ define(function (require) {
          */
         render: function (ctx) {
             _setInitDimension.call(this);
+
             ctx.save();
 
             ctx.fillStyle = this.fillStyle;
@@ -73,11 +109,20 @@ define(function (require) {
             this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
 
-            ctx.drawImage(
-                this.asset,
-                this.sx, this.sy, this.sWidth, this.sHeight,
-                this.x, this.y, this.width, this.height
-            );
+            if (this.useCache) {
+                if (!this._.execCache) {
+                    this._.execCache = true;
+                    this.initCacheCanvas();
+                }
+                ctx.drawImage(this.cacheCanvas, this.x, this.y);
+            }
+            else {
+                ctx.drawImage(
+                    this.asset,
+                    this.sx, this.sy, this.sWidth, this.sHeight,
+                    this.x, this.y, this.width, this.height
+                );
+            }
 
             this.generatePoints();
             this.getBounds();

@@ -2669,8 +2669,8 @@ define('ig/Bitmap', [
             return this;
         },
         render: function (ctx) {
-            ctx.save();
             _setInitDimension.call(this);
+            ctx.save();
             Bitmap.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
             if (this.useCache) {
@@ -2722,7 +2722,8 @@ define('ig/BitmapPolygon', [
             sx: 0,
             sy: 0,
             sWidth: 0,
-            sHeight: 0
+            sHeight: 0,
+            useCache: true
         }, opts);
         Polygon.call(this, opts);
         this.getOriginBounds();
@@ -2730,6 +2731,22 @@ define('ig/BitmapPolygon', [
     }
     BitmapPolygon.prototype = {
         constructor: BitmapPolygon,
+        initCacheCanvas: function () {
+            if (!this.cacheCanvas) {
+                this.cacheCanvas = document.createElement('canvas');
+                this.cacheCtx = this.cacheCanvas.getContext('2d');
+            }
+            this.cacheCanvas.width = this.width;
+            this.cacheCanvas.height = this.height;
+            this.cache();
+            return this;
+        },
+        cache: function () {
+            this.cacheCtx.save();
+            this.cacheCtx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, 0, 0, this.width, this.height);
+            this.cacheCtx.restore();
+            return this;
+        },
         render: function (ctx) {
             _setInitDimension.call(this);
             ctx.save();
@@ -2742,7 +2759,15 @@ define('ig/BitmapPolygon', [
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
+            if (this.useCache) {
+                if (!this._.execCache) {
+                    this._.execCache = true;
+                    this.initCacheCanvas();
+                }
+                ctx.drawImage(this.cacheCanvas, this.x, this.y);
+            } else {
+                ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
+            }
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
