@@ -439,15 +439,13 @@ define(function (require) {
                     this.bounds.height
                 );
 
-                ctx.strokeStyle = '#f00';
-                ctx.beginPath();
-                ctx.moveTo(this.points[0].x, this.points[0].y);
-                for (var i = 0; i < this.points.length; i++) {
-                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                if (this.points.length) {
+                    ctx.strokeStyle = '#f00';
+                    ctx.beginPath();
+                    this.createPath(ctx);
+                    ctx.closePath();
+                    ctx.stroke();
                 }
-                ctx.lineTo(this.points[0].x, this.points[0].y);
-                ctx.closePath();
-                ctx.stroke();
 
                 ctx.restore();
             }

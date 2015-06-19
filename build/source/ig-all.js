@@ -2742,7 +2742,7 @@ define('ig/BitmapPolygon', [
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.originBounds.x, this.originBounds.y, this.originBounds.width, this.originBounds.height);
+            ctx.drawImage(this.asset, this.sx, this.sy, this.sWidth, this.sHeight, this.x, this.y, this.width, this.height);
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
@@ -2756,6 +2756,12 @@ define('ig/BitmapPolygon', [
     function _setInitDimension() {
         if (!this._.isInitDimension) {
             this._.isInitDimension = true;
+            if (this.width === 0) {
+                this.width = this.asset.width;
+            }
+            if (this.height === 0) {
+                this.height = this.asset.height;
+            }
             if (this.sWidth === 0) {
                 this.sWidth = this.asset.width;
             }
@@ -3990,11 +3996,7 @@ define('ig/Rectangle', [
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
                 ctx.strokeStyle = '#f00';
                 ctx.beginPath();
-                ctx.moveTo(this.points[0].x, this.points[0].y);
-                for (var i = 0; i < this.points.length; i++) {
-                    ctx.lineTo(this.points[i].x, this.points[i].y);
-                }
-                ctx.lineTo(this.points[0].x, this.points[0].y);
+                this.createPath(ctx);
                 ctx.closePath();
                 ctx.stroke();
                 ctx.restore();
@@ -4225,15 +4227,13 @@ define('ig/Polygon', [
                 ctx.strokeStyle = '#0f0';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                ctx.strokeStyle = '#f00';
-                ctx.beginPath();
-                ctx.moveTo(this.points[0].x, this.points[0].y);
-                for (var i = 0; i < this.points.length; i++) {
-                    ctx.lineTo(this.points[i].x, this.points[i].y);
+                if (this.points.length) {
+                    ctx.strokeStyle = '#f00';
+                    ctx.beginPath();
+                    this.createPath(ctx);
+                    ctx.closePath();
+                    ctx.stroke();
                 }
-                ctx.lineTo(this.points[0].x, this.points[0].y);
-                ctx.closePath();
-                ctx.stroke();
                 ctx.restore();
             }
         }

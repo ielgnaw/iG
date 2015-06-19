@@ -12,6 +12,9 @@ define(function (require) {
 
     /**
      * Bitmap 基类
+     * 改变图片的显示大小可以设置 width, height 属性
+     * Bitmap 和 BitmapPolygon 的区别是，Bitmap 的形状大小跟 width 和 height 属性一致
+     * 而 BitmapPolygon 可以通过 points 自由的设置形状大小
      *
      * @extends DisplayObject
      * @constructor

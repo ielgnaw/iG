@@ -12,6 +12,9 @@ define(function (require) {
 
     /**
      * BitmapPolygon 基类
+     * 改变图片的显示大小可以设置 width, height 属性，points 属性形状的大小
+     * Bitmap 和 BitmapPolygon 的区别是，Bitmap 的形状大小跟 width 和 height 属性一致
+     * 而 BitmapPolygon 可以通过 points 自由的设置形状大小
      *
      * @extends DisplayObject
      * @constructor
@@ -73,7 +76,7 @@ define(function (require) {
             ctx.drawImage(
                 this.asset,
                 this.sx, this.sy, this.sWidth, this.sHeight,
-                this.originBounds.x, this.originBounds.y, this.originBounds.width, this.originBounds.height
+                this.x, this.y, this.width, this.height
             );
 
             this.generatePoints();
@@ -99,6 +102,14 @@ define(function (require) {
     function _setInitDimension() {
         if (!this._.isInitDimension) {
             this._.isInitDimension = true;
+
+            if (this.width === 0) {
+                this.width = this.asset.width;
+            }
+
+            if (this.height === 0) {
+                this.height = this.asset.height;
+            }
 
             if (this.sWidth === 0) {
                 this.sWidth = this.asset.width;

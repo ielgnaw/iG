@@ -340,11 +340,7 @@ define(function (require) {
 
                 ctx.strokeStyle = '#f00';
                 ctx.beginPath();
-                ctx.moveTo(this.points[0].x, this.points[0].y);
-                for (var i = 0; i < this.points.length; i++) {
-                    ctx.lineTo(this.points[i].x, this.points[i].y);
-                }
-                ctx.lineTo(this.points[0].x, this.points[0].y);
+                this.createPath(ctx);
                 ctx.closePath();
                 ctx.stroke();
 

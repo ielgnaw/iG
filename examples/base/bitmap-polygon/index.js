@@ -50,7 +50,8 @@ window.onload = function () {
         // ],
         captureFunc: function (e) {
             console.warn(e);
-            console.warn(bitmap1.hitTestPoint(e.x, e.y));
+            console.warn('BitmapPolygon', bitmap1.hitTestPoint(e.x, e.y));
+            console.warn('Bitmap', bitmap2.hitTestPoint(e.x, e.y));
             // console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
@@ -66,29 +67,45 @@ window.onload = function () {
             x: 150,
             y: 150,
             angle: 30,
-            // width: 80,
-            // height: 80,
+            // width: 64,
+            // height: 32,
             points: [
                 {
-                    x: 0,
-                    y: 0
+                    x: 10,
+                    y: 10
                 },
                 {
-                    x: 64,
-                    y: 0
+                    x: 50,
+                    y: 10
                 },
                 {
-                    x: 64,
-                    y: 32
+                    x: 50,
+                    y: 25
                 },
                 {
-                    x: 0,
-                    y: 32
-                },
-                {
-                    x: -16,
-                    y: 32
+                    x: 10,
+                    y: 25
                 }
+                // {
+                //     x: 0,
+                //     y: 0
+                // },
+                // {
+                //     x: 64,
+                //     y: 0
+                // },
+                // {
+                //     x: 64,
+                //     y: 32
+                // },
+                // {
+                //     x: 0,
+                //     y: 32
+                // },
+                // {
+                //     x: -16,
+                //     y: 32
+                // }
             ],
 
             mouseEnable: true,
@@ -101,7 +118,7 @@ window.onload = function () {
     );
 
     bitmap1.step = function (dt, stepCount) {
-        this.angle += 1;
+        // this.angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
@@ -114,13 +131,14 @@ window.onload = function () {
             name: 'bitmap2',
             // image: '/examples/img/base/2.png',
             image: 'runnerBox',
-            // sWidth: 110,
-            // sHeight: 110,
+            sx: 10,
+            sWidth: 0,
+            sHeight: 0,
             debug: 1,
             x: 200,
             y: 400,
-            // width: 80,
-            // height: 80,
+            // width: 120,
+            // height: 120,
             mouseEnable: true,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
@@ -131,7 +149,7 @@ window.onload = function () {
     );
 
     bitmap2.step = function (dt, stepCount) {
-        this.angle += 1;
+        // this.angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
