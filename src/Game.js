@@ -502,12 +502,35 @@ define(function (require) {
             // 像 text 等构造函数里面不需要 image 参数的就不检测了
             if (displayObject instanceof ig.Bitmap
                 || displayObject instanceof ig.BitmapPolygon
+                || displayObject instanceof ig.SpriteSheet
             ) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
-                    throw new Error(displayObject.name + ' image is not in game.asset');
+                    throw new Error(''
+                        + displayObject.name
+                        + '\'s'
+                        + ' image: `'
+                        + displayObject.image
+                        + '` is not in game.asset'
+                    );
                 }
                 displayObject.asset = imageAsset;
+            }
+
+            if (displayObject instanceof ig.SpriteSheet) {
+                // spriteSheet Data 和 img 在 game.resource 中是一样的格式
+                // 因此这里可以直接用检测图片的方式来检测 spriteSheet Data
+                var sheetAsset = util.getImgAsset(displayObject.sheet, asset, resource);
+                if (!sheetAsset) {
+                    throw new Error(''
+                        + displayObject.name
+                        + '\'s'
+                        + ' sheet: `'
+                        + displayObject.sheet
+                        + '` is not in game.asset'
+                    );
+                }
+                displayObject.sheetData = sheetAsset;
             }
         }
     }

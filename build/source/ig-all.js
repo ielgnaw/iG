@@ -2797,6 +2797,126 @@ define('ig/BitmapPolygon', [
     }
     util.inherits(BitmapPolygon, Polygon);
     return BitmapPolygon;
+});'use strict';
+define('ig/SpriteSheet', [
+    'require',
+    './util',
+    './Rectangle'
+], function (require) {
+    var util = require('./util');
+    var Rectangle = require('./Rectangle');
+    var floor = Math.floor;
+    function SpriteSheet(opts) {
+        opts = opts || {};
+        if (!opts.image) {
+            throw new Error('SpriteSheet must be require a image param');
+        }
+        Rectangle.apply(this, arguments);
+        util.extend(this, {
+            jumpFrames: 0,
+            isOnce: false,
+            onceDone: util.noop
+        }, opts);
+        this.frameUpdateCount = 0;
+        this.frameIndex = 0;
+        return this;
+    }
+    SpriteSheet.prototype = {
+        constructor: SpriteSheet,
+        changeFrame: function (prop) {
+            util.extend(this, {
+                total: this.total,
+                x: this.x,
+                y: this.y,
+                sx: this.sx,
+                sy: this.sy,
+                cols: this.cols,
+                rows: this.rows,
+                tileW: 0,
+                tileH: 0,
+                offsetX: 0,
+                offsetY: 0,
+                jumpFrames: this.jumpFrames,
+                isOnce: false,
+                onceDone: util.noop
+            }, prop);
+            this.frameUpdateCount = 0;
+            this.frameIndex = 0;
+            this.originalSX = this.sx;
+            this.originalTotal = this.total;
+            this.realCols = floor(this.cols - this.sx / this.tileW);
+            this.width = this.tileW;
+            this.height = this.tileH;
+            return this;
+        },
+        _step: function (dt, stepCount, requestID) {
+            this.frameUpdateCount++;
+            if (this.frameUpdateCount > this.jumpFrames) {
+                this.frameUpdateCount = 0;
+                if (this.frameIndex < this.total - 1) {
+                    this.frameIndex++;
+                } else {
+                    this.frameIndex = 0;
+                    this.total = this.originalTotal;
+                    this.sx = this.originalSX;
+                    this.realCols = floor(this.cols - this.originalSX / this.tileW);
+                    this.sy -= (this.rows - 1) * this.tileH;
+                    if (this.isOnce) {
+                        if (util.getType(this.onceDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDone(me);
+                            }, 100);
+                        }
+                    }
+                }
+                if (this.frameIndex === this.realCols) {
+                    this.total -= this.realCols;
+                    this.frameIndex = 0;
+                    this.sy += this.tileH;
+                    this.sx = 0;
+                    this.realCols = this.cols;
+                }
+            }
+            return this;
+        },
+        render: function (ctx) {
+            _setup.call(this);
+            ctx.save();
+            ctx.globalAlpha = this.alpha;
+            SpriteSheet.superClass.render.apply(this, arguments);
+            this.matrix.setCtxTransform(ctx);
+            ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
+            ctx.restore();
+            return this;
+        }
+    };
+    function _setup() {
+        if (!this._.isSetup) {
+            this._.isSetup = true;
+            var curSheetData = this.sheetData[this.sheetKey];
+            if (curSheetData) {
+                util.extend(this, {
+                    total: 1,
+                    sx: 0,
+                    sy: 0,
+                    cols: 0,
+                    rows: 0,
+                    tileW: 0,
+                    tileH: 0,
+                    offsetX: 0,
+                    offsetY: 0
+                }, curSheetData);
+                this.originalSX = this.sx;
+                this.originalTotal = this.total;
+                this.realCols = floor(this.cols - this.sx / this.tileW);
+                this.width = this.tileW;
+                this.height = this.tileH;
+            }
+        }
+    }
+    util.inherits(SpriteSheet, Rectangle);
+    return SpriteSheet;
 });define('ig/ResourceLoader', [
     'require',
     './util',
@@ -3200,12 +3320,19 @@ define('ig/Game', [
         var displayObjectList = stage.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var displayObject = displayObjectList[i];
-            if (displayObject instanceof ig.Bitmap || displayObject instanceof ig.BitmapPolygon) {
+            if (displayObject instanceof ig.Bitmap || displayObject instanceof ig.BitmapPolygon || displayObject instanceof ig.SpriteSheet) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
-                    throw new Error(displayObject.name + ' image is not in game.asset');
+                    throw new Error('' + displayObject.name + '\'s' + ' image: `' + displayObject.image + '` is not in game.asset');
                 }
                 displayObject.asset = imageAsset;
+            }
+            if (displayObject instanceof ig.SpriteSheet) {
+                var sheetAsset = util.getImgAsset(displayObject.sheet, asset, resource);
+                if (!sheetAsset) {
+                    throw new Error('' + displayObject.name + '\'s' + ' sheet: `' + displayObject.sheet + '` is not in game.asset');
+                }
+                displayObject.sheetData = sheetAsset;
             }
         }
     }
@@ -4535,6 +4662,28 @@ else {
 
 var modName = 'ig/BitmapPolygon';
 var refName = 'BitmapPolygon';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/SpriteSheet';
+var refName = 'SpriteSheet';
 var folderName = '';
 
 var tmp;

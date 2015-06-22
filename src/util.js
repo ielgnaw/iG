@@ -291,6 +291,8 @@ define(function (require) {
 
     /**
      * 检测图片 id 或者路径是否在 game.asset 中即是否加载完成
+     * spriteSheet Data 和 img 在 game.resource 中是一样的格式
+     * 因此这里可以直接用检测图片的方式来检测 spriteSheet Data
      *
      * @param {string} img 图片 id 或者路径
      * @param {Object} gameAsset 游戏资源，加载后的

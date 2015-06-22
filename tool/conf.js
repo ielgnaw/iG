@@ -18,6 +18,7 @@ exports.modules = {
         {name: 'ig/Text', refName: 'Text'},
         {name: 'ig/Bitmap', refName: 'Bitmap'},
         {name: 'ig/BitmapPolygon', refName: 'BitmapPolygon'},
+        {name: 'ig/SpriteSheet', refName: 'SpriteSheet'},
         {name: 'ig/ResourceLoader'},
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage'},
