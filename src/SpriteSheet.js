@@ -13,7 +13,7 @@ define(function (require) {
     var floor = Math.floor;
 
     /**
-     * 精灵表基类
+     * 精灵表基类，精灵表由于每帧都在变化，因此不存在 useCache 了
      *
      * @constructor
      *
@@ -27,7 +27,7 @@ define(function (require) {
             throw new Error('SpriteSheet must be require a image param');
         }
 
-        Rectangle.apply(this, arguments);
+        Rectangle.apply(this, opts);
 
         util.extend(this, {
             // 跳帧的个数，可以用来设置延迟
@@ -196,10 +196,8 @@ define(function (require) {
          */
         render: function (ctx) {
             _setup.call(this);
-            // console.warn(this.frameIndex);
 
             ctx.save();
-            ctx.globalAlpha = this.alpha;
 
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
@@ -225,45 +223,56 @@ define(function (require) {
     function _setup() {
         if (!this._.isSetup) {
             this._.isSetup = true;
-            var curSheetData = this.sheetData[this.sheetKey];
-            if (curSheetData) {
-                util.extend(this, {
-                    // 一组动画中的所有帧的总数
-                    total: 1,
-                    // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-                    // 这两个参数对应 drawImage 的 sx, sy
-                    sx: 0,
-                    sy: 0,
-                    // 列数，如果精灵在当前行不是从第 0 列开始的，这个列数也还是指的所有的列数
-                    // 例如 sprite-sheet1.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
-                    cols: 0,
-                    // 行数，当前这组精灵所占的行数
-                    // 例如 sprite-sheet1.png 气球图，红球的行数数是 2，桔球的行数是 2
-                    rows: 0,
-                    // 每帧宽度
-                    tileW: 0,
-                    // 每帧高度
-                    tileH: 0,
-                    // 横轴偏移
-                    offsetX: 0,
-                    // 纵轴偏移
-                    offsetY: 0
-                }, curSheetData);
 
-                // this.sx 的备份，精灵表换行时，sx 从 0 开始
-                this.originalSX = this.sx;
-
-                // this.total 的备份，所有精灵表动画跑完后还原到最初状态使用
-                this.originalTotal = this.total;
-
-                // 剩下的列数
-                // 例如气球图的第二行桔色球，是从第五个球开始的，sx 设置为前四个球的宽度
-                // 那么桔色球这行真实的列数是 12，但是换行后，就是整个的列数 16 了
-                this.realCols = floor(this.cols - this.sx / this.tileW);
-
-                this.width = this.tileW;
-                this.height = this.tileH;
+            var curSheetData = null;
+            var sheetKey = this.sheetKey;
+            if (!sheetKey) {
+                curSheetData = this.sheetData;
             }
+            else {
+                curSheetData = this.sheetData[sheetKey];
+            }
+
+            if (!curSheetData) {
+                return;
+            }
+
+            util.extend(this, {
+                // 一组动画中的所有帧的总数
+                total: 1,
+                // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+                // 这两个参数对应 drawImage 的 sx, sy
+                sx: 0,
+                sy: 0,
+                // 列数，如果精灵在当前行不是从第 0 列开始的，这个列数也还是指的所有的列数
+                // 例如 sprite-sheet1.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
+                cols: 0,
+                // 行数，当前这组精灵所占的行数
+                // 例如 sprite-sheet1.png 气球图，红球的行数数是 2，桔球的行数是 2
+                rows: 0,
+                // 每帧宽度
+                tileW: 0,
+                // 每帧高度
+                tileH: 0,
+                // 横轴偏移
+                offsetX: 0,
+                // 纵轴偏移
+                offsetY: 0
+            }, curSheetData);
+
+            // this.sx 的备份，精灵表换行时，sx 从 0 开始
+            this.originalSX = this.sx;
+
+            // this.total 的备份，所有精灵表动画跑完后还原到最初状态使用
+            this.originalTotal = this.total;
+
+            // 剩下的列数
+            // 例如气球图的第二行桔色球，是从第五个球开始的，sx 设置为前四个球的宽度
+            // 那么桔色球这行真实的列数是 12，但是换行后，就是整个的列数 16 了
+            this.realCols = floor(this.cols - this.sx / this.tileW);
+
+            this.width = this.width || this.tileW;
+            this.height = this.height || this.tileH;
         }
     }
 

@@ -57,13 +57,15 @@ window.onload = function () {
             name: 'spritesheet1',
             // image: '/examples/img/base/sprite-sheet1.png',
             image: 'spriteSheetImg',
-            sheet: 'spriteSheetData',
-            sheetKey: 'smallBoom',
+            // sheet: 'spriteSheetData',
+            sheet: './data/sprite-sheet1.json',
+            sheetKey: 'red',
             jumpFrames: 5,
-            frameIndex: 21,
             x: 150,
             y: 150,
-            // debug: 1,
+            debug: 1,
+            // width: 100,
+            // height: 200,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
                 this.move(d.x, d.y);
@@ -72,7 +74,7 @@ window.onload = function () {
         })
     );
     spritesheet1.step = function (dt, stepCount) {
-        // this.angle += 1;
+        this.angle += 1;
     };
 
     // var text1 = stage1.addDisplayObject(

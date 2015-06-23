@@ -32,9 +32,6 @@ define(function (require) {
         Rectangle.call(this, opts);
 
         util.extend(true, this, {
-            width: 0,
-            height: 0,
-
             // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
             // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
             sx: 0,

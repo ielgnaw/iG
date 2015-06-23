@@ -29,6 +29,8 @@ define(function (require) {
             throw new Error('BitmapPolygon must be require a image param');
         }
 
+        Polygon.call(this, opts);
+
         util.extend(true, this, {
             // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
             // 这四个参数对应 drawImage 的 sx, sy, sWidth, sHeight
@@ -40,8 +42,6 @@ define(function (require) {
             // 是否使用缓存
             useCache: true
         }, opts);
-
-        Polygon.call(this, opts);
 
         this.getOriginBounds();
 

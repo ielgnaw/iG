@@ -2640,8 +2640,6 @@ define('ig/Bitmap', [
         }
         Rectangle.call(this, opts);
         util.extend(true, this, {
-            width: 0,
-            height: 0,
             sx: 0,
             sy: 0,
             sWidth: 0,
@@ -2718,6 +2716,7 @@ define('ig/BitmapPolygon', [
         if (!opts.image) {
             throw new Error('BitmapPolygon must be require a image param');
         }
+        Polygon.call(this, opts);
         util.extend(true, this, {
             sx: 0,
             sy: 0,
@@ -2725,7 +2724,6 @@ define('ig/BitmapPolygon', [
             sHeight: 0,
             useCache: true
         }, opts);
-        Polygon.call(this, opts);
         this.getOriginBounds();
         return this;
     }
@@ -2811,7 +2809,7 @@ define('ig/SpriteSheet', [
         if (!opts.image) {
             throw new Error('SpriteSheet must be require a image param');
         }
-        Rectangle.apply(this, arguments);
+        Rectangle.apply(this, opts);
         util.extend(this, {
             jumpFrames: 0,
             isOnce: false,
@@ -2883,7 +2881,6 @@ define('ig/SpriteSheet', [
         render: function (ctx) {
             _setup.call(this);
             ctx.save();
-            ctx.globalAlpha = this.alpha;
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
             ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
@@ -2894,25 +2891,32 @@ define('ig/SpriteSheet', [
     function _setup() {
         if (!this._.isSetup) {
             this._.isSetup = true;
-            var curSheetData = this.sheetData[this.sheetKey];
-            if (curSheetData) {
-                util.extend(this, {
-                    total: 1,
-                    sx: 0,
-                    sy: 0,
-                    cols: 0,
-                    rows: 0,
-                    tileW: 0,
-                    tileH: 0,
-                    offsetX: 0,
-                    offsetY: 0
-                }, curSheetData);
-                this.originalSX = this.sx;
-                this.originalTotal = this.total;
-                this.realCols = floor(this.cols - this.sx / this.tileW);
-                this.width = this.tileW;
-                this.height = this.tileH;
+            var curSheetData = null;
+            var sheetKey = this.sheetKey;
+            if (!sheetKey) {
+                curSheetData = this.sheetData;
+            } else {
+                curSheetData = this.sheetData[sheetKey];
             }
+            if (!curSheetData) {
+                return;
+            }
+            util.extend(this, {
+                total: 1,
+                sx: 0,
+                sy: 0,
+                cols: 0,
+                rows: 0,
+                tileW: 0,
+                tileH: 0,
+                offsetX: 0,
+                offsetY: 0
+            }, curSheetData);
+            this.originalSX = this.sx;
+            this.originalTotal = this.total;
+            this.realCols = floor(this.cols - this.sx / this.tileW);
+            this.width = this.width || this.tileW;
+            this.height = this.height || this.tileH;
         }
     }
     util.inherits(SpriteSheet, Rectangle);
