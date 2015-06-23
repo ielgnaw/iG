@@ -62,7 +62,7 @@ define(function (require) {
          *
          * @return {Object} SpriteSheet 实例
          */
-        changeFrame: function (prop) {
+        change: function (prop) {
             prop = prop || {};
             util.extend(this, {
                 asset: this.asset,
@@ -199,6 +199,9 @@ define(function (require) {
             _setup.call(this);
 
             ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
 
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
@@ -232,7 +235,9 @@ define(function (require) {
 
             var curSheetData = null;
             var sheetKey = this.sheetKey;
-            if (!sheetKey) {
+
+            // this.sheetData 的情况是 直接在 SpriteSheet 的构造中传入 sheetData
+            if (!sheetKey || this.sheetData) {
                 curSheetData = this.sheetData;
             }
             else {

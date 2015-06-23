@@ -69,14 +69,14 @@ window.onload = function () {
         anim = new ig.Animation({
             source: circle,
             target: {
-                x: 200
+                x: 201
             }
         });
         anim.play().on('step', function (e) {
-            console.warn(e.data.source);
             circle.x = e.data.source.x;
             circle.draw();
-        }).on('complete', function (d) {
+        }).on('complete', function (e) {
+            console.warn(e.data.source);
             console.warn('all complete');
         });
     }

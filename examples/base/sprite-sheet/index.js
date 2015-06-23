@@ -107,8 +107,8 @@ window.onload = function () {
     };
 
     setTimeout(function () {
-        // spritesheet1.changeFrame();
-        spritesheet1.changeFrame(
+        // spritesheet1.change();
+        spritesheet1.change(
             // ig.util.extend(true, {}, game1.asset.spriteSheetData.redCapture, {x: 20, y: 30})
             ig.util.extend(true, {
                 asset: game1.asset.spriteSheetImg,

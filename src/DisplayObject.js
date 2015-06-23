@@ -161,7 +161,7 @@ define(function (require) {
          *
          * @return {Object} DisplayObject 实例
          */
-        changeStatus: function (status) {
+        setStatus: function (status) {
             this.status = status || this.status;
             return this;
         },

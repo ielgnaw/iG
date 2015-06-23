@@ -97,7 +97,6 @@ define(function (require) {
             _setInitDimension.call(this);
 
             ctx.save();
-
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;

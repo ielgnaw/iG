@@ -85,6 +85,35 @@ define(function (require) {
         },
 
         /**
+         * 改变 bitmap
+         *
+         * @param {Object} prop 变化的属性
+         *
+         * @return {Object} Bitmap 实例
+         */
+        change: function (prop) {
+            prop = prop || {};
+            util.extend(this, {
+                asset: this.asset,
+                // 横坐标
+                x: this.x,
+                // 纵坐标
+                y: this.y,
+                sx: this.sx,
+                sy: this.sy,
+                sWidth: this.sWidth,
+                sHeight: this.sHeight
+            }, prop);
+
+            this._.isInitDimension = false;
+            _setInitDimension.call(this);
+
+            this.initCacheCanvas();
+
+            return this;
+        },
+
+        /**
          * 渲染当前 Bitmap 实例
          *
          * @param {Object} ctx canvas 2d context 对象
@@ -95,10 +124,14 @@ define(function (require) {
             _setInitDimension.call(this);
 
             ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
 
             Bitmap.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
 
+            // console.warn(ctx.globalAlpha);
             if (this.useCache) {
                 if (!this._.execCache) {
                     this._.execCache = true;

@@ -1,7 +1,7 @@
 {
     "red": {
-        "sX": 0,
-        "sY": 2,
+        "sx": 0,
+        "sy": 2,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -11,8 +11,8 @@
         "offsetY": 0
     },
     "redCapture": {
-        "sX": 896,
-        "sY": 602,
+        "sx": 896,
+        "sy": 602,
         "cols": 16,
         "rows": 2,
         "total": 4,
@@ -22,8 +22,8 @@
         "offsetY": 0
     },
     "orange": {
-        "sX": 256,
-        "sY": 86,
+        "sx": 256,
+        "sy": 86,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -33,8 +33,8 @@
         "offsetY": 0
     },
     "orangeCapture": {
-        "sX": 128,
-        "sY": 688,
+        "sx": 128,
+        "sy": 688,
         "cols": 16,
         "rows": 1,
         "total": 4,
@@ -44,8 +44,8 @@
         "offsetY": 0
     },
     "yellow": {
-        "sX": 512,
-        "sY": 172,
+        "sx": 512,
+        "sy": 172,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -55,8 +55,8 @@
         "offsetY": 0
     },
     "yellowCapture": {
-        "sX": 384,
-        "sY": 688,
+        "sx": 384,
+        "sy": 688,
         "cols": 16,
         "rows": 1,
         "total": 4,
@@ -66,8 +66,8 @@
         "offsetY": 0
     },
     "green": {
-        "sX": 768,
-        "sY": 258,
+        "sx": 768,
+        "sy": 258,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -77,8 +77,8 @@
         "offsetY": 0
     },
     "greenCapture": {
-        "sX": 640,
-        "sY": 688,
+        "sx": 640,
+        "sy": 688,
         "cols": 16,
         "rows": 1,
         "total": 4,
@@ -88,8 +88,8 @@
         "offsetY": 0
     },
     "blue": {
-        "sX": 0,
-        "sY": 430,
+        "sx": 0,
+        "sy": 430,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -99,8 +99,8 @@
         "offsetY": 0
     },
     "blueCapture": {
-        "sX": 896,
-        "sY": 688,
+        "sx": 896,
+        "sy": 688,
         "cols": 16,
         "rows": 2,
         "total": 4,
@@ -110,8 +110,8 @@
         "offsetY": 0
     },
     "pink": {
-        "sX": 256,
-        "sY": 516,
+        "sx": 256,
+        "sy": 516,
         "cols": 16,
         "rows": 2,
         "total": 20,
@@ -121,8 +121,8 @@
         "offsetY": 0
     },
     "pinkCapture": {
-        "sX": 128,
-        "sY": 774,
+        "sx": 128,
+        "sy": 774,
         "cols": 16,
         "rows": 1,
         "total": 4,
@@ -132,8 +132,8 @@
         "offsetY": 0
     },
     "smallBoom": {
-        "sX": 576,
-        "sY": 602,
+        "sx": 576,
+        "sy": 602,
         "cols": 16,
         "rows": 1,
         "total": 3,

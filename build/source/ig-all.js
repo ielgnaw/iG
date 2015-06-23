@@ -2326,7 +2326,7 @@ define('ig/DisplayObject', [
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
-        changeStatus: function (status) {
+        setStatus: function (status) {
             this.status = status || this.status;
             return this;
         },
@@ -2666,9 +2666,28 @@ define('ig/Bitmap', [
             this.cacheCtx.restore();
             return this;
         },
+        change: function (prop) {
+            prop = prop || {};
+            util.extend(this, {
+                asset: this.asset,
+                x: this.x,
+                y: this.y,
+                sx: this.sx,
+                sy: this.sy,
+                sWidth: this.sWidth,
+                sHeight: this.sHeight
+            }, prop);
+            this._.isInitDimension = false;
+            _setInitDimension.call(this);
+            this.initCacheCanvas();
+            return this;
+        },
         render: function (ctx) {
             _setInitDimension.call(this);
             ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
             Bitmap.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
             if (this.useCache) {
@@ -2821,7 +2840,7 @@ define('ig/SpriteSheet', [
     }
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
-        changeFrame: function (prop) {
+        change: function (prop) {
             prop = prop || {};
             util.extend(this, {
                 asset: this.asset,
@@ -2883,6 +2902,9 @@ define('ig/SpriteSheet', [
         render: function (ctx) {
             _setup.call(this);
             ctx.save();
+            ctx.fillStyle = this.fillStyle;
+            ctx.strokeStyle = this.strokeStyle;
+            ctx.globalAlpha = this.alpha;
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
             ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
@@ -2895,7 +2917,7 @@ define('ig/SpriteSheet', [
             this._.isSetup = true;
             var curSheetData = null;
             var sheetKey = this.sheetKey;
-            if (!sheetKey) {
+            if (!sheetKey || this.sheetData) {
                 curSheetData = this.sheetData;
             } else {
                 curSheetData = this.sheetData[sheetKey];
