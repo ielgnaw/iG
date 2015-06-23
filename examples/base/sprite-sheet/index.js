@@ -83,12 +83,13 @@ window.onload = function () {
     spritesheet1.step = function (dt, stepCount, requestID) {
         // console.warn(arguments);
         this.angle += 1;
-        this.vx += this.ax * dt;// * (this.fps / 1000);
-        this.vy += this.ay * dt;// * (this.fps / 1000);
+        this.vx += this.ax * dt;
+        this.vx *= this.frictionX * dt;
+        this.vy += this.ay * dt;
+        this.vy *= this.frictionY * dt;
 
-        // 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
-        this.x += this.vx * dt;// * (this.fps / 1000);
-        this.y += this.vy * dt;// * (this.fps / 1000);
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
 
         if (this.bounds.x + this.bounds.width > game1.width) {
             this.vx = -Math.abs(this.vx);

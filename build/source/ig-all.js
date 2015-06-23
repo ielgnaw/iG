@@ -2431,8 +2431,8 @@ define('ig/DisplayObject', [
             this.status = STATUS.DESTROYED;
         },
         move: function (x, y) {
-            this.x = x;
-            this.y = y;
+            this.x = x || this.x;
+            this.y = y || this.y;
             return this;
         },
         hitTestPoint: function (x, y) {

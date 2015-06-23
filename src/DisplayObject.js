@@ -461,8 +461,8 @@ define(function (require) {
          * @return {Object} DisplayObject 实例
          */
         move: function (x, y) {
-            this.x = x;
-            this.y = y;
+            this.x = x || this.x;
+            this.y = y || this.y;
             return this;
         },
 

@@ -288,7 +288,7 @@ define(function (require) {
         },
 
         /**
-         * 移动
+         * 移动，设置位置，即设置 x, y
          * x, y 是指要移动到的横轴、纵轴目标位置即终点坐标
          *
          * @param {number} x 终点横坐标
