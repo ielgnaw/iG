@@ -69,6 +69,8 @@ window.onload = function () {
             x: 150,
             y: 150,
             debug: 1,
+            vx: 1,
+            vy: 2,
             // width: 100,
             // height: 200,
             moveFunc: function (d) {
@@ -78,8 +80,29 @@ window.onload = function () {
             // useCache: false
         })
     );
-    spritesheet1.step = function (dt, stepCount) {
+    spritesheet1.step = function (dt, stepCount, requestID) {
+        // console.warn(arguments);
         this.angle += 1;
+        this.vx += this.ax * dt;// * (this.fps / 1000);
+        this.vy += this.ay * dt;// * (this.fps / 1000);
+
+        // 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
+        this.x += this.vx * dt;// * (this.fps / 1000);
+        this.y += this.vy * dt;// * (this.fps / 1000);
+
+        if (this.bounds.x + this.bounds.width > game1.width) {
+            this.vx = -Math.abs(this.vx);
+        }
+        else if (this.bounds.x < 0) {
+            this.vx = Math.abs(this.vx);
+        }
+
+        if (this.bounds.y + this.bounds.height > game1.height) {
+            this.vy = -Math.abs(this.vy);
+        }
+        else if (this.bounds.y < 0) {
+            this.vy = Math.abs(this.vy);
+        }
     };
 
     setTimeout(function () {
