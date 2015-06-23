@@ -17,8 +17,10 @@ window.onload = function () {
             // {id: 'bg2', src: '/examples/img/base/bg2.png'},
             // {id: 'bg3', src: '/examples/img/base/bg3.png'},
             {id: 'spriteSheetImg', src: '/examples/img/base/sprite-sheet1.png'},
+            {id: 'spriteSheetImg2', src: '/examples/img/base/sprite-sheet2.jpg'},
             // {id: 'test2', src: '/examples/img/base/2.png'},
             {id: 'spriteSheetData', src: './data/sprite-sheet1.json'},
+            {id: 'spriteSheetData2', src: './data/sprite-sheet2.json'},
             // {id: 'text', src: './data/text.text'},
             // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
             // '/examples/img/base/boom.png'
@@ -56,10 +58,13 @@ window.onload = function () {
         new ig.SpriteSheet({
             name: 'spritesheet1',
             // image: '/examples/img/base/sprite-sheet1.png',
-            image: 'spriteSheetImg',
+            // image: 'spriteSheetImg',
             // sheet: 'spriteSheetData',
-            sheet: './data/sprite-sheet1.json',
-            sheetKey: 'red',
+            // sheet: './data/sprite-sheet1.json',
+            // sheetKey: 'red',
+
+            image: 'spriteSheetImg2',
+            sheet: './data/sprite-sheet2.json',
             jumpFrames: 5,
             x: 150,
             y: 150,
@@ -76,6 +81,20 @@ window.onload = function () {
     spritesheet1.step = function (dt, stepCount) {
         this.angle += 1;
     };
+
+    setTimeout(function () {
+        // spritesheet1.changeFrame();
+        spritesheet1.changeFrame(
+            // ig.util.extend(true, {}, game1.asset.spriteSheetData.redCapture, {x: 20, y: 30})
+            ig.util.extend(true, {
+                asset: game1.asset.spriteSheetImg,
+                isOnce: true,
+                onceDone: function () {
+                    // console.warn(arguments, 'onceDone');
+                }
+            }, game1.asset.spriteSheetData.red)
+        );
+    }, 3000);
 
     // var text1 = stage1.addDisplayObject(
     //     new ig.Text({

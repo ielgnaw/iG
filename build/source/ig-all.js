@@ -2822,18 +2822,20 @@ define('ig/SpriteSheet', [
     SpriteSheet.prototype = {
         constructor: SpriteSheet,
         changeFrame: function (prop) {
+            prop = prop || {};
             util.extend(this, {
-                total: this.total,
+                asset: this.asset,
                 x: this.x,
                 y: this.y,
-                sx: this.sx,
-                sy: this.sy,
-                cols: this.cols,
-                rows: this.rows,
-                tileW: 0,
-                tileH: 0,
-                offsetX: 0,
-                offsetY: 0,
+                total: 1,
+                sx: 0,
+                sy: 0,
+                cols: 1,
+                rows: 1,
+                tileW: this.tileW,
+                tileH: this.tileH,
+                offsetX: this.offsetX,
+                offsetY: this.offsetY,
                 jumpFrames: this.jumpFrames,
                 isOnce: false,
                 onceDone: util.noop
@@ -2918,6 +2920,7 @@ define('ig/SpriteSheet', [
             this.width = this.width || this.tileW;
             this.height = this.height || this.tileH;
         }
+        return this;
     }
     util.inherits(SpriteSheet, Rectangle);
     return SpriteSheet;

@@ -55,41 +55,44 @@ define(function (require) {
         constructor: SpriteSheet,
 
         /**
-         * 改变动画帧
+         * 改变动画，如果 prop 为空对象，那么结果是当前的 asset 的第一帧，帧也不会再变化了。
+         * 这也是 total, sx, sy, cols, rows 设置为固定值的原因
          *
-         * @param {Object} prop 动画帧属性
+         * @param {Object} prop 变化的属性
          *
          * @return {Object} SpriteSheet 实例
          */
         changeFrame: function (prop) {
+            prop = prop || {};
             util.extend(this, {
-                // 一组动画中的所有帧数
-                total: this.total,
+                asset: this.asset,
                 // 横坐标
                 x: this.x,
                 // 纵坐标
                 y: this.y,
+                // 一组动画中的所有帧数
+                total: 1,
                 // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
                 // 这两个参数对应 drawImage 的 sx, sy
-                sx: this.sx,
-                sy: this.sy,
+                sx: 0,
+                sy: 0,
                 // 列数，如果精灵在当前行不是从第 0 列开始的，这个列数也还是指的所有的列数
                 // 例如 sprite-sheet3.png 气球图，第一行红球的列数是 16，第二行桔球的列数也是 16
-                cols: this.cols,
+                cols: 1,
                 // 行数，当前这组精灵所占的行数
                 // 例如 sprite-sheet3.png 气球图，红球的行数数是 2，桔球的行数是 2
-                rows: this.rows,
+                rows: 1,
                 // 每帧宽度
-                tileW: 0,
+                tileW: this.tileW,
                 // 每帧高度
-                tileH: 0,
+                tileH: this.tileH,
                 // 横轴偏移
-                offsetX: 0,
+                offsetX: this.offsetX,
                 // 纵轴偏移
-                offsetY: 0,
-                // 如果游戏的帧数是 60fps，意味着每 16ms 就执行一帧，这对精灵图来说切换太快，
-                // 所以这是这个值来控制精灵切换的速度，
-                // 如果设置为 3，那么就代表精灵切换的帧数是 20fps 即每 50ms 切换一次精灵图
+                offsetY: this.offsetY,
+                // 跳帧的个数，可以用来设置延迟
+                // 如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
+                // 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
                 jumpFrames: this.jumpFrames,
                 // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
                 isOnce: false,
@@ -155,8 +158,6 @@ define(function (require) {
                     this.sy -= (this.rows - 1) * this.tileH;
 
                     if (this.isOnce) {
-                        // TODO: isOnce 执行完成后不应该销毁，销毁应该另外设置一个标识
-                        // this.status = 5;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
                             setTimeout(function () {
@@ -220,6 +221,11 @@ define(function (require) {
         }
     };
 
+    /**
+     * 内部初始化
+     *
+     * @return {Object} SpriteSheet 实例
+     */
     function _setup() {
         if (!this._.isSetup) {
             this._.isSetup = true;
@@ -274,6 +280,7 @@ define(function (require) {
             this.width = this.width || this.tileW;
             this.height = this.height || this.tileH;
         }
+        return this;
     }
 
     util.inherits(SpriteSheet, Rectangle);
