@@ -367,7 +367,7 @@ define(function (require) {
             }
             me.curFrame++;
 
-            if (me.curFrame <= me.frames + 1) {
+            if (me.curFrame <= me.frames) {
                 return;
             }
 

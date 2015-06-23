@@ -2170,7 +2170,7 @@ define('ig/Animation', [
                 }
             }
             me.curFrame++;
-            if (me.curFrame <= me.frames + 1) {
+            if (me.curFrame <= me.frames) {
                 return;
             }
             if (me.range && !me.rangeExec) {
