@@ -194,8 +194,8 @@ define(function (require) {
     exports.addEvent = function () {
         var me = this;
         var elem = me.element;
-        var ratioWidth = me.stage.game.cssXRatio;
-        var ratioHeight = me.stage.game.cssYRatio;
+        var ratioWidth = me.stage.game.cssRatioX;
+        var ratioHeight = me.stage.game.cssRatioY;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
                 // e.preventDefault();

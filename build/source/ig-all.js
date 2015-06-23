@@ -3446,10 +3446,10 @@ define('ig/Game', [
             if (this.scaleFit) {
                 fitScreen.call(this);
             }
-            this.xRatio = this.width / CONFIG.width;
-            this.yRatio = this.height / CONFIG.height;
-            this.cssXRatio = this.width / parseInt(this.cssWidth, 10);
-            this.cssYRatio = this.height / parseInt(this.cssHeight, 10);
+            this.ratioX = this.width / CONFIG.width;
+            this.ratioY = this.height / CONFIG.height;
+            this.cssRatioX = this.width / parseInt(this.cssWidth, 10);
+            this.cssRatioY = this.height / parseInt(this.cssHeight, 10);
         };
         getRatio.call(this);
         var me = this;
@@ -3934,8 +3934,8 @@ define('ig/domEvt', [
     exports.addEvent = function () {
         var me = this;
         var elem = me.element;
-        var ratioWidth = me.stage.game.cssXRatio;
-        var ratioHeight = me.stage.game.cssYRatio;
+        var ratioWidth = me.stage.game.cssRatioX;
+        var ratioHeight = me.stage.game.cssRatioY;
         me.events.forEach(function (name, i) {
             elem.addEventListener(name, function (e) {
                 if (i === 0) {

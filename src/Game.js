@@ -690,13 +690,13 @@ define(function (require) {
                 fitScreen.call(this);
             }
             // 实际宽度和默认宽度的比值
-            this.xRatio = this.width / CONFIG.width;
+            this.ratioX = this.width / CONFIG.width;
             // 实际高度和默认高度的比值
-            this.yRatio = this.height / CONFIG.height;
+            this.ratioY = this.height / CONFIG.height;
             // 宽度和 css 宽度的比值
-            this.cssXRatio = this.width / parseInt(this.cssWidth, 10);
+            this.cssRatioX = this.width / parseInt(this.cssWidth, 10);
             // 高度和 css 高度的比值
-            this.cssYRatio = this.height / parseInt(this.cssHeight, 10);
+            this.cssRatioY = this.height / parseInt(this.cssHeight, 10);
         };
 
         getRatio.call(this);
