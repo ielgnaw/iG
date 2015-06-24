@@ -98,6 +98,7 @@ window.onload = function () {
             debug: 1,
             zIndex: 100,
             fillStyle: '#f00',
+            mouseEnable: true,
             moveFunc: function (d) {
                 // console.warn(d);
                 this.move(d.x, d.y);

@@ -66,6 +66,7 @@ window.onload = function () {
             debug: 1,
             zIndex: 100,
             fillStyle: '#f00',
+            mouseEnable: true,
             // useCache: false,
             captureFunc: function (e) {
                 // console.warn(text1);

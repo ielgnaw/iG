@@ -16,23 +16,10 @@ define(function (require) {
 
     // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
     // touchmove, mousemove 时，把所有经过的可 mouseEnable 的精灵缓存起来
-    var holdSprites = [];
+    var holdSpriteList = [];
 
-    /**
-     * 根据精灵名字判断精灵是否在 holdSprites 中
-     *
-     * @param {string} displayObjectName 精灵名字
-     *
-     * @return {boolean} 结果
-     */
-    function inHoldSprites(displayObjectName) {
-        for (var i = 0, len = holdSprites.length; i < len; i++) {
-            if (holdSprites[i].name === displayObjectName) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // 辅助 holdSpriteList 的，记录是否存在于 holdSpriteList 中
+    var holdSprites = {};
 
     /**
      * 用于记录按下是的横坐标和形状的 x 之间的偏移量
@@ -113,20 +100,20 @@ define(function (require) {
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         // target 是 Stage
         var target = e.target;
-        if (util.getType(target.moveFunc) === 'function') {
-            target.moveFunc.call(target, e.data);
-        }
+
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
 
-            // 获取 move 时，touch/mouse 点经过的所有可 mouseEnable 的 sprite
+            // 获取 move 时，touch/mouse 点经过的 sprite
             if (curDisplayObject.hitTestPoint(e.data.x, e.data.y)
-                && !inHoldSprites(curDisplayObject.name)
+                && !holdSprites[curDisplayObject.name]
             ) {
-                holdSprites.push(curDisplayObject);
+                holdSpriteList.push(curDisplayObject);
+                holdSprites[curDisplayObject.name] = curDisplayObject;
             }
 
+            e.data.holdSpriteList = holdSpriteList;
             e.data.holdSprites = holdSprites;
 
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
@@ -136,6 +123,10 @@ define(function (require) {
                 e.data.y = e.data.y - subY;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
+        }
+
+        if (util.getType(target.moveFunc) === 'function') {
+            target.moveFunc.call(target, e.data);
         }
         return target;
     };
@@ -156,14 +147,15 @@ define(function (require) {
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || holdSprites[curDisplayObject.name]) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }
         }
         subX = 0;
         subY = 0;
-        holdSprites = [];
+        holdSpriteList = [];
+        holdSprites = {};
         return target;
     };
 

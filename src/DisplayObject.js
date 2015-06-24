@@ -14,7 +14,6 @@ define(function (require) {
     var Matrix = require('./Matrix');
 
     var CONFIG = ig.getConfig();
-
     var STATUS = CONFIG.status;
 
     /**
@@ -115,7 +114,7 @@ define(function (require) {
             // 状态
             status: STATUS.NORMAL,
             // 是否允许鼠标 / touch 操作
-            mouseEnable: true,
+            mouseEnable: false,
             // 对应 mousedown 和 touchstart 事件
             // 这个 func 中的 this 指向的是当前的 DisplayObject 实例
             captureFunc: util.noop,

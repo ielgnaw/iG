@@ -78,6 +78,7 @@ define(function (require) {
      * @type {number}
      */
     // exports.setConfig('width', 320);
+    // exports.setConfig('width', 414);
     exports.setConfig('width', 383);
 
     /**
@@ -86,6 +87,7 @@ define(function (require) {
      * @type {number}
      */
     // exports.setConfig('height', 480);
+    // exports.setConfig('height', 736);
     exports.setConfig('height', 550);
 
     /**

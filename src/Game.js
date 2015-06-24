@@ -645,22 +645,6 @@ define(function (require) {
         if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
-
-            var horizontalPageScroll;
-            var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
-
-            if (horizontalPageScrollType === 'number') {
-                horizontalPageScroll = this.horizontalPageScroll;
-            }
-            else if (horizontalPageScrollType === 'boolean') {
-                horizontalPageScroll = 17;
-            }
-            else {
-                horizontalPageScroll = 0;
-            }
-
-            width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
-            height = Math.min(window.innerHeight - 5, maxHeight);
         }
 
         if (env.supportTouch) {
@@ -670,6 +654,22 @@ define(function (require) {
             width = Math.min(window.innerWidth, maxWidth);
             height = Math.min(window.innerHeight, maxHeight);
         }
+
+        var horizontalPageScroll;
+        var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
+
+        if (horizontalPageScrollType === 'number') {
+            horizontalPageScroll = this.horizontalPageScroll;
+        }
+        else if (horizontalPageScrollType === 'boolean') {
+            horizontalPageScroll = 17;
+        }
+        else {
+            horizontalPageScroll = 0;
+        }
+
+        width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
+        height = Math.min(window.innerHeight - 5, maxHeight);
 
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';

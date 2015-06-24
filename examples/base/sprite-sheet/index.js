@@ -73,6 +73,7 @@ window.onload = function () {
             vy: 2,
             // width: 100,
             // height: 200,
+            mouseEnable: true,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
                 this.move(d.x, d.y);
@@ -134,6 +135,7 @@ window.onload = function () {
     //         debug: 1,
     //         zIndex: 100,
     //         fillStyle: '#f00',
+    //         mouseEnable: true,
     //         moveFunc: function (d) {
     //             // console.warn(d);
     //             this.move(d.x, d.y);

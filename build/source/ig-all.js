@@ -2312,7 +2312,7 @@ define('ig/DisplayObject', [
             frictionY: 1,
             children: [],
             status: STATUS.NORMAL,
-            mouseEnable: true,
+            mouseEnable: false,
             captureFunc: util.noop,
             moveFunc: util.noop,
             releaseFunc: util.noop,
@@ -2822,10 +2822,11 @@ define('ig/SpriteSheet', [
 ], function (require) {
     var util = require('./util');
     var Rectangle = require('./Rectangle');
+    var STATUS = ig.getConfig('status');
     var floor = Math.floor;
     function SpriteSheet(opts) {
         opts = opts || {};
-        if (!opts.image) {
+        if (!opts.image && !opts.asset) {
             throw new Error('SpriteSheet must be require a image param');
         }
         Rectangle.apply(this, opts);
@@ -2883,6 +2884,7 @@ define('ig/SpriteSheet', [
                     this.realCols = floor(this.cols - this.originalSX / this.tileW);
                     this.sy -= (this.rows - 1) * this.tileH;
                     if (this.isOnce) {
+                        this.status = STATUS.DESTROYED;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
                             setTimeout(function () {
@@ -2909,7 +2911,7 @@ define('ig/SpriteSheet', [
             ctx.globalAlpha = this.alpha;
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX, this.y + this.offsetY, this.tileW, this.tileH);
+            ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX * this.game.ratioX, this.y + this.offsetY * this.game.ratioY, this.tileW, this.tileH);
             ctx.restore();
             return this;
         }
@@ -3438,17 +3440,6 @@ define('ig/Game', [
         if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
-            var horizontalPageScroll;
-            var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
-            if (horizontalPageScrollType === 'number') {
-                horizontalPageScroll = this.horizontalPageScroll;
-            } else if (horizontalPageScrollType === 'boolean') {
-                horizontalPageScroll = 17;
-            } else {
-                horizontalPageScroll = 0;
-            }
-            width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
-            height = Math.min(window.innerHeight - 5, maxHeight);
         }
         if (env.supportTouch) {
             this.canvas.style.height = height * 2 + 'px';
@@ -3456,6 +3447,17 @@ define('ig/Game', [
             width = Math.min(window.innerWidth, maxWidth);
             height = Math.min(window.innerHeight, maxHeight);
         }
+        var horizontalPageScroll;
+        var horizontalPageScrollType = util.getType(this.horizontalPageScroll);
+        if (horizontalPageScrollType === 'number') {
+            horizontalPageScroll = this.horizontalPageScroll;
+        } else if (horizontalPageScrollType === 'boolean') {
+            horizontalPageScroll = 17;
+        } else {
+            horizontalPageScroll = 0;
+        }
+        width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
+        height = Math.min(window.innerHeight - 5, maxHeight);
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
@@ -3864,15 +3866,8 @@ define('ig/domEvt', [
         'mousemove',
         'mouseup'
     ];
-    var holdSprites = [];
-    function inHoldSprites(displayObjectName) {
-        for (var i = 0, len = holdSprites.length; i < len; i++) {
-            if (holdSprites[i].name === displayObjectName) {
-                return true;
-            }
-        }
-        return false;
-    }
+    var holdSpriteList = [];
+    var holdSprites = {};
     var subX = 0;
     var subY = 0;
     var exports = {};
@@ -3906,15 +3901,14 @@ define('ig/domEvt', [
     };
     exports.fireEvt.touchmove = exports.fireEvt.mousemove = function (e) {
         var target = e.target;
-        if (util.getType(target.moveFunc) === 'function') {
-            target.moveFunc.call(target, e.data);
-        }
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !inHoldSprites(curDisplayObject.name)) {
-                holdSprites.push(curDisplayObject);
+            if (curDisplayObject.hitTestPoint(e.data.x, e.data.y) && !holdSprites[curDisplayObject.name]) {
+                holdSpriteList.push(curDisplayObject);
+                holdSprites[curDisplayObject.name] = curDisplayObject;
             }
+            e.data.holdSpriteList = holdSpriteList;
             e.data.holdSprites = holdSprites;
             if (curDisplayObject.mouseEnable && curDisplayObject.isCapture) {
                 e.data.curStage = target;
@@ -3922,6 +3916,9 @@ define('ig/domEvt', [
                 e.data.y = e.data.y - subY;
                 curDisplayObject.moveFunc.call(curDisplayObject, e.data);
             }
+        }
+        if (util.getType(target.moveFunc) === 'function') {
+            target.moveFunc.call(target, e.data);
         }
         return target;
     };
@@ -3933,14 +3930,15 @@ define('ig/domEvt', [
         var displayObjectList = target.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var curDisplayObject = displayObjectList[i];
-            if (curDisplayObject.isCapture || inHoldSprites(curDisplayObject.name)) {
+            if (curDisplayObject.isCapture || holdSprites[curDisplayObject.name]) {
                 curDisplayObject.releaseFunc.call(curDisplayObject, e.data);
                 curDisplayObject.isCapture = false;
             }
         }
         subX = 0;
         subY = 0;
-        holdSprites = [];
+        holdSpriteList = [];
+        holdSprites = {};
         return target;
     };
     exports.initMouse = function (stage) {

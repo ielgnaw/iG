@@ -10,6 +10,8 @@ define(function (require) {
     var util = require('./util');
     var Rectangle = require('./Rectangle');
 
+    var STATUS = ig.getConfig('status');
+
     var floor = Math.floor;
 
     /**
@@ -23,7 +25,7 @@ define(function (require) {
      */
     function SpriteSheet(opts) {
         opts = opts || {};
-        if (!opts.image) {
+        if (!opts.image && !opts.asset) {
             throw new Error('SpriteSheet must be require a image param');
         }
 
@@ -140,6 +142,7 @@ define(function (require) {
             if (this.frameUpdateCount > this.jumpFrames) {
                 this.frameUpdateCount = 0;
 
+                // if (this.frameIndex < this.total - 1) {
                 if (this.frameIndex < this.total - 1) {
                     this.frameIndex++;
                 }
@@ -160,6 +163,7 @@ define(function (require) {
                     this.sy -= (this.rows - 1) * this.tileH;
 
                     if (this.isOnce) {
+                        this.status = STATUS.DESTROYED;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
                             setTimeout(function () {
@@ -214,8 +218,8 @@ define(function (require) {
                 this.sy,
                 this.tileW,
                 this.tileH,
-                this.x + this.offsetX,
-                this.y + this.offsetY,
+                this.x + this.offsetX * this.game.ratioX,
+                this.y + this.offsetY * this.game.ratioY,
                 this.tileW,
                 this.tileH
             );

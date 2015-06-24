@@ -17,6 +17,8 @@ window.onload = function () {
             {id: 'playBut', src: '/examples/img/game/balloon/playBut.png'},
             {id: 'spriteSheetImg', src: '/examples/img/game/balloon/sprite-sheet1.png'},
             {id: 'spriteSheetData', src: './data/sprite-sheet1.json'},
+            {id: 'boomImg', src: '/examples/img/game/balloon/boom.png'},
+            {id: 'boomData', src: './data/boom.json'},
         ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
@@ -24,6 +26,10 @@ window.onload = function () {
     }).on('loadResDone', function (e) {
         document.querySelector('#load-process').style.display = 'none';
     });
+
+    var allData;
+    var spritesData;
+    var boomData;
 
     var stage = game.createStage({
         name: 'balloon-stage',
@@ -43,9 +49,15 @@ window.onload = function () {
                 animInterval: 1000
             }
         ],
-        moveFunc: function (e) {
-            e.domEvent.preventDefault();
+        captureFunc: function (e) {
+            stageCaptureFunc.call(this, e);
         },
+        moveFunc: function (e) {
+            stageMoveFunc.call(this, e);
+        },
+        releaseFunc: function (e) {
+            stageReleaseFunc.call(this, e);
+        }
     });
 
     var coverWidth = 326;
@@ -88,8 +100,257 @@ window.onload = function () {
      * 初始化气球
      */
     function initBalloon() {
-        var allData = game.asset.spriteSheetData;
-        var spritesData = [
+        // 六列
+        var countInRow = 6;
+        // 七行
+        var countInCol = 7 + 1;
+        // 每一帧的宽度
+        var tileW = 64;
+        // 每一帧的高度
+        var tileH = 86;
+
+        var rx = stage.width / (countInRow * tileW);
+        var ry = stage.height / (countInCol * tileH);
+
+        var index = 0;
+        console.warn(game.ratioX , rx);
+        console.warn(game);
+        /* jshint loopfunc:true */
+        for (var colIndex = 1; colIndex < countInCol; colIndex++) {
+            for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
+                var d = spritesData[util.randomInt(0, 5)];
+                // var d = spritesData[0];
+                (function (_d, colI, rowI) {
+                    stage.addDisplayObject(
+                        new ig.SpriteSheet({
+                            name: rowI + '_' + colI,
+                            image: 'spriteSheetImg',
+                            sheet: 'spriteSheetData',
+                            sheetKey: _d.type,
+                            asset: game.asset.spriteSheetImg,
+                            sheetData: allData[_d.type],
+                            jumpFrames: 5,
+                            x: rowI * _d.data.tileW * rx + 2 * rx,
+                            y: colI * _d.data.tileH * ry,
+                            // debug: 1,
+                            zIndex: 2,
+                            scaleX: rx,
+                            scaleY: ry,
+                            width: 50,
+                            height: 50,
+                            // mouseEnable: true,
+                            // 自定义属性
+                            c: {
+                                data: _d.data,
+                                captureData: _d.captureData,
+                                type: _d.type,
+                                index: ++index
+                            }
+                        })
+                    );
+                })(d, colIndex, rowIndex);
+            }
+        }
+    }
+
+    var abs = Math.abs;
+    var canBoomBalloons = [];
+    var holdSpriteList = [];
+
+    var stageCaptureSprite = null;
+
+    /**
+     * stage capture 回调事件
+     *
+     * @param {Object} e captureFunc 的回调参数
+     */
+    function stageCaptureFunc(e) {
+        var displayObjectList = this.displayObjectList;
+        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+            if (displayObjectList[i].hitTestPoint(e.x, e.y)) {
+                stageCaptureSprite = displayObjectList[i];
+                return;
+            }
+        }
+    }
+
+    /**
+     * 根据条件删除数组里的满足条件的项，返回新数组
+     *
+     * @param {Array} list 待删除的数组
+     * @param {Function} callback 条件函数，返回 true 就执行
+     *
+     * @return {Array} 结果数组
+     */
+    function removeArr(list, callback) {
+        var ret = [];
+        var candidateIndex = -1;
+        var tmp;
+        for (var i = 0, len = list.length; i < len; i++) {
+            tmp = list[i];
+            if (!callback(tmp)) {
+                ret.push(tmp);
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * stage move 回调事件
+     *
+     * @param {Object} e moveFunc 毁掉参数
+     */
+    function stageMoveFunc(e) {
+        e.domEvent.preventDefault();
+
+        holdSpriteList = e.holdSpriteList.concat();
+
+        var firstItem;
+        if (stageCaptureSprite && !e.holdSprites[stageCaptureSprite.name]) {
+            firstItem = stageCaptureSprite;
+            holdSpriteList.unshift(stageCaptureSprite);
+        }
+        else {
+            firstItem = holdSpriteList[0];
+        }
+
+        if (!firstItem) {
+            return;
+        }
+
+        var balloonType = firstItem.c.type;
+        holdSpriteList = removeArr(holdSpriteList, function (item) {
+            return item.c.type !== balloonType;
+        });
+
+        var len = holdSpriteList.length;
+
+        for (var i = 0, j = -1; i < len; i++, j++) {
+            var cur = holdSpriteList[i];
+            var prev = holdSpriteList[j] || cur;
+            var sub = abs(cur.c.index - prev.c.index);
+            if (sub !== 5 && sub !== 6 && sub !== 7 && sub !== 1 && sub !== 0) {
+                prev.change(prev.c.data);
+                util.removeArrByCondition(canBoomBalloons, function (item) {
+                    return item.name === prev.name;
+                });
+                return;
+            }
+            else {
+                cur.change(cur.c.captureData);
+                if (!inCanBoomBalloons(cur.name)) {
+                    canBoomBalloons.push(cur);
+                }
+            }
+        }
+    }
+
+    /**
+     * stage release 回调事件
+     *
+     * @param {Object} e releaseFunc 毁掉参数
+     */
+    function stageReleaseFunc(e) {
+        var len = canBoomBalloons.length;
+        if (len < 3) {
+            for (var i = 0, len = holdSpriteList.length; i < len; i++) {
+                var sprite = holdSpriteList[i];
+                sprite.change(util.extend({}, sprite.c.data));
+            }
+        }
+        else {
+            while (canBoomBalloons.length) {
+                var curBoomBalloon = canBoomBalloons.shift();
+                curBoomBalloon.setStatus(STATUS.DESTROYED);
+                var boomSprite = createBoomSprite(
+                    curBoomBalloon.x - boomData.tileW / 2 * game.ratioX + 10,
+                    curBoomBalloon.y - boomData.tileH / 2 * game.ratioY + 10,
+                    {
+                        boomBalloon: curBoomBalloon
+                    },
+                    function () {
+                        var d = spritesData[util.randomInt(0, 5)];
+                        var newBalloon = stage.addDisplayObject(
+                            new ig.SpriteSheet({
+                                name: this.c.boomBalloon.name,
+                                asset: game.asset.spriteSheetImg,
+                                sheetData: allData[d.type],
+                                jumpFrames: 5,
+                                x: this.c.boomBalloon.x,
+                                y: this.c.boomBalloon.y,
+                                // debug: 1,
+                                zIndex: 2,
+                                scaleX: 0.1, // this.c.boomBalloon.scaleX,
+                                scaleY: 0.1, // this.c.boomBalloon.scaleY,
+                                width: this.c.boomBalloon.width,
+                                height: this.c.boomBalloon.height,
+                                // 自定义属性
+                                c: {
+                                    data: d.data,
+                                    captureData: d.captureData,
+                                    type: d.type,
+                                    index: this.c.boomBalloon.c.index
+                                }
+                            })
+                        );
+
+                        newBalloon.setAnimate({
+                            target: {
+                                scaleX: this.c.boomBalloon.scaleX,
+                                scaleY: this.c.boomBalloon.scaleY
+                            },
+                            duration: 500
+                        });
+                    }
+                );
+            }
+        }
+        holdSpriteList = [];
+        stageCaptureSprite = null;
+        canBoomBalloons = [];
+    }
+
+    /**
+     * 判断 spritesheet 是否在 canBoomBalloons 里
+     *
+     * @param {string} displayObjectName spritesheet name
+     *
+     * @return {boolean} 结果
+     */
+    function inCanBoomBalloons(displayObjectName) {
+        for (var i = 0, len = canBoomBalloons.length; i < len; i++) {
+            if (canBoomBalloons[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    var boomGuid = 0;
+    function createBoomSprite(x, y, c, callback) {
+        return stage.addDisplayObject(
+            new ig.SpriteSheet({
+                name: 'boom_' + boomGuid++,
+                asset: game.asset.boomImg,
+                sheetData: boomData,
+                jumpFrames: 5,
+                x: x,
+                y: y,
+                // debug: 1,
+                zIndex: 10,
+                scaleX: game.ratioX,
+                scaleY: game.ratioY,
+                isOnce: true,
+                onceDone: callback || util.noop,
+                c: c || {}
+            })
+        );
+    }
+
+    game.start(function () {
+        boomData = game.asset.boomData;
+        allData = game.asset.spriteSheetData;
+        spritesData = [
             {
                 type:'red',
                 data: allData.red,
@@ -122,155 +383,7 @@ window.onload = function () {
             }
         ];
 
-        // 六列
-        var countInRow = 6;
-        // 七行
-        var countInCol = 7 + 1;
-        // 每一帧的宽度
-        var tileW = 64;
-        // 每一帧的高度
-        var tileH = 86;
 
-        var rx = stage.width / (countInRow * tileW);
-        var ry = stage.height / (countInCol * tileH);
-
-        var index = 0;
-        console.warn(game.ratioX , rx);
-        console.warn(game);
-        /* jshint loopfunc:true */
-        for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
-            for (var colIndex = 1; colIndex < countInCol; colIndex++) {
-                var d = spritesData[util.randomInt(0, 5)];
-                (function (_d) {
-                    stage.addDisplayObject(
-                        new ig.SpriteSheet({
-                            name: colIndex + '_' + rowIndex,
-                            image: 'spriteSheetImg',
-                            sheet: 'spriteSheetData',
-                            sheetKey: _d.type,
-                            asset: game.asset.spriteSheetImg,
-                            sheetData: allData[_d.type],
-                            jumpFrames: 5,
-                            x: rowIndex * _d.data.tileW * rx + 0 * game.ratioX,
-                            y: colIndex * _d.data.tileH * ry,
-                            debug: 1,
-                            zIndex: 2,
-                            scaleX: rx,
-                            scaleY: ry,
-                            width: 50,
-                            height: 50,
-                            // 自定义属性
-                            c: {
-                                data: _d.data,
-                                captureData: _d.captureData,
-                                type: _d.type,
-                                index: ++index
-                            },
-                            captureFunc: function (e) {
-                                captureFunc.call(this, e, _d);
-                            },
-                            moveFunc: function (e) {
-                                moveFunc.call(this, e);
-                            },
-                            releaseFunc: function (e) {
-                                releaseFunc.call(this, e, _d);
-                            },
-                            // useCache: false
-                        })
-                    );
-                })(d);
-            }
-        }
-    }
-
-    var abs = Math.abs;
-    var canBoomBalloons = [];
-
-    /**
-     * 每个气球获取焦点的事件回调
-     * 上下文是当前获取焦点的气球的这个 SpriteSheet 实例
-     *
-     * @param {Object} e captureFunc 的回调参数
-     * @param {Object} spriteData 当前这个 SpriteSheet 实例对应的 sprite 数据
-     */
-    function captureFunc(e, spriteData) {
-        // this.change(util.extend({}, spriteData.captureData));
-    }
-
-    var holdSprites = [];
-
-    function moveFunc(e) {
-        // this 是开始的那一个
-        this.change(util.extend({}, this.c.captureData));
-        for (var i = 0, len = e.holdSprites.length; i < len; i++) {
-            var sprite = e.holdSprites[i];
-            sprite.change(util.extend({}, sprite.c.captureData));
-        }
-
-
-        // holdSprites = e.holdSprites;
-        // var first = holdSprites[0];
-        // util.removeArrByCondition(holdSprites, function (item) {
-        //     return item.c.type !== first.c.type;
-        // });
-
-        // var len = holdSprites.length;
-
-        // for (var i = 0, j = -1; i < len; i++, j++) {
-        //     var cur = holdSprites[i];
-        //     var prev = holdSprites[j] || cur;
-        //     var sub = abs(cur.c.index - prev.c.index);
-        //     if (sub !== 5 && sub !== 6 && sub !== 7 && sub !== 1 && sub !== 0) {
-        //         prev.change(prev.c.data);
-        //         util.removeArrByCondition(canBoomBalloons, function (item) {
-        //             return item.name !== prev.name;
-        //         });
-        //         return;
-        //     }
-        //     else {
-        //         cur.change(cur.c.captureData);
-        //         if (!inCanBoomBalloons(cur.name)) {
-        //             canBoomBalloons.push(cur);
-        //         }
-        //     }
-        // }
-    }
-
-    function releaseFunc(e, d) {
-        holdSprites = [];
-        // this.change(d.data);
-        // var len = canBoomBalloons.length;
-        // if (len >= 3) {
-        //     // var content = parseInt(gameScoreText.getContent(), 10);
-        //     // gameScoreText.changeContent(content + canBoomBalloons.length * 100);
-        //     while (canBoomBalloons.length) {
-        //         var curBoomBalloon = canBoomBalloons.shift();
-        //         curBoomBalloon.setStatus(STATUS.DESTROYED);
-        //         // var boomSprite = createBoomSprite(
-        //         //     curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
-        //         //     curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
-        //         //     {
-        //         //         boomBalloon: curBoomBalloon
-        //         //     },
-        //         //     boomSpriteOnceDone
-        //         // );
-        //         // stage.addDisplayObject(boomSprite);
-        //         // boomSpriteOnceDone(boomSprite);
-        //     }
-        // }
-        // canBoomBalloons = [];
-    }
-
-    function inCanBoomBalloons(displayObjectName) {
-        for (var i = 0, len = canBoomBalloons.length; i < len; i++) {
-            if (canBoomBalloons[i].name === displayObjectName) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    game.start(function () {
         initBalloon();
         playBut.setStatus(STATUS.DESTROYED);
         startCover.setStatus(STATUS.DESTROYED);
