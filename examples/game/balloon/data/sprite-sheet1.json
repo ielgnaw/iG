@@ -7,8 +7,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "redCapture": {
         "sx": 896,
@@ -18,8 +18,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "orange": {
         "sx": 256,
@@ -29,8 +29,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "orangeCapture": {
         "sx": 128,
@@ -40,8 +40,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "yellow": {
         "sx": 512,
@@ -51,8 +51,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "yellowCapture": {
         "sx": 384,
@@ -62,8 +62,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "green": {
         "sx": 768,
@@ -73,8 +73,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "greenCapture": {
         "sx": 640,
@@ -84,8 +84,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "blue": {
         "sx": 0,
@@ -95,8 +95,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "blueCapture": {
         "sx": 896,
@@ -106,8 +106,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "pink": {
         "sx": 256,
@@ -117,8 +117,8 @@
         "total": 20,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "pinkCapture": {
         "sx": 128,
@@ -128,8 +128,8 @@
         "total": 4,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     },
     "smallBoom": {
         "sx": 576,
@@ -139,7 +139,7 @@
         "total": 3,
         "tileW": 64,
         "tileH": 86,
-        "offsetX": 0,
-        "offsetY": 0
+        "offsetX": -5,
+        "offsetY": -5
     }
 }

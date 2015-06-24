@@ -43,9 +43,9 @@ window.onload = function () {
                 animInterval: 1000
             }
         ],
-        moveFunc: function (d) {
-            d.domEvent.preventDefault();
-        }
+        moveFunc: function (e) {
+            e.domEvent.preventDefault();
+        },
     });
 
     var coverWidth = 326;
@@ -131,104 +131,150 @@ window.onload = function () {
         // 每一帧的高度
         var tileH = 86;
 
-        var rX = stage.width / (countInRow * tileW);// * game.ratioX;
-        var rY = stage.height / (countInCol * tileH);// * game.ratioY;
-        console.warn(game.ratioX, game.ratioY, rX, rY);
+        var rx = stage.width / (countInRow * tileW);
+        var ry = stage.height / (countInCol * tileH);
 
+        var index = 0;
+        console.warn(game.ratioX , rx);
+        console.warn(game);
         /* jshint loopfunc:true */
-        for (var colIndex = 1; colIndex < countInCol; colIndex++) {
-            for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
+        for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
+            for (var colIndex = 1; colIndex < countInCol; colIndex++) {
                 var d = spritesData[util.randomInt(0, 5)];
                 (function (_d) {
-                    var s = stage.addDisplayObject(
+                    stage.addDisplayObject(
                         new ig.SpriteSheet({
-                            name: rowIndex + '_' + colIndex,
+                            name: colIndex + '_' + rowIndex,
                             image: 'spriteSheetImg',
                             sheet: 'spriteSheetData',
                             sheetKey: _d.type,
                             asset: game.asset.spriteSheetImg,
                             sheetData: allData[_d.type],
                             jumpFrames: 5,
-                            x: rowIndex * _d.data.tileW * rX,
-                            y: colIndex * _d.data.tileH * rY,
+                            x: rowIndex * _d.data.tileW * rx + 0 * game.ratioX,
+                            y: colIndex * _d.data.tileH * ry,
                             debug: 1,
                             zIndex: 2,
-                            scaleX: rX,
-                            scaleY: rY,
+                            scaleX: rx,
+                            scaleY: ry,
                             width: 50,
                             height: 50,
-                            moveFunc: function (d) {
-                                d.domEvent.preventDefault();
-                                this.move(d.x, d.y);
+                            // 自定义属性
+                            c: {
+                                data: _d.data,
+                                captureData: _d.captureData,
+                                type: _d.type,
+                                index: ++index
+                            },
+                            captureFunc: function (e) {
+                                captureFunc.call(this, e, _d);
+                            },
+                            moveFunc: function (e) {
+                                moveFunc.call(this, e);
+                            },
+                            releaseFunc: function (e) {
+                                releaseFunc.call(this, e, _d);
                             },
                             // useCache: false
                         })
                     );
-                    s.step = function () {
-                        // this.angle++;
-                    }
-
-                    // var balloonSprite = new ig.SpriteSheet({
-                    //     name: rowIndex + '_' + colIndex,
-                    //     image: resource.ss3,
-                    //     x: rowIndex * _d.data.tileW * ratioX,
-                    //     y: colIndex * _d.data.tileH * ratioY,
-                    //     // 用 points 更精确捕捉 touch 事件
-                    //     points: [
-                    //         {
-                    //             x: 5,
-                    //             y: 10
-                    //         },
-                    //         {
-                    //             x: _d.data.tileW - 5,
-                    //             y: 10
-                    //         },
-                    //         {
-                    //             x: 45,
-                    //             y: _d.data.tileH - 20
-                    //         },
-                    //         {
-                    //             x: _d.data.tileW - 45,
-                    //             y: _d.data.tileH - 20
-                    //         }
-                    //     ],
-                    //     sX: _d.data.sX,
-                    //     sY: _d.data.sY,
-                    //     total: _d.data.total,
-                    //     tileW: _d.data.tileW,
-                    //     tileH: _d.data.tileH,
-                    //     cols: _d.data.cols,
-                    //     rows: _d.data.rows,
-                    //     zIndex: 2,
-                    //     ticksPerFrame: 1,
-                    //     scaleX: ratioX,
-                    //     scaleY: ratioY,
-                    //     // debug: 1,
-                    //     mouseEnable: true,
-                    //     c: {
-                    //         data: _d.data,
-                    //         captureData: _d.captureData,
-                    //         type: _d.type,
-                    //         index: ++index
-                    //     },
-                    //     captureFunc: function (e) {
-                    //         captureFunc.call(this, e);
-                    //     },
-                    //     releaseFunc: function (e) {
-                    //         releaseFunc.call(this, e, _d);
-                    //     },
-                    //     moveFunc: function (e) {
-                    //         moveFunc.call(this, e);
-                    //     }
-                    // });
-                    // stage.addDisplayObject(balloonSprite);
                 })(d);
             }
         }
-        console.warn(stage);
+    }
+
+    var abs = Math.abs;
+    var canBoomBalloons = [];
+
+    /**
+     * 每个气球获取焦点的事件回调
+     * 上下文是当前获取焦点的气球的这个 SpriteSheet 实例
+     *
+     * @param {Object} e captureFunc 的回调参数
+     * @param {Object} spriteData 当前这个 SpriteSheet 实例对应的 sprite 数据
+     */
+    function captureFunc(e, spriteData) {
+        // this.change(util.extend({}, spriteData.captureData));
+    }
+
+    var holdSprites = [];
+
+    function moveFunc(e) {
+        // this 是开始的那一个
+        this.change(util.extend({}, this.c.captureData));
+        for (var i = 0, len = e.holdSprites.length; i < len; i++) {
+            var sprite = e.holdSprites[i];
+            sprite.change(util.extend({}, sprite.c.captureData));
+        }
+
+
+        // holdSprites = e.holdSprites;
+        // var first = holdSprites[0];
+        // util.removeArrByCondition(holdSprites, function (item) {
+        //     return item.c.type !== first.c.type;
+        // });
+
+        // var len = holdSprites.length;
+
+        // for (var i = 0, j = -1; i < len; i++, j++) {
+        //     var cur = holdSprites[i];
+        //     var prev = holdSprites[j] || cur;
+        //     var sub = abs(cur.c.index - prev.c.index);
+        //     if (sub !== 5 && sub !== 6 && sub !== 7 && sub !== 1 && sub !== 0) {
+        //         prev.change(prev.c.data);
+        //         util.removeArrByCondition(canBoomBalloons, function (item) {
+        //             return item.name !== prev.name;
+        //         });
+        //         return;
+        //     }
+        //     else {
+        //         cur.change(cur.c.captureData);
+        //         if (!inCanBoomBalloons(cur.name)) {
+        //             canBoomBalloons.push(cur);
+        //         }
+        //     }
+        // }
+    }
+
+    function releaseFunc(e, d) {
+        holdSprites = [];
+        // this.change(d.data);
+        // var len = canBoomBalloons.length;
+        // if (len >= 3) {
+        //     // var content = parseInt(gameScoreText.getContent(), 10);
+        //     // gameScoreText.changeContent(content + canBoomBalloons.length * 100);
+        //     while (canBoomBalloons.length) {
+        //         var curBoomBalloon = canBoomBalloons.shift();
+        //         curBoomBalloon.setStatus(STATUS.DESTROYED);
+        //         // var boomSprite = createBoomSprite(
+        //         //     curBoomBalloon.x - boomData.tileW / 2 * ratioX + 10,
+        //         //     curBoomBalloon.y - boomData.tileH / 2 * ratioY + 10,
+        //         //     {
+        //         //         boomBalloon: curBoomBalloon
+        //         //     },
+        //         //     boomSpriteOnceDone
+        //         // );
+        //         // stage.addDisplayObject(boomSprite);
+        //         // boomSpriteOnceDone(boomSprite);
+        //     }
+        // }
+        // canBoomBalloons = [];
+    }
+
+    function inCanBoomBalloons(displayObjectName) {
+        for (var i = 0, len = canBoomBalloons.length; i < len; i++) {
+            if (canBoomBalloons[i].name === displayObjectName) {
+                return true;
+            }
+        }
+        return false;
     }
 
     game.start(function () {
+        initBalloon();
+        playBut.setStatus(STATUS.DESTROYED);
+        startCover.setStatus(STATUS.DESTROYED);
+        return;
         startCover.setAnimate({
             target: {
                 y: stage.height / 2 - coverHeight * game.ratioY / 2 - 100 * game.ratioY
@@ -252,19 +298,18 @@ window.onload = function () {
                     e.domEvent.preventDefault();
                     if (startCover.startIndex === 0) {
                         startCover.startIndex = 1;
+                        var tmpX = startCover.x;
                         startCover.setAnimate({
                             target: {
-                                alpha: 0
+                                x: -500
                             },
-                            duration: 500,
+                            duration: 200,
                             completeFunc: function (e) {
-                                var tmpX = startCover.x;
                                 e.data.source.change({
                                     sy: 78,
                                     x: stage.width + 100
                                 }).setAnimate({
                                     target: {
-                                        alpha: 1,
                                         x: tmpX
                                     },
                                     duration: 1000,

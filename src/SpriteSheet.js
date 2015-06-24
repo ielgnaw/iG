@@ -70,6 +70,8 @@ define(function (require) {
                 x: this.x,
                 // 纵坐标
                 y: this.y,
+                width: this.width,
+                height: this.height,
                 // 一组动画中的所有帧数
                 total: 1,
                 // void ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
@@ -117,8 +119,8 @@ define(function (require) {
             // 那么桔色球这行真实的列数是 12，但是换行后，就是整个的列数 16 了
             this.realCols = floor(this.cols - this.sx / this.tileW);
 
-            this.width = this.tileW;
-            this.height = this.tileH;
+            this.width = this.width || this.tileW;
+            this.height = this.height || this.tileH;
 
             return this;
         },

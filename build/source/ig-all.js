@@ -2846,6 +2846,8 @@ define('ig/SpriteSheet', [
                 asset: this.asset,
                 x: this.x,
                 y: this.y,
+                width: this.width,
+                height: this.height,
                 total: 1,
                 sx: 0,
                 sy: 0,
@@ -2864,8 +2866,8 @@ define('ig/SpriteSheet', [
             this.originalSX = this.sx;
             this.originalTotal = this.total;
             this.realCols = floor(this.cols - this.sx / this.tileW);
-            this.width = this.tileW;
-            this.height = this.tileH;
+            this.width = this.width || this.tileW;
+            this.height = this.height || this.tileH;
             return this;
         },
         _step: function (dt, stepCount, requestID) {
