@@ -19,6 +19,7 @@ window.onload = function () {
             {id: 'spriteSheetData', src: './data/sprite-sheet1.json'},
             {id: 'boomImg', src: '/examples/img/game/balloon/boom.png'},
             {id: 'boomData', src: './data/boom.json'},
+            {id: 'hudImg', src: '/examples/img/game/balloon/hud.png'},
         ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
@@ -113,8 +114,6 @@ window.onload = function () {
         var ry = stage.height / (countInCol * tileH);
 
         var index = 0;
-        console.warn(game.ratioX , rx);
-        console.warn(game);
         /* jshint loopfunc:true */
         for (var colIndex = 1; colIndex < countInCol; colIndex++) {
             for (var rowIndex = 0; rowIndex < countInRow; rowIndex++) {
@@ -133,7 +132,7 @@ window.onload = function () {
                             x: rowI * _d.data.tileW * rx + 2 * rx,
                             y: colI * _d.data.tileH * ry,
                             // debug: 1,
-                            zIndex: 2,
+                            zIndex: 3,
                             scaleX: rx,
                             scaleY: ry,
                             width: 50,
@@ -214,7 +213,7 @@ window.onload = function () {
             firstItem = holdSpriteList[0];
         }
 
-        if (!firstItem) {
+        if (!firstItem || firstItem.name === 'hud' || firstItem.name.indexOf('boom_') > -1) {
             return;
         }
 
@@ -255,10 +254,15 @@ window.onload = function () {
         if (len < 3) {
             for (var i = 0, len = holdSpriteList.length; i < len; i++) {
                 var sprite = holdSpriteList[i];
-                sprite.change(util.extend({}, sprite.c.data));
+                if (sprite.name !== 'hud') {
+                    sprite.change(util.extend({}, sprite.c.data));
+                }
             }
         }
         else {
+            stage.setParallax();
+
+            var isChangeStageParallax = false;
             while (canBoomBalloons.length) {
                 var curBoomBalloon = canBoomBalloons.shift();
                 curBoomBalloon.setStatus(STATUS.DESTROYED);
@@ -282,8 +286,8 @@ window.onload = function () {
                                 zIndex: 2,
                                 scaleX: 0.1, // this.c.boomBalloon.scaleX,
                                 scaleY: 0.1, // this.c.boomBalloon.scaleY,
-                                width: this.c.boomBalloon.width,
-                                height: this.c.boomBalloon.height,
+                                // width: this.c.boomBalloon.width,
+                                // height: this.c.boomBalloon.height,
                                 // 自定义属性
                                 c: {
                                     data: d.data,
@@ -299,7 +303,26 @@ window.onload = function () {
                                 scaleX: this.c.boomBalloon.scaleX,
                                 scaleY: this.c.boomBalloon.scaleY
                             },
-                            duration: 500
+                            duration: 1000,
+                            completeFunc: function () {
+                                if (!isChangeStageParallax) {
+                                    isChangeStageParallax = true;
+                                    stage.setParallax({
+                                        image: 'bg',
+                                        anims: [
+                                            {
+                                                ax: 1,
+                                                ay: 1
+                                            },
+                                            {
+                                                ax: -1,
+                                                ay: 1
+                                            }
+                                        ],
+                                        animInterval: 1000
+                                    });
+                                }
+                            }
                         });
                     }
                 );
@@ -333,7 +356,7 @@ window.onload = function () {
                 name: 'boom_' + boomGuid++,
                 asset: game.asset.boomImg,
                 sheetData: boomData,
-                jumpFrames: 5,
+                jumpFrames: 2,
                 x: x,
                 y: y,
                 // debug: 1,
@@ -343,6 +366,26 @@ window.onload = function () {
                 isOnce: true,
                 onceDone: callback || util.noop,
                 c: c || {}
+            })
+        );
+    }
+
+    function initHud() {
+        var rx = stage.width / game.asset.hudImg.width;
+        var ry = stage.height / game.asset.hudImg.height;
+        var hud = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'hud',
+                asset: game.asset.hudImg,
+                x: 0,
+                y: 0,
+                width: game.asset.hudImg.width * game.ratioX, // * rx,
+                // height: game.asset.hudImg.height * ry,
+                height: game.asset.hudImg.height * game.ratioY, // * ry,
+                // width: 108 * game.ratioX,
+                // height: 108 * game.ratioY,
+                zIndex: 0,
+                // debug: 1
             })
         );
     }
@@ -383,7 +426,7 @@ window.onload = function () {
             }
         ];
 
-
+        initHud();
         initBalloon();
         playBut.setStatus(STATUS.DESTROYED);
         startCover.setStatus(STATUS.DESTROYED);

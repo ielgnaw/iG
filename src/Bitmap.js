@@ -25,7 +25,7 @@ define(function (require) {
      */
     function Bitmap(opts) {
         opts = opts || {};
-        if (!opts.image) {
+        if (!opts.image && !opts.asset) {
             throw new Error('Bitmap must be require a image param');
         }
 

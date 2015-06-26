@@ -168,7 +168,7 @@ define(function (require) {
                             var me = this;
                             setTimeout(function () {
                                 me.onceDone(me);
-                            }, 100);
+                            }, 10);
                         }
                     }
                 }

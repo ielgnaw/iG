@@ -262,6 +262,8 @@ define(function (require) {
          * @return {Object} Stage 实例
          */
         setParallax: function (parallaxOpts) {
+            parallaxOpts = parallaxOpts || [];
+
             if (!Array.isArray(parallaxOpts)) {
                 parallaxOpts = [parallaxOpts];
             }

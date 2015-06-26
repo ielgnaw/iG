@@ -2635,7 +2635,7 @@ define('ig/Bitmap', [
     var Rectangle = require('./Rectangle');
     function Bitmap(opts) {
         opts = opts || {};
-        if (!opts.image) {
+        if (!opts.image && !opts.asset) {
             throw new Error('Bitmap must be require a image param');
         }
         Rectangle.call(this, opts);
@@ -2889,7 +2889,7 @@ define('ig/SpriteSheet', [
                             var me = this;
                             setTimeout(function () {
                                 me.onceDone(me);
-                            }, 100);
+                            }, 10);
                         }
                     }
                 }
@@ -3612,6 +3612,7 @@ define('ig/Stage', [
             return this;
         },
         setParallax: function (parallaxOpts) {
+            parallaxOpts = parallaxOpts || [];
             if (!Array.isArray(parallaxOpts)) {
                 parallaxOpts = [parallaxOpts];
             }
@@ -4083,6 +4084,9 @@ define('ig/Rectangle', [
         },
         createPath: function (ctx) {
             var points = this.points;
+            if (!points) {
+                return;
+            }
             var len = points.length;
             if (!len) {
                 return;
@@ -4289,6 +4293,9 @@ define('ig/Polygon', [
         },
         createPath: function (ctx) {
             var points = this.points;
+            if (!points) {
+                return;
+            }
             var len = points.length;
             if (!len) {
                 return;
