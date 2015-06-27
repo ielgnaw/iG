@@ -111,6 +111,8 @@ define(function (require) {
             frictionY: 1,
             // 子精灵
             children: [],
+            // 父精灵
+            parent: null,
             // 状态
             status: STATUS.NORMAL,
             // 是否允许鼠标 / touch 操作
@@ -147,6 +149,18 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: DisplayObject,
+
+        /**
+         * 设置 matrix
+         *
+         * @param {Array} m matrix 数组
+         *
+         * @return {Object} Matrix 实例
+         */
+        setMatrix: function (m) {
+            this.matrix.m = m;
+            return this;
+        },
 
         /**
          * 设置状态

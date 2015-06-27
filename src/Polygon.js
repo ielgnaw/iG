@@ -53,6 +53,7 @@ define(function (require) {
 
         this.cx = this.bounds.x + this.bounds.width / 2;
         this.cy = this.bounds.y + this.bounds.height / 2;
+
         return this;
     }
 
@@ -342,57 +343,6 @@ define(function (require) {
         },
 
         /**
-         * 移动一步，重写了父类的 moveStep
-         *
-         * @return {Object} Polygon 实例
-         */
-        // moveStep: function () {
-        //     var x = this.x;
-        //     this.vX += this.aX;
-        //     this.vX *= this.frictionX;
-        //     this.x += this.vX;
-
-        //     var y = this.y;
-        //     this.vY += this.aY;
-        //     this.vY *= this.frictionY;
-        //     this.y += this.vY;
-
-        //     for (var j = 0, len = this.origin.points.length; j < len; j++) {
-        //         this.origin.points[j] = {
-        //             x: this.origin.points[j].x + this.x - x,
-        //             y: this.origin.points[j].y + this.y - y
-        //         };
-        //     }
-
-        //     var points = this.origin.points;
-
-        //     var minX = Number.MAX_VALUE;
-        //     var maxX = Number.MIN_VALUE;
-        //     var minY = Number.MAX_VALUE;
-        //     var maxY = Number.MIN_VALUE;
-
-        //     for (var i = 0, pLen = points.length; i < pLen; i++) {
-        //         if (points[i].x < minX) {
-        //             minX = points[i].x;
-        //         }
-        //         if (points[i].x > maxX) {
-        //             maxX = points[i].x;
-        //         }
-        //         if (points[i].y < minY) {
-        //             minY = points[i].y;
-        //         }
-        //         if (points[i].y > maxY) {
-        //             maxY = points[i].y;
-        //         }
-        //     }
-
-        //     this.cX = minX + (maxX - minX) / 2;
-        //     this.cY = minY + (maxY - minY) / 2;
-
-        //     return this;
-        // },
-
-        /**
          * 渲染当前 Polygon 实例
          *
          * @param {Object} ctx canvas 2d context 对象
@@ -400,6 +350,8 @@ define(function (require) {
          * @return {Object} 当前 Polygon 实例
          */
         render: function (ctx) {
+            _childrenHandler.call(this);
+
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -410,6 +362,10 @@ define(function (require) {
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
+
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].setMatrix(this.matrix.m);
+            }
 
             this.generatePoints();
             this.getBounds();
@@ -456,6 +412,30 @@ define(function (require) {
             }
         }
     };
+
+    /**
+     * 子精灵的处理
+     */
+    function _childrenHandler() {
+        if (!this._.isHandleChildren) {
+            this._.isHandleChildren = true;
+            var children = this.children;
+            if (!Array.isArray(children)) {
+                children = [children];
+            }
+
+            var stage = this.stage;
+            var len = children.length;
+            for (var i = 0; i < len; i++) {
+                children[i].x += this.x;
+                children[i].y += this.y;
+                children[i].move(children[i].x, children[i].y);
+                children[i].parent = this;
+                children[i].setMatrix(this.matrix.m);
+                stage.addDisplayObject(children[i]);
+            }
+        }
+    }
 
     util.inherits(Polygon, DisplayObject);
 

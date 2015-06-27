@@ -250,11 +250,15 @@ define(function (require) {
             ctx.globalAlpha = this.alpha;
             ctx.font = this.font;
 
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            // 如果有父精灵，那么就不需要自己设置 matrix 了，跟随父精灵变化
+            if (!this.parent) {
+                this.matrix.reset();
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.cx, -this.cy);
+            }
+
             this.matrix.setCtxTransform(ctx);
 
             this.generatePoints();

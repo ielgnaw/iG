@@ -2311,6 +2311,7 @@ define('ig/DisplayObject', [
             frictionX: 1,
             frictionY: 1,
             children: [],
+            parent: null,
             status: STATUS.NORMAL,
             mouseEnable: false,
             captureFunc: util.noop,
@@ -2326,6 +2327,10 @@ define('ig/DisplayObject', [
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
+        setMatrix: function (m) {
+            this.matrix.m = m;
+            return this;
+        },
         setStatus: function (status) {
             this.status = status || this.status;
             return this;
@@ -2581,11 +2586,13 @@ define('ig/Text', [
             ctx.fillStyle = this.fillStyle;
             ctx.globalAlpha = this.alpha;
             ctx.font = this.font;
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            if (!this.parent) {
+                this.matrix.reset();
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.cx, -this.cy);
+            }
             this.matrix.setCtxTransform(ctx);
             this.generatePoints();
             if (this.useCache) {
@@ -3457,7 +3464,7 @@ define('ig/Game', [
             horizontalPageScroll = 0;
         }
         width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
-        height = Math.min(window.innerHeight - 5, maxHeight);
+        height = Math.min(window.innerHeight, maxHeight);
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
@@ -4391,6 +4398,7 @@ define('ig/Polygon', [
             return this;
         },
         render: function (ctx) {
+            _childrenHandler.call(this);
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -4400,6 +4408,9 @@ define('ig/Polygon', [
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].setMatrix(this.matrix.m);
+            }
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
@@ -4426,6 +4437,25 @@ define('ig/Polygon', [
             }
         }
     };
+    function _childrenHandler() {
+        if (!this._.isHandleChildren) {
+            this._.isHandleChildren = true;
+            var children = this.children;
+            if (!Array.isArray(children)) {
+                children = [children];
+            }
+            var stage = this.stage;
+            var len = children.length;
+            for (var i = 0; i < len; i++) {
+                children[i].x += this.x;
+                children[i].y += this.y;
+                children[i].move(children[i].x, children[i].y);
+                children[i].parent = this;
+                children[i].setMatrix(this.matrix.m);
+                stage.addDisplayObject(children[i]);
+            }
+        }
+    }
     util.inherits(Polygon, DisplayObject);
     return Polygon;
 });

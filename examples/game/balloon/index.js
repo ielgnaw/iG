@@ -260,9 +260,11 @@ window.onload = function () {
             }
         }
         else {
-            stage.setParallax();
-
             var isChangeStageParallax = false;
+            stage.setParallax({
+                image: 'bg',
+                ay: 5
+            });
             while (canBoomBalloons.length) {
                 var curBoomBalloon = canBoomBalloons.shift();
                 curBoomBalloon.setStatus(STATUS.DESTROYED);
@@ -308,18 +310,7 @@ window.onload = function () {
                                 if (!isChangeStageParallax) {
                                     isChangeStageParallax = true;
                                     stage.setParallax({
-                                        image: 'bg',
-                                        anims: [
-                                            {
-                                                ax: 1,
-                                                ay: 1
-                                            },
-                                            {
-                                                ax: -1,
-                                                ay: 1
-                                            }
-                                        ],
-                                        animInterval: 1000
+                                        image: 'bg'
                                     });
                                 }
                             }
@@ -426,11 +417,29 @@ window.onload = function () {
             }
         ];
 
+        var text1 = stage.addDisplayObject(
+            new ig.Text({
+                name: 'text1',
+                content: '000',
+                x: 5 * game.ratioX,
+                y: 20 * game.ratioY,
+                size: 20,
+                isBold: true,
+                debug: 1,
+                zIndex: 100,
+                fillStyle: '#fff'
+            })
+        );
+
         initHud();
         initBalloon();
         playBut.setStatus(STATUS.DESTROYED);
         startCover.setStatus(STATUS.DESTROYED);
+        stage.setParallax({
+            image: 'bg'
+        });
         return;
+
         startCover.setAnimate({
             target: {
                 y: stage.height / 2 - coverHeight * game.ratioY / 2 - 100 * game.ratioY
@@ -475,9 +484,13 @@ window.onload = function () {
                         });
                     }
                     else {
-                        initBalloon();
-                        playBut.setStatus(STATUS.DESTROYED);
-                        startCover.setStatus(STATUS.DESTROYED);
+                        // initHud();
+                        // initBalloon();
+                        // playBut.setStatus(STATUS.DESTROYED);
+                        // startCover.setStatus(STATUS.DESTROYED);
+                        // stage.setParallax({
+                        //     image: 'bg'
+                        // });
                     }
                 });
             }

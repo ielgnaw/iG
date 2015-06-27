@@ -669,7 +669,8 @@ define(function (require) {
         }
 
         width = Math.min(window.innerWidth, maxWidth) - horizontalPageScroll;
-        height = Math.min(window.innerHeight - 5, maxHeight);
+        // height = Math.min(window.innerHeight - 5, maxHeight);
+        height = Math.min(window.innerHeight, maxHeight);
 
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
