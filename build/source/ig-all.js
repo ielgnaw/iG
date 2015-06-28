@@ -4395,6 +4395,10 @@ define('ig/Polygon', [
             this.cx = minX + (maxX - minX) / 2;
             this.cy = minY + (maxY - minY) / 2;
             this.getOriginBounds();
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                child.move(x + child.relativeX, y + child.relativeY);
+            }
             return this;
         },
         render: function (ctx) {
@@ -4408,15 +4412,15 @@ define('ig/Polygon', [
             this.matrix.rotate(this.angle);
             this.matrix.scale(this.scaleX, this.scaleY);
             this.matrix.translate(-this.cx, -this.cy);
-            for (var i = 0; i < this.children.length; i++) {
-                this.children[i].setMatrix(this.matrix.m);
-            }
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
             ctx.fill();
             ctx.stroke();
             ctx.restore();
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].setMatrix(this.matrix.m);
+            }
             this.debugRender(ctx);
             return this;
         },
@@ -4447,12 +4451,15 @@ define('ig/Polygon', [
             var stage = this.stage;
             var len = children.length;
             for (var i = 0; i < len; i++) {
-                children[i].x += this.x;
-                children[i].y += this.y;
-                children[i].move(children[i].x, children[i].y);
-                children[i].parent = this;
-                children[i].setMatrix(this.matrix.m);
-                stage.addDisplayObject(children[i]);
+                var child = children[i];
+                child.relativeX = child.x;
+                child.relativeY = child.y;
+                child.x += this.x;
+                child.y += this.y;
+                child.move(child.x, child.y);
+                child.parent = this;
+                child.setMatrix(this.matrix.m);
+                stage.addDisplayObject(child);
             }
         }
     }

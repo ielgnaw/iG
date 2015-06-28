@@ -5,7 +5,6 @@
 
 window.onload = function () {
     var canvas = document.querySelector('#canvas');
-    var ctx = canvas.getContext('2d');
 
     var game1 = new ig.Game({
         canvas: canvas,
@@ -13,7 +12,7 @@ window.onload = function () {
         maximize: 1,
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
-            = 'loadProcess: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%'
+            = 'loadProcess: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%';
     }).on('loadResDone', function (e) {
     });
 
@@ -86,7 +85,6 @@ window.onload = function () {
             mouseEnable: true,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
-                // console.warn(d);
                 this.move(d.x, d.y);
             },
         })
@@ -101,31 +99,35 @@ window.onload = function () {
         // this.scaleY += 0.01;
         // console.warn(dt);
 
-        // this.vx += this.ax * dt;
-        // this.vx *= this.frictionX * dt;
-        // this.vy += this.ay * dt;
-        // this.vy *= this.frictionY * dt;
+        this.vx += this.ax * dt;
+        this.vx *= this.frictionX * dt;
+        this.vy += this.ay * dt;
+        this.vy *= this.frictionY * dt;
 
-        // this.x += this.vx * dt;
-        // this.y += this.vy * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
 
-        // if (this.bounds.x + this.bounds.width > game1.width) {
-        //     this.vx = -Math.abs(this.vx);
-        // }
-        // else if (this.bounds.x < 0) {
-        //     this.vx = Math.abs(this.vx);
-        // }
+        if (this.bounds.x + this.bounds.width > game1.width) {
+            this.vx = -Math.abs(this.vx);
+        }
+        else if (this.bounds.x < 0) {
+            this.vx = Math.abs(this.vx);
+        }
 
-        // if (this.bounds.y + this.bounds.height > game1.height) {
-        //     this.vy = -Math.abs(this.vy);
-        // }
-        // else if (this.bounds.y < 0) {
-        //     this.vy = Math.abs(this.vy);
-        // }
-        // this.move(this.x, this.y);
+        if (this.bounds.y + this.bounds.height > game1.height) {
+            this.vy = -Math.abs(this.vy);
+        }
+        else if (this.bounds.y < 0) {
+            this.vy = Math.abs(this.vy);
+        }
+        this.move(this.x, this.y);
     };
 
     console.warn(polygon1);
+
+    // setTimeout(function () {
+    //     polygon1.move(200, 250);
+    // }, 3000);
 
     // var text1 = stage1.addDisplayObject(
     //     new ig.Text({

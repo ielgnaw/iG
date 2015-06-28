@@ -151,11 +151,11 @@ define(function (require) {
         constructor: DisplayObject,
 
         /**
-         * 设置 matrix
+         * 设置 DisplayObject 实例的 matrix
          *
          * @param {Array} m matrix 数组
          *
-         * @return {Object} Matrix 实例
+         * @return {Object} DisplayObject 实例
          */
         setMatrix: function (m) {
             this.matrix.m = m;
