@@ -269,29 +269,13 @@ define(function (require) {
             this.generatePoints();
             this.getBounds();
 
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                child.move(x + child.relativeX, y + child.relativeY);
+            }
+
             return this;
         },
-
-        /**
-         * 移动一步，重写了父类的 moveStep
-         *
-         * @return {Object} Rectangle 实例
-         */
-        // moveStep: function () {
-        //     // console.warn(1);
-        //     this.vX += this.aX;
-        //     this.vX *= this.frictionX;
-        //     this.x += this.vX;
-
-        //     this.vY += this.aY;
-        //     this.vY *= this.frictionY;
-        //     this.y += this.vY;
-
-        //     this.generatePoints();
-        //     this.getBounds();
-
-        //     return this;
-        // },
 
         /**
          * 渲染当前 Rectangle 实例
@@ -301,6 +285,8 @@ define(function (require) {
          * @return {Object} 当前 Rectangle 实例
          */
         render: function (ctx) {
+            _childrenHandler.call(this);
+
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -321,6 +307,11 @@ define(function (require) {
 
             ctx.restore();
             this.debugRender(ctx);
+
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].setMatrix(this.matrix.m);
+            }
+
             return this;
         },
 
@@ -353,6 +344,35 @@ define(function (require) {
             }
         }
     };
+
+    /**
+     * 子精灵的处理
+     */
+    function _childrenHandler() {
+        if (!this._.isHandleChildren) {
+            this._.isHandleChildren = true;
+            var children = this.children;
+            if (!Array.isArray(children)) {
+                children = [children];
+            }
+
+            var stage = this.stage;
+            var len = children.length;
+
+            // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                child.relativeX = child.x;
+                child.relativeY = child.y;
+                child.x += this.x;
+                child.y += this.y;
+                child.move(child.x, child.y);
+                child.parent = this;
+                child.setMatrix(this.matrix.m);
+                stage.addDisplayObject(child);
+            }
+        }
+    }
 
     util.inherits(Rectangle, DisplayObject);
 

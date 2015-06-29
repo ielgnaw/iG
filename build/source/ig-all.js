@@ -4159,9 +4159,14 @@ define('ig/Rectangle', [
             this.y = y;
             this.generatePoints();
             this.getBounds();
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                child.move(x + child.relativeX, y + child.relativeY);
+            }
             return this;
         },
         render: function (ctx) {
+            _childrenHandler.call(this);
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -4178,6 +4183,9 @@ define('ig/Rectangle', [
             ctx.stroke();
             ctx.restore();
             this.debugRender(ctx);
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].setMatrix(this.matrix.m);
+            }
             return this;
         },
         debugRender: function (ctx) {
@@ -4195,6 +4203,28 @@ define('ig/Rectangle', [
             }
         }
     };
+    function _childrenHandler() {
+        if (!this._.isHandleChildren) {
+            this._.isHandleChildren = true;
+            var children = this.children;
+            if (!Array.isArray(children)) {
+                children = [children];
+            }
+            var stage = this.stage;
+            var len = children.length;
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                child.relativeX = child.x;
+                child.relativeY = child.y;
+                child.x += this.x;
+                child.y += this.y;
+                child.move(child.x, child.y);
+                child.parent = this;
+                child.setMatrix(this.matrix.m);
+                stage.addDisplayObject(child);
+            }
+        }
+    }
     util.inherits(Rectangle, DisplayObject);
     return Rectangle;
 });'use strict';
