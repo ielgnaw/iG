@@ -131,7 +131,6 @@ define(function (require) {
             Bitmap.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
 
-            // console.warn(ctx.globalAlpha);
             if (this.useCache) {
                 if (!this._.execCache) {
                     this._.execCache = true;

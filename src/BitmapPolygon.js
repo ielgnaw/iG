@@ -101,11 +101,14 @@ define(function (require) {
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
 
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            // this.matrix.reset();
+            // this.matrix.translate(this.cx, this.cy);
+            // this.matrix.rotate(this.angle);
+            // this.matrix.scale(this.scaleX, this.scaleY);
+            // this.matrix.translate(-this.cx, -this.cy);
+            // this.matrix.setCtxTransform(ctx);
+
+            BitmapPolygon.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
 
             if (this.useCache) {

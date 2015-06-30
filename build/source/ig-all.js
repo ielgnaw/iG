@@ -2777,11 +2777,7 @@ define('ig/BitmapPolygon', [
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            BitmapPolygon.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
             if (this.useCache) {
                 if (!this._.execCache) {
