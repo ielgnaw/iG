@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>children(parent:spritesheet, sub:Text)</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <style type="text/css">
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .container {
+                width: 800px;
+                height: 400px;
+                margin: 20px auto;
+                /*border: 1px solid #ddd;*/
+                position: relative;
+            }
+            .control {
+                position: absolute;
+                right: 100px;
+                z-index: 100;
+            }
+            .control a {
+                color: #000;
+                display: inline-block;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                padding: 5px;
+                text-align: center;
+                font-size: 14px;
+            }
+            .control a:hover {
+                background: #5580dd;
+                color: #fff;
+            }
+            #fps {
+                position: absolute;
+                z-index: 10000;
+                top: 5px;
+                left: 5px;
+            }
+            #load-process {
+                position: absolute;
+                z-index: 10000;
+                top: 100px;
+                left: 5px;
+            }
+            canvas {
+                border: 1px solid #ddd;
+            }
+        </style>
+        <script type="text/javascript" src="/build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <div id="fps">fps: 0</div>
+        <div id="load-process">loadProcess: </div>
+        <canvas id="canvas"></canvas>
+        <script src="./5.js"></script>
+    </body>
+</html>
