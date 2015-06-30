@@ -32,6 +32,52 @@ window.onload = function () {
     var spritesData;
     var boomData;
 
+    // 计时
+    var timeText = new ig.Text({
+        name: 'time',
+        content: 60,
+        x: 13 * game.ratioX,
+        y: 13 * game.ratioY,
+        // scaleX: 0.5,
+        // scaleY: 0.5,
+        size: 20 * game.ratioX,
+        isBold: true,
+        angle: 0,
+        // debug: 1,
+        zIndex: 100,
+        fillStyle: '#fff',
+        mouseEnable: true,
+        moveFunc: function (d) {
+            // console.warn(d);
+            this.move(d.x, d.y);
+        }
+        // useCache: false
+    });
+
+    // 分数
+    var scoreText = new ig.Text({
+        name: 'scoreText',
+        content: '00000000',
+        x: 100 * game.ratioX,
+        y: 8 * game.ratioY,
+        // scaleX: 0.5,
+        // scaleY: 0.5,
+        size: 25 * game.ratioX,
+        isBold: true,
+        angle: 0,
+        // debug: 1,
+        zIndex: 100,
+        fillStyle: '#fff',
+        mouseEnable: true,
+        moveFunc: function (d) {
+            // console.warn(d);
+            this.move(d.x, d.y);
+        }
+        // useCache: false
+    });
+
+    // scoreText.changeContent('00000030');
+
     var stage = game.createStage({
         name: 'balloon-stage',
         parallaxOpts: [
@@ -377,6 +423,7 @@ window.onload = function () {
                 // height: 108 * game.ratioY,
                 zIndex: 0,
                 // debug: 1
+                children: [timeText, scoreText]
             })
         );
     }
@@ -416,20 +463,6 @@ window.onload = function () {
                 captureData: allData.pinkCapture
             }
         ];
-
-        var text1 = stage.addDisplayObject(
-            new ig.Text({
-                name: 'text1',
-                content: '000',
-                x: 5 * game.ratioX,
-                y: 20 * game.ratioY,
-                size: 20,
-                isBold: true,
-                debug: 1,
-                zIndex: 100,
-                fillStyle: '#fff'
-            })
-        );
 
         initHud();
         initBalloon();

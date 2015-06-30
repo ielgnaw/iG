@@ -2504,7 +2504,7 @@ define('ig/Text', [
             this.cacheCtx.fillStyle = this.fillStyle;
             this.cacheCtx.globalAlpha = this.alpha;
             this.cacheCtx.font = this.font;
-            this.cacheCtx.fillText(this.content, 0, this.bounds.height);
+            this.cacheCtx.fillText(this.content, 0, this.bounds.height - 2);
             this.cacheCtx.restore();
             return this;
         },
@@ -2598,7 +2598,7 @@ define('ig/Text', [
             if (this.useCache) {
                 ctx.drawImage(this.cacheCanvas, this.bounds.x, this.bounds.y);
             } else {
-                ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height);
+                ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height - 2);
             }
             this.debugRender(ctx);
             ctx.restore();
