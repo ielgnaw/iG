@@ -10,6 +10,19 @@ window.onload = function () {
         canvas: canvas,
         name: 'test-game1',
         maximize: 1,
+        resource: [
+            // {id: 'bg', src: '/examples/img/base/bg.jpg'},
+            // {id: 'bg1', src: '/examples/img/base/bg1.png'},
+            // {id: 'bg2', src: '/examples/img/base/bg2.png'},
+            // {id: 'bg3', src: '/examples/img/base/bg3.png'},
+            {id: 'playBut', src: '/examples/img/base/playBut.png'},
+            // {id: 'test2', src: '/examples/img/base/2.png'},
+            {id: 'runnerBox', src: '/examples/img/base/runner-box.png'},
+            // {id: 'testData', src: './data/test.json'},
+            // {id: 'text', src: './data/text.text'},
+            // {id: 'a2o', src: ['./data/a2.mp3','./data/a2.ogg'], opts: {loop: true}},
+            // '/examples/img/base/boom.png'
+        ]
     }).on('loadResProcess', function (e) {
         document.querySelector('#load-process').innerHTML
             = 'loadProcess: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%';
@@ -20,7 +33,7 @@ window.onload = function () {
         name: 'stage-name1',
         captureFunc: function (e) {
             console.warn(e);
-            console.warn(rectangle1.hitTestPoint(e.x, e.y));
+            console.warn(bitmap1.hitTestPoint(e.x, e.y));
             // console.warn(text1.hitTestPoint(e.x, e.y));
         }
     });
@@ -28,56 +41,55 @@ window.onload = function () {
     var text1 = new ig.Text({
         name: 'text1',
         content: 'oh no....',
-        x: 20,
-        y: 20,
+        x: 0,
+        y: 0,
         // scaleX: 0.5,
         // scaleY: 0.5,
         size: 20,
         isBold: true,
         angle: 0,
         debug: 1,
-        zIndex: 100,
+        // zIndex: 100,
         fillStyle: '#fff',
         mouseEnable: true,
         moveFunc: function (d) {
-            console.warn(1);
+            d.domEvent.preventDefault();
             // console.warn(d);
             this.move(d.x, d.y);
         },
         // useCache: false
     });
 
-    var rectangle1 = stage1.addDisplayObject(
-        new ig.Rectangle({
-            name: 'rectangle',
-            fillStyle: 'rgba(0, 255, 255, 0.5)',
+    var bitmap1 = stage1.addDisplayObject(
+        new ig.Bitmap({
+            name: 'bitmap1',
+            // image: '/examples/img/base/2.png',
+            image: 'runnerBox',
             // sWidth: 110,
             // sHeight: 110,
             debug: 1,
             x: 150,
             y: 150,
-            width: 120,
-            height: 150,
-            // vx: 1,
+            width: 80,
+            height: 80,
             mouseEnable: true,
             children: [text1],
+            // vx: 1,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
                 // console.warn(d);
                 this.move(d.x, d.y);
-            }
+            },
         })
     );
 
-    rectangle1.step = function (dt, stepCount, requestID) {
+    bitmap1.step = function (dt, stepCount) {
         // this.angle += 1;
-        // this.children[0].angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;
         // this.scaleY += 0.01;
         // console.warn(dt);
-
         this.vx += this.ax * dt;
         this.vx *= this.frictionX * dt;
         this.vy += this.ay * dt;
@@ -101,8 +113,6 @@ window.onload = function () {
         }
         this.move(this.x, this.y);
     };
-
-    console.warn(rectangle1);
 
     // setTimeout(function () {
     //     rectangle1.move(200, 250);
