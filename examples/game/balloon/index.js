@@ -34,7 +34,7 @@ window.onload = function () {
 
     // 计时
     var timeText = new ig.Text({
-        name: 'time',
+        name: 'scoreTime',
         content: 60,
         x: 13 * game.ratioX,
         y: 13 * game.ratioY,
@@ -259,7 +259,11 @@ window.onload = function () {
             firstItem = holdSpriteList[0];
         }
 
-        if (!firstItem || firstItem.name === 'hud' || firstItem.name.indexOf('boom_') > -1) {
+        if (!firstItem || firstItem.name === 'hud'
+            || firstItem.name === 'scoreTime'
+            || firstItem.name === 'scoreText'
+            || firstItem.name.indexOf('boom_') > -1
+        ) {
             return;
         }
 
@@ -300,7 +304,7 @@ window.onload = function () {
         if (len < 3) {
             for (var i = 0, len = holdSpriteList.length; i < len; i++) {
                 var sprite = holdSpriteList[i];
-                if (sprite.name !== 'hud') {
+                if (sprite.name !== 'hud' && sprite.name !== 'scoreText' && sprite.name !== 'scoreTime') {
                     sprite.change(util.extend({}, sprite.c.data));
                 }
             }
@@ -314,6 +318,27 @@ window.onload = function () {
             while (canBoomBalloons.length) {
                 var curBoomBalloon = canBoomBalloons.shift();
                 curBoomBalloon.setStatus(STATUS.DESTROYED);
+
+                var score = scoreText.getContent();
+                score = parseInt(score, 10) + 10 + '';
+                if (score.length < 8) {
+                    var tmp = '';
+                    for (var i = 0; i < 8 - score.length; i++) {
+                        tmp += '0';
+                    }
+                    score = tmp + score;
+                }
+                scoreText.changeContent(score);
+                scoreText.setAnimate({
+                    target: {
+                        scaleX: 2,
+                        scaleY: 2
+                    },
+                    duration: 1000,
+                    completeFunc: function () {
+                    }
+                });
+
                 var boomSprite = createBoomSprite(
                     curBoomBalloon.x - boomData.tileW / 2 * game.ratioX + 10,
                     curBoomBalloon.y - boomData.tileH / 2 * game.ratioY + 10,
@@ -517,13 +542,13 @@ window.onload = function () {
                         });
                     }
                     else {
-                        // initHud();
-                        // initBalloon();
-                        // playBut.setStatus(STATUS.DESTROYED);
-                        // startCover.setStatus(STATUS.DESTROYED);
-                        // stage.setParallax({
-                        //     image: 'bg'
-                        // });
+                        initHud();
+                        initBalloon();
+                        playBut.setStatus(STATUS.DESTROYED);
+                        startCover.setStatus(STATUS.DESTROYED);
+                        stage.setParallax({
+                            image: 'bg'
+                        });
                     }
                 });
             }

@@ -49,6 +49,7 @@ window.onload = function () {
         isBold: true,
         angle: 0,
         debug: 1,
+        followParent: 0,
         // zIndex: 100,
         fillStyle: '#fff',
         mouseEnable: true,
@@ -59,6 +60,10 @@ window.onload = function () {
         },
         // useCache: false
     });
+
+    text1.step = function () {
+        this.angle++;
+    };
 
     var bitmap1 = stage1.addDisplayObject(
         new ig.Bitmap({
@@ -74,7 +79,7 @@ window.onload = function () {
             height: 80,
             mouseEnable: true,
             children: [text1],
-            vx: 1,
+            // vx: 1,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
                 // console.warn(d);
@@ -84,7 +89,7 @@ window.onload = function () {
     );
 
     bitmap1.step = function (dt, stepCount) {
-        this.angle += 1;
+        // this.angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);
         // this.scaleX += 0.01;

@@ -37,6 +37,7 @@ window.onload = function () {
         angle: 0,
         debug: 1,
         zIndex: 100,
+        // followParent: 0,
         fillStyle: '#fff',
         mouseEnable: true,
         moveFunc: function (d) {
@@ -46,6 +47,10 @@ window.onload = function () {
         },
         // useCache: false
     });
+
+    text1.step = function () {
+        this.angle++;
+    };
 
     var rectangle1 = stage1.addDisplayObject(
         new ig.Rectangle({

@@ -49,6 +49,7 @@ window.onload = function () {
         isBold: true,
         angle: 0,
         debug: 1,
+        // followParent: 0,
         // zIndex: 100,
         fillStyle: '#fff',
         mouseEnable: true,
@@ -59,6 +60,9 @@ window.onload = function () {
         },
         // useCache: false
     });
+    text1.step = function () {
+        this.angle++;
+    };
 
     var bitmap1 = stage1.addDisplayObject(
         new ig.BitmapPolygon({

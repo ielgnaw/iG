@@ -2311,6 +2311,7 @@ define('ig/DisplayObject', [
             frictionX: 1,
             frictionY: 1,
             children: [],
+            followParent: 1,
             parent: null,
             status: STATUS.NORMAL,
             mouseEnable: false,
@@ -2586,7 +2587,7 @@ define('ig/Text', [
             ctx.fillStyle = this.fillStyle;
             ctx.globalAlpha = this.alpha;
             ctx.font = this.font;
-            if (!this.parent) {
+            if (!this.parent || !this.followParent) {
                 this.matrix.reset();
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.angle);
@@ -4157,7 +4158,9 @@ define('ig/Rectangle', [
             this.getBounds();
             for (var i = 0; i < this.children.length; i++) {
                 var child = this.children[i];
-                child.move(x + child.relativeX, y + child.relativeY);
+                if (child.followParent) {
+                    child.move(x + child.relativeX, y + child.relativeY);
+                }
             }
             return this;
         },
@@ -4423,7 +4426,9 @@ define('ig/Polygon', [
             this.getOriginBounds();
             for (var i = 0; i < this.children.length; i++) {
                 var child = this.children[i];
-                child.move(x + child.relativeX, y + child.relativeY);
+                if (child.followParent) {
+                    child.move(x + child.relativeX, y + child.relativeY);
+                }
             }
             return this;
         },

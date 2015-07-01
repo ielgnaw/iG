@@ -251,7 +251,7 @@ define(function (require) {
             ctx.font = this.font;
 
             // 如果有父精灵，那么就不需要自己设置 matrix 了，跟随父精灵变化
-            if (!this.parent) {
+            if (!this.parent || !this.followParent) {
                 this.matrix.reset();
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.angle);

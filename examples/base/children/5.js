@@ -67,12 +67,17 @@ window.onload = function () {
         debug: 1,
         zIndex: 100,
         fillStyle: '#f00',
-        // mouseEnable: true,
+        followParent: 0,
+        mouseEnable: true,
         moveFunc: function (d) {
             // console.warn(d);
             this.move(d.x, d.y);
         },
-    })
+    });
+
+    text1.step = function () {
+        this.angle++;
+    };
 
     var spritesheet1 = stage1.addDisplayObject(
         new ig.SpriteSheet({

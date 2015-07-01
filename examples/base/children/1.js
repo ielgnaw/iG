@@ -38,6 +38,7 @@ window.onload = function () {
         debug: 1,
         zIndex: 100,
         fillStyle: '#fff',
+        // followParent: 0,
         mouseEnable: true,
         moveFunc: function (d) {
             // console.warn(d);
@@ -45,6 +46,10 @@ window.onload = function () {
         },
         // useCache: false
     });
+
+    text1.step = function () {
+        this.angle++;
+    };
 
     var polygon1 = stage1.addDisplayObject(
         new ig.Polygon({
@@ -80,8 +85,8 @@ window.onload = function () {
                     y: 64
                 }
             ],
-            vx: 1,
-            vy: 1,
+            // vx: 1,
+            // vy: 1,
             mouseEnable: true,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
@@ -91,7 +96,7 @@ window.onload = function () {
     );
 
     polygon1.step = function (dt, stepCount, requestID) {
-        this.angle += 1;
+        // this.angle += 1;
         // this.children[0].angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);

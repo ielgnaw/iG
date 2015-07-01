@@ -341,7 +341,9 @@ define(function (require) {
 
             for (var i = 0; i < this.children.length; i++) {
                 var child = this.children[i];
-                child.move(x + child.relativeX, y + child.relativeY);
+                if (child.followParent) {
+                    child.move(x + child.relativeX, y + child.relativeY);
+                }
             }
 
             return this;
