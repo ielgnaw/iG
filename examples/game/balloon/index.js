@@ -69,6 +69,7 @@ window.onload = function () {
         zIndex: 100,
         fillStyle: '#fff',
         mouseEnable: true,
+        followParent: 0,
         moveFunc: function (d) {
             // console.warn(d);
             this.move(d.x, d.y);
@@ -331,11 +332,11 @@ window.onload = function () {
                 scoreText.changeContent(score);
                 scoreText.setAnimate({
                     target: {
-                        scaleX: 2,
-                        scaleY: 2
+                        angle: 360
                     },
-                    duration: 1000,
-                    completeFunc: function () {
+                    duration: 500,
+                    completeFunc: function (e) {
+                        e.data.source.angle = 0;
                     }
                 });
 
