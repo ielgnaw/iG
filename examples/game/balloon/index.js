@@ -32,10 +32,12 @@ window.onload = function () {
     var spritesData;
     var boomData;
 
+    var gameCountDown = 15;
+
     // 计时
     var timeText = new ig.Text({
         name: 'scoreTime',
-        content: 60,
+        content: gameCountDown,
         x: 13 * game.ratioX,
         y: 13 * game.ratioY,
         // scaleX: 0.5,
@@ -455,39 +457,16 @@ window.onload = function () {
     }
 
     game.start(function () {
+
         boomData = game.asset.boomData;
         allData = game.asset.spriteSheetData;
         spritesData = [
-            {
-                type:'red',
-                data: allData.red,
-                captureData: allData.redCapture
-            },
-            {
-                type:'orange',
-                data: allData.orange,
-                captureData: allData.orangeCapture
-            },
-            {
-                type:'yellow',
-                data: allData.yellow,
-                captureData: allData.yellowCapture
-            },
-            {
-                type:'green',
-                data: allData.green,
-                captureData: allData.greenCapture
-            },
-            {
-                type:'blue',
-                data: allData.blue,
-                captureData: allData.blueCapture
-            },
-            {
-                type:'pink',
-                data: allData.pink,
-                captureData: allData.pinkCapture
-            }
+            {type:'red', data: allData.red, captureData: allData.redCapture},
+            {type:'orange', data: allData.orange, captureData: allData.orangeCapture},
+            {type:'yellow', data: allData.yellow, captureData: allData.yellowCapture},
+            {type:'green', data: allData.green, captureData: allData.greenCapture},
+            {type:'blue', data: allData.blue, captureData: allData.blueCapture},
+            {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
         ];
 
         initHud();
@@ -497,6 +476,17 @@ window.onload = function () {
         stage.setParallax({
             image: 'bg'
         });
+
+        var gameTimer = setInterval(function () {
+            gameCountDown = (gameCountDown - 1).toFixed(0);
+            if (gameCountDown.length < 2) {
+                gameCountDown = '0' + gameCountDown;
+            }
+            if (gameCountDown == 0) {
+                clearInterval(gameTimer);
+            }
+            timeText.changeContent(gameCountDown);
+        }, 1000);
         return;
 
         startCover.setAnimate({
