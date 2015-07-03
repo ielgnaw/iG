@@ -3134,6 +3134,14 @@ define('ig/Game', [
             this._.requestID = null;
             return this;
         },
+        pause: function () {
+            this.paused = true;
+            return this;
+        },
+        resume: function () {
+            this.paused = false;
+            return this;
+        },
         start: function (startStageName, startCallback) {
             var _startStageName = '';
             var _startCallback = util.noop;
@@ -3386,6 +3394,7 @@ define('ig/Game', [
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
+                me._.requestID = requestID;
                 if (!me.paused) {
                     if (realDt > 1000) {
                         realDt = 0;

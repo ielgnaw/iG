@@ -32,7 +32,7 @@ window.onload = function () {
     var spritesData;
     var boomData;
 
-    var gameCountDown = 15;
+    var gameCountDown = 10;
 
     // 计时
     var timeText = new ig.Text({
@@ -469,25 +469,12 @@ window.onload = function () {
             {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
         ];
 
-        initHud();
-        initBalloon();
-        playBut.setStatus(STATUS.DESTROYED);
-        startCover.setStatus(STATUS.DESTROYED);
-        stage.setParallax({
-            image: 'bg'
-        });
-
-        var gameTimer = setInterval(function () {
-            gameCountDown = (gameCountDown - 1).toFixed(0);
-            if (gameCountDown.length < 2) {
-                gameCountDown = '0' + gameCountDown;
-            }
-            if (gameCountDown == 0) {
-                clearInterval(gameTimer);
-            }
-            timeText.changeContent(gameCountDown);
-        }, 1000);
-        return;
+        // setTimeout(function () {
+        //     game.pause();
+        //     setTimeout(function () {
+        //         game.resume();
+        //     }, 3000);
+        // }, 3000);
 
         startCover.setAnimate({
             target: {
@@ -540,6 +527,21 @@ window.onload = function () {
                         stage.setParallax({
                             image: 'bg'
                         });
+
+                        var gameTimer = setInterval(function () {
+                            if (gameCountDown.length < 2) {
+                                gameCountDown = '0' + gameCountDown;
+                            }
+                            timeText.changeContent(gameCountDown);
+                            if (gameCountDown == 0) {
+                                timeText.changeContent('00');
+                                clearInterval(gameTimer);
+                                setTimeout(function () {
+                                    game.stop();
+                                }, 100);
+                            }
+                            gameCountDown = (gameCountDown - 1).toFixed(0);
+                        }, 1000);
                     }
                 });
             }

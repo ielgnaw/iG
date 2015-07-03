@@ -105,6 +105,26 @@ define(function (require) {
         },
 
         /**
+         * 游戏暂停，暂停意味着 requestAnimationFrame 还在运行，只是游戏停止渲染
+         *
+         * @return {Object} Game 实例
+         */
+        pause: function () {
+            this.paused = true;
+            return this;
+        },
+
+        /**
+         * 从暂停状态恢复
+         *
+         * @return {Object} Game 实例
+         */
+        resume: function () {
+            this.paused = false;
+            return this;
+        },
+
+        /**
          * 游戏开始
          *
          * @param {string} startStageName 游戏开始时指定的场景名
@@ -562,6 +582,7 @@ define(function (require) {
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
+                me._.requestID = requestID;
                 if (!me.paused) {
                     if (realDt > 1000) {
                         realDt = 0;
