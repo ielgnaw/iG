@@ -31,6 +31,7 @@ window.onload = function () {
     var allData;
     var spritesData;
     var boomData;
+    var gameIsStart = false;
 
     var gameCountDown = 10;
 
@@ -213,6 +214,9 @@ window.onload = function () {
      * @param {Object} e captureFunc 的回调参数
      */
     function stageCaptureFunc(e) {
+        if (!gameIsStart) {
+            return;
+        }
         var displayObjectList = this.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             if (displayObjectList[i].hitTestPoint(e.x, e.y)) {
@@ -249,6 +253,9 @@ window.onload = function () {
      * @param {Object} e moveFunc 毁掉参数
      */
     function stageMoveFunc(e) {
+        if (!gameIsStart) {
+            return;
+        }
         e.domEvent.preventDefault();
 
         holdSpriteList = e.holdSpriteList.concat();
@@ -303,6 +310,9 @@ window.onload = function () {
      * @param {Object} e releaseFunc 毁掉参数
      */
     function stageReleaseFunc(e) {
+        if (!gameIsStart) {
+            return;
+        }
         var len = canBoomBalloons.length;
         if (len < 3) {
             for (var i = 0, len = holdSpriteList.length; i < len; i++) {
@@ -469,6 +479,28 @@ window.onload = function () {
             {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
         ];
 
+
+        // startCover.setStatus(STATUS.DESTROYED);
+        // stage.addDisplayObject(
+        //     new ig.Bitmap({
+        //         name: 'endCover',
+        //         asset: game.asset.panel,
+        //         x: stage.width / 2 - coverWidth * game.ratioX / 2,
+        //         y: 100,
+        //         sx: 412,
+        //         sy: 1175,
+        //         // debug: 1,
+        //         sWidth: coverWidth,
+        //         sHeight: coverHeight,
+        //         width: coverWidth * game.ratioX,
+        //         height: coverHeight * game.ratioY,
+        //         mouseEnable: true,
+        //         zIndex: 1,
+        //         startIndex: 0 // 自定义属性，用于记录点击 playBut 是否出气球开始界面
+        //     })
+        // );
+        // return;
+
         // setTimeout(function () {
         //     game.pause();
         //     setTimeout(function () {
@@ -528,6 +560,7 @@ window.onload = function () {
                             image: 'bg'
                         });
 
+                        gameIsStart = true;
                         var gameTimer = setInterval(function () {
                             if (gameCountDown.length < 2) {
                                 gameCountDown = '0' + gameCountDown;
@@ -536,6 +569,7 @@ window.onload = function () {
                             if (gameCountDown == 0) {
                                 timeText.changeContent('00');
                                 clearInterval(gameTimer);
+                                gameIsStart = false;
                                 setTimeout(function () {
                                     game.stop();
                                 }, 100);
