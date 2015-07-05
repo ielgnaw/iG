@@ -49,12 +49,7 @@ window.onload = function () {
         // debug: 1,
         zIndex: 100,
         fillStyle: '#fff',
-        mouseEnable: true,
-        moveFunc: function (d) {
-            // console.warn(d);
-            this.move(d.x, d.y);
-        }
-        // useCache: false
+        followParent: 0
     });
 
     // 分数
@@ -71,13 +66,7 @@ window.onload = function () {
         // debug: 1,
         zIndex: 100,
         fillStyle: '#fff',
-        mouseEnable: true,
         followParent: 0,
-        moveFunc: function (d) {
-            // console.warn(d);
-            this.move(d.x, d.y);
-        }
-        // useCache: false
     });
 
     // scoreText.changeContent('00000030');
@@ -480,26 +469,79 @@ window.onload = function () {
         ];
 
 
-        // startCover.setStatus(STATUS.DESTROYED);
-        // stage.addDisplayObject(
-        //     new ig.Bitmap({
-        //         name: 'endCover',
-        //         asset: game.asset.panel,
-        //         x: stage.width / 2 - coverWidth * game.ratioX / 2,
-        //         y: 100,
-        //         sx: 412,
-        //         sy: 1175,
-        //         // debug: 1,
-        //         sWidth: coverWidth,
-        //         sHeight: coverHeight,
-        //         width: coverWidth * game.ratioX,
-        //         height: coverHeight * game.ratioY,
-        //         mouseEnable: true,
-        //         zIndex: 1,
-        //         startIndex: 0 // 自定义属性，用于记录点击 playBut 是否出气球开始界面
-        //     })
-        // );
-        // return;
+        startCover.setStatus(STATUS.DESTROYED);
+        stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'endCover',
+                asset: game.asset.panel,
+                x: stage.width / 2 - coverWidth * game.ratioX / 2,
+                y: 100,
+                sx: 412,
+                sy: 1175,
+                // debug: 1,
+                sWidth: coverWidth,
+                sHeight: coverHeight,
+                width: coverWidth * game.ratioX,
+                height: coverHeight * game.ratioY,
+                mouseEnable: true,
+                zIndex: 1,
+                children: [
+                    new ig.Text({
+                        name: 'scoreResult',
+                        content: '00000000',
+                        x: 44 * game.ratioX,
+                        y: 96 * game.ratioY,
+                        size: 40 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0
+                    }),
+                    new ig.Text({
+                        name: 'zuichangliantiao',
+                        content: '00000000',
+                        x: 134 * game.ratioX,
+                        y: 171 * game.ratioY,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0
+                    }),
+                    new ig.Text({
+                        name: 'baopoqiqiu',
+                        content: '00000000',
+                        x: 134 * game.ratioX,
+                        y: 201 * game.ratioY,
+                        // scaleX: 0.5,
+                        // scaleY: 0.5,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0
+                    }),
+                    new ig.Text({
+                        name: 'maxScore',
+                        content: '00000000',
+                        x: 134 * game.ratioX,
+                        y: 255 * game.ratioY,
+                        // scaleX: 0.5,
+                        // scaleY: 0.5,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0
+                    }),
+                ]
+            })
+        );
+        return;
 
         // setTimeout(function () {
         //     game.pause();
