@@ -41,8 +41,20 @@ define(function (require) {
             x: this.x,
             y: this.y,
             width: obj.width,
-            height: obj.height
+            height: obj.height,
+            realWidth: obj.width,
+            realHeight: obj.height
         };
+
+        // 设置了宽度，那么文字就居中
+        if (this.width !== 0) {
+            this.bounds.width = this.width;
+        }
+
+        // 设置了高度
+        if (this.height !== 0) {
+            this.bounds.height = this.height;
+        }
 
         this.width = this.bounds.width;
         this.height = this.bounds.height;
@@ -92,7 +104,11 @@ define(function (require) {
             this.cacheCtx.fillStyle = this.fillStyle;
             this.cacheCtx.globalAlpha = this.alpha;
             this.cacheCtx.font = this.font;
-            this.cacheCtx.fillText(this.content, 0, this.bounds.height - 2);
+            this.cacheCtx.fillText(
+                this.content,
+                this.bounds.width / 2  - this.bounds.realWidth / 2,
+                this.bounds.height - 2
+            );
             this.cacheCtx.restore();
             return this;
         },
@@ -202,8 +218,10 @@ define(function (require) {
             this.bounds = {
                 x: this.x,
                 y: this.y,
-                width: obj.width,
-                height: obj.height
+                width: this.width,
+                height: this.height,
+                realWidth: obj.width,
+                realHeight: obj.height
             };
             this.initCacheCanvas();
             return this;
@@ -267,7 +285,11 @@ define(function (require) {
                 ctx.drawImage(this.cacheCanvas, this.bounds.x, this.bounds.y);
             }
             else {
-                ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height - 2);
+                ctx.fillText(
+                    this.content,
+                    this.x + this.bounds.width / 2  - this.bounds.realWidth / 2,
+                    this.bounds.y + this.bounds.height - 2
+                );
             }
 
             this.debugRender(ctx);

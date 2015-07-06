@@ -269,6 +269,26 @@ define(function (require) {
         catch (e) { }
     }
 
+    var isSupportLocalStorage = (function () {
+        try {
+            var support = 'localStorage' in window && window['localStorage'] !== null;
+
+            var test = {
+                k: 'test key',
+                v: 'test value'
+            };
+            if (support) {
+                localStorage.setItem(test.k, test.v);
+                support = test.v === localStorage.getItem(test.k);
+                localStorage.removeItem(test.k);
+            }
+            return support;
+        }
+        catch (e) {
+            return false;
+        }
+    })();
+
     var env = detect(navigator.userAgent);
 
     var exports = {
@@ -277,6 +297,7 @@ define(function (require) {
         supportOrientation: (typeof window.orientation === 'number' && typeof window.onorientationchange === 'object'),
         supportTouch: ('ontouchstart' in window) || window.DocumentTouch && document instanceof window.DocumentTouch,
         supportGeolocation: (navigator.geolocation != null),
+        supportLocalStorage: isSupportLocalStorage,
         isAndroid: env.os.android,
         isIOS: env.os.ios,
         isPhone: env.os.phone,

@@ -36,7 +36,6 @@ define(function (require) {
      * @return {Object} 当前游戏实例
      */
     function Game(opts) {
-        // 属性全部挂载在 p 这个属性下，避免实例上挂载的属性太多，太乱
         util.extend(true, this, {
             // 名称
             name: 'ig_game_' + (GUID_KEY++),
@@ -520,9 +519,10 @@ define(function (require) {
             var displayObject = displayObjectList[i];
             // 只检测需要图片的 DisplayObject 例如 bitmap, spriteSheet 等
             // 像 text 等构造函数里面不需要 image 参数的就不检测了
-            if (displayObject instanceof ig.Bitmap
-                || displayObject instanceof ig.BitmapPolygon
-                || displayObject instanceof ig.SpriteSheet
+            if (!displayObject.asset
+                && (displayObject instanceof ig.Bitmap
+                        || displayObject instanceof ig.BitmapPolygon
+                        || displayObject instanceof ig.SpriteSheet)
             ) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
@@ -537,7 +537,7 @@ define(function (require) {
                 displayObject.asset = imageAsset;
             }
 
-            if (displayObject instanceof ig.SpriteSheet) {
+            if (!displayObject.sheetData && displayObject instanceof ig.SpriteSheet) {
                 // spriteSheet Data 和 img 在 game.resource 中是一样的格式
                 // 因此这里可以直接用检测图片的方式来检测 spriteSheet Data
                 var sheetAsset = util.getImgAsset(displayObject.sheet, asset, resource);

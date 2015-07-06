@@ -1672,6 +1672,23 @@ define('ig/env', [
         } catch (e) {
         }
     }
+    var isSupportLocalStorage = function () {
+        try {
+            var support = 'localStorage' in window && window['localStorage'] !== null;
+            var test = {
+                k: 'test key',
+                v: 'test value'
+            };
+            if (support) {
+                localStorage.setItem(test.k, test.v);
+                support = test.v === localStorage.getItem(test.k);
+                localStorage.removeItem(test.k);
+            }
+            return support;
+        } catch (e) {
+            return false;
+        }
+    }();
     var env = detect(navigator.userAgent);
     var exports = {
         browser: env.browser,
@@ -1679,6 +1696,7 @@ define('ig/env', [
         supportOrientation: typeof window.orientation === 'number' && typeof window.onorientationchange === 'object',
         supportTouch: 'ontouchstart' in window || window.DocumentTouch && document instanceof window.DocumentTouch,
         supportGeolocation: navigator.geolocation != null,
+        supportLocalStorage: isSupportLocalStorage,
         isAndroid: env.os.android,
         isIOS: env.os.ios,
         isPhone: env.os.phone,
@@ -2334,6 +2352,10 @@ define('ig/DisplayObject', [
         },
         setStatus: function (status) {
             this.status = status || this.status;
+            var children = this.children;
+            for (var i = 0, len = children.length; i < len; i++) {
+                children[i].status = this.status;
+            }
             return this;
         },
         setCaptureFunc: function (func) {
@@ -2478,8 +2500,16 @@ define('ig/Text', [
             x: this.x,
             y: this.y,
             width: obj.width,
-            height: obj.height
+            height: obj.height,
+            realWidth: obj.width,
+            realHeight: obj.height
         };
+        if (this.width !== 0) {
+            this.bounds.width = this.width;
+        }
+        if (this.height !== 0) {
+            this.bounds.height = this.height;
+        }
         this.width = this.bounds.width;
         this.height = this.bounds.height;
         this.font = '' + (this.isBold ? 'bold ' : '') + this.size + 'pt ' + this.fontFamily;
@@ -2505,7 +2535,7 @@ define('ig/Text', [
             this.cacheCtx.fillStyle = this.fillStyle;
             this.cacheCtx.globalAlpha = this.alpha;
             this.cacheCtx.font = this.font;
-            this.cacheCtx.fillText(this.content, 0, this.bounds.height - 2);
+            this.cacheCtx.fillText(this.content, this.bounds.width / 2 - this.bounds.realWidth / 2, this.bounds.height - 2);
             this.cacheCtx.restore();
             return this;
         },
@@ -2567,8 +2597,10 @@ define('ig/Text', [
             this.bounds = {
                 x: this.x,
                 y: this.y,
-                width: obj.width,
-                height: obj.height
+                width: this.width,
+                height: this.height,
+                realWidth: obj.width,
+                realHeight: obj.height
             };
             this.initCacheCanvas();
             return this;
@@ -2599,7 +2631,7 @@ define('ig/Text', [
             if (this.useCache) {
                 ctx.drawImage(this.cacheCanvas, this.bounds.x, this.bounds.y);
             } else {
-                ctx.fillText(this.content, this.bounds.x, this.bounds.y + this.bounds.height - 2);
+                ctx.fillText(this.content, this.x + this.bounds.width / 2 - this.bounds.realWidth / 2, this.bounds.y + this.bounds.height - 2);
             }
             this.debugRender(ctx);
             ctx.restore();
@@ -3365,14 +3397,14 @@ define('ig/Game', [
         var displayObjectList = stage.displayObjectList;
         for (var i = 0, len = displayObjectList.length; i < len; i++) {
             var displayObject = displayObjectList[i];
-            if (displayObject instanceof ig.Bitmap || displayObject instanceof ig.BitmapPolygon || displayObject instanceof ig.SpriteSheet) {
+            if (!displayObject.asset && (displayObject instanceof ig.Bitmap || displayObject instanceof ig.BitmapPolygon || displayObject instanceof ig.SpriteSheet)) {
                 var imageAsset = util.getImgAsset(displayObject.image, asset, resource);
                 if (!imageAsset) {
                     throw new Error('' + displayObject.name + '\'s' + ' image: `' + displayObject.image + '` is not in game.asset');
                 }
                 displayObject.asset = imageAsset;
             }
-            if (displayObject instanceof ig.SpriteSheet) {
+            if (!displayObject.sheetData && displayObject instanceof ig.SpriteSheet) {
                 var sheetAsset = util.getImgAsset(displayObject.sheet, asset, resource);
                 if (!sheetAsset) {
                     throw new Error('' + displayObject.name + '\'s' + ' sheet: `' + displayObject.sheet + '` is not in game.asset');
@@ -3995,6 +4027,81 @@ define('ig/domEvt', [
         });
     };
     return exports;
+});define('ig/Storage', [
+    'require',
+    './util',
+    './env',
+    './Event'
+], function (require) {
+    var util = require('./util');
+    var env = require('./env');
+    var Event = require('./Event');
+    var STORAGE_ID = '_IG';
+    var EVENT = { OUT_OF_LIMIT: 'Out of space limit' };
+    var stringify = function (v) {
+        return JSON.stringify(v);
+    };
+    var parse = function (v) {
+        try {
+            v = JSON.parse(v);
+        } catch (e) {
+        }
+        return v;
+    };
+    var memoryStorage = {
+        data: {},
+        setItem: function (k, v) {
+            this.data[k] = v;
+        },
+        getItem: function (k) {
+            return this.data[k];
+        },
+        removeItem: function (k) {
+            delete this.data[k];
+        }
+    };
+    function Storage(opts) {
+        util.extend(true, this, {
+            storageId: STORAGE_ID,
+            memoryCache: false
+        }, opts);
+        this.storage = env.supportLocalStorage && !this.memoryCache ? window.localStorage : memoryStorage;
+        return this;
+    }
+    Storage.prototype = {
+        constructor: Storage,
+        setItem: function (key, val) {
+            var data = this._getData();
+            data[key] = val;
+            try {
+                this.storage.setItem(this.storageId, stringify(data));
+                return true;
+            } catch (err) {
+                this.fire(EVENT.OUT_OF_LIMIT, { data: err });
+                return false;
+            }
+        },
+        getItem: function (key) {
+            return this._getData()[key];
+        },
+        removeItem: function (key) {
+            var data = this._getData();
+            delete data[key];
+            this.storage.setItem(this.storageId, stringify(data));
+        },
+        clear: function () {
+            this.storage.removeItem(this.storageId);
+        },
+        key: function () {
+            return Object.keys(this._getData());
+        },
+        _getData: function () {
+            var data = this.storage.getItem(this.storageId);
+            return data ? parse(data) : {};
+        }
+    };
+    util.inherits(Storage, Event);
+    return Storage;
 });define('ig/Projection', ['require'], function (require) {
     function Projection(min, max) {
         this.min = min;
@@ -4885,6 +4992,28 @@ else {
 
 var modName = 'ig/domEvt';
 var refName = '';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Storage';
+var refName = 'Storage';
 var folderName = '';
 
 var tmp;

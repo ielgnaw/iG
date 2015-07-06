@@ -23,6 +23,7 @@ exports.modules = {
         {name: 'ig/Game', refName: 'Game'},
         {name: 'ig/Stage'},
         {name: 'ig/domEvt'},
+        {name: 'ig/Storage', refName: 'Storage'},
 
         {name: 'ig/Projection'},
         {name: 'ig/Rectangle', refName: 'Rectangle'},

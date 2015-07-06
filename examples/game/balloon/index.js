@@ -6,6 +6,7 @@ window.onload = function () {
     var util = ig.util;
     var STATUS = ig.getConfig('status');
     var canvas = document.querySelector('#canvas');
+    var storage = new ig.Storage();
 
     var game = new ig.Game({
         canvas: canvas,
@@ -32,8 +33,15 @@ window.onload = function () {
     var spritesData;
     var boomData;
     var gameIsStart = false;
+    var gameTimer;
+    var maxScore = storage.getItem('maxScore') || 0;
 
-    var gameCountDown = 10;
+    // 最长链条数
+    var zuichangliantiao = 0;
+    // 爆破气球总数
+    var baopoqiqiuTotal = 0;
+
+    var gameCountDown = 4;
 
     // 计时
     var timeText = new ig.Text({
@@ -41,25 +49,21 @@ window.onload = function () {
         content: gameCountDown,
         x: 13 * game.ratioX,
         y: 13 * game.ratioY,
-        // scaleX: 0.5,
-        // scaleY: 0.5,
         size: 20 * game.ratioX,
         isBold: true,
         angle: 0,
-        // debug: 1,
         zIndex: 100,
         fillStyle: '#fff',
-        followParent: 0
+        followParent: 0,
+        width: 32 * game.ratioX
     });
 
     // 分数
     var scoreText = new ig.Text({
         name: 'scoreText',
-        content: '00000000',
+        content: '0',
         x: 100 * game.ratioX,
         y: 8 * game.ratioY,
-        // scaleX: 0.5,
-        // scaleY: 0.5,
         size: 25 * game.ratioX,
         isBold: true,
         angle: 0,
@@ -67,9 +71,8 @@ window.onload = function () {
         zIndex: 100,
         fillStyle: '#fff',
         followParent: 0,
+        width: 155 * game.ratioX
     });
-
-    // scoreText.changeContent('00000030');
 
     var stage = game.createStage({
         name: 'balloon-stage',
@@ -126,7 +129,7 @@ window.onload = function () {
         new ig.Bitmap({
             name: 'playBut',
             image: 'playBut',
-            x: -100,
+            x: -game.width,
             y: stage.height - 150 * game.ratioY,
             width: 108 * game.ratioX,
             height: 108 * game.ratioY,
@@ -203,7 +206,7 @@ window.onload = function () {
      * @param {Object} e captureFunc 的回调参数
      */
     function stageCaptureFunc(e) {
-        if (!gameIsStart) {
+        if (!gameIsStart || game.paused) {
             return;
         }
         var displayObjectList = this.displayObjectList;
@@ -242,7 +245,7 @@ window.onload = function () {
      * @param {Object} e moveFunc 毁掉参数
      */
     function stageMoveFunc(e) {
-        if (!gameIsStart) {
+        if (!gameIsStart || game.paused) {
             return;
         }
         e.domEvent.preventDefault();
@@ -299,7 +302,7 @@ window.onload = function () {
      * @param {Object} e releaseFunc 毁掉参数
      */
     function stageReleaseFunc(e) {
-        if (!gameIsStart) {
+        if (!gameIsStart || game.paused) {
             return;
         }
         var len = canBoomBalloons.length;
@@ -312,6 +315,12 @@ window.onload = function () {
             }
         }
         else {
+            if (len >= zuichangliantiao) {
+                zuichangliantiao = len;
+            }
+
+            baopoqiqiuTotal += len;
+
             var isChangeStageParallax = false;
             stage.setParallax({
                 image: 'bg',
@@ -323,23 +332,23 @@ window.onload = function () {
 
                 var score = scoreText.getContent();
                 score = parseInt(score, 10) + 10 + '';
-                if (score.length < 8) {
-                    var tmp = '';
-                    for (var i = 0; i < 8 - score.length; i++) {
-                        tmp += '0';
-                    }
-                    score = tmp + score;
-                }
+                // if (score.length < 8) {
+                //     var tmp = '';
+                //     for (var i = 0; i < 8 - score.length; i++) {
+                //         tmp += '0';
+                //     }
+                //     score = tmp + score;
+                // }
                 scoreText.changeContent(score);
-                scoreText.setAnimate({
-                    target: {
-                        angle: 360
-                    },
-                    duration: 500,
-                    completeFunc: function (e) {
-                        e.data.source.angle = 0;
-                    }
-                });
+                // scoreText.setAnimate({
+                //     target: {
+                //         angle: 360
+                //     },
+                //     duration: 500,
+                //     completeFunc: function (e) {
+                //         e.data.source.angle = 0;
+                //     }
+                // });
 
                 var boomSprite = createBoomSprite(
                     curBoomBalloon.x - boomData.tileW / 2 * game.ratioX + 10,
@@ -357,12 +366,9 @@ window.onload = function () {
                                 jumpFrames: 5,
                                 x: this.c.boomBalloon.x,
                                 y: this.c.boomBalloon.y,
-                                // debug: 1,
                                 zIndex: 2,
                                 scaleX: 0.1, // this.c.boomBalloon.scaleX,
                                 scaleY: 0.1, // this.c.boomBalloon.scaleY,
-                                // width: this.c.boomBalloon.width,
-                                // height: this.c.boomBalloon.height,
                                 // 自定义属性
                                 c: {
                                     data: d.data,
@@ -423,7 +429,6 @@ window.onload = function () {
                 jumpFrames: 2,
                 x: x,
                 y: y,
-                // debug: 1,
                 zIndex: 10,
                 scaleX: game.ratioX,
                 scaleY: game.ratioY,
@@ -434,6 +439,9 @@ window.onload = function () {
         );
     }
 
+    /**
+     * 初始化顶部 显示时间、分数，暂定控制等状态栏
+     */
     function initHud() {
         var rx = stage.width / game.asset.hudImg.width;
         var ry = stage.height / game.asset.hudImg.height;
@@ -444,19 +452,220 @@ window.onload = function () {
                 x: 0,
                 y: 0,
                 width: game.asset.hudImg.width * game.ratioX, // * rx,
-                // height: game.asset.hudImg.height * ry,
                 height: game.asset.hudImg.height * game.ratioY, // * ry,
-                // width: 108 * game.ratioX,
-                // height: 108 * game.ratioY,
                 zIndex: 0,
+                children: [timeText, scoreText],
+                mouseEnable: 1,
+                captureFunc: function (e) {
+                    if (game.paused) {
+                        countDownFunc();
+                        stage.removeDisplayObjectByName('pauseCover');
+                        stage.removeDisplayObjectByName('playBut4Pause');
+                        setTimeout(function () {
+                            game.resume();
+                        }, 100);
+                    }
+                    else {
+                        clearInterval(gameTimer);
+                        showPauseScreen();
+                        setTimeout(function () {
+                            game.pause();
+                        }, 100);
+                    }
+                }
+            })
+        );
+    }
+
+    /**
+     * 游戏倒计时函数
+     */
+    function countDownFunc() {
+        gameTimer = setInterval(function () {
+            if (gameCountDown.length < 2) {
+                gameCountDown = '0' + gameCountDown;
+            }
+            timeText.changeContent(gameCountDown);
+            if (gameCountDown == 0) {
+                timeText.changeContent('00');
+                clearInterval(gameTimer);
+                gameIsStart = false;
+                endGame();
+                setTimeout(function () {
+                    game.stop();
+                }, 100);
+            }
+            gameCountDown = (gameCountDown - 1).toFixed(0);
+        }, 1000);
+    }
+
+    /**
+     * 显示暂定的屏幕
+     */
+    function showPauseScreen() {
+        stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'pauseCover',
+                asset: game.asset.panel,
+                zIndex: 99,
+                x: stage.width / 2 - coverWidth * game.ratioX / 2,
+                y: 80 * game.ratioY,
+                sx: 412,
+                sy: 1725,
+                // debug: 1,
+                sWidth: coverWidth,
+                sHeight: coverHeight,
+                width: coverWidth * game.ratioX,
+                height: coverHeight * game.ratioY,
+            })
+        );
+        stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'playBut4Pause',
+                asset: game.asset.playBut,
+                x: stage.width / 2 - 108 * game.ratioX / 2,
+                y: stage.height - 120 * game.ratioY,
+                width: 108 * game.ratioX,
+                height: 108 * game.ratioY,
+                mouseEnable: true,
+                zIndex: 99,
+                captureFunc: function () {
+                    countDownFunc();
+                    stage.removeDisplayObjectByName('pauseCover');
+                    stage.removeDisplayObjectByName('playBut4Pause');
+                    setTimeout(function () {
+                        game.resume();
+                    }, 100);
+                }
                 // debug: 1
-                children: [timeText, scoreText]
+            })
+        );
+    }
+
+    /**
+     * 游戏结束
+     */
+    function endGame() {
+        var result = scoreText.getContent();
+        if (parseInt(result, 10) >= parseInt(maxScore, 10)) {
+            storage.setItem('maxScore', result);
+        }
+        var endCover = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'endCover',
+                asset: game.asset.panel,
+                x: stage.width / 2 - coverWidth * game.ratioX / 2,
+                y: 90,
+                sx: 412,
+                sy: 1175,
+                sWidth: coverWidth,
+                sHeight: coverHeight,
+                width: coverWidth * game.ratioX,
+                height: coverHeight * game.ratioY,
+                mouseEnable: true,
+                zIndex: 100,
+                children: [
+                    new ig.Text({
+                        name: 'scoreResult',
+                        content: scoreText.getContent(),
+                        x: 44 * game.ratioX,
+                        y: 96 * game.ratioY,
+                        size: 40 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0,
+                        width: 240 * game.ratioX
+                    }),
+                    new ig.Text({
+                        name: 'zuichangliantiao',
+                        content: zuichangliantiao,
+                        x: 134 * game.ratioX,
+                        y: 171 * game.ratioY,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0,
+                        width: 160 * game.ratioX
+                    }),
+                    new ig.Text({
+                        name: 'baopoqiqiu',
+                        content: baopoqiqiuTotal,
+                        x: 134 * game.ratioX,
+                        y: 201 * game.ratioY,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0,
+                        width: 160 * game.ratioX
+                    }),
+                    new ig.Text({
+                        name: 'maxScore',
+                        content: storage.getItem('maxScore'),
+                        x: 134 * game.ratioX,
+                        y: 255 * game.ratioY,
+                        size: 25 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 100,
+                        fillStyle: '#fff',
+                        followParent: 0,
+                        width: 160 * game.ratioX
+                    }),
+                ]
+            })
+        );
+        var playButAgain = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'playButAgain',
+                asset: game.asset.playBut,
+                x: stage.width / 2 - 108 * game.ratioX / 2,
+                y: stage.height - 120 * game.ratioY,
+                width: 108 * game.ratioX,
+                height: 108 * game.ratioY,
+                mouseEnable: true,
+                zIndex: 99,
+                captureFunc: function () {
+                    game.start(function () {
+                        var displayObjectList = stage.displayObjectList;
+                        for (var i = 0, len = displayObjectList.length; i < len; i++) {
+                            var displayObject = displayObjectList[i];
+                            // 判断是气球
+                            if (displayObject instanceof ig.SpriteSheet) {
+                                displayObject.setStatus(STATUS.DESTROYED);
+                            }
+                        }
+                        setTimeout(function () {
+                            initHud();
+                            initBalloon();
+                            endCover.setStatus(STATUS.DESTROYED);
+                            playButAgain.setStatus(STATUS.DESTROYED);
+                            stage.setParallax({
+                                image: 'bg'
+                            });
+
+                            gameIsStart = true;
+                            // 最长链条数
+                            zuichangliantiao = 0;
+                            // 爆破气球总数
+                            baopoqiqiuTotal = 0;
+
+                            gameCountDown = 4;
+                            scoreText.changeContent('0');
+                            countDownFunc();
+                        }, 200);
+                    });
+                }
             })
         );
     }
 
     game.start(function () {
-
         boomData = game.asset.boomData;
         allData = game.asset.spriteSheetData;
         spritesData = [
@@ -467,81 +676,6 @@ window.onload = function () {
             {type:'blue', data: allData.blue, captureData: allData.blueCapture},
             {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
         ];
-
-
-        startCover.setStatus(STATUS.DESTROYED);
-        stage.addDisplayObject(
-            new ig.Bitmap({
-                name: 'endCover',
-                asset: game.asset.panel,
-                x: stage.width / 2 - coverWidth * game.ratioX / 2,
-                y: 100,
-                sx: 412,
-                sy: 1175,
-                // debug: 1,
-                sWidth: coverWidth,
-                sHeight: coverHeight,
-                width: coverWidth * game.ratioX,
-                height: coverHeight * game.ratioY,
-                mouseEnable: true,
-                zIndex: 1,
-                children: [
-                    new ig.Text({
-                        name: 'scoreResult',
-                        content: '00000000',
-                        x: 44 * game.ratioX,
-                        y: 96 * game.ratioY,
-                        size: 40 * game.ratioX,
-                        isBold: true,
-                        angle: 0,
-                        zIndex: 100,
-                        fillStyle: '#fff',
-                        followParent: 0
-                    }),
-                    new ig.Text({
-                        name: 'zuichangliantiao',
-                        content: '00000000',
-                        x: 134 * game.ratioX,
-                        y: 171 * game.ratioY,
-                        size: 25 * game.ratioX,
-                        isBold: true,
-                        angle: 0,
-                        zIndex: 100,
-                        fillStyle: '#fff',
-                        followParent: 0
-                    }),
-                    new ig.Text({
-                        name: 'baopoqiqiu',
-                        content: '00000000',
-                        x: 134 * game.ratioX,
-                        y: 201 * game.ratioY,
-                        // scaleX: 0.5,
-                        // scaleY: 0.5,
-                        size: 25 * game.ratioX,
-                        isBold: true,
-                        angle: 0,
-                        zIndex: 100,
-                        fillStyle: '#fff',
-                        followParent: 0
-                    }),
-                    new ig.Text({
-                        name: 'maxScore',
-                        content: '00000000',
-                        x: 134 * game.ratioX,
-                        y: 255 * game.ratioY,
-                        // scaleX: 0.5,
-                        // scaleY: 0.5,
-                        size: 25 * game.ratioX,
-                        isBold: true,
-                        angle: 0,
-                        zIndex: 100,
-                        fillStyle: '#fff',
-                        followParent: 0
-                    }),
-                ]
-            })
-        );
-        return;
 
         // setTimeout(function () {
         //     game.pause();
@@ -603,21 +737,7 @@ window.onload = function () {
                         });
 
                         gameIsStart = true;
-                        var gameTimer = setInterval(function () {
-                            if (gameCountDown.length < 2) {
-                                gameCountDown = '0' + gameCountDown;
-                            }
-                            timeText.changeContent(gameCountDown);
-                            if (gameCountDown == 0) {
-                                timeText.changeContent('00');
-                                clearInterval(gameTimer);
-                                gameIsStart = false;
-                                setTimeout(function () {
-                                    game.stop();
-                                }, 100);
-                            }
-                            gameCountDown = (gameCountDown - 1).toFixed(0);
-                        }, 1000);
+                        countDownFunc();
                     }
                 });
             }

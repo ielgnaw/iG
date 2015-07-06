@@ -181,6 +181,10 @@ define(function (require) {
          */
         setStatus: function (status) {
             this.status = status || this.status;
+            var children = this.children;
+            for (var i = 0, len = children.length; i < len; i++) {
+                children[i].status = this.status;
+            }
             return this;
         },
 
