@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>balloon</title>
+        <title>气球砰砰砰</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -63,13 +63,44 @@
             canvas {
                 border: 1px solid #ddd;
             }
+            .share-container {
+                background: rgba(0, 0, 0, 0.8);
+                fixd: 0;
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 999;
+            }
+            .share-container .share-img {
+                position: absolute;
+                z-index: 999;
+                top: 5px;
+                width: 100%;
+            }
+            .share-container .share-close {
+                position: fixed;
+                color: #fff;
+                z-index: 998;
+                display: block;
+                width: 100%;
+                height: 100%;
+                left: 0;
+                top: 0;
+                background: rgba(0, 0, 0, 0.8);
+            }
         </style>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
         <!-- <div id="fps">fps: 0</div> -->
+        <img src="../../img/game/balloon/wx-share.png" width="0" height="0" id="wx-share" style="position:absolute">
         <div id="load-process">loadProcess: </div>
         <canvas id="canvas"></canvas>
+        <div class="share-container" style="display: none;">
+            <img src="../../img/game/balloon/share-masker.png" class="share-img">
+            <a href="#" class="share-close"></a>
+        </div>
         <script src="./index.js"></script>
     </body>
 </html>

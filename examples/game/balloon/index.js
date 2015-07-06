@@ -16,6 +16,7 @@ window.onload = function () {
             {id: 'bg', src: '/examples/img/game/balloon/bg.jpg'},
             {id: 'panel', src: '/examples/img/game/balloon/panel.png'},
             {id: 'playBut', src: '/examples/img/game/balloon/playBut.png'},
+            {id: 'shareBut', src: '/examples/img/game/balloon/shareBut.png'},
             {id: 'spriteSheetImg', src: '/examples/img/game/balloon/sprite-sheet1.png'},
             {id: 'spriteSheetData', src: './data/sprite-sheet1.json'},
             {id: 'boomImg', src: '/examples/img/game/balloon/boom.png'},
@@ -35,13 +36,17 @@ window.onload = function () {
     var gameIsStart = false;
     var gameTimer;
     var maxScore = storage.getItem('maxScore') || 0;
+    var shareContainerNode = document.querySelector('.share-container');
+    shareContainerNode.addEventListener('click', function (e) {
+        shareContainerNode.style.display = 'none';
+    });
 
     // 最长链条数
     var zuichangliantiao = 0;
     // 爆破气球总数
     var baopoqiqiuTotal = 0;
 
-    var gameCountDown = 4;
+    var gameCountDown = 30;
 
     // 计时
     var timeText = new ig.Text({
@@ -620,11 +625,29 @@ window.onload = function () {
                 ]
             })
         );
+        var shareBut = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'shareBut',
+                asset: game.asset.shareBut,
+                x: stage.width / 2 - 108 * game.ratioX / 2 - 60 * game.ratioX,
+                y: stage.height - 120 * game.ratioY,
+                width: 108 * game.ratioX,
+                height: 108 * game.ratioY,
+                mouseEnable: true,
+                zIndex: 99,
+                captureFunc: function (e) {
+                    e.domEvent.preventDefault();
+                    e.domEvent.stopPropagation();
+                    shareContainerNode.style.display = 'block';
+                    document.title = '我在气球砰砰砰中得了' + scoreText.getContent() + '分，你也来试试吧~~';
+                }
+            })
+        );
         var playButAgain = stage.addDisplayObject(
             new ig.Bitmap({
                 name: 'playButAgain',
                 asset: game.asset.playBut,
-                x: stage.width / 2 - 108 * game.ratioX / 2,
+                x: stage.width / 2 - 108 * game.ratioX / 2 + 60 * game.ratioX,
                 y: stage.height - 120 * game.ratioY,
                 width: 108 * game.ratioX,
                 height: 108 * game.ratioY,
@@ -632,6 +655,7 @@ window.onload = function () {
                 zIndex: 99,
                 captureFunc: function () {
                     game.start(function () {
+                        document.title = '气球砰砰砰';
                         var displayObjectList = stage.displayObjectList;
                         for (var i = 0, len = displayObjectList.length; i < len; i++) {
                             var displayObject = displayObjectList[i];
@@ -644,6 +668,7 @@ window.onload = function () {
                             initHud();
                             initBalloon();
                             endCover.setStatus(STATUS.DESTROYED);
+                            shareBut.setStatus(STATUS.DESTROYED);
                             playButAgain.setStatus(STATUS.DESTROYED);
                             stage.setParallax({
                                 image: 'bg'
