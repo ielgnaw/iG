@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>气球砰砰砰</title>
+        <title>气球啪啪啪</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -55,10 +55,16 @@
                 left: 5px;
             }
             #load-process {
+                display: none;
                 position: absolute;
                 z-index: 10000;
-                top: 100px;
-                left: 5px;
+                /*top: 100px;*/
+                /*left: 5px;*/
+
+                width: 110px;
+                margin: 0 auto;
+                height: 30px;
+                line-height: 30px;
             }
             canvas {
                 border: 1px solid #ddd;
@@ -90,12 +96,12 @@
                 background: rgba(0, 0, 0, 0.8);
             }
         </style>
-        <script type="text/javascript" src="/build/source/ig-all.js"></script>
+        <script type="text/javascript" src="/build/dist/ig-all.js"></script>
     </head>
     <body>
         <!-- <div id="fps">fps: 0</div> -->
-        <img src="../../img/game/balloon/wx-share.png" width="0" height="0" id="wx-share" style="position:absolute">
-        <div id="load-process">loadProcess: </div>
+        <img src="../../img/game/balloon/sprite-sheet1.png" width="0" height="0" id="wx-share" style="position:absolute">
+        <div id="load-process">loading: </div>
         <canvas id="canvas"></canvas>
         <div class="share-container" style="display: none;">
             <img src="../../img/game/balloon/share-masker.png" class="share-img">

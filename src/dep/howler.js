@@ -1325,7 +1325,10 @@ define(function (require) {
     };
 
   }
-
+  if (typeof window !== 'undefined') {
+    window.Howler = Howler;
+    window.Howl = Howl;
+  }
   return {
     Howler: Howler,
     Howl: Howl

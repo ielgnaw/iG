@@ -1032,6 +1032,10 @@ define('ig/dep/howler', ['require'], function (require) {
             node.bufferSource.playbackRate.value = obj._rate;
         };
     }
+    if (typeof window !== 'undefined') {
+        window.Howler = Howler;
+        window.Howl = Howl;
+    }
     return {
         Howler: Howler,
         Howl: Howl
@@ -3091,7 +3095,7 @@ define('ig/SpriteSheet', [
                                             loadOneCallback(rId, this);
                                         },
                                         onloaderror: function () {
-                                            errorCallback(this._src);
+                                            errorCallback(this._src || this._urls);
                                         }
                                     };
                                     new Howl(util.extend(true, {}, howlOpts, r.opts || {}));

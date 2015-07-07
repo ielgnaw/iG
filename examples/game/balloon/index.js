@@ -6,7 +6,23 @@ window.onload = function () {
     var util = ig.util;
     var STATUS = ig.getConfig('status');
     var canvas = document.querySelector('#canvas');
+    var loadProcessNode = document.querySelector('#load-process');
     var storage = new ig.Storage();
+
+    // document.addEventListener('touchstart', function (e) {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    // });
+
+    document.addEventListener('touchmove', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
+    // document.addEventListener('touchend', function (e) {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    // });
 
     var game = new ig.Game({
         canvas: canvas,
@@ -22,12 +38,44 @@ window.onload = function () {
             {id: 'boomImg', src: '/examples/img/game/balloon/boom.png'},
             {id: 'boomData', src: './data/boom.json'},
             {id: 'hudImg', src: '/examples/img/game/balloon/hud.png'},
+            {id: 'muteImg', src: '/examples/img/game/balloon/mute.png'},
+            {
+                id: 'bgMusic',
+                src: [
+                    '/examples/audio/game/balloon/bg-music.ogg',
+                    '/examples/audio/game/balloon/bg-music.mp3'
+                ],
+                opts: {
+                    loop: true
+                }
+            },
+            {
+                id: 'effectSound',
+                src: [
+                    '/examples/audio/game/balloon/sound.ogg',
+                    '/examples/audio/game/balloon/sound.mp3'
+                ],
+                opts: {
+                    sprite: {
+                        pop1: [0, 400],
+                        pop2: [500, 400],
+                        pop3: [1000, 750],
+                        click: [2000, 300],
+                        timesUp: [2500, 2400],
+                        explode: [5000, 1500],
+                        drag: [7000, 400]
+                    }
+                }
+            },
         ]
     }).on('loadResProcess', function (e) {
-        document.querySelector('#load-process').innerHTML
-            = 'loadProcess: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%';
+        loadProcessNode.style.display = 'block';
+        loadProcessNode.style.left = (game.width / 2 - 110 / 2) + 'px';
+        loadProcessNode.style.top = (game.height / 2 - 30 / 2) + 'px';
+        loadProcessNode.innerHTML
+            = 'loading: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%';
     }).on('loadResDone', function (e) {
-        document.querySelector('#load-process').style.display = 'none';
+        loadProcessNode.style.display = 'none';
     });
 
     var allData;
@@ -46,7 +94,9 @@ window.onload = function () {
     // 爆破气球总数
     var baopoqiqiuTotal = 0;
 
-    var gameCountDown = 30;
+    var COUNT_DOWN = 3;
+
+    var gameCountDown = COUNT_DOWN;
 
     // 计时
     var timeText = new ig.Text({
@@ -127,6 +177,38 @@ window.onload = function () {
             mouseEnable: true,
             zIndex: 1,
             startIndex: 0 // 自定义属性，用于记录点击 playBut 是否出气球开始界面
+        })
+    );
+
+    var muteSwitch = stage.addDisplayObject(
+        new ig.Bitmap({
+            name: 'mute',
+            // asset: game.asset.muteImg,
+            image: 'muteImg',
+            x: game.width - (70 + 30) * game.ratioX / 2,
+            y: 7 * game.ratioY,
+            width: 35 * game.ratioX,
+            height: 35 * game.ratioY,
+            sWidth: 35,
+            zIndex: 500,
+            mouseEnable: 1,
+            captureFunc: function (e) {
+                if (!stage.getDisplayObjectByName('endCover')) {
+                    game.asset.effectSound.play('click');
+                    if (window.Howler._muted) {
+                        window.Howler.unmute();
+                        muteSwitch.change({
+                            sx: 0
+                        });
+                    }
+                    else {
+                        window.Howler.mute();
+                        muteSwitch.change({
+                            sx: 35
+                        });
+                    }
+                }
+            }
         })
     );
 
@@ -233,7 +315,6 @@ window.onload = function () {
      */
     function removeArr(list, callback) {
         var ret = [];
-        var candidateIndex = -1;
         var tmp;
         for (var i = 0, len = list.length; i < len; i++) {
             tmp = list[i];
@@ -270,6 +351,7 @@ window.onload = function () {
             || firstItem.name === 'scoreTime'
             || firstItem.name === 'scoreText'
             || firstItem.name.indexOf('boom_') > -1
+            || !firstItem.c
         ) {
             return;
         }
@@ -314,7 +396,11 @@ window.onload = function () {
         if (len < 3) {
             for (var i = 0, len = holdSpriteList.length; i < len; i++) {
                 var sprite = holdSpriteList[i];
-                if (sprite.name !== 'hud' && sprite.name !== 'scoreText' && sprite.name !== 'scoreTime') {
+                if (sprite.name !== 'hud'
+                    && sprite.name !== 'scoreText'
+                    && sprite.name !== 'scoreTime'
+                    && sprite.c
+                ) {
                     sprite.change(util.extend({}, sprite.c.data));
                 }
             }
@@ -325,6 +411,13 @@ window.onload = function () {
             }
 
             baopoqiqiuTotal += len;
+
+            if (len < 5) {
+                game.asset.effectSound.play('pop2');
+            }
+            else {
+                game.asset.effectSound.play('pop3');
+            }
 
             var isChangeStageParallax = false;
             stage.setParallax({
@@ -337,25 +430,9 @@ window.onload = function () {
 
                 var score = scoreText.getContent();
                 score = parseInt(score, 10) + 10 + '';
-                // if (score.length < 8) {
-                //     var tmp = '';
-                //     for (var i = 0; i < 8 - score.length; i++) {
-                //         tmp += '0';
-                //     }
-                //     score = tmp + score;
-                // }
                 scoreText.changeContent(score);
-                // scoreText.setAnimate({
-                //     target: {
-                //         angle: 360
-                //     },
-                //     duration: 500,
-                //     completeFunc: function (e) {
-                //         e.data.source.angle = 0;
-                //     }
-                // });
 
-                var boomSprite = createBoomSprite(
+                createBoomSprite(
                     curBoomBalloon.x - boomData.tileW / 2 * game.ratioX + 10,
                     curBoomBalloon.y - boomData.tileH / 2 * game.ratioY + 10,
                     {
@@ -448,9 +525,9 @@ window.onload = function () {
      * 初始化顶部 显示时间、分数，暂定控制等状态栏
      */
     function initHud() {
-        var rx = stage.width / game.asset.hudImg.width;
-        var ry = stage.height / game.asset.hudImg.height;
-        var hud = stage.addDisplayObject(
+        // var rx = stage.width / game.asset.hudImg.width;
+        // var ry = stage.height / game.asset.hudImg.height;
+        stage.addDisplayObject(
             new ig.Bitmap({
                 name: 'hud',
                 asset: game.asset.hudImg,
@@ -491,7 +568,9 @@ window.onload = function () {
                 gameCountDown = '0' + gameCountDown;
             }
             timeText.changeContent(gameCountDown);
-            if (gameCountDown == 0) {
+            if (parseInt(gameCountDown, 10) === 0) {
+                game.asset.effectSound.play('timesUp');
+                game.asset.bgMusic.mute();
                 timeText.changeContent('00');
                 clearInterval(gameTimer);
                 gameIsStart = false;
@@ -560,7 +639,7 @@ window.onload = function () {
                 name: 'endCover',
                 asset: game.asset.panel,
                 x: stage.width / 2 - coverWidth * game.ratioX / 2,
-                y: 90,
+                y: 70,
                 sx: 412,
                 sy: 1175,
                 sWidth: coverWidth,
@@ -639,7 +718,7 @@ window.onload = function () {
                     e.domEvent.preventDefault();
                     e.domEvent.stopPropagation();
                     shareContainerNode.style.display = 'block';
-                    document.title = '我在气球砰砰砰中得了' + scoreText.getContent() + '分，你也来试试吧~~';
+                    document.title = '我在气球啪啪啪中得了' + scoreText.getContent() + '分~~';
                 }
             })
         );
@@ -655,7 +734,7 @@ window.onload = function () {
                 zIndex: 99,
                 captureFunc: function () {
                     game.start(function () {
-                        document.title = '气球砰砰砰';
+                        document.title = '气球啪啪啪';
                         var displayObjectList = stage.displayObjectList;
                         for (var i = 0, len = displayObjectList.length; i < len; i++) {
                             var displayObject = displayObjectList[i];
@@ -680,9 +759,10 @@ window.onload = function () {
                             // 爆破气球总数
                             baopoqiqiuTotal = 0;
 
-                            gameCountDown = 4;
+                            gameCountDown = COUNT_DOWN;
                             scoreText.changeContent('0');
                             countDownFunc();
+                            game.asset.bgMusic.unmute();
                         }, 200);
                     });
                 }
@@ -691,6 +771,16 @@ window.onload = function () {
     }
 
     game.start(function () {
+        game.asset.bgMusic.play();
+        // game.asset.bgMusic.mute();
+        // window.Howler.mute();
+        // game.asset.effectSound.play('pop1');
+        // game.asset.effectSound.play('pop2');
+        // game.asset.effectSound.play('pop3');
+        // game.asset.effectSound.play('timesUp');
+        // game.asset.effectSound.play('explode');
+        // game.asset.effectSound.play('drag');
+
         boomData = game.asset.boomData;
         allData = game.asset.spriteSheetData;
         spritesData = [
@@ -701,13 +791,6 @@ window.onload = function () {
             {type:'blue', data: allData.blue, captureData: allData.blueCapture},
             {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
         ];
-
-        // setTimeout(function () {
-        //     game.pause();
-        //     setTimeout(function () {
-        //         game.resume();
-        //     }, 3000);
-        // }, 3000);
 
         startCover.setAnimate({
             target: {
@@ -741,7 +824,8 @@ window.onload = function () {
                             completeFunc: function (e) {
                                 e.data.source.change({
                                     sy: 78,
-                                    x: stage.width + 100
+                                    x: stage.width + 100,
+                                    y: stage.height / 2 - coverHeight * game.ratioY / 2 - 50 * game.ratioY
                                 }).setAnimate({
                                     target: {
                                         x: tmpX

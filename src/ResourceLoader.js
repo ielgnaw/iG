@@ -172,7 +172,7 @@ define(function (require) {
                                             loadOneCallback(rId, this);
                                         },
                                         onloaderror: function () {
-                                            errorCallback(this._src);
+                                            errorCallback(this._src || this._urls);
                                         }
                                     };
                                     new Howl(util.extend(true, {}, howlOpts, r.opts || {}));
