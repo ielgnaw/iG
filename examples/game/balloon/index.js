@@ -9,41 +9,31 @@ window.onload = function () {
     var loadProcessNode = document.querySelector('#load-process');
     var storage = new ig.Storage();
 
-    // document.addEventListener('touchstart', function (e) {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    // });
-
     document.addEventListener('touchmove', function (e) {
         e.preventDefault();
         e.stopPropagation();
     });
-
-    // document.addEventListener('touchend', function (e) {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    // });
 
     var game = new ig.Game({
         canvas: canvas,
         name: 'balloon-game',
         maximize: 1,
         resource: [
-            {id: 'bg', src: '/examples/img/game/balloon/bg.jpg'},
-            {id: 'panel', src: '/examples/img/game/balloon/panel.png'},
-            {id: 'playBut', src: '/examples/img/game/balloon/playBut.png'},
-            {id: 'shareBut', src: '/examples/img/game/balloon/shareBut.png'},
-            {id: 'spriteSheetImg', src: '/examples/img/game/balloon/sprite-sheet1.png'},
+            {id: 'bg', src: './img/bg.jpg'},
+            {id: 'panel', src: './img/panel.png'},
+            {id: 'playBut', src: './img/playBut.png'},
+            {id: 'shareBut', src: './img/shareBut.png'},
+            {id: 'spriteSheetImg', src: './img/sprite-sheet1.png'},
             {id: 'spriteSheetData', src: './data/sprite-sheet1.json'},
-            {id: 'boomImg', src: '/examples/img/game/balloon/boom.png'},
+            {id: 'boomImg', src: './img/boom.png'},
             {id: 'boomData', src: './data/boom.json'},
-            {id: 'hudImg', src: '/examples/img/game/balloon/hud.png'},
-            {id: 'muteImg', src: '/examples/img/game/balloon/mute.png'},
+            {id: 'hudImg', src: './img/hud.png'},
+            {id: 'muteImg', src: './img/mute.png'},
             {
                 id: 'bgMusic',
                 src: [
-                    '/examples/audio/game/balloon/bg-music.ogg',
-                    '/examples/audio/game/balloon/bg-music.mp3'
+                    './audio/bg-music.ogg',
+                    './audio/bg-music.mp3'
                 ],
                 opts: {
                     loop: true
@@ -52,8 +42,8 @@ window.onload = function () {
             {
                 id: 'effectSound',
                 src: [
-                    '/examples/audio/game/balloon/sound.ogg',
-                    '/examples/audio/game/balloon/sound.mp3'
+                    './audio/sound.ogg',
+                    './audio/sound.mp3'
                 ],
                 opts: {
                     sprite: {
