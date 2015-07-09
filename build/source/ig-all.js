@@ -204,13 +204,17 @@ define('ig/ig', [
                 passed = now - then;
                 then = now;
                 acc += passed;
-                while (acc >= dt) {
-                    stepCount++;
-                    conf.step(dt * (fps / 1000), stepCount, requestID);
-                    acc -= dt;
+                if (passed <= 1000) {
+                    while (acc >= dt) {
+                        stepCount++;
+                        conf.step(dt * (fps / 1000), stepCount, requestID);
+                        acc -= dt;
+                    }
+                    execCount++;
+                    conf.exec(execCount);
+                } else {
+                    acc -= passed;
                 }
-                execCount++;
-                conf.exec(execCount);
             }
         }());
     };
@@ -2951,7 +2955,7 @@ define('ig/SpriteSheet', [
             ctx.globalAlpha = this.alpha;
             SpriteSheet.superClass.render.apply(this, arguments);
             this.matrix.setCtxTransform(ctx);
-            ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX * this.game.ratioX, this.y + this.offsetY * this.game.ratioY, this.tileW, this.tileH);
+            ctx.drawImage(this.asset, this.frameIndex * this.tileW + this.sx, this.sy, this.tileW, this.tileH, this.x + this.offsetX * this.game.ratioX, this.y + this.offsetY * this.game.ratioY, this.width, this.height);
             ctx.restore();
             return this;
         }
@@ -2961,10 +2965,12 @@ define('ig/SpriteSheet', [
             this._.isSetup = true;
             var curSheetData = null;
             var sheetKey = this.sheetKey;
-            if (!sheetKey || this.sheetData) {
-                curSheetData = this.sheetData;
-            } else {
-                curSheetData = this.sheetData[sheetKey];
+            if (this.sheetData) {
+                if (this.sheetData[sheetKey]) {
+                    curSheetData = this.sheetData[sheetKey];
+                } else {
+                    curSheetData = this.sheetData;
+                }
             }
             if (!curSheetData) {
                 return;

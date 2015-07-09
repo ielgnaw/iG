@@ -156,21 +156,33 @@ define(function (require) {
                 now = Date.now();
                 passed = now - then;
                 then = now;
-
                 acc += passed; // 过去的时间的累积
-                while (acc >= dt) { // 时间大于固定的 dt 才能更新
-                    stepCount++;
-                    // 如果这里直接写成 conf.step(dt)，
-                    // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
-                    // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，那么每毫秒移动 60/1000 个单位距离
-                    conf.step(dt * (fps / 1000), stepCount, requestID); // 分片更新时间
-                    acc -= dt;
+
+                // 这里设置 passed <= 1000ms 时才会执行
+                // 1000ms 意味着 fps = 1，即每秒才会执行动画的一帧，这样太慢了，几乎不会存在这样的设备
+                // 大部分 passed > 1000ms 的情况是指切换页面了，
+                // 切换到其他页面后， requestAnimationFrame 不会执行了，这时 while 循环里的内容实际上也不执行，但是回到动画页面时，
+                // 由于 now 是回到动画页面的时间戳，而 then 是切换到其他页面那个时刻的时间戳，
+                // 因此 now 和 then 的差值即 passed 会变得特别大，这就会导致 while 循环里面的内容会执行很多次，这是没有必要的
+                // 所以这里用 passed <= 1000 来限制这种情况，当 > 1000 后，需要把 acc 还原为切换到其他页面那个时刻的值即减去 passed
+                if (passed <= 1000) {
+                    while (acc >= dt) { // 时间大于固定的 dt 才能更新
+                        stepCount++;
+                        // 如果这里直接写成 conf.step(dt)，
+                        // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
+                        // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，
+                        // 那么每毫秒移动 60/1000 个单位距离
+                        conf.step(dt * (fps / 1000), stepCount, requestID); // 分片更新时间
+                        acc -= dt;
+                    }
+                    execCount++;
+                    conf.exec(execCount);
                 }
-                execCount++;
-                conf.exec(execCount);
+                else {
+                    acc -= passed;
+                }
             }
         })();
-
     };
 
     return exports;

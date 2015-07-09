@@ -76,7 +76,7 @@ window.onload = function () {
             circle.x = e.data.source.x;
             circle.draw();
         }).on('complete', function (e) {
-            console.warn(e.data.source);
+            // console.warn(e.data.source);
             console.warn('all complete');
         });
     }

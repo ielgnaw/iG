@@ -220,8 +220,10 @@ define(function (require) {
                 this.tileH,
                 this.x + this.offsetX * this.game.ratioX,
                 this.y + this.offsetY * this.game.ratioY,
-                this.tileW,
-                this.tileH
+                // this.tileW,
+                // this.tileH
+                this.width,
+                this.height
             );
 
             ctx.restore();
@@ -240,14 +242,16 @@ define(function (require) {
             this._.isSetup = true;
 
             var curSheetData = null;
-            var sheetKey = this.sheetKey;
 
+            var sheetKey = this.sheetKey;
             // this.sheetData 的情况是 直接在 SpriteSheet 的构造中传入 sheetData
-            if (!sheetKey || this.sheetData) {
-                curSheetData = this.sheetData;
-            }
-            else {
-                curSheetData = this.sheetData[sheetKey];
+            if (this.sheetData) {
+                if (this.sheetData[sheetKey]) {
+                    curSheetData = this.sheetData[sheetKey];
+                }
+                else {
+                    curSheetData = this.sheetData;
+                }
             }
 
             if (!curSheetData) {
