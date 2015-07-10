@@ -39,30 +39,33 @@ var guide = (function () {
                     x: guideStep1.x - 50
                 }
             ,
-            jumpFrames: 10,
+            jumpFrames: 1,
             duration: 500,
-            completeFunc: function () {
-                guideStep1.setAnimate({
-                    target: [
-                        {
-                            x: guideStep1.x + 100
-                        }
-                    ],
-                    duration: 800,
-                    completeFunc: function () {
-                        guideStep1.setAnimate({
-                            target: [
-                                {
-                                    x: guideStep1.x - 50
-                                }
-                            ],
-                            duration: 500,
-                            completeFunc: function () {
-                                console.warn('done');
-                            }
-                        });
-                    }
-                });
+            completeFunc: function (e) {
+                console.warn('done111');
+                // debugger
+                // guideStep1.setAnimate({
+                //     target:
+                //         {
+                //             x: guideStep1.x + 100
+                //         }
+                //     ,
+                //     duration: 800,
+                //     completeFunc: function () {
+                //         console.warn('done222');
+                //         guideStep1.setAnimate({
+                //             target:
+                //                 {
+                //                     x: guideStep1.x - 50
+                //                 }
+                //             ,
+                //             duration: 500,
+                //             completeFunc: function () {
+                //                 console.warn('done');
+                //             }
+                //         });
+                //     }
+                // });
             }
         });
     }

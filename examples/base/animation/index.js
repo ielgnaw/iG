@@ -70,7 +70,8 @@ window.onload = function () {
             source: circle,
             target: {
                 x: 201
-            }
+            },
+            jumpFrames: 1
         });
         anim.play().on('step', function (e) {
             circle.x = e.data.source.x;
@@ -78,6 +79,7 @@ window.onload = function () {
         }).on('complete', function (e) {
             // console.warn(e.data.source);
             console.warn('all complete');
+            console.warn('\n');
         });
     }
     document.querySelector('#simple-repeat').onclick = function () {

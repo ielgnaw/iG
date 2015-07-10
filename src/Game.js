@@ -157,7 +157,9 @@ define(function (require) {
             // 资源加载完成后，做引擎内部的 start 工作
             preLoadResource.call(this, function () {
                 // 启动前先停止
-                this.stop();
+                if (this._.requestID) {
+                    this.stop();
+                }
 
                 this.paused = false;
 
@@ -582,6 +584,9 @@ define(function (require) {
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
+                if (me._.requestID === null) {
+                    return;
+                }
                 me._.requestID = requestID;
                 if (!me.paused) {
                     if (realDt > 1000) {

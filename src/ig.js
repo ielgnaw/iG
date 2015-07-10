@@ -167,6 +167,11 @@ define(function (require) {
                 // 由于 now 是回到动画页面的时间戳，而 then 是切换到其他页面那个时刻的时间戳，
                 // 因此 now 和 then 的差值即 passed 会变得特别大，这就会导致 while 循环里面的内容会执行很多次，这是没有必要的
                 // 所以这里用 passed <= 100 来限制这种情况，当 > 100 后，需要把 acc 还原为切换到其他页面那个时刻的值即减去 passed
+                //
+                // 这里还有可能出现一个问题，就是当 cancelAnimationFrame 时，那么不会执行下一次的 tick 了，但是当前这一次 tick 里的
+                // while 循环还没有执行完成，所以会导致多执行，这个问题不在这里修改，在调用处修改
+                // 例如 Animation.play 以及 Game._gameStartExec 的 ig.loop 初，
+                // 同时在调用处 cancelAnimationFrame 时要把 requestID 设置为 null
                 if (passed <= 100 * _jumpFrames) {
                     while (acc >= dt * _jumpFrames) { // 时间大于固定的 dt（每跳一帧会经过一个 dt）才能更新
                         stepCount++;

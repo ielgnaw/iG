@@ -153,6 +153,9 @@ define(function (require) {
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -167,6 +170,7 @@ define(function (require) {
          */
         stop: function () {
             window.cancelAnimationFrame(this.requestID);
+            this.requestID = null;
             return this;
         },
 
@@ -221,6 +225,9 @@ define(function (require) {
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -241,6 +248,9 @@ define(function (require) {
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -276,6 +286,9 @@ define(function (require) {
             // var me = this;
             // ig.loop({
             //     step: function (dt, stepCount, requestID) {
+            //         if (me.requestID === null) {
+            //             return;
+            //         }
             //         me.step.call(me, dt, stepCount, requestID);
             //     },
             //     jumpFrames: me.jumpFrames

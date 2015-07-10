@@ -2076,6 +2076,9 @@ define('ig/Animation', [
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -2084,6 +2087,7 @@ define('ig/Animation', [
         },
         stop: function () {
             window.cancelAnimationFrame(this.requestID);
+            this.requestID = null;
             return this;
         },
         destroy: function () {
@@ -2109,6 +2113,9 @@ define('ig/Animation', [
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -2122,6 +2129,9 @@ define('ig/Animation', [
             var me = this;
             ig.loop({
                 step: function (dt, stepCount, requestID) {
+                    if (me.requestID === null) {
+                        return;
+                    }
                     me.step.call(me, dt, stepCount, requestID);
                 },
                 jumpFrames: me.jumpFrames
@@ -3206,7 +3216,9 @@ define('ig/Game', [
             default:
             }
             preLoadResource.call(this, function () {
-                this.stop();
+                if (this._.requestID) {
+                    this.stop();
+                }
                 this.paused = false;
                 if (_startStageName && this.stages[_startStageName]) {
                     var stageStack = this.stageStack;
@@ -3437,6 +3449,9 @@ define('ig/Game', [
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
+                if (me._.requestID === null) {
+                    return;
+                }
                 me._.requestID = requestID;
                 if (!me.paused) {
                     if (realDt > 1000) {
