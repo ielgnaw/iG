@@ -84,7 +84,7 @@ window.onload = function () {
     // 爆破气球总数
     var baopoqiqiuTotal = 0;
 
-    var COUNT_DOWN = 10;
+    var COUNT_DOWN = 5;
 
     var gameCountDown = COUNT_DOWN;
 

@@ -205,7 +205,7 @@ define('ig/ig', [
                 passed = now - then;
                 then = now;
                 acc += passed;
-                if (passed <= 100 * _jumpFrames) {
+                if (passed <= 1000 * _jumpFrames) {
                     while (acc >= dt * _jumpFrames) {
                         stepCount++;
                         conf.step(dt * (fps / 1000), stepCount, requestID);
@@ -3449,7 +3449,7 @@ define('ig/Game', [
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
-                if (me._.requestID === null) {
+                if (me._.requestID === null && stepCount !== 1) {
                     return;
                 }
                 me._.requestID = requestID;

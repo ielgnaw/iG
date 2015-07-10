@@ -584,7 +584,8 @@ define(function (require) {
         var me = this;
         ig.loop({
             step: function (dt, stepCount, requestID) {
-                if (me._.requestID === null) {
+                // stepCount === 1 说明是第一次，这个时候 me._.requestID 就是 null，所以仅判断 me._.requestID 是不够的
+                if (me._.requestID === null && stepCount !== 1) {
                     return;
                 }
                 me._.requestID = requestID;
