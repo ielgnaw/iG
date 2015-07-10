@@ -32,37 +32,37 @@ var guide = (function () {
                 scaleY: 0.7,
             })
         );
-        console.warn('11111');
+
         guideStep1.setAnimate({
             target:
                 {
                     x: guideStep1.x - 50
                 }
             ,
+            jumpFrames: 10,
             duration: 500,
             completeFunc: function () {
-                console.error('done');
-                // guideStep1.setAnimate({
-                //     target: [
-                //         {
-                //             x: guideStep1.x + 100
-                //         }
-                //     ],
-                //     duration: 800,
-                //     completeFunc: function () {
-                //         guideStep1.setAnimate({
-                //             target: [
-                //                 {
-                //                     x: guideStep1.x - 50
-                //                 }
-                //             ],
-                //             duration: 500,
-                //             completeFunc: function () {
-                //                 console.warn('done');
-                //             }
-                //         });
-                //     }
-                // });
+                guideStep1.setAnimate({
+                    target: [
+                        {
+                            x: guideStep1.x + 100
+                        }
+                    ],
+                    duration: 800,
+                    completeFunc: function () {
+                        guideStep1.setAnimate({
+                            target: [
+                                {
+                                    x: guideStep1.x - 50
+                                }
+                            ],
+                            duration: 500,
+                            completeFunc: function () {
+                                console.warn('done');
+                            }
+                        });
+                    }
+                });
             }
         });
     }

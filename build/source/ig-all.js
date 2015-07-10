@@ -195,6 +195,7 @@ define('ig/ig', [
         var acc = 0;
         var stepCount = 0;
         var execCount = 0;
+        var _jumpFrames = conf.jumpFrames === 0 ? 1 : conf.jumpFrames;
         (function tick() {
             requestID = window.requestAnimationFrame(tick);
             frameUpdateCount++;
@@ -204,11 +205,11 @@ define('ig/ig', [
                 passed = now - then;
                 then = now;
                 acc += passed;
-                if (passed <= 1000) {
-                    while (acc >= dt) {
+                if (passed <= 100 * _jumpFrames) {
+                    while (acc >= dt * _jumpFrames) {
                         stepCount++;
                         conf.step(dt * (fps / 1000), stepCount, requestID);
-                        acc -= dt;
+                        acc -= dt * _jumpFrames;
                     }
                     execCount++;
                     conf.exec(execCount);
