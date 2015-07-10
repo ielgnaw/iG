@@ -4297,11 +4297,13 @@ define('ig/Rectangle', [
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            if (!this.parent || !this.followParent) {
+                this.matrix.reset();
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.cx, -this.cy);
+            }
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
