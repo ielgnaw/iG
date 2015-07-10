@@ -364,11 +364,20 @@ define(function (require) {
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
 
-            this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
-            this.matrix.rotate(this.angle);
-            this.matrix.scale(this.scaleX, this.scaleY);
-            this.matrix.translate(-this.cx, -this.cy);
+            // 如果有父精灵，那么就不需要自己设置 matrix 了，跟随父精灵变化
+            if (!this.parent || !this.followParent) {
+                this.matrix.reset();
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.cx, -this.cy);
+            }
+
+            // this.matrix.reset();
+            // this.matrix.translate(this.cx, this.cy);
+            // this.matrix.rotate(this.angle);
+            // this.matrix.scale(this.scaleX, this.scaleY);
+            // this.matrix.translate(-this.cx, -this.cy);
 
             this.generatePoints();
             this.getBounds();
