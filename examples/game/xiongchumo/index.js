@@ -111,7 +111,9 @@ window.onload = function () {
             stage: stage
         });
 
-        guide.initGuideStep1();
+        setTimeout(function () {
+            guide.initGuideStep1();
+        }, 1000);
 
         // boomData = game.asset.boomData;
         // allData = game.asset.spriteSheetData;
