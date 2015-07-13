@@ -154,7 +154,7 @@ var guide = (function () {
                         duration: 500,
                         completeFunc: function () {
                             guideStep2.setStatus(STATUS.DESTROYED);
-                            pinecone.createPinecone();
+                            // pinecone.createPinecone();
                         }
                     });
                 }, 1500);

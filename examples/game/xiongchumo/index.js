@@ -22,7 +22,9 @@ window.onload = function () {
         resource: [
             {id: 'bg', src: './img/bg.jpg'},
             {id: 'spritesImg', src: './img/sprites.png'},
+            {id: 'boomImg', src: './img/boom.png'},
             {id: 'spritesData', src: './data/sprites.json'},
+            {id: 'boomData', src: './data/boom.json'},
         ]
     }).on('loadResProcess', function (e) {
         loadProcessNode.style.display = 'block';
@@ -35,6 +37,7 @@ window.onload = function () {
     });
 
     var spritesData;
+    var boomData;
     var gameIsStart = false;
 
     var stage = game.createStage({
@@ -59,7 +62,7 @@ window.onload = function () {
             sheetKey: 'bg',
             jumpFrames: 1.2, // [0.5, 1.2]
             zIndex: 1,
-            debug: 1,
+            // debug: 1,
             width: CONFIG.width * game.ratioX,
             height: CONFIG.height * game.ratioY
         })
@@ -76,7 +79,7 @@ window.onload = function () {
             zIndex: 10,
             jumpFrames: 4,
             runStatus: 'normal',
-            debug: 1,
+            // debug: 1,
             // moveFunc: function (d) {
             //     // 跳起
             //     if (d.y < this.y / 2 && !this.isJump) {
@@ -129,12 +132,14 @@ window.onload = function () {
     game.start(function () {
         gameIsStart = true;
         spritesData = game.asset.spritesData;
+        boomData = game.asset.boomData;
         player.move((game.width - spritesData.normalRun.tileW) / 2, player.y);
 
         pinecone.setup({
             game: game,
             stage: stage,
             spritesData: spritesData,
+            boomData: boomData,
             player: player
         });
 
