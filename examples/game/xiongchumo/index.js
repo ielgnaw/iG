@@ -35,15 +35,16 @@ window.onload = function () {
     });
 
     var spritesData;
+    var gameIsStart = false;
 
     var stage = game.createStage({
         name: 'xiongchumoStage',
         bgColor: '#000',
         captureFunc: function (e) {
-            // stageCaptureFunc.call(this, e);
+            stageCaptureFunc.call(this, e);
         },
         moveFunc: function (e) {
-            // stageMoveFunc.call(this, e);
+            stageMoveFunc.call(this, e);
         },
         releaseFunc: function (e) {
             // stageReleaseFunc.call(this, e);
@@ -101,11 +102,41 @@ window.onload = function () {
         })
     );
 
+    /**
+     * stage capture 回调事件
+     *
+     * @param {Object} e captureFunc 的回调参数
+     */
+    function stageCaptureFunc(e) {
+        if (!gameIsStart || game.paused) {
+            return;
+        }
+        player.move(e.x, player.y);
+    }
+
+    /**
+     * stage move 回调事件
+     *
+     * @param {Object} e moveFunc 毁掉参数
+     */
+    function stageMoveFunc(e) {
+        if (!gameIsStart || game.paused) {
+            return;
+        }
+        player.move(e.x, player.y);
+    }
+
     game.start(function () {
+        gameIsStart = true;
         spritesData = game.asset.spritesData;
-        console.warn(spritesData);
         player.move((game.width - spritesData.normalRun.tileW) / 2, player.y);
-        // player.width = spritesData.normalRun.tileW * game.ratioX;
+
+        pinecone.setup({
+            game: game,
+            stage: stage,
+            spritesData: spritesData,
+            player: player
+        });
 
         guide.setup({
             game: game,
