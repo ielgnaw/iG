@@ -109,11 +109,54 @@ var guide = (function () {
                             },
                             duration: 500,
                             completeFunc: function () {
-                                guideStep1.setStatus(STATUS.DESTROYED)
+                                guideStep1.setStatus(STATUS.DESTROYED);
+                                setTimeout(initGuideStep2, 2000);
                             }
                         });
                     }
                 });
+            }
+        });
+    }
+
+    /**
+     * 初始化顶部收集松果
+     */
+    function initGuideStep2() {
+        var guideStep2 = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'guideStep2',
+                asset: game.asset.spritesImg,
+                x: (game.width - 273) / 2,
+                y: -100, // 10 * game.ratioY,
+                sx: 0,
+                sy: 938,
+                width: 273,
+                sWidth: 273,
+                height: 66,
+                sHeight: 66,
+                zIndex: 15,
+            })
+        );
+
+        guideStep2.setAnimate({
+            target: {
+                y: 20 * game.ratioY,
+            },
+            duration: 500,
+            tween: ig.easing.easeOutBounce,
+            completeFunc: function () {
+                setTimeout(function () {
+                    guideStep2.setAnimate({
+                        target: {
+                            alpha: 0
+                        },
+                        duration: 500,
+                        completeFunc: function () {
+                            guideStep2.setStatus(STATUS.DESTROYED);
+                        }
+                    });
+                }, 1500);
             }
         });
     }
@@ -126,5 +169,6 @@ var guide = (function () {
     return {
         setup: setup,
         initGuideStep1: initGuideStep1
-    }
+    };
+
 })();

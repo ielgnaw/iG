@@ -69,6 +69,7 @@ window.onload = function () {
             name: 'player',
             image: 'spritesImg',
             sheet: 'spritesData',
+            x: -100,
             sheetKey: 'normalRun',
             y: 200 * game.ratioY,
             zIndex: 10,
