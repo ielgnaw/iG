@@ -19,6 +19,8 @@ var guide = (function () {
      * 初始化第一个 guide 界面
      */
     function initGuideStep1() {
+        initGuideStep3();
+        return;
         var left = new ig.Bitmap({
             name: 'leftArrow',
             asset: game.asset.spritesImg,
@@ -154,7 +156,59 @@ var guide = (function () {
                         duration: 500,
                         completeFunc: function () {
                             guideStep2.setStatus(STATUS.DESTROYED);
-                            // pinecone.createPinecone();
+                            // pinecone.create();
+                            // setTimeout(function () {
+                            //     console.warn(123);
+                            //     pinecone.create();
+                            // }, 3000)
+                            // pinecone.loopCreate();
+                        }
+                    });
+                }, 1500);
+            }
+        });
+    }
+
+    /**
+     * 初始化顶部躲开石头
+     */
+    function initGuideStep3() {
+        var guideStep3 = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'guideStep3',
+                asset: game.asset.spritesImg,
+                x: (game.width - 273) / 2,
+                y: -100, // 10 * game.ratioY,
+                sx: 273,
+                sy: 938,
+                width: 273,
+                sWidth: 273,
+                height: 66,
+                sHeight: 66,
+                zIndex: 15,
+            })
+        );
+
+        guideStep3.setAnimate({
+            target: {
+                y: 20 * game.ratioY,
+            },
+            duration: 500,
+            tween: ig.easing.easeOutBounce,
+            completeFunc: function () {
+                setTimeout(function () {
+                    guideStep3.setAnimate({
+                        target: {
+                            alpha: 0
+                        },
+                        duration: 500,
+                        completeFunc: function () {
+                            guideStep3.setStatus(STATUS.DESTROYED);
+                            // stone.create();
+                            // setTimeout(function () {
+                            //     stone.create();
+                            // }, 3000);
+                            // stone.loopCreate();
                         }
                     });
                 }, 1500);
@@ -165,6 +219,10 @@ var guide = (function () {
     function setup(opts) {
         game = opts.game;
         stage = opts.stage;
+
+        setInterval(function () {
+            stone.create();
+        }, 2000)
     }
 
     return {

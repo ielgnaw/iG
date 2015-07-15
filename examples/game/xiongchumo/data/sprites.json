@@ -65,25 +65,14 @@
         "offsetX": 0,
         "offsetY": 0
     },
-    "pineconeWithPlayer": {
+    "stone": {
         "sx": 0,
-        "sy": 430,
-        "cols": 1,
+        "sy": 310,
+        "cols": 6,
         "rows": 1,
-        "total": 1,
-        "tileW": 70,
-        "tileH": 80,
-        "offsetX": 0,
-        "offsetY": 0
-    },
-    "pineconeWithBear": {
-        "sx": 150,
-        "sy": 430,
-        "cols": 1,
-        "rows": 1,
-        "total": 1,
-        "tileW": 70,
-        "tileH": 80,
+        "total": 6,
+        "tileW": 65,
+        "tileH": 55,
         "offsetX": 0,
         "offsetY": 0
     }

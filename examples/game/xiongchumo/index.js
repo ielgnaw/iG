@@ -74,6 +74,7 @@ window.onload = function () {
             image: 'spritesImg',
             sheet: 'spritesData',
             x: -100,
+            // sheetKey: 'normalRun',
             sheetKey: 'normalRun',
             y: 200 * game.ratioY,
             zIndex: 10,
@@ -136,6 +137,14 @@ window.onload = function () {
         player.move((game.width - spritesData.normalRun.tileW) / 2, player.y);
 
         pinecone.setup({
+            game: game,
+            stage: stage,
+            spritesData: spritesData,
+            boomData: boomData,
+            player: player
+        });
+
+        stone.setup({
             game: game,
             stage: stage,
             spritesData: spritesData,
