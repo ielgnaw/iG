@@ -19,8 +19,8 @@ var guide = (function () {
      * 初始化第一个 guide 界面
      */
     function initGuideStep1() {
-        initGuideStep3();
-        return;
+        // initGuideStep3();
+        // return;
         var left = new ig.Bitmap({
             name: 'leftArrow',
             asset: game.asset.spritesImg,
@@ -156,6 +156,7 @@ var guide = (function () {
                         duration: 500,
                         completeFunc: function () {
                             guideStep2.setStatus(STATUS.DESTROYED);
+                            setTimeout(initGuideStep3, 2000);
                             // pinecone.create();
                             // setTimeout(function () {
                             //     console.warn(123);
@@ -220,9 +221,9 @@ var guide = (function () {
         game = opts.game;
         stage = opts.stage;
 
-        setInterval(function () {
-            stone.create();
-        }, 2000)
+        // setInterval(function () {
+            // stone.create();
+        // }, 2000)
     }
 
     return {

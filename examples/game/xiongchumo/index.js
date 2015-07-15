@@ -115,7 +115,7 @@ window.onload = function () {
         if (!gameIsStart || game.paused) {
             return;
         }
-        player.move(e.x, player.y);
+        // player.move(e.x, player.y);
     }
 
     /**

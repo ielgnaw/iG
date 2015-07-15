@@ -73,33 +73,37 @@ var stone = (function () {
                 if (x <= player.x + player.width - width / 2 && player.x < x + width - width / 2) {
                     this.setStatus(STATUS.DESTROYED);
                     player.change(util.extend(true, {width: 55}, spritesData.tripRun));
-                    player.move(player.x, player.y + 10);
+                    // player.move(player.x, player.y + 10);
                     player.setAnimate({
                         target: {
-                            alpha: 0
+                            y: player.y - 10,
+                            // alpha: 0
                         },
                         duration: 100,
                         completeFunc: function (e) {
                             player.setAnimate({
                                 target: {
-                                    alpha: 1
+                                    y: player.y + 10,
+                                    // alpha: 1
                                 },
                                 duration: 100,
                                 completeFunc: function (e) {
                                     player.setAnimate({
                                         target: {
-                                            alpha: 0
+                                            y: player.y - 10,
+                                            // alpha: 0
                                         },
                                         duration: 100,
                                         completeFunc: function (e) {
                                             player.setAnimate({
                                                 target: {
-                                                    alpha: 1
+                                                    y: player.y + 10,
+                                                    // alpha: 1
                                                 },
                                                 duration: 100,
                                                 completeFunc: function (e) {
                                                     player.change(util.extend(true, {width: 48}, spritesData.normalRun));
-                                                    player.move(player.x, player.y - 10);
+                                                    // player.move(player.x, player.y - 10);
                                                 }
                                             });
                                         }
