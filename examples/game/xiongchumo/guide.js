@@ -156,12 +156,11 @@ var guide = (function () {
                         duration: 500,
                         completeFunc: function () {
                             guideStep2.setStatus(STATUS.DESTROYED);
-                            setTimeout(initGuideStep3, 2000);
-                            // pinecone.create();
-                            // setTimeout(function () {
-                            //     console.warn(123);
-                            //     pinecone.create();
-                            // }, 3000)
+                            pinecone.create();
+                            setTimeout(function () {
+                                pinecone.create();
+                                setTimeout(initGuideStep3, 3000);
+                            }, 3000)
                             // pinecone.loopCreate();
                         }
                     });
@@ -205,16 +204,24 @@ var guide = (function () {
                         duration: 500,
                         completeFunc: function () {
                             guideStep3.setStatus(STATUS.DESTROYED);
-                            // stone.create();
-                            // setTimeout(function () {
-                            //     stone.create();
-                            // }, 3000);
+                            stone.create();
+                            setTimeout(function () {
+                                stone.create();
+                                setTimeout(initGuideStep4, 3000);
+                            }, 3000);
                             // stone.loopCreate();
                         }
                     });
                 }, 1500);
             }
         });
+    }
+
+    /**
+     * 初始化跳的 guide
+     */
+    function initGuideStep4() {
+        console.warn(1);
     }
 
     function setup(opts) {
