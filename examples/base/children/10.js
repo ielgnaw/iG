@@ -138,9 +138,9 @@ window.onload = function () {
     //         // ig.util.extend(true, {}, game1.asset.spriteSheetData.redCapture, {x: 20, y: 30})
     //         ig.util.extend(true, {
     //             asset: game1.asset.spriteSheetImg,
-    //             isOnce: true,
-    //             onceDone: function () {
-    //                 // console.warn(arguments, 'onceDone');
+    //             isOnceDestroyed: true,
+    //             onceDestroyedDone: function () {
+    //                 // console.warn(arguments, 'onceDestroyedDone');
     //             }
     //         }, game1.asset.spriteSheetData.red)
     //     );

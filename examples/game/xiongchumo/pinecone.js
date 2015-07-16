@@ -82,8 +82,8 @@ var pinecone = (function () {
                             zIndex: 10,
                             width: 100 * game.ratioX,
                             height: 100 * game.ratioY,
-                            isOnce: true,
-                            onceDone: function () {
+                            isOnceDestroyed: true,
+                            onceDestroyedDone: function () {
                                 if (isLoop) {
                                     setTimeout(function () {
                                         _create(isLoop);

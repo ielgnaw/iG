@@ -19,7 +19,7 @@ var guide = (function () {
      * 初始化第一个 guide 界面
      */
     function initGuideStep1() {
-        // initGuideStep3();
+        // initGuideStep4();
         // return;
         var left = new ig.Bitmap({
             name: 'leftArrow',
@@ -49,8 +49,8 @@ var guide = (function () {
             // debug: 1,
         });
 
-        var huaText = new ig.Bitmap({
-            name: 'huaText',
+        var hua = new ig.Bitmap({
+            name: 'hua',
             asset: game.asset.spritesImg,
             x: 110 * game.ratioX,
             y: -100 * game.ratioY,
@@ -65,7 +65,7 @@ var guide = (function () {
             // debug: 1,
         });
 
-        huaText.setAnimate({
+        hua.setAnimate({
             target: {
                 alpha: 1
             },
@@ -88,7 +88,7 @@ var guide = (function () {
                 height: 140,
                 sHeight: 140,
                 zIndex: 15,
-                children: [left, right, huaText]
+                children: [left, right, hua]
             })
         );
 
@@ -221,7 +221,146 @@ var guide = (function () {
      * 初始化跳的 guide
      */
     function initGuideStep4() {
-        console.warn(1);
+        var guideStep4 = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'guideStep4',
+                asset: game.asset.spritesImg,
+                x: (game.width - 273) / 2,
+                y: -100, // 10 * game.ratioY,
+                sx: 546,
+                sy: 938,
+                width: 273,
+                sWidth: 273,
+                height: 66,
+                sHeight: 66,
+                zIndex: 15,
+            })
+        );
+
+        guideStep4.setAnimate({
+            target: {
+                y: 20 * game.ratioY,
+            },
+            duration: 500,
+            tween: ig.easing.easeOutBounce,
+            completeFunc: function () {
+                setTimeout(function () {
+                    guideStep4.setAnimate({
+                        target: {
+                            alpha: 0
+                        },
+                        duration: 500,
+                        completeFunc: function () {
+                            guideStep4.setStatus(STATUS.DESTROYED);
+                        }
+                    });
+                }, 1500);
+            }
+        });
+
+        var top = new ig.Bitmap({
+            name: 'topArrow',
+            asset: game.asset.spritesImg,
+            x: -80 * game.ratioX,
+            sx: 500,
+            sy: 310,
+            width: 67,
+            sWidth: 67,
+            height: 110,
+            sHeight: 110,
+            zIndex: 14,
+            // debug: 1,
+        });
+
+        var tiao = new ig.Bitmap({
+            name: 'tiao',
+            asset: game.asset.spritesImg,
+            x: 110 * game.ratioX,
+            y: -100 * game.ratioY,
+            sx: 801,
+            sy: 758,
+            width: 110,
+            sWidth: 110,
+            height: 95,
+            sHeight: 95,
+            zIndex: 14,
+            alpha: 0,
+            // debug: 1,
+        });
+
+        tiao.setAnimate({
+            target: {
+                alpha: 1
+            },
+            jumpFrames: 1,
+            duration: 500,
+            completeFunc: function (e) {
+            }
+        });
+
+        var shou = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'shou',
+                asset: game.asset.spritesImg,
+                x: (game.width - 110) / 2,
+                y: 220 * game.ratioY,
+                sx: 390,
+                sy: 305,
+                width: 110,
+                sWidth: 110,
+                height: 140,
+                sHeight: 140,
+                zIndex: 15,
+                children: [top, tiao]
+            })
+        );
+
+        shou.setAnimate({
+            target: [
+                {
+                    y: shou.y - 60,
+                    alpha: 0
+                },
+                {
+                    y: shou.y - 60,
+                    alpha: 0
+                }
+            ],
+            jumpFrames: 1,
+            duration: 1000,
+            completeFunc: function (e) {
+                shou.setStatus(STATUS.DESTROYED);
+                rollBranch.loopCreate();
+                // rollBranch.create();
+                // setTimeout(function () {
+                    // rollBranch.create();
+                    // setTimeout(initGuideStep4, 3000);
+                // }, 3000);
+                // setTimeout(function () {
+                //     stone.create();
+                //     setTimeout(initGuideStep4, 3000);
+                // }, 3000);
+
+                // guideStep1.setAnimate({
+                //     target: {
+                //         x: guideStep1.x + 100
+                //     },
+                //     duration: 800,
+                //     completeFunc: function () {
+                //         guideStep1.setAnimate({
+                //             target: {
+                //                 x: guideStep1.x - 50
+                //             },
+                //             duration: 500,
+                //             completeFunc: function () {
+                //                 guideStep1.setStatus(STATUS.DESTROYED);
+                //                 setTimeout(initGuideStep2, 2000);
+                //             }
+                //         });
+                //     }
+                // });
+            }
+        });
     }
 
     function setup(opts) {

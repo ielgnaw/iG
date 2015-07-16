@@ -22,8 +22,10 @@ window.onload = function () {
         resource: [
             {id: 'bg', src: './img/bg.jpg'},
             {id: 'spritesImg', src: './img/sprites.png'},
+            {id: 'spritesImg1', src: './img/sprites1.png'},
             {id: 'boomImg', src: './img/boom.png'},
             {id: 'spritesData', src: './data/sprites.json'},
+            {id: 'spritesData1', src: './data/sprites1.json'},
             {id: 'boomData', src: './data/boom.json'},
         ]
     }).on('loadResProcess', function (e) {
@@ -37,6 +39,7 @@ window.onload = function () {
     });
 
     var spritesData;
+    var spritesData1;
     var boomData;
     var gameIsStart = false;
 
@@ -50,7 +53,7 @@ window.onload = function () {
             stageMoveFunc.call(this, e);
         },
         releaseFunc: function (e) {
-            // stageReleaseFunc.call(this, e);
+            stageReleaseFunc.call(this, e);
         }
     });
 
@@ -77,62 +80,87 @@ window.onload = function () {
             // sheetKey: 'normalRun',
             sheetKey: 'normalRun',
             y: 200 * game.ratioY,
+            backupY: 200 * game.ratioY,
             zIndex: 10,
             jumpFrames: 4,
             runStatus: 'normal',
             // debug: 1,
-            // moveFunc: function (d) {
-            //     // 跳起
-            //     if (d.y < this.y / 2 && !this.isJump) {
-            //         this.isJump = true;
-            //         this.image = spritesImg1;
-            //         this.y -= 20;
-            //         this.changeFrame(util.extend(true, {
-            //             isOnce: true,
-            //             onceDone: function () {
-            //                 this.image = spritesImg;
-            //                 this.changeFrame(normalRunData);
-            //                 this.y += 20;
-            //                 this.isJump = false;
-            //             }
-            //         }, jumpRunData));
-            //     }
-            //     else {
-            //         if (d.x > 46 && d.x < 223) {
-            //             this.move(d.x, this.y);
-            //         }
-            //     }
-            // }
         })
     );
 
+    // 判断是否跳起的时间戳
+    var captureTimer;
+    var captureY;
+
     /**
      * stage capture 回调事件
-     *
-     * @param {Object} e captureFunc 的回调参数
      */
     function stageCaptureFunc(e) {
         if (!gameIsStart || game.paused) {
             return;
         }
+        captureTimer = Date.now();
+        captureY = e.y;
         // player.move(e.x, player.y);
     }
 
     /**
      * stage move 回调事件
-     *
-     * @param {Object} e moveFunc 毁掉参数
      */
     function stageMoveFunc(e) {
         if (!gameIsStart || game.paused) {
             return;
         }
-        player.move(e.x, player.y);
+
+        // if (e.x > 60 * game.ratioX && e.x < 270 * game.ratioX) {
+        if (e.x > 50 * game.ratioX && e.x < 270 * game.ratioX) {
+            player.move(e.x, player.y);
+        }
     }
+
+    /**
+     * stage release 回调事件
+     */
+    function stageReleaseFunc(e) {
+        if (!gameIsStart || game.paused) {
+            return;
+        }
+
+        // 跳起
+        if (Date.now() - captureTimer <= 500
+            && captureY - e.y >= 70
+            && player.runStatus === 'normal'
+        ) {
+            player.runStatus = 'jump';
+            player.change(
+                util.extend(true, {
+                    asset: game.asset.spritesImg1,
+                    width: 89,
+                    jumpFrames: 10,
+                    y: player.y - 50,
+                    isOnce: true,
+                    onceDone: function () {
+                        player.change(
+                            util.extend(true, {
+                                width: 48,
+                                jumpFrames: 4,
+                                asset: game.asset.spritesImg,
+                                status: STATUS.NORMAL,
+                                y: player.backupY
+                            }, spritesData.normalRun)
+                        );
+                        player.runStatus = 'normal';
+                    }
+                }, spritesData1.jumpRun)
+            );
+        }
+    }
+
 
     game.start(function () {
         gameIsStart = true;
         spritesData = game.asset.spritesData;
+        spritesData1 = game.asset.spritesData1;
         boomData = game.asset.boomData;
         player.move((game.width - spritesData.normalRun.tileW) / 2, player.y);
 
@@ -152,6 +180,15 @@ window.onload = function () {
             player: player
         });
 
+        rollBranch.setup({
+            game: game,
+            stage: stage,
+            spritesData: spritesData,
+            spritesData1: spritesData1,
+            boomData: boomData,
+            player: player
+        });
+
         guide.setup({
             game: game,
             stage: stage
@@ -160,78 +197,6 @@ window.onload = function () {
         setTimeout(function () {
             guide.initGuideStep1();
         }, 1000);
-
-        // boomData = game.asset.boomData;
-        // allData = game.asset.spriteSheetData;
-        // spritesData = [
-        //     {type:'red', data: allData.red, captureData: allData.redCapture},
-        //     {type:'orange', data: allData.orange, captureData: allData.orangeCapture},
-        //     {type:'yellow', data: allData.yellow, captureData: allData.yellowCapture},
-        //     {type:'green', data: allData.green, captureData: allData.greenCapture},
-        //     {type:'blue', data: allData.blue, captureData: allData.blueCapture},
-        //     {type:'pink', data: allData.pink, captureData: allData.pinkCapture}
-        // ];
-
-        // startCover.setAnimate({
-        //     target: {
-        //         y: stage.height / 2 - coverHeight * game.ratioY / 2 - 100 * game.ratioY
-        //     },
-        //     tween: ig.easing.easeOutBounce
-        // });
-        // playBut.setAnimate({
-        //     target: {
-        //         x: stage.width / 2 - 108 * game.ratioX / 2
-        //     },
-        //     tween: ig.easing.easeOutBounce,
-        //     duration: 1500,
-        //     completeFunc: function (e) {
-        //         e.data.source.setAnimate({
-        //             range: {
-        //                 y: 10
-        //             },
-        //             duration: 1500,
-        //             repeat: 1
-        //         }).setCaptureFunc(function (e) {
-        //             e.domEvent.preventDefault();
-        //             if (startCover.startIndex === 0) {
-        //                 startCover.startIndex = 1;
-        //                 var tmpX = startCover.x;
-        //                 startCover.setAnimate({
-        //                     target: {
-        //                         x: -500
-        //                     },
-        //                     duration: 200,
-        //                     completeFunc: function (e) {
-        //                         e.data.source.change({
-        //                             sy: 78,
-        //                             x: stage.width + 100,
-        //                             y: stage.height / 2 - coverHeight * game.ratioY / 2 - 50 * game.ratioY
-        //                         }).setAnimate({
-        //                             target: {
-        //                                 x: tmpX
-        //                             },
-        //                             duration: 1000,
-        //                             tween: ig.easing.easeOutBounce
-        //                         });
-        //                     }
-        //                 });
-        //             }
-        //             else {
-        //                 initHud();
-        //                 initBalloon();
-        //                 playBut.setStatus(STATUS.DESTROYED);
-        //                 startCover.setStatus(STATUS.DESTROYED);
-        //                 stage.setParallax({
-        //                     image: 'bg'
-        //                 });
-
-        //                 gameIsStart = true;
-        //                 countDownFunc();
-        //             }
-        //         });
-        //     }
-        // });
-
     });
 };
 

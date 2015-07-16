@@ -2887,6 +2887,8 @@ define('ig/SpriteSheet', [
         Rectangle.apply(this, opts);
         util.extend(this, {
             jumpFrames: 0,
+            isOnceDestroyed: false,
+            onceDestroyedDone: util.noop,
             isOnce: false,
             onceDone: util.noop
         }, opts);
@@ -2914,6 +2916,8 @@ define('ig/SpriteSheet', [
                 offsetX: this.offsetX,
                 offsetY: this.offsetY,
                 jumpFrames: this.jumpFrames,
+                isOnceDestroyed: false,
+                onceDestroyedDone: util.noop,
                 isOnce: false,
                 onceDone: util.noop
             }, prop);
@@ -2938,8 +2942,17 @@ define('ig/SpriteSheet', [
                     this.sx = this.originalSX;
                     this.realCols = floor(this.cols - this.originalSX / this.tileW);
                     this.sy -= (this.rows - 1) * this.tileH;
-                    if (this.isOnce) {
+                    if (this.isOnceDestroyed) {
                         this.status = STATUS.DESTROYED;
+                        if (util.getType(this.onceDestroyedDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDestroyedDone(me);
+                            }, 10);
+                        }
+                    }
+                    if (this.isOnce) {
+                        this.status = STATUS.NOT_UPDATE;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
                             setTimeout(function () {

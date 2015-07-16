@@ -1,0 +1,24 @@
+{
+    "rollBranch": {
+        "sx": 0,
+        "sy": 4,
+        "cols": 6,
+        "rows": 1,
+        "total": 6,
+        "tileW": 235,
+        "tileH": 45,
+        "offsetX": 0,
+        "offsetY": 0
+    },
+    "jumpRun": {
+        "sx": 0,
+        "sy": 358,
+        "cols": 3,
+        "rows": 1,
+        "total": 3,
+        "tileW": 90,
+        "tileH": 113,
+        "offsetX": 0,
+        "offsetY": 0
+    }
+}

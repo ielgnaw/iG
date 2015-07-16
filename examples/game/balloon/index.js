@@ -504,8 +504,8 @@ window.onload = function () {
                 zIndex: 10,
                 scaleX: game.ratioX,
                 scaleY: game.ratioY,
-                isOnce: true,
-                onceDone: callback || util.noop,
+                isOnceDestroyed: true,
+                onceDestroyedDone: callback || util.noop,
                 c: c || {}
             })
         );

@@ -37,9 +37,11 @@ define(function (require) {
             // 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
             jumpFrames: 0,
             // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
+            isOnceDestroyed: false,
+            // isOnceDestroyed 为 true 时，一组动画结束后的回调
+            onceDestroyedDone: util.noop,
             isOnce: false,
-            // isOnce 为 true 时，一组动画结束后的回调
-            onceDone: util.noop
+            onceDone: util.noop,
         }, opts);
 
         // 帧更新的计数器，辅助 jumpFrames 计数的
@@ -99,8 +101,10 @@ define(function (require) {
                 // 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
                 jumpFrames: this.jumpFrames,
                 // 设为 true 时，那么此 spriteSheet 在一组动画帧执行完成后自动销毁
+                isOnceDestroyed: false,
+                // isOnceDestroyed 为 true 时，一组动画结束后的回调
+                onceDestroyedDone: util.noop,
                 isOnce: false,
-                // isOnce 为 true 时，一组动画结束后的回调
                 onceDone: util.noop
             }, prop);
 
@@ -162,8 +166,18 @@ define(function (require) {
                     // 还原 sy
                     this.sy -= (this.rows - 1) * this.tileH;
 
-                    if (this.isOnce) {
+                    if (this.isOnceDestroyed) {
                         this.status = STATUS.DESTROYED;
+                        if (util.getType(this.onceDestroyedDone) === 'function') {
+                            var me = this;
+                            setTimeout(function () {
+                                me.onceDestroyedDone(me);
+                            }, 10);
+                        }
+                    }
+
+                    if (this.isOnce) {
+                        this.status = STATUS.NOT_UPDATE;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
                             setTimeout(function () {
