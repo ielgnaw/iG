@@ -19,8 +19,8 @@ var guide = (function () {
      * 初始化第一个 guide 界面
      */
     function initGuideStep1() {
-        // initGuideStep4();
-        // return;
+        initLastGuide();
+        return;
         var left = new ig.Bitmap({
             name: 'leftArrow',
             asset: game.asset.spritesImg,
@@ -330,35 +330,68 @@ var guide = (function () {
             duration: 1000,
             completeFunc: function (e) {
                 shou.setStatus(STATUS.DESTROYED);
-                rollBranch.loopCreate();
-                // rollBranch.create();
-                // setTimeout(function () {
-                    // rollBranch.create();
-                    // setTimeout(initGuideStep4, 3000);
-                // }, 3000);
-                // setTimeout(function () {
-                //     stone.create();
-                //     setTimeout(initGuideStep4, 3000);
-                // }, 3000);
+                // rollBranch.loopCreate();
+                rollBranch.create();
+                setTimeout(function () {
+                    rollBranch.create();
+                    setTimeout(initLastGuide, 3000);
+                }, 3000);
+            }
+        });
+    }
 
-                // guideStep1.setAnimate({
-                //     target: {
-                //         x: guideStep1.x + 100
-                //     },
-                //     duration: 800,
-                //     completeFunc: function () {
-                //         guideStep1.setAnimate({
-                //             target: {
-                //                 x: guideStep1.x - 50
-                //             },
-                //             duration: 500,
-                //             completeFunc: function () {
-                //                 guideStep1.setStatus(STATUS.DESTROYED);
-                //                 setTimeout(initGuideStep2, 2000);
-                //             }
-                //         });
-                //     }
-                // });
+    /**
+     * 初始化最后一个 guide 顶部出现危险字样
+     */
+    function initLastGuide() {
+        var danger = stage.addDisplayObject(
+            new ig.Bitmap({
+                name: 'danger',
+                asset: game.asset.spritesImg,
+                x: (game.width - 145) / 2,
+                y: 30 * game.ratioY,
+                sx: 765,
+                sy: 101,
+                width: 145,
+                sWidth: 145,
+                height: 70,
+                sHeight: 70,
+                zIndex: 10,
+            })
+        );
+
+        danger.setAnimate({
+            target: {
+                alpha: 0
+            },
+            duration: 100,
+            completeFunc: function (e) {
+                danger.setAnimate({
+                    target: {
+                        alpha: 1
+                    },
+                    duration: 100,
+                    completeFunc: function (e) {
+                        danger.setAnimate({
+                            target: {
+                                alpha: 0
+                            },
+                            duration: 100,
+                            completeFunc: function (e) {
+                                danger.setAnimate({
+                                    target: {
+                                        alpha: 1
+                                    },
+                                    duration: 100,
+                                    completeFunc: function (e) {
+                                        danger.setStatus(STATUS.DESTROYED);
+                                        console.warn('出熊');
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
         });
     }

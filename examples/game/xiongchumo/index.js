@@ -136,7 +136,7 @@ window.onload = function () {
                 util.extend(true, {
                     asset: game.asset.spritesImg1,
                     width: 89,
-                    jumpFrames: 10,
+                    jumpFrames: 8,
                     y: player.y - 50,
                     isOnce: true,
                     onceDone: function () {
