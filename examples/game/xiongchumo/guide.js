@@ -364,25 +364,25 @@ var guide = (function () {
             target: {
                 alpha: 0
             },
-            duration: 100,
+            duration: 300,
             completeFunc: function (e) {
                 danger.setAnimate({
                     target: {
                         alpha: 1
                     },
-                    duration: 100,
+                    duration: 300,
                     completeFunc: function (e) {
                         danger.setAnimate({
                             target: {
                                 alpha: 0
                             },
-                            duration: 100,
+                            duration: 300,
                             completeFunc: function (e) {
                                 danger.setAnimate({
                                     target: {
                                         alpha: 1
                                     },
-                                    duration: 100,
+                                    duration: 300,
                                     completeFunc: function (e) {
                                         danger.setStatus(STATUS.DESTROYED);
                                         console.warn('出熊');
