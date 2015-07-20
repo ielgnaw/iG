@@ -443,6 +443,24 @@ define(function (require) {
                     completeFunc(d);
                 });
 
+            var childLen = 0;
+            if (Array.isArray(this.children) && (childLen = this.children.length)) {
+                var childAnimOpts = {};
+                for (var i = 0; i < childLen; i++) {
+                    if (this.children[i].followParent) {
+                        childAnimOpts = util.extend(true, {}, {source: this.children[i]}, opts);
+                        // 子精灵的 x, y 是相对于父精灵的 x, y 来定位的
+                        if (opts.target.x) {
+                            childAnimOpts.target.x += this.children[i].x;
+                        }
+                        if (opts.target.y) {
+                            childAnimOpts.target.y += this.children[i].y;
+                        }
+                        this.children[i].animate = new Animation(childAnimOpts).play();
+                    }
+                }
+            }
+
             return this;
         },
 

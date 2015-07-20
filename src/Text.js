@@ -160,6 +160,11 @@ define(function (require) {
          */
         createPath: function (ctx) {
             var points = this.points;
+
+            if (!points) {
+                return;
+            }
+
             var len = points.length;
             if (!len) {
                 return;

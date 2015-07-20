@@ -2464,6 +2464,22 @@ define('ig/DisplayObject', [
             }).on('complete', function (d) {
                 completeFunc(d);
             });
+            var childLen = 0;
+            if (Array.isArray(this.children) && (childLen = this.children.length)) {
+                var childAnimOpts = {};
+                for (var i = 0; i < childLen; i++) {
+                    if (this.children[i].followParent) {
+                        childAnimOpts = util.extend(true, {}, { source: this.children[i] }, opts);
+                        if (opts.target.x) {
+                            childAnimOpts.target.x += this.children[i].x;
+                        }
+                        if (opts.target.y) {
+                            childAnimOpts.target.y += this.children[i].y;
+                        }
+                        this.children[i].animate = new Animation(childAnimOpts).play();
+                    }
+                }
+            }
             return this;
         },
         stopAnimate: function () {
@@ -2590,6 +2606,9 @@ define('ig/Text', [
         },
         createPath: function (ctx) {
             var points = this.points;
+            if (!points) {
+                return;
+            }
             var len = points.length;
             if (!len) {
                 return;
