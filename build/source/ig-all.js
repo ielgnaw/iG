@@ -2974,9 +2974,7 @@ define('ig/SpriteSheet', [
                         this.status = STATUS.NOT_UPDATE;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
-                            setTimeout(function () {
-                                me.onceDone(me);
-                            }, 10);
+                            me.onceDone(me);
                         }
                     }
                 }
@@ -3542,6 +3540,7 @@ define('ig/Game', [
         if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
+            document.body.style.overflow = 'hidden';
         }
         if (env.supportTouch) {
             this.canvas.style.height = height * 2 + 'px';

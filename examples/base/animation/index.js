@@ -171,7 +171,7 @@ window.onload = function () {
         anim = new ig.Animation({
             source: circle,
             range: {
-                x: 30,
+                x: circle.x + 10,
                 y: 10
             }
         });

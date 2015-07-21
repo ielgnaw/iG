@@ -61,7 +61,9 @@ var pinecone = (function () {
             if (this.collidesWith(player)
                 // && (player.y + player.height) > (this.y + this.height)
                 // && (player.y + player.height / 2) < (this.y + this.height)
-                && (this.y + this.height) >= (player.y + player.height)
+                // && (this.y + this.height) >= (player.y + player.height)
+                && (this.y) <= (player.y + player.height - 30 * game.ratioY)
+                && (this.y) >= (player.y + player.height - 40 * game.ratioY)
             ) {
                 var x = this.x;
                 var y = this.y;
@@ -73,12 +75,13 @@ var pinecone = (function () {
 
                     stage.addDisplayObject(
                         new ig.SpriteSheet({
-                            name: 'boom',
+                            name: 'boom_' + Date.now(),
                             asset: game.asset.boomImg,
                             sheetData: boomData,
                             jumpFrames: 2.5,
                             x: x - width / 2,
-                            y: y - height / 2,
+                            y: y - height,
+                            // y: y - player.y + player.height, // + player.height / 3,
                             zIndex: 10,
                             width: 100 * game.ratioX,
                             height: 100 * game.ratioY,

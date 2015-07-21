@@ -671,6 +671,7 @@ define(function (require) {
         if (this.maximize) {
             document.body.style.padding = 0;
             document.body.style.margin = 0;
+            document.body.style.overflow = 'hidden';
         }
 
         if (env.supportTouch) {

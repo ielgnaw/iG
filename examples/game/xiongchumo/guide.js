@@ -406,7 +406,7 @@ var guide = (function () {
         stage = opts.stage;
 
         setInterval(function () {
-            stone.create();
+            pinecone.create();
         }, 2000)
     }
 

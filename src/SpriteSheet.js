@@ -180,9 +180,7 @@ define(function (require) {
                         this.status = STATUS.NOT_UPDATE;
                         if (util.getType(this.onceDone) === 'function') {
                             var me = this;
-                            setTimeout(function () {
-                                me.onceDone(me);
-                            }, 10);
+                            me.onceDone(me);
                         }
                     }
                 }

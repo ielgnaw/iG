@@ -72,7 +72,8 @@ var rollBranch = (function () {
                     util.extend(true, {
                         width: 55,
                         jumpFrames: 4,
-                        asset: game.asset.spritesImg
+                        asset: game.asset.spritesImg,
+                        status: STATUS.NORMAL
                     }, spritesData.tripRun)
                 );
 
@@ -112,7 +113,8 @@ var rollBranch = (function () {
                                                     util.extend(true, {
                                                         width: 48,
                                                         jumpFrames: 4,
-                                                        asset: game.asset.spritesImg
+                                                        asset: game.asset.spritesImg,
+                                                        status: STATUS.NORMAL
                                                     }, spritesData.normalRun)
                                                 );
                                                 // player.move(player.x, player.y - 10);

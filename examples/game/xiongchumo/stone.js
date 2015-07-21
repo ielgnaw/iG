@@ -75,11 +75,13 @@ var stone = (function () {
 
                     player.change(util.extend(true, {
                         width: 55,
-                        asset: game.asset.spritesImg
+                        asset: game.asset.spritesImg,
+                        status: STATUS.NORMAL
                     }, spritesData.tripRun));
 
                     // player.move(player.x, player.y + 10);
-                    player.setAnimate({
+
+                    /*player.setAnimate({
                         target: {
                             y: player.y - 10,
                             // alpha: 0
@@ -116,6 +118,7 @@ var stone = (function () {
                                                             true,
                                                             {
                                                                 width: 48,
+                                                                status: STATUS.NORMAL,
                                                                 asset: game.asset.spritesImg
                                                             },
                                                             spritesData.normalRun
@@ -128,6 +131,36 @@ var stone = (function () {
                                     });
                                 }
                             });
+                        }
+                    });*/
+
+                    player.setAnimate({
+                        range: {
+                            y: 10,
+                        },
+                        duration: 120,
+                        repeat: 1,
+                        repeatFunc: function (e) {
+                            if (e.data.repeatCount === 2) {
+                                e.target.stop();
+                                e.target.paused = false;
+
+                                // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                                player.runStatus = 'normal';
+                                player.y = player.backupY;
+                                player.jumpFrames = 4;
+                                player.change(
+                                    util.extend(
+                                        true,
+                                        {
+                                            width: 48,
+                                            status: STATUS.NORMAL,
+                                            asset: game.asset.spritesImg
+                                        },
+                                        spritesData.normalRun
+                                    )
+                                );
+                            }
                         }
                     });
 

@@ -54,6 +54,7 @@ var bear = (function () {
             duration: 3000,
             completeFunc: function (e) {
                 console.warn(e);
+                console.warn('开始积分');
             }
         });
 
