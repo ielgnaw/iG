@@ -92,6 +92,8 @@ window.onload = function () {
     var captureTimer;
     var captureY;
 
+    var captureX;
+
     /**
      * stage capture 回调事件
      */
@@ -101,6 +103,8 @@ window.onload = function () {
         }
         captureTimer = Date.now();
         captureY = e.y;
+
+        captureX = e.x;
         // player.move(e.x, player.y);
     }
 
@@ -108,14 +112,24 @@ window.onload = function () {
      * stage move 回调事件
      */
     function stageMoveFunc(e) {
-        if (!gameIsStart || game.paused) {
+        if (!gameIsStart || game.paused || player.runStatus === 'jump') {
             return;
         }
 
-        // if (e.x > 60 * game.ratioX && e.x < 270 * game.ratioX) {
-        if (e.x > 50 * game.ratioX && e.x < 270 * game.ratioX) {
-            player.move(e.x, player.y);
+        var x = player.x;
+        var dx = e.x - captureX;
+        if (x >= 50 * game.ratioX && x <= 270 * game.ratioX) {
+            player.move(dx + x, player.y);
         }
+        else {
+            if (x < 50 * game.ratioX) {
+                player.x = 50 * game.ratioX;
+            }
+            else if (x > 270 * game.ratioX) {
+                player.x = 270 * game.ratioX;
+            }
+        }
+        captureX = e.x;
     }
 
     /**
@@ -181,6 +195,15 @@ window.onload = function () {
         });
 
         rollBranch.setup({
+            game: game,
+            stage: stage,
+            spritesData: spritesData,
+            spritesData1: spritesData1,
+            boomData: boomData,
+            player: player
+        });
+
+        bear.setup({
             game: game,
             stage: stage,
             spritesData: spritesData,

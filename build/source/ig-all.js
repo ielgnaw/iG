@@ -3230,7 +3230,6 @@ define('ig/Game', [
         start: function (startStageName, startCallback) {
             var _startStageName = '';
             var _startCallback = util.noop;
-            this.canStart = false;
             var argLength = arguments.length;
             switch (argLength) {
             case 1:

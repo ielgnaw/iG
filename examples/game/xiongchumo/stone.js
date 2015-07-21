@@ -72,7 +72,12 @@ var stone = (function () {
 
                 if (x <= player.x + player.width - width / 2 && player.x < x + width - width / 2) {
                     this.setStatus(STATUS.DESTROYED);
-                    player.change(util.extend(true, {width: 55}, spritesData.tripRun));
+
+                    player.change(util.extend(true, {
+                        width: 55,
+                        asset: game.asset.spritesImg
+                    }, spritesData.tripRun));
+
                     // player.move(player.x, player.y + 10);
                     player.setAnimate({
                         target: {
@@ -102,7 +107,20 @@ var stone = (function () {
                                                 },
                                                 duration: 100,
                                                 completeFunc: function (e) {
-                                                    player.change(util.extend(true, {width: 48}, spritesData.normalRun));
+                                                    // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                                                    player.runStatus = 'normal';
+                                                    player.y = player.backupY;
+                                                    player.jumpFrames = 4;
+                                                    player.change(
+                                                        util.extend(
+                                                            true,
+                                                            {
+                                                                width: 48,
+                                                                asset: game.asset.spritesImg
+                                                            },
+                                                            spritesData.normalRun
+                                                        )
+                                                    );
                                                     // player.move(player.x, player.y - 10);
                                                 }
                                             });

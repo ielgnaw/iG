@@ -19,8 +19,8 @@ var guide = (function () {
      * 初始化第一个 guide 界面
      */
     function initGuideStep1() {
-        initLastGuide();
-        return;
+        // initLastGuide();
+        // return;
         var left = new ig.Bitmap({
             name: 'leftArrow',
             asset: game.asset.spritesImg,
@@ -32,6 +32,7 @@ var guide = (function () {
             height: 60,
             sHeight: 60,
             zIndex: 14,
+            followParent: 0
             // debug: 1,
         });
 
@@ -46,6 +47,7 @@ var guide = (function () {
             height: 60,
             sHeight: 60,
             zIndex: 14,
+            followParent: 0
             // debug: 1,
         });
 
@@ -62,6 +64,7 @@ var guide = (function () {
             sHeight: 95,
             zIndex: 14,
             alpha: 0,
+            followParent: 0
             // debug: 1,
         });
 
@@ -269,6 +272,7 @@ var guide = (function () {
             height: 110,
             sHeight: 110,
             zIndex: 14,
+            followParent: 0
             // debug: 1,
         });
 
@@ -285,6 +289,7 @@ var guide = (function () {
             sHeight: 95,
             zIndex: 14,
             alpha: 0,
+            followParent: 0
             // debug: 1,
         });
 
@@ -385,7 +390,7 @@ var guide = (function () {
                                     duration: 300,
                                     completeFunc: function (e) {
                                         danger.setStatus(STATUS.DESTROYED);
-                                        console.warn('出熊');
+                                        bear.create();
                                     }
                                 });
                             }
@@ -400,9 +405,9 @@ var guide = (function () {
         game = opts.game;
         stage = opts.stage;
 
-        // setInterval(function () {
-            // stone.create();
-        // }, 2000)
+        setInterval(function () {
+            stone.create();
+        }, 2000)
     }
 
     return {
