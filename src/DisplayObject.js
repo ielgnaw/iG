@@ -168,6 +168,20 @@ define(function (require) {
         },
 
         /**
+         * 设置 DisplayObject 实例的 relativeX, relativeY，只有子精灵才会有
+         *
+         * @param {number} x 横坐标
+         * @param {number} y 纵坐标
+         *
+         * @return {Object} DisplayObject 实例
+         */
+        setRelativeXY: function (x, y) {
+            this.relativeX = x;
+            this.relativeY = y;
+            return this;
+        },
+
+        /**
          * 设置状态
          *
          * @param {number} status 状态值
@@ -446,15 +460,31 @@ define(function (require) {
             var childLen = 0;
             if (Array.isArray(this.children) && (childLen = this.children.length)) {
                 var childAnimOpts = {};
+                if (!this._.isHandleChildren) {
+                    var children = this.children;
+                    this._.isHandleChildren = true;
+
+                    // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+                    for (var i = 0; i < childLen; i++) {
+                        var child = children[i];
+                        child.setRelativeXY(child.x, child.y);
+                        child.x += this.x;
+                        child.y += this.y;
+                        child.move(child.x, child.y);
+                        child.parent = this;
+                        child.setMatrix(this.matrix.m);
+                    }
+                }
+
                 for (var i = 0; i < childLen; i++) {
                     if (this.children[i].followParent) {
                         childAnimOpts = util.extend(true, {}, {source: this.children[i]}, opts);
                         // 子精灵的 x, y 是相对于父精灵的 x, y 来定位的
                         if (opts.target.x) {
-                            childAnimOpts.target.x += this.children[i].x;
+                            childAnimOpts.target.x += this.children[i].x + this.x;
                         }
                         if (opts.target.y) {
-                            childAnimOpts.target.y += this.children[i].y;
+                            childAnimOpts.target.y += this.children[i].y - this.y;
                         }
                         this.children[i].animate = new Animation(childAnimOpts).play();
                     }

@@ -42,7 +42,7 @@ var pinecone = (function () {
                 vy: -3 * game.ratioY,
                 x: x,
                 vx: vx * game.ratioX * 3,
-                // debug: 1,
+                debug: 1,
             })
         );
 
@@ -96,6 +96,67 @@ var pinecone = (function () {
                         })
                     );
                 }
+            }
+
+            var bear = stage.getDisplayObjectByName('bear');
+            if (this.collidesWith(bear)
+                // && (bear.y + bear.height) > (this.y + this.height)
+                // && (bear.y + bear.height / 2) < (this.y + this.height)
+                // && (this.y + this.height) >= (bear.y + bear.height)
+                && (this.y) <= (bear.y + bear.height - 30 * game.ratioY)
+                && (this.y) >= (bear.y + bear.height - 40 * game.ratioY)
+            ) {
+                var x = this.x;
+                var y = this.y;
+                var width = this.width;
+                var height = this.height;
+
+                // this.vx = 0;
+                // this.vy = 0;
+                // this.setScale(0.3824124999999976, 0.3824124999999976);
+                this.setStatus(STATUS.DESTROYED);
+
+                var t = new ig.Bitmap({
+                    name: 'boomBearPinecone',
+                    asset: game.asset.spritesImg,
+                    x: bear.x - 50 / 2, // + bear.width / 2,
+                    y: bear.y + bear.height / 2,
+                    sx: 0,
+                    sy: 430,
+                    width: 75,
+                    sWidth: 75,
+                    height: 90,
+                    sHeight: 90,
+                    zIndex: 10,
+                    children: [
+                        // 右
+                        new ig.Bitmap({
+                            name: 'boomBearPineconeChild1',
+                            asset: game.asset.spritesImg,
+                            x: bear.width * game.ratioX,
+                            y: 0,
+                            sx: 80,
+                            sy: 430,
+                            width: 75,
+                            sWidth: 75,
+                            height: 90,
+                            sHeight: 90,
+                            zIndex: 10,
+                        }),
+                    ]
+                });
+
+                t.setAnimate({
+                    target: {
+                        alpha: 0,
+                        y: 3 * game.ratioY
+                    },
+                    completeFunc: function (e) {
+                        t.setStatus(STATUS.DESTROYED);
+                    }
+                })
+                // debugger
+                stage.addDisplayObject(t);
             }
 
             if (this.y < 100 * game.ratioY) {

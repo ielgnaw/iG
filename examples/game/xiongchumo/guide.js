@@ -407,7 +407,8 @@ var guide = (function () {
 
         setInterval(function () {
             pinecone.create();
-        }, 2000)
+        }, 2000);
+        bear.create();
     }
 
     return {

@@ -58,7 +58,7 @@ var bear = (function () {
             }
         });
 
-        return bear
+        return bear;
     };
 
     exports.setup = function (opts) {

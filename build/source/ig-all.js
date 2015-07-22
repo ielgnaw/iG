@@ -2369,6 +2369,11 @@ define('ig/DisplayObject', [
             this.matrix.m = m;
             return this;
         },
+        setRelativeXY: function (x, y) {
+            this.relativeX = x;
+            this.relativeY = y;
+            return this;
+        },
         setStatus: function (status) {
             this.status = status || this.status;
             var children = this.children;
@@ -2467,14 +2472,27 @@ define('ig/DisplayObject', [
             var childLen = 0;
             if (Array.isArray(this.children) && (childLen = this.children.length)) {
                 var childAnimOpts = {};
+                if (!this._.isHandleChildren) {
+                    var children = this.children;
+                    this._.isHandleChildren = true;
+                    for (var i = 0; i < childLen; i++) {
+                        var child = children[i];
+                        child.setRelativeXY(child.x, child.y);
+                        child.x += this.x;
+                        child.y += this.y;
+                        child.move(child.x, child.y);
+                        child.parent = this;
+                        child.setMatrix(this.matrix.m);
+                    }
+                }
                 for (var i = 0; i < childLen; i++) {
                     if (this.children[i].followParent) {
                         childAnimOpts = util.extend(true, {}, { source: this.children[i] }, opts);
                         if (opts.target.x) {
-                            childAnimOpts.target.x += this.children[i].x;
+                            childAnimOpts.target.x += this.children[i].x + this.x;
                         }
                         if (opts.target.y) {
-                            childAnimOpts.target.y += this.children[i].y;
+                            childAnimOpts.target.y += this.children[i].y - this.y;
                         }
                         this.children[i].animate = new Animation(childAnimOpts).play();
                     }
@@ -3763,6 +3781,7 @@ define('ig/Stage', [
                 displayObj.game = this.game;
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
+                _childrenHandler.call(this, displayObj);
             }
             return displayObj;
         },
@@ -3816,6 +3835,34 @@ define('ig/Stage', [
                     curDisplay._step(dt, stepCount, requestID);
                     curDisplay.step(dt, stepCount, requestID);
                 }
+            }
+        }
+    }
+    function _childrenHandler(displayObj) {
+        var children = displayObj.children;
+        if (!Array.isArray(children)) {
+            return;
+        }
+        if (!displayObj._.isHandleChildren) {
+            displayObj._.isHandleChildren = true;
+            var stage = this;
+            var len = children.length;
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                child.setRelativeXY(child.x, child.y);
+                child.x += displayObj.x;
+                child.y += displayObj.y;
+                child.move(child.x, child.y);
+                child.parent = displayObj;
+                child.setMatrix(displayObj.matrix.m);
+                stage.addDisplayObject(child);
+            }
+        } else {
+            var stage = this;
+            var len = children.length;
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                stage.addDisplayObject(child);
             }
         }
     }
@@ -4310,6 +4357,9 @@ define('ig/Rectangle', [
             return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
         },
         collidesWith: function (rectangle) {
+            if (!rectangle) {
+                return false;
+            }
             return !(this.x + this.width < rectangle.x || rectangle.x + rectangle.width < this.x || this.y + this.height < rectangle.y || rectangle.y + rectangle.height < this.y);
         },
         separationOnAxes: function (axes, rectangle) {
@@ -4337,7 +4387,6 @@ define('ig/Rectangle', [
             return this;
         },
         render: function (ctx) {
-            _childrenHandler.call(this);
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -4376,28 +4425,6 @@ define('ig/Rectangle', [
             }
         }
     };
-    function _childrenHandler() {
-        if (!this._.isHandleChildren) {
-            this._.isHandleChildren = true;
-            var children = this.children;
-            if (!Array.isArray(children)) {
-                children = [children];
-            }
-            var stage = this.stage;
-            var len = children.length;
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
-                child.relativeX = child.x;
-                child.relativeY = child.y;
-                child.x += this.x;
-                child.y += this.y;
-                child.move(child.x, child.y);
-                child.parent = this;
-                child.setMatrix(this.matrix.m);
-                stage.addDisplayObject(child);
-            }
-        }
-    }
     util.inherits(Rectangle, DisplayObject);
     return Rectangle;
 });'use strict';
@@ -4553,6 +4580,9 @@ define('ig/Polygon', [
             return new Projection(Math.min.apply(Math, scalars), Math.max.apply(Math, scalars));
         },
         collidesWith: function (polygon) {
+            if (!polygon) {
+                return false;
+            }
             var axes = this.getAxes().concat(polygon.getAxes());
             return !this.separationOnAxes(axes, polygon);
         },
@@ -4607,7 +4637,6 @@ define('ig/Polygon', [
             return this;
         },
         render: function (ctx) {
-            _childrenHandler.call(this);
             ctx.save();
             ctx.fillStyle = this.fillStyle;
             ctx.strokeStyle = this.strokeStyle;
@@ -4648,28 +4677,6 @@ define('ig/Polygon', [
             }
         }
     };
-    function _childrenHandler() {
-        if (!this._.isHandleChildren) {
-            this._.isHandleChildren = true;
-            var children = this.children;
-            if (!Array.isArray(children)) {
-                children = [children];
-            }
-            var stage = this.stage;
-            var len = children.length;
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
-                child.relativeX = child.x;
-                child.relativeY = child.y;
-                child.x += this.x;
-                child.y += this.y;
-                child.move(child.x, child.y);
-                child.parent = this;
-                child.setMatrix(this.matrix.m);
-                stage.addDisplayObject(child);
-            }
-        }
-    }
     util.inherits(Polygon, DisplayObject);
     return Polygon;
 });

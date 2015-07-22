@@ -225,6 +225,10 @@ define(function (require) {
             // var axes = this.getAxes().concat(rectangle.getAxes());
             // return !this.separationOnAxes(axes, rectangle);
 
+            if (!rectangle) {
+                return false;
+            }
+
             return !(
                 this.x + this.width < rectangle.x
                     || rectangle.x + rectangle.width < this.x
@@ -287,7 +291,7 @@ define(function (require) {
          * @return {Object} 当前 Rectangle 实例
          */
         render: function (ctx) {
-            _childrenHandler.call(this);
+            // _childrenHandler.call(this);
 
             ctx.save();
             ctx.fillStyle = this.fillStyle;
@@ -359,31 +363,32 @@ define(function (require) {
     /**
      * 子精灵的处理
      */
-    function _childrenHandler() {
-        if (!this._.isHandleChildren) {
-            this._.isHandleChildren = true;
-            var children = this.children;
-            if (!Array.isArray(children)) {
-                children = [children];
-            }
+    // function _childrenHandler() {
+    //     if (!this._.isHandleChildren) {
+    //         this._.isHandleChildren = true;
+    //         var children = this.children;
+    //         if (!Array.isArray(children)) {
+    //             children = [children];
+    //         }
 
-            var stage = this.stage;
-            var len = children.length;
+    //         var stage = this.stage;
+    //         var len = children.length;
 
-            // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
-                child.relativeX = child.x;
-                child.relativeY = child.y;
-                child.x += this.x;
-                child.y += this.y;
-                child.move(child.x, child.y);
-                child.parent = this;
-                child.setMatrix(this.matrix.m);
-                stage.addDisplayObject(child);
-            }
-        }
-    }
+    //         // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+    //         for (var i = 0; i < len; i++) {
+    //             var child = children[i];
+    //             child.setRelativeXY(child.x, child.y);
+    //             // child.relativeX = child.x;
+    //             // child.relativeY = child.y;
+    //             child.x += this.x;
+    //             child.y += this.y;
+    //             child.move(child.x, child.y);
+    //             child.parent = this;
+    //             child.setMatrix(this.matrix.m);
+    //             stage.addDisplayObject(child);
+    //         }
+    //     }
+    // }
 
     util.inherits(Rectangle, DisplayObject);
 

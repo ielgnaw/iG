@@ -269,6 +269,10 @@ define(function (require) {
          * @return {boolean} 结果
          */
         collidesWith: function (polygon) {
+            if (!polygon) {
+                return false;
+            }
+
             var axes = this.getAxes().concat(polygon.getAxes());
             return !this.separationOnAxes(axes, polygon);
         },
@@ -357,7 +361,7 @@ define(function (require) {
          * @return {Object} 当前 Polygon 实例
          */
         render: function (ctx) {
-            _childrenHandler.call(this);
+            // _childrenHandler.call(this);
 
             ctx.save();
             ctx.fillStyle = this.fillStyle;
@@ -432,31 +436,31 @@ define(function (require) {
     /**
      * 子精灵的处理
      */
-    function _childrenHandler() {
-        if (!this._.isHandleChildren) {
-            this._.isHandleChildren = true;
-            var children = this.children;
-            if (!Array.isArray(children)) {
-                children = [children];
-            }
+    // function _childrenHandler() {
+    //     if (!this._.isHandleChildren) {
+    //         this._.isHandleChildren = true;
+    //         var children = this.children;
+    //         if (!Array.isArray(children)) {
+    //             children = [children];
+    //         }
 
-            var stage = this.stage;
-            var len = children.length;
+    //         var stage = this.stage;
+    //         var len = children.length;
 
-            // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
-                child.relativeX = child.x;
-                child.relativeY = child.y;
-                child.x += this.x;
-                child.y += this.y;
-                child.move(child.x, child.y);
-                child.parent = this;
-                child.setMatrix(this.matrix.m);
-                stage.addDisplayObject(child);
-            }
-        }
-    }
+    //         // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+    //         for (var i = 0; i < len; i++) {
+    //             var child = children[i];
+    //             child.relativeX = child.x;
+    //             child.relativeY = child.y;
+    //             child.x += this.x;
+    //             child.y += this.y;
+    //             child.move(child.x, child.y);
+    //             child.parent = this;
+    //             child.setMatrix(this.matrix.m);
+    //             stage.addDisplayObject(child);
+    //         }
+    //     }
+    // }
 
     util.inherits(Polygon, DisplayObject);
 

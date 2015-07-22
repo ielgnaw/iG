@@ -370,6 +370,8 @@ define(function (require) {
                 displayObj.game = this.game;
                 this.displayObjectList.push(displayObj);
                 this.displayObjects[displayObj.name] = displayObj;
+
+                _childrenHandler.call(this, displayObj);
             }
             return displayObj;
         },
@@ -475,6 +477,49 @@ define(function (require) {
                     curDisplay._step(dt, stepCount, requestID);
                     curDisplay.step(dt, stepCount, requestID);
                 }
+            }
+        }
+    }
+
+    /**
+     * 子精灵的处理
+     *
+     * @param {Object} displayObj displayObject 对象
+     */
+    function _childrenHandler(displayObj) {
+        var children = displayObj.children;
+        if (!Array.isArray(children)) {
+            return;
+        }
+
+        if (!displayObj._.isHandleChildren) {
+            displayObj._.isHandleChildren = true;
+
+            var stage = this;
+            var len = children.length;
+
+            // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                child.setRelativeXY(child.x, child.y);
+                // child.relativeX = child.x;
+                // child.relativeY = child.y;
+                child.x += displayObj.x;
+                child.y += displayObj.y;
+                child.move(child.x, child.y);
+                child.parent = displayObj;
+                child.setMatrix(displayObj.matrix.m);
+                stage.addDisplayObject(child);
+            }
+        }
+        else {
+            var stage = this;
+            var len = children.length;
+
+            // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
+            for (var i = 0; i < len; i++) {
+                var child = children[i];
+                stage.addDisplayObject(child);
             }
         }
     }
