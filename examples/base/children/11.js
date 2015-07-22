@@ -51,7 +51,7 @@ window.onload = function () {
             width: 80,
             height: 80,
             mouseEnable: true,
-            followParent: 0,
+            // followParent: 0,
             // vx: 1,
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
@@ -79,6 +79,7 @@ window.onload = function () {
             // vx: 1,
             mouseEnable: true,
             vx: 1,
+            angle: 30,
             children: [bitmapChild],
             moveFunc: function (d) {
                 d.domEvent.preventDefault();
@@ -97,28 +98,28 @@ window.onload = function () {
         // this.scaleY += 0.01;
         // console.warn(dt);
 
-        this.vx += this.ax * dt;
-        this.vx *= this.frictionX * dt;
-        this.vy += this.ay * dt;
-        this.vy *= this.frictionY * dt;
+        // this.vx += this.ax * dt;
+        // this.vx *= this.frictionX * dt;
+        // this.vy += this.ay * dt;
+        // this.vy *= this.frictionY * dt;
 
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
+        // this.x += this.vx * dt;
+        // this.y += this.vy * dt;
 
-        if (this.bounds.x + this.bounds.width > game1.width) {
-            this.vx = -Math.abs(this.vx);
-        }
-        else if (this.bounds.x < 0) {
-            this.vx = Math.abs(this.vx);
-        }
+        // if (this.bounds.x + this.bounds.width > game1.width) {
+        //     this.vx = -Math.abs(this.vx);
+        // }
+        // else if (this.bounds.x < 0) {
+        //     this.vx = Math.abs(this.vx);
+        // }
 
-        if (this.bounds.y + this.bounds.height > game1.height) {
-            this.vy = -Math.abs(this.vy);
-        }
-        else if (this.bounds.y < 0) {
-            this.vy = Math.abs(this.vy);
-        }
-        this.move(this.x, this.y);
+        // if (this.bounds.y + this.bounds.height > game1.height) {
+        //     this.vy = -Math.abs(this.vy);
+        // }
+        // else if (this.bounds.y < 0) {
+        //     this.vy = Math.abs(this.vy);
+        // }
+        // this.move(this.x, this.y);
     };
 
     console.warn(rectangle1);

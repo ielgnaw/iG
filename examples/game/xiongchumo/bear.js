@@ -53,8 +53,20 @@ var bear = (function () {
             },
             duration: 3000,
             completeFunc: function (e) {
-                console.warn(e);
-                console.warn('开始积分');
+                game.on('afterGameStep', function (e) {
+                    var resultText = stage.getDisplayObjectByName('resultText');
+                    resultText.alpha = 1;
+                    var score = resultText.getContent();
+                    score = parseInt(score, 10) + 1 + '米';
+                    resultText.changeContent(score);
+                });
+                pinecone.loopCreate();
+                setTimeout(function () {
+                    rollBranch.loopCreate();
+                    setTimeout(function () {
+                        stone.loopCreate();
+                    }, 3000);
+                }, 3000);
             }
         });
 

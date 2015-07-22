@@ -32,7 +32,7 @@ window.onload = function () {
         // sHeight: 110,
         debug: 1,
         x: 50,
-        y: 50,
+        y: 160,
         width: 80,
         height: 100,
         // followParent: 0,
@@ -72,7 +72,7 @@ window.onload = function () {
     );
 
     rectangle1.step = function (dt, stepCount, requestID) {
-        // this.angle += 1;
+        this.angle += 1;
         // this.children[0].angle += 1;
         // this.alpha -= 0.01;
         // this.setScale(this.scaleX + 0.01, this.scaleY + 0.01);

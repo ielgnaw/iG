@@ -60,17 +60,19 @@ var stone = (function () {
             this.move(this.x, this.y);
             this.setScale(this.scaleX - scaleRatio, this.scaleY - scaleRatio);
 
+            var isCollide = false;
+            var x = this.x;
+            var y = this.y;
+            var width = this.width;
+            var height = this.height;
+
             if (this.collidesWith(player)
                 // && (player.y + player.height) > (this.y + this.height)
                 // && (player.y + player.height / 2) < (this.y + this.height)
                 && (this.y + this.height) >= (player.y + player.height)
             ) {
-                var x = this.x;
-                var y = this.y;
-                var width = this.width;
-                var height = this.height;
-
                 if (x <= player.x + player.width - width / 2 && player.x < x + width - width / 2) {
+                    isCollide = true;
                     this.setStatus(STATUS.DESTROYED);
 
                     player.change(util.extend(true, {
@@ -163,108 +165,127 @@ var stone = (function () {
                             }
                         }
                     });
-
-                    var breakStonePiece = stage.addDisplayObject(
-                        new ig.Bitmap({
-                            name: 'breakStonePiece',
-                            asset: game.asset.spritesImg,
-                            x: x - 10,
-                            y: y,
-                            sx: 327,
-                            sy: 428,
-                            width: 23,
-                            sWidth: 23,
-                            height: 20,
-                            sHeight: 20,
-                            zIndex: 10,
-                            children: [
-                                // 右
-                                new ig.Bitmap({
-                                    name: 'breakStonePieceChild1',
-                                    asset: game.asset.spritesImg,
-                                    x: 10,
-                                    y: 10,
-                                    sx: 350,
-                                    sy: 428,
-                                    width: 23,
-                                    sWidth: 23,
-                                    height: 20,
-                                    sHeight: 20,
-                                    zIndex: 10,
-                                }),
-                                // 左
-                                new ig.Bitmap({
-                                    name: 'breakStonePieceChild2',
-                                    asset: game.asset.spritesImg,
-                                    x: 30,
-                                    y: 30,
-                                    sx: 305,
-                                    sy: 428,
-                                    width: 23,
-                                    sWidth: 23,
-                                    height: 20,
-                                    sHeight: 20,
-                                    zIndex: 10,
-                                }),
-                                new ig.Bitmap({
-                                    name: 'breakStonePieceChild3',
-                                    asset: game.asset.spritesImg,
-                                    x: 40,
-                                    y: 25,
-                                    sx: 350,
-                                    sy: 428,
-                                    width: 23,
-                                    sWidth: 23,
-                                    height: 20,
-                                    sHeight: 20,
-                                    zIndex: 10,
-                                }),
-                                new ig.Bitmap({
-                                    name: 'breakStonePieceChild4',
-                                    asset: game.asset.spritesImg,
-                                    x: 50,
-                                    y: 10,
-                                    sx: 305,
-                                    sy: 428,
-                                    width: 23,
-                                    sWidth: 23,
-                                    height: 20,
-                                    sHeight: 20,
-                                    zIndex: 10,
-                                }),
-                                new ig.Bitmap({
-                                    name: 'breakStonePieceChild5',
-                                    asset: game.asset.spritesImg,
-                                    x: 60,
-                                    y: 0,
-                                    sx: 327,
-                                    sy: 428,
-                                    width: 23,
-                                    sWidth: 23,
-                                    height: 20,
-                                    sHeight: 20,
-                                    zIndex: 10,
-                                })
-                            ]
-                        })
-                    );
-
-                    breakStonePiece.step = function () {
-                        this.move(this.x, this.y - 2);
-                        this.scaleX -= 0.02;
-                        this.scaleY -= 0.02;
-                        this.alpha -= 0.1;
-                        if (this.alpha < 0) {
-                            this.alpha = 1;
-                        }
-                        for (var i = 0, len = this.children.length; i < len; i++) {
-                            this.children[i].alpha = this.alpha;
-                        }
-                        if (this.scaleX.toFixed(2) === '0.00' || this.scaleX.toFixed(2) === '-0.00') {
-                            this.setStatus(STATUS.DESTROYED);
-                        }
-                    };
                 }
+            }
+
+            var bear = stage.getDisplayObjectByName('bear');
+            if (this.collidesWith(bear)
+                // && (bear.y + bear.height) > (this.y + this.height)
+                // && (bear.y + bear.height / 2) < (this.y + this.height)
+                // && (this.y + this.height) >= (bear.y + bear.height)
+                && (this.y) <= (bear.y + bear.height - 30 * game.ratioY)
+                && (this.y) >= (bear.y + bear.height - 40 * game.ratioY)
+            ) {
+                isCollide = true;
+                this.setStatus(STATUS.DESTROYED);
+            }
+
+            if (isCollide) {
+                var breakStonePiece = stage.addDisplayObject(
+                    new ig.Bitmap({
+                        name: 'breakStonePiece_' + Date.now(),
+                        asset: game.asset.spritesImg,
+                        x: x - 10,
+                        y: y,
+                        sx: 327,
+                        sy: 428,
+                        width: 23,
+                        sWidth: 23,
+                        height: 20,
+                        sHeight: 20,
+                        zIndex: 10,
+                        children: [
+                            // 右
+                            new ig.Bitmap({
+                                name: 'breakStonePieceChild1_' + Date.now(),
+                                asset: game.asset.spritesImg,
+                                x: 10,
+                                y: 10,
+                                sx: 350,
+                                sy: 428,
+                                width: 23,
+                                sWidth: 23,
+                                height: 20,
+                                sHeight: 20,
+                                zIndex: 10,
+                            }),
+                            // 左
+                            new ig.Bitmap({
+                                name: 'breakStonePieceChild2_' + Date.now(),
+                                asset: game.asset.spritesImg,
+                                x: 30,
+                                y: 30,
+                                sx: 305,
+                                sy: 428,
+                                width: 23,
+                                sWidth: 23,
+                                height: 20,
+                                sHeight: 20,
+                                zIndex: 10,
+                            }),
+                            new ig.Bitmap({
+                                name: 'breakStonePieceChild3_' + Date.now(),
+                                asset: game.asset.spritesImg,
+                                x: 40,
+                                y: 25,
+                                sx: 350,
+                                sy: 428,
+                                width: 23,
+                                sWidth: 23,
+                                height: 20,
+                                sHeight: 20,
+                                zIndex: 10,
+                            }),
+                            new ig.Bitmap({
+                                name: 'breakStonePieceChild4_' + Date.now(),
+                                asset: game.asset.spritesImg,
+                                x: 50,
+                                y: 10,
+                                sx: 305,
+                                sy: 428,
+                                width: 23,
+                                sWidth: 23,
+                                height: 20,
+                                sHeight: 20,
+                                zIndex: 10,
+                            }),
+                            new ig.Bitmap({
+                                name: 'breakStonePieceChild5_'+ Date.now(),
+                                asset: game.asset.spritesImg,
+                                x: 60,
+                                y: 0,
+                                sx: 327,
+                                sy: 428,
+                                width: 23,
+                                sWidth: 23,
+                                height: 20,
+                                sHeight: 20,
+                                zIndex: 10,
+                            })
+                        ]
+                    })
+                );
+
+                breakStonePiece.step = function () {
+                    this.move(this.x, this.y - 2);
+                    this.scaleX -= 0.02;
+                    this.scaleY -= 0.02;
+                    this.alpha -= 0.1;
+                    if (this.alpha < 0) {
+                        this.alpha = 1;
+                    }
+                    for (var i = 0, len = this.children.length; i < len; i++) {
+                        this.children[i].alpha = this.alpha;
+                    }
+                    if (this.scaleX.toFixed(2) === '0.00' || this.scaleX.toFixed(2) === '-0.00') {
+                        this.setStatus(STATUS.DESTROYED);
+                        if (isLoop) {
+                            setTimeout(function () {
+                                _create(isLoop);
+                            }, util.randomInt(2000, 5000));
+                        }
+                    }
+                };
             }
 
             if (this.y < 100 * game.ratioY) {

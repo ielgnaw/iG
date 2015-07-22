@@ -12,7 +12,6 @@ var rollBranch = (function () {
     var util = ig.util;
     var CONFIG = ig.getConfig();
     var STATUS = CONFIG.status;
-    var abs = Math.abs;
 
     var game;
     var stage;
@@ -28,7 +27,7 @@ var rollBranch = (function () {
     function _create(isLoop) {
         var x = util.randomInt(0, game.width - rollBranchWidth);
         // var x = 100;
-        var vx = ((game.width - rollBranchWidth) / 2 - x) / (game.height);
+        // var vx = ((game.width - rollBranchWidth) / 2 - x) / (game.height);
         var p = stage.addDisplayObject(
             new ig.SpriteSheet({
                 name: 'rollBranch' + (guid++),
@@ -60,14 +59,17 @@ var rollBranch = (function () {
             this.move(this.x, this.y);
             this.setScale(this.scaleX - scaleRatio, this.scaleY - scaleRatio);
             // console.warn(this.y, player.y + player.height, player.y + player.height - this.y);
+            var isCollide = false;
+
+            var x;
+            var y;
+
             var sub = Math.abs(player.y + player.height - this.y - this.height / 2);
             if (this.collidesWith(player) && sub >= 0 && sub <= 2) {
-                var x = this.x;
-                var y = this.y;
-                var width = this.width;
-                var height = this.height;
-
+                isCollide = true;
                 this.setStatus(STATUS.DESTROYED);
+                x = player.x - 100;
+                y = player.y + player.height / 2 + 50;
                 player.change(
                     util.extend(true, {
                         width: 55,
@@ -118,11 +120,11 @@ var rollBranch = (function () {
                                                     }, spritesData.normalRun)
                                                 );
                                                 // player.move(player.x, player.y - 10);
-                                                if (isLoop) {
-                                                    setTimeout(function () {
-                                                        _create(isLoop);
-                                                    }, util.randomInt(2000, 5000));
-                                                }
+                                                // if (isLoop) {
+                                                //     setTimeout(function () {
+                                                //         _create(isLoop);
+                                                //     }, util.randomInt(2000, 5000));
+                                                // }
                                             }
                                         });
                                     }
@@ -131,13 +133,29 @@ var rollBranch = (function () {
                         });
                     }
                 });
+            }
 
+            var bear = stage.getDisplayObjectByName('bear');
+            if (this.collidesWith(bear)
+                // && (bear.y + bear.height) > (this.y + this.height)
+                // && (bear.y + bear.height / 2) < (this.y + this.height)
+                // && (this.y + this.height) >= (bear.y + bear.height)
+                && (this.y) <= (bear.y + bear.height - 30 * game.ratioY)
+                && (this.y) >= (bear.y + bear.height - 40 * game.ratioY)
+            ) {
+                isCollide = true;
+                this.setStatus(STATUS.DESTROYED);
+                x = bear.x - 100;
+                y = bear.y + bear.height / 2 + 50;
+            }
+
+            if (isCollide) {
                 var breakBranchPiece = stage.addDisplayObject(
                     new ig.Bitmap({
-                        name: 'breakBranchPiece',
+                        name: 'breakBranchPiece_' + Date.now(),
                         asset: game.asset.spritesImg,
-                        x: player.x - 100,
-                        y: player.y + player.height / 2 + 50,
+                        x: x,
+                        y: y,
                         sx: 733,
                         sy: 171,
                         width: 168,
@@ -149,7 +167,7 @@ var rollBranch = (function () {
                         children: [
                             // 右
                             new ig.Bitmap({
-                                name: 'breakBranchPieceChild1',
+                                name: 'breakBranchPieceChild1_' + Date.now(),
                                 asset: game.asset.spritesImg,
                                 x: 100,
                                 y: -7,
@@ -165,7 +183,7 @@ var rollBranch = (function () {
                                 // debug: 1
                             }),
                             new ig.Bitmap({
-                                name: 'breakBranchPieceChild2',
+                                name: 'breakBranchPieceChild2_' + Date.now(),
                                 asset: game.asset.spritesImg,
                                 x: 150,
                                 y: -25,
@@ -181,7 +199,7 @@ var rollBranch = (function () {
                                 // debug: 1
                             }),
                             new ig.Bitmap({
-                                name: 'breakBranchPieceChild3',
+                                name: 'breakBranchPieceChild3_' + Date.now(),
                                 asset: game.asset.spritesImg,
                                 x: 30,
                                 y: -25,
@@ -216,6 +234,11 @@ var rollBranch = (function () {
                     }
                     if (this.scaleX.toFixed(2) === '0.00' || this.scaleX.toFixed(2) === '-0.00') {
                         this.setStatus(STATUS.DESTROYED);
+                        if (isLoop) {
+                            setTimeout(function () {
+                                _create(isLoop);
+                            }, util.randomInt(2000, 5000));
+                        }
                     }
                 };
             }

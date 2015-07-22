@@ -15,6 +15,27 @@ window.onload = function () {
         e.stopPropagation();
     });
 
+    var resultText;
+
+    // var resultText = new ig.Text({
+    //     name: 'resultText',
+    //     content: '99999999米',
+    //     // content: '1米',
+    //     x: game.width - 125 * game.ratioX,
+    //     y: 10 * game.ratioY,
+    //     size: 17 * game.ratioX,
+    //     isBold: true,
+    //     angle: 0,
+    //     zIndex: 100,
+    //     fillStyle: '#fff',
+    //     followParent: 0,
+    //     width: 125 * game.ratioX,
+    //     // width: 32 * game.ratioX,
+    //     // debug: 1
+    // });
+
+    // stage.addDisplayObject(resultText);
+
     var game = new ig.Game({
         canvas: canvas,
         name: 'xiongchumoGame',
@@ -36,6 +57,21 @@ window.onload = function () {
             = 'loading: ' + (e.data.loadedCount / e.data.total).toFixed(1) * 100 + '%';
     }).on('loadResDone', function (e) {
         loadProcessNode.style.display = 'none';
+        resultText = new ig.Text({
+            name: 'resultText',
+            content: '00000000米',
+            // content: '1米',
+            x: game.width - 125 * game.ratioX,
+            y: 10 * game.ratioY,
+            size: 17 * game.ratioX,
+            isBold: true,
+            angle: 0,
+            zIndex: 100,
+            fillStyle: '#fff',
+            alpha: 0
+            // width: 125 * game.ratioX,
+        });
+        stage.addDisplayObject(resultText);
     });
 
     var spritesData;

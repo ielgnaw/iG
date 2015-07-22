@@ -405,10 +405,11 @@ var guide = (function () {
         game = opts.game;
         stage = opts.stage;
 
-        setInterval(function () {
-            pinecone.create();
-        }, 2000);
-        bear.create();
+        // setInterval(function () {
+        //     stone.create();
+        // }, 2000);
+        // rollBranch.loopCreate();
+        // bear.create();
     }
 
     return {

@@ -42,7 +42,7 @@ var pinecone = (function () {
                 vy: -3 * game.ratioY,
                 x: x,
                 vx: vx * game.ratioX * 3,
-                debug: 1,
+                // debug: 1,
             })
         );
 
@@ -111,51 +111,38 @@ var pinecone = (function () {
                 var width = this.width;
                 var height = this.height;
 
-                // this.vx = 0;
-                // this.vy = 0;
-                // this.setScale(0.3824124999999976, 0.3824124999999976);
                 this.setStatus(STATUS.DESTROYED);
 
                 var t = new ig.Bitmap({
-                    name: 'boomBearPinecone',
+                    name: 'boomBearPinecone_' + Date.now(),
                     asset: game.asset.spritesImg,
-                    x: bear.x - 50 / 2, // + bear.width / 2,
+                    // x: game.ratioX * (bear.x), // + bear.width / 2,
+                    x: (game.width - 140) / 2,
                     y: bear.y + bear.height / 2,
-                    sx: 0,
+                    sx: 10,
                     sy: 430,
-                    width: 75,
-                    sWidth: 75,
+                    width: 140,
+                    sWidth: 140,
                     height: 90,
                     sHeight: 90,
                     zIndex: 10,
-                    children: [
-                        // 右
-                        new ig.Bitmap({
-                            name: 'boomBearPineconeChild1',
-                            asset: game.asset.spritesImg,
-                            x: bear.width * game.ratioX,
-                            y: 0,
-                            sx: 80,
-                            sy: 430,
-                            width: 75,
-                            sWidth: 75,
-                            height: 90,
-                            sHeight: 90,
-                            zIndex: 10,
-                        }),
-                    ]
+                    // debug: 1
                 });
-
                 t.setAnimate({
                     target: {
                         alpha: 0,
-                        y: 3 * game.ratioY
+                        y: 3 * game.ratioY,
                     },
+                    duration: 1000,
                     completeFunc: function (e) {
                         t.setStatus(STATUS.DESTROYED);
+                        if (isLoop) {
+                            setTimeout(function () {
+                                _create(isLoop);
+                            }, util.randomInt(2000, 5000));
+                        }
                     }
                 })
-                // debugger
                 stage.addDisplayObject(t);
             }
 
