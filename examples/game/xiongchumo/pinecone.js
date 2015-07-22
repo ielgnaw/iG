@@ -24,27 +24,55 @@ var pinecone = (function () {
     var pineconeWidth = 50;
     var guid = 0;
 
+    var pineconeCount = 0;
+
     function _create(isLoop) {
+        if (isLoop) {
+            pineconeCount++;
+        }
         var x = util.randomInt(0, game.width - pineconeWidth);
         // var x = 100;
         var vx = ((game.width - pineconeWidth) / 2 - x) / (game.height);
-        var p = stage.addDisplayObject(
-            new ig.SpriteSheet({
-                name: 'pinecone' + (guid++),
-                asset: game.asset.spritesImg,
-                sheetData: spritesData.pinecone,
-                sheetKey: 'pinecone',
-                jumpFrames: 4,
-                zIndex: 5,
-                y: game.height - 50,
-                width: 50,
-                height: 50,
-                vy: -3 * game.ratioY,
-                x: x,
-                vx: vx * game.ratioX * 3,
-                // debug: 1,
-            })
-        );
+
+        var p = new ig.SpriteSheet({
+            name: 'pinecone' + (guid++),
+            asset: game.asset.spritesImg,
+            sheetData: spritesData.pinecone,
+            sheetKey: 'pinecone',
+            jumpFrames: 4,
+            zIndex: 5,
+            y: game.height - 50,
+            width: 50,
+            height: 50,
+            vy: -3 * game.ratioY,
+            x: x,
+            vx: vx * game.ratioX * 3,
+            // debug: 1,
+        })
+
+        // isLoop 存在说明不是引导模式
+        if (isLoop && player.runStatus !== 'super') {
+            pineconeCount = 0;
+            var q = util.randomInt(0, 99);
+            // 超级药水
+            if (q % 3 === 0) {
+                p = new ig.Bitmap({
+                    name: 'pinecone' + (guid++),
+                    asset: game.asset.spritesImg,
+                    zIndex: 5,
+                    y: game.height - 50,
+                    vy: -3 * game.ratioY,
+                    x: x,
+                    vx: vx * game.ratioX * 3,
+                    sx: 570,
+                    sy: 314,
+                    width: 50,
+                    sWidth: 50,
+                    height: 65,
+                    sHeight: 65,
+                });
+            }
+        }
 
         p.step = function (dt, stepCount, requestID) {
             this.vx += this.ax * dt;
@@ -58,10 +86,10 @@ var pinecone = (function () {
             this.move(this.x, this.y);
             this.setScale(this.scaleX - scaleRatio, this.scaleY - scaleRatio);
 
+            var bear = stage.getDisplayObjectByName('bear');
+
             if (this.collidesWith(player)
-                // && (player.y + player.height) > (this.y + this.height)
-                // && (player.y + player.height / 2) < (this.y + this.height)
-                // && (this.y + this.height) >= (player.y + player.height)
+                && player.runStatus !== 'super'
                 && (this.y) <= (player.y + player.height - 30 * game.ratioY)
                 && (this.y) >= (player.y + player.height - 40 * game.ratioY)
             ) {
@@ -72,6 +100,31 @@ var pinecone = (function () {
 
                 if (x <= player.x + player.width - width / 2 && player.x < x + width - width / 2) {
                     this.setStatus(STATUS.DESTROYED);
+
+                    if (bear && bear.runStatus === 'complete') {
+                        if (bear.scaleX >= bear.backupScaleX) {
+                            bear.y -= game.ratioY;
+                            bear.setScale(
+                                (parseFloat(bear.scaleX) - 0.1).toFixed(1),
+                                (parseFloat(bear.scaleY) - 0.1).toFixed(1)
+                            );
+                        }
+                        // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                        player.runStatus = 'normal';
+                        player.y = player.backupY;
+                        player.jumpFrames = 4;
+                        player.change(
+                            util.extend(
+                                true,
+                                {
+                                    width: 48,
+                                    status: STATUS.NORMAL,
+                                    asset: game.asset.spritesImg
+                                },
+                                bear.scaleX >= 1.7 ? spritesData.dangerRun : spritesData.normalRun
+                            )
+                        );
+                    }
 
                     stage.addDisplayObject(
                         new ig.SpriteSheet({
@@ -88,9 +141,42 @@ var pinecone = (function () {
                             isOnceDestroyed: true,
                             onceDestroyedDone: function () {
                                 if (isLoop) {
-                                    setTimeout(function () {
+                                    var timeout = setTimeout(function () {
+                                        clearTimeout(timeout);
                                         _create(isLoop);
                                     }, util.randomInt(2000, 5000));
+                                }
+
+                                // 吃到超级松果
+                                if (p instanceof ig.Bitmap) {
+                                    game.increaseMeter = 10;
+                                    var bg = stage.getDisplayObjectByName('bg');
+                                    var player = stage.getDisplayObjectByName('player');
+                                    bg.jumpFrames = 0.5;
+                                    player.jumpFrames = 3;
+                                    player.runStatus = 'super';
+                                    bear.y = bear.backupY;
+                                    bear.scaleX = bear.backupScaleX;
+                                    bear.scaleY = bear.backupScaleY;
+                                    var timeout1 = setTimeout(function () {
+                                        clearTimeout(timeout1);
+                                        game.increaseMeter = 1;
+                                        bg.jumpFrames = 1.2;
+                                        player.jumpFrames = 4;
+                                        player.runStatus = 'normal';
+                                        player.y = player.backupY;
+                                        player.change(
+                                            util.extend(
+                                                true,
+                                                {
+                                                    width: 48,
+                                                    status: STATUS.NORMAL,
+                                                    asset: game.asset.spritesImg
+                                                },
+                                                spritesData.normalRun
+                                            )
+                                        );
+                                    }, 10000);
                                 }
                             }
                         })
@@ -98,11 +184,9 @@ var pinecone = (function () {
                 }
             }
 
-            var bear = stage.getDisplayObjectByName('bear');
             if (this.collidesWith(bear)
-                // && (bear.y + bear.height) > (this.y + this.height)
-                // && (bear.y + bear.height / 2) < (this.y + this.height)
-                // && (this.y + this.height) >= (bear.y + bear.height)
+                && player.runStatus !== 'super'
+                && bear.runStatus === 'complete'
                 && (this.y) <= (bear.y + bear.height - 30 * game.ratioY)
                 && (this.y) >= (bear.y + bear.height - 40 * game.ratioY)
             ) {
@@ -113,7 +197,39 @@ var pinecone = (function () {
 
                 this.setStatus(STATUS.DESTROYED);
 
-                var t = new ig.Bitmap({
+                // 吃到超级松果
+                if (p instanceof ig.Bitmap) {
+                    bear.y += game.ratioY * 2;
+                    bear.setScale(
+                        (parseFloat(bear.scaleX) + 0.2).toFixed(1),
+                        (parseFloat(bear.scaleY) + 0.2).toFixed(1)
+                    );
+                }
+                else {
+                    bear.y += game.ratioY;
+                    bear.setScale(
+                        (parseFloat(bear.scaleX) + 0.1).toFixed(1),
+                        (parseFloat(bear.scaleY) + 0.1).toFixed(1)
+                    );
+                }
+
+                // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                player.runStatus = 'normal';
+                player.y = player.backupY;
+                player.jumpFrames = 4;
+                player.change(
+                    util.extend(
+                        true,
+                        {
+                            width: 48,
+                            status: STATUS.NORMAL,
+                            asset: game.asset.spritesImg
+                        },
+                        bear.scaleX >= 1.7 ? spritesData.dangerRun : spritesData.normalRun
+                    )
+                );
+
+                var boomBearPinecone = new ig.Bitmap({
                     name: 'boomBearPinecone_' + Date.now(),
                     asset: game.asset.spritesImg,
                     // x: game.ratioX * (bear.x), // + bear.width / 2,
@@ -128,33 +244,38 @@ var pinecone = (function () {
                     zIndex: 10,
                     // debug: 1
                 });
-                t.setAnimate({
+                boomBearPinecone.setAnimate({
                     target: {
                         alpha: 0,
                         y: 3 * game.ratioY,
                     },
                     duration: 1000,
                     completeFunc: function (e) {
-                        t.setStatus(STATUS.DESTROYED);
+                        boomBearPinecone.setStatus(STATUS.DESTROYED);
                         if (isLoop) {
-                            setTimeout(function () {
+                            var t = setTimeout(function () {
+                                clearTimeout(t);
                                 _create(isLoop);
                             }, util.randomInt(2000, 5000));
                         }
                     }
-                })
-                stage.addDisplayObject(t);
+                });
+                stage.addDisplayObject(boomBearPinecone);
             }
 
             if (this.y < 100 * game.ratioY) {
                 this.setStatus(STATUS.DESTROYED);
                 if (isLoop) {
-                    setTimeout(function () {
+                    var t1 = setTimeout(function () {
+                        clearTimeout(t1);
                         _create(isLoop);
                     }, util.randomInt(2000, 5000));
                 }
             }
         };
+
+        stage.addDisplayObject(p);
+
     }
 
     var exports = {};

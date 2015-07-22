@@ -2675,13 +2675,16 @@ define('ig/Text', [
             ctx.fillStyle = this.fillStyle;
             ctx.globalAlpha = this.alpha;
             ctx.font = this.font;
-            if (!this.parent || !this.followParent) {
-                this.matrix.reset();
-                this.matrix.translate(this.cx, this.cy);
+            this.matrix.reset();
+            this.matrix.translate(this.cx, this.cy);
+            if (this.parent && this.followParent) {
+                this.matrix.rotate(this.parent.angle);
+                this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
+            } else {
                 this.matrix.rotate(this.angle);
                 this.matrix.scale(this.scaleX, this.scaleY);
-                this.matrix.translate(-this.cx, -this.cy);
             }
+            this.matrix.translate(-this.cx, -this.cy);
             this.matrix.setCtxTransform(ctx);
             this.generatePoints();
             if (this.useCache) {
@@ -2983,7 +2986,8 @@ define('ig/SpriteSheet', [
                         this.status = STATUS.DESTROYED;
                         if (util.getType(this.onceDestroyedDone) === 'function') {
                             var me = this;
-                            setTimeout(function () {
+                            var timeout = setTimeout(function () {
+                                clearTimeout(timeout);
                                 me.onceDestroyedDone(me);
                             }, 10);
                         }

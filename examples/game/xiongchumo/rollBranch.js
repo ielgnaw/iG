@@ -63,13 +63,22 @@ var rollBranch = (function () {
 
             var x;
             var y;
-
+            var bear = stage.getDisplayObjectByName('bear');
             var sub = Math.abs(player.y + player.height - this.y - this.height / 2);
-            if (this.collidesWith(player) && sub >= 0 && sub <= 2) {
+            if (this.collidesWith(player) && sub >= 0 && sub <= 2 && player.runStatus !== 'super') {
                 isCollide = true;
                 this.setStatus(STATUS.DESTROYED);
                 x = player.x - 100;
                 y = player.y + player.height / 2 + 50;
+
+                if (bear && bear.runStatus === 'complete') {
+                    bear.y += game.ratioY;
+                    bear.setScale(
+                        (parseFloat(bear.scaleX) + 0.1).toFixed(1),
+                        (parseFloat(bear.scaleY) + 0.1).toFixed(1)
+                    );
+                }
+
                 player.change(
                     util.extend(true, {
                         width: 55,
@@ -80,73 +89,70 @@ var rollBranch = (function () {
                 );
 
                 player.setAnimate({
-                    target: {
-                        y: player.y - 10,
-                        // alpha: 0
+                    range: {
+                        y: 10,
                     },
-                    duration: 100,
-                    completeFunc: function (e) {
-                        player.setAnimate({
-                            target: {
-                                y: player.y + 10,
-                                // alpha: 1
-                            },
-                            duration: 100,
-                            completeFunc: function (e) {
-                                player.setAnimate({
-                                    target: {
-                                        y: player.y - 10,
-                                        // alpha: 0
+                    duration: 120,
+                    repeat: 1,
+                    repeatFunc: function (e) {
+                        if (e.data.repeatCount === 2) {
+                            e.target.stop();
+                            e.target.paused = false;
+
+                            // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                            player.runStatus = 'normal';
+                            player.y = player.backupY;
+                            player.jumpFrames = 4;
+                            player.change(
+                                util.extend(
+                                    true,
+                                    {
+                                        width: 48,
+                                        status: STATUS.NORMAL,
+                                        asset: game.asset.spritesImg
                                     },
-                                    duration: 100,
-                                    completeFunc: function (e) {
-                                        player.setAnimate({
-                                            target: {
-                                                y: player.y + 10,
-                                                // alpha: 1
-                                            },
-                                            duration: 100,
-                                            completeFunc: function (e) {
-                                                if (player.runStatus === 'jump') {
-                                                    player.runStatus = 'normal';
-                                                    player.y = player.backupY;
-                                                }
-                                                player.change(
-                                                    util.extend(true, {
-                                                        width: 48,
-                                                        jumpFrames: 4,
-                                                        asset: game.asset.spritesImg,
-                                                        status: STATUS.NORMAL
-                                                    }, spritesData.normalRun)
-                                                );
-                                                // player.move(player.x, player.y - 10);
-                                                // if (isLoop) {
-                                                //     setTimeout(function () {
-                                                //         _create(isLoop);
-                                                //     }, util.randomInt(2000, 5000));
-                                                // }
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
+                                    bear && bear.scaleX >= 1.7 ? spritesData.dangerRun : spritesData.normalRun
+                                )
+                            );
+                        }
                     }
                 });
             }
 
-            var bear = stage.getDisplayObjectByName('bear');
             if (this.collidesWith(bear)
-                // && (bear.y + bear.height) > (this.y + this.height)
-                // && (bear.y + bear.height / 2) < (this.y + this.height)
-                // && (this.y + this.height) >= (bear.y + bear.height)
+                && bear.runStatus === 'complete'
                 && (this.y) <= (bear.y + bear.height - 30 * game.ratioY)
                 && (this.y) >= (bear.y + bear.height - 40 * game.ratioY)
+                && player.runStatus !== 'super'
             ) {
                 isCollide = true;
                 this.setStatus(STATUS.DESTROYED);
                 x = bear.x - 100;
                 y = bear.y + bear.height / 2 + 50;
+
+                if (bear.scaleX >= bear.backupScaleX) {
+                    bear.y -= game.ratioY;
+                    bear.setScale(
+                        (parseFloat(bear.scaleX) - 0.1).toFixed(1),
+                        (parseFloat(bear.scaleY) - 0.1).toFixed(1)
+                    );
+                }
+
+                // 这三行防止在跳起升空的过程中撞到石头无法恢复之前的状态
+                player.runStatus = 'normal';
+                player.y = player.backupY;
+                player.jumpFrames = 4;
+                player.change(
+                    util.extend(
+                        true,
+                        {
+                            width: 48,
+                            status: STATUS.NORMAL,
+                            asset: game.asset.spritesImg
+                        },
+                        bear.scaleX >= 1.7 ? spritesData.dangerRun : spritesData.normalRun
+                    )
+                );
             }
 
             if (isCollide) {
@@ -213,7 +219,7 @@ var rollBranch = (function () {
                                 zIndex: 10,
                                 angle: -10,
                                 // debug: 1
-                            }),
+                            })
                         ]
                     })
                 );
@@ -235,7 +241,8 @@ var rollBranch = (function () {
                     if (this.scaleX.toFixed(2) === '0.00' || this.scaleX.toFixed(2) === '-0.00') {
                         this.setStatus(STATUS.DESTROYED);
                         if (isLoop) {
-                            setTimeout(function () {
+                            var t = setTimeout(function () {
+                                clearTimeout(t);
                                 _create(isLoop);
                             }, util.randomInt(2000, 5000));
                         }
@@ -246,7 +253,8 @@ var rollBranch = (function () {
             if (this.y < 100 * game.ratioY) {
                 this.setStatus(STATUS.DESTROYED);
                 if (isLoop) {
-                    setTimeout(function () {
+                    var t1 = setTimeout(function () {
+                        clearTimeout(t1);
                         _create(isLoop);
                     }, util.randomInt(2000, 5000));
                 }

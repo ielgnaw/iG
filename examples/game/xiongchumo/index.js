@@ -8,6 +8,9 @@ window.onload = function () {
     var STATUS = CONFIG.status;
     var canvas = document.querySelector('#canvas');
     var loadProcessNode = document.querySelector('#load-process');
+    var shareNode = document.querySelector('.share');
+    var playAgainNode = document.querySelector('.play-again');
+    var shareContainerNode = document.querySelector('.share-container');
     var storage = new ig.Storage();
 
     document.addEventListener('touchmove', function (e) {
@@ -15,26 +18,48 @@ window.onload = function () {
         e.stopPropagation();
     });
 
+    shareNode.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        shareContainerNode.style.display = 'block';
+        document.title = '我在熊出没中跑了' + storage.getItem('curScore') + '米~~';
+    });
+
+    playAgainNode.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.title = '熊出没';
+        shareNode.style.display = 'none';
+        playAgainNode.style.display = 'none';
+        shareContainerNode.style.display = 'none';
+
+        stage.clearAllDisplayObject();
+        stage.addDisplayObject(bg);
+        resultText.changeContent('0米');
+        stage.addDisplayObject(resultText);
+        stage.addDisplayObject(player);
+
+        game.increaseMeter = 1;
+        game.result = 0;
+
+        game.start(function () {
+            gameIsStart = true;
+            var t = setTimeout(function () {
+                clearTimeout(t);
+                // guide.initGuideStep1();
+
+                // 不要引导就直接调用下面这句
+                bear.create();
+            }, 1000);
+        });
+    });
+
+    shareContainerNode.addEventListener('click', function (e) {
+        shareContainerNode.style.display = 'none';
+    });
+
     var resultText;
-
-    // var resultText = new ig.Text({
-    //     name: 'resultText',
-    //     content: '99999999米',
-    //     // content: '1米',
-    //     x: game.width - 125 * game.ratioX,
-    //     y: 10 * game.ratioY,
-    //     size: 17 * game.ratioX,
-    //     isBold: true,
-    //     angle: 0,
-    //     zIndex: 100,
-    //     fillStyle: '#fff',
-    //     followParent: 0,
-    //     width: 125 * game.ratioX,
-    //     // width: 32 * game.ratioX,
-    //     // debug: 1
-    // });
-
-    // stage.addDisplayObject(resultText);
 
     var game = new ig.Game({
         canvas: canvas,
@@ -79,6 +104,9 @@ window.onload = function () {
     var boomData;
     var gameIsStart = false;
 
+    game.increaseMeter = 1;
+    game.result = 0;
+
     var stage = game.createStage({
         name: 'xiongchumoStage',
         bgColor: '#000',
@@ -93,36 +121,135 @@ window.onload = function () {
         }
     });
 
-    var bgSheet = stage.addDisplayObject(
-        new ig.SpriteSheet({
-            name: 'bg',
-            image: 'bg',
-            sheet: 'spritesData',
-            sheetKey: 'bg',
-            jumpFrames: 1.2, // [0.5, 1.2]
-            zIndex: 1,
-            // debug: 1,
-            width: CONFIG.width * game.ratioX,
-            height: CONFIG.height * game.ratioY
-        })
-    );
+    var bg = new ig.SpriteSheet({
+        name: 'bg',
+        image: 'bg',
+        sheet: 'spritesData',
+        sheetKey: 'bg',
+        jumpFrames: 1.2, // [0.5, 1.2]
+        zIndex: 1,
+        // debug: 1,
+        width: CONFIG.width * game.ratioX,
+        height: CONFIG.height * game.ratioY
+    });
+    stage.addDisplayObject(bg);
 
-    var player = stage.addDisplayObject(
-        new ig.SpriteSheet({
-            name: 'player',
-            image: 'spritesImg',
-            sheet: 'spritesData',
-            x: -100,
-            // sheetKey: 'normalRun',
-            sheetKey: 'normalRun',
-            y: 200 * game.ratioY,
-            backupY: 200 * game.ratioY,
-            zIndex: 10,
-            jumpFrames: 4,
-            runStatus: 'normal',
-            // debug: 1,
-        })
-    );
+    var player = new ig.SpriteSheet({
+        name: 'player',
+        image: 'spritesImg',
+        sheet: 'spritesData',
+        x: -100,
+        sheetKey: 'normalRun',
+        // sheetKey: 'dangerRun',
+        y: 200 * game.ratioY,
+        backupY: 200 * game.ratioY,
+        zIndex: 10,
+        jumpFrames: 4,
+        runStatus: 'normal',
+        // debug: 1,
+    });
+
+    player.step = function () {
+        var bear = stage.getDisplayObjectByName('bear');
+        if (!bear) {
+            return;
+        }
+
+        if (bear.scaleX >= '1.1') {
+            gameOver();
+        }
+    };
+
+    stage.addDisplayObject(player);
+
+    /**
+     * gameOver 的字样
+     *
+     * @return {Object} Text 对象
+     */
+    function gameOver() {
+        stage.clearAllDisplayObject();
+        stage.addDisplayObject(bg);
+
+        gameIsStart = false;
+        game.increaseMeter = 1;
+        var result = parseInt(game.result, 10);
+        game.result = 0;
+        var maxScore = storage.getItem('maxScore') || 0;
+        if (parseInt(result, 10) >= parseInt(maxScore, 10)) {
+            maxScore = result;
+        }
+        storage.setItem('maxScore', maxScore);
+        storage.setItem('curScore', parseInt(result, 10));
+
+        var gameOverMain = stage.addDisplayObject(
+            new ig.Text({
+                name: 'gameOver',
+                content: 'GAME OVER',
+                x: (game.width - 180) / 2,
+                y: (game.height - 200) / 2,
+                size: 20 * game.ratioX,
+                isBold: true,
+                angle: 0,
+                zIndex: 20,
+                fillStyle: '#fff',
+                scaleX: 0.01,
+                scaleY: 0.01,
+                width: 180,
+                children: [
+                    new ig.Text({
+                        name: 'gameOverResult',
+                        content: '当前成绩: ' + result + '米',
+                        x: -20,
+                        y: 50 * game.ratioY,
+                        size: 15 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 20,
+                        fillStyle: '#fff',
+                        width: 220,
+                    }),
+                    new ig.Text({
+                        name: 'gameOverHistoryResult',
+                        content: '历史最高: ' + maxScore + '米',
+                        x: -20,
+                        y: 100 * game.ratioY,
+                        size: 15 * game.ratioX,
+                        isBold: true,
+                        angle: 0,
+                        zIndex: 20,
+                        fillStyle: '#fff',
+                        width: 220,
+                    })
+                ]
+            })
+        );
+
+        gameOverMain.setAnimate({
+            target: {
+                scaleX: 1,
+                scaleY: 1,
+                alpha: 1
+            },
+            duration: 1000,
+            tween: ig.easing.easeOutBounce,
+            completeFunc: function () {
+                stage.clearAllDisplayObject();
+                stage.addDisplayObject(bg);
+                game.stop();
+
+                shareNode.style.display = 'block';
+                shareNode.style.bottom = '150px';
+                shareNode.style.left = (game.width / 2 - 30) + 'px';
+
+                playAgainNode.style.display = 'block';
+                playAgainNode.style.bottom = '100px';
+                playAgainNode.style.left = (game.width / 2 - 60) + 'px';
+
+            }
+        });
+        return gameOverMain;
+    }
 
     // 判断是否跳起的时间戳
     var captureTimer;
@@ -141,7 +268,6 @@ window.onload = function () {
         captureY = e.y;
 
         captureX = e.x;
-        // player.move(e.x, player.y);
     }
 
     /**
@@ -180,6 +306,7 @@ window.onload = function () {
         if (Date.now() - captureTimer <= 500
             && captureY - e.y >= 70
             && player.runStatus === 'normal'
+            && player.runStatus !== 'super'
         ) {
             player.runStatus = 'jump';
             player.change(
@@ -206,8 +333,7 @@ window.onload = function () {
         }
     }
 
-
-    game.start(function () {
+    game.start('xiongchumoStage', function () {
         gameIsStart = true;
         spritesData = game.asset.spritesData;
         spritesData1 = game.asset.spritesData1;
@@ -253,8 +379,12 @@ window.onload = function () {
             stage: stage
         });
 
-        setTimeout(function () {
-            guide.initGuideStep1();
+        var t = setTimeout(function () {
+            clearTimeout(t);
+            // guide.initGuideStep1();
+
+            // 不要引导就直接调用下面这句
+            bear.create();
         }, 1000);
     });
 };

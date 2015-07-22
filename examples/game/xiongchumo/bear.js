@@ -38,8 +38,12 @@ var bear = (function () {
                 zIndex: 5,
                 x: (game.width - bearData.tileW) / 2,
                 y: 30 * game.ratioY,
+                backupY: 60 * game.ratioY,
                 scaleX: 0.3,
                 scaleY: 0.3,
+                backupScaleX: 1,
+                backupScaleY: 1,
+                alpha: 0
                 // y: 100 * game.ratioY,
                 // debug: 1,
             })
@@ -49,24 +53,36 @@ var bear = (function () {
             target: {
                 scaleX: 1,
                 scaleY: 1,
-                y: 70 * game.ratioY
+                y: 60 * game.ratioY,
+                alpha: 1
             },
             duration: 3000,
             completeFunc: function (e) {
-                game.on('afterGameStep', function (e) {
-                    var resultText = stage.getDisplayObjectByName('resultText');
-                    resultText.alpha = 1;
-                    var score = resultText.getContent();
-                    score = parseInt(score, 10) + 1 + '米';
-                    resultText.changeContent(score);
-                });
+                bear.runStatus = 'complete';
+                if (!game._events.afterGameStep) {
+                    game.on('afterGameStep', function (e) {
+                        var resultText = stage.getDisplayObjectByName('resultText');
+                        if (resultText) {
+                            resultText.alpha = 1;
+                            var score = resultText.getContent();
+                            score = parseInt(score, 10) + game.increaseMeter + '米';
+                            resultText.changeContent(score);
+                            game.result = score;
+                        }
+                    });
+                }
+
+                // pinecone.loopCreate();
+                // var t = setTimeout(function () {
+                //     clearTimeout(t);
+                //     rollBranch.loopCreate();
+                //     var t1 = setTimeout(function () {
+                //         clearTimeout(t1);
+                //         stone.loopCreate();
+                //     }, 3000);
+                // }, 3000);
+
                 pinecone.loopCreate();
-                setTimeout(function () {
-                    rollBranch.loopCreate();
-                    setTimeout(function () {
-                        stone.loopCreate();
-                    }, 3000);
-                }, 3000);
             }
         });
 

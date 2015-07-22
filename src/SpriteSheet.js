@@ -170,7 +170,8 @@ define(function (require) {
                         this.status = STATUS.DESTROYED;
                         if (util.getType(this.onceDestroyedDone) === 'function') {
                             var me = this;
-                            setTimeout(function () {
+                            var timeout = setTimeout(function () {
+                                clearTimeout(timeout);
                                 me.onceDestroyedDone(me);
                             }, 10);
                         }

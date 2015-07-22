@@ -115,7 +115,10 @@ var guide = (function () {
                             duration: 500,
                             completeFunc: function () {
                                 guideStep1.setStatus(STATUS.DESTROYED);
-                                setTimeout(initGuideStep2, 2000);
+                                var t = setTimeout(function () {
+                                    clearTimeout(t);
+                                    initGuideStep2();
+                                }, 1000);
                             }
                         });
                     }
@@ -151,7 +154,8 @@ var guide = (function () {
             duration: 500,
             tween: ig.easing.easeOutBounce,
             completeFunc: function () {
-                setTimeout(function () {
+                var t = setTimeout(function () {
+                    clearTimeout(t);
                     guideStep2.setAnimate({
                         target: {
                             alpha: 0
@@ -160,14 +164,17 @@ var guide = (function () {
                         completeFunc: function () {
                             guideStep2.setStatus(STATUS.DESTROYED);
                             pinecone.create();
-                            setTimeout(function () {
+                            var t1 = setTimeout(function () {
+                                clearTimeout(t1);
                                 pinecone.create();
-                                setTimeout(initGuideStep3, 3000);
-                            }, 3000)
-                            // pinecone.loopCreate();
+                                var t3 = setTimeout(function () {
+                                    clearTimeout(t3);
+                                    initGuideStep3();
+                                }, 1000);
+                            }, 1000)
                         }
                     });
-                }, 1500);
+                }, 1000);
             }
         });
     }
@@ -199,7 +206,8 @@ var guide = (function () {
             duration: 500,
             tween: ig.easing.easeOutBounce,
             completeFunc: function () {
-                setTimeout(function () {
+                var t = setTimeout(function () {
+                    clearTimeout(t);
                     guideStep3.setAnimate({
                         target: {
                             alpha: 0
@@ -208,14 +216,18 @@ var guide = (function () {
                         completeFunc: function () {
                             guideStep3.setStatus(STATUS.DESTROYED);
                             stone.create();
-                            setTimeout(function () {
+                            var t1 = setTimeout(function () {
+                                clearTimeout(t1);
                                 stone.create();
-                                setTimeout(initGuideStep4, 3000);
-                            }, 3000);
+                                var t2 = setTimeout(function () {
+                                    clearTimeout(t2);
+                                    initGuideStep4();
+                                }, 1000);
+                            }, 1000);
                             // stone.loopCreate();
                         }
                     });
-                }, 1500);
+                }, 1000);
             }
         });
     }
@@ -247,7 +259,8 @@ var guide = (function () {
             duration: 500,
             tween: ig.easing.easeOutBounce,
             completeFunc: function () {
-                setTimeout(function () {
+                var t = setTimeout(function () {
+                    clearTimeout(t);
                     guideStep4.setAnimate({
                         target: {
                             alpha: 0
@@ -257,7 +270,7 @@ var guide = (function () {
                             guideStep4.setStatus(STATUS.DESTROYED);
                         }
                     });
-                }, 1500);
+                }, 1000);
             }
         });
 
@@ -337,10 +350,14 @@ var guide = (function () {
                 shou.setStatus(STATUS.DESTROYED);
                 // rollBranch.loopCreate();
                 rollBranch.create();
-                setTimeout(function () {
+                var t = setTimeout(function () {
+                    clearTimeout(t);
                     rollBranch.create();
-                    setTimeout(initLastGuide, 3000);
-                }, 3000);
+                    var t1 = setTimeout(function () {
+                        clearTimeout(t1);
+                        initLastGuide();
+                    }, 1000);
+                }, 1000);
             }
         });
     }

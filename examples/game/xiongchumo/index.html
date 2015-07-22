@@ -91,6 +91,15 @@
                 top: 0;
                 background: rgba(0, 0, 0, 0.8);
             }
+
+            .share, .play-again {
+                position: absolute;
+                z-index: 1;
+                color: #379df5;
+                text-decoration: none;
+                font-size: 30px;
+                display: none;
+            }
         </style>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
@@ -102,6 +111,8 @@
             <img src="./img/share-masker.png" class="share-img">
             <a href="#" class="share-close"></a>
         </div>
+        <a href="#" class="share">分享</a>
+        <a href="#" class="play-again">再玩一次</a>
         <script src="./index.js"></script>
         <script src="./pinecone.js"></script>
         <script src="./bear.js"></script>
