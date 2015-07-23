@@ -161,6 +161,28 @@ var pinecone = (function () {
                                     player.jumpFrames = 2;
                                     player.runStatus = 'super';
 
+                                    superText = new ig.Bitmap({
+                                        name: 'superText' + Date.now(),
+                                        asset: game.asset.spritesImg,
+                                        x: (game.width - 273) / 2,
+                                        y: -100,
+                                        sx: 646,
+                                        sy: 885,
+                                        width: 273,
+                                        sWidth: 273,
+                                        height: 45,
+                                        sHeight: 45,
+                                        zIndex: 20,
+                                    });
+
+                                    superText.setAnimate({
+                                        target: {
+                                            y: 10 * game.ratioY,
+                                        },
+                                        duration: 500,
+                                        tween: ig.easing.easeOutBounce
+                                    });
+
                                     stage.addDisplayObject(superText);
 
                                     if (bear) {
@@ -309,28 +331,6 @@ var pinecone = (function () {
         spritesData = opts.spritesData;
         boomData = opts.boomData;
         scaleRatio = Math.max(0.006 / game.ratioX, 0.006 / game.ratioY);
-
-        superText = new ig.Bitmap({
-            name: 'superText' + Date.now(),
-            asset: game.asset.spritesImg,
-            x: (game.width - 273) / 2,
-            y: -100,
-            sx: 646,
-            sy: 885,
-            width: 273,
-            sWidth: 273,
-            height: 45,
-            sHeight: 45,
-            zIndex: 20,
-        });
-
-        superText.setAnimate({
-            target: {
-                y: 10 * game.ratioY,
-            },
-            duration: 500,
-            tween: ig.easing.easeOutBounce
-        });
     };
 
     return exports;

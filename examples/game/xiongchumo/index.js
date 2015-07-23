@@ -23,7 +23,7 @@ window.onload = function () {
         e.stopPropagation();
 
         shareContainerNode.style.display = 'block';
-        document.title = '我在熊出没中跑了' + storage.getItem('curScore') + '米~~';
+        document.title = '熊出没中跑出' + storage.getItem('curScore') + '米~';
     });
 
     playAgainNode.addEventListener('click', function (e) {
