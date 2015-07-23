@@ -51,8 +51,8 @@ var bear = (function () {
 
         bear.setAnimate({
             target: {
-                scaleX: 1,
-                scaleY: 1,
+                scaleX: 1.3,
+                scaleY: 1.3,
                 y: 60 * game.ratioY,
                 alpha: 1
             },
@@ -72,17 +72,17 @@ var bear = (function () {
                     });
                 }
 
-                // pinecone.loopCreate();
-                // var t = setTimeout(function () {
-                //     clearTimeout(t);
-                //     rollBranch.loopCreate();
-                //     var t1 = setTimeout(function () {
-                //         clearTimeout(t1);
-                //         stone.loopCreate();
-                //     }, 3000);
-                // }, 3000);
-
                 pinecone.loopCreate();
+                var t = setTimeout(function () {
+                    clearTimeout(t);
+                    rollBranch.loopCreate();
+                    var t1 = setTimeout(function () {
+                        clearTimeout(t1);
+                        stone.loopCreate();
+                    }, 3000);
+                }, 3000);
+
+                // pinecone.loopCreate();
             }
         });
 

@@ -35,9 +35,23 @@ window.onload = function () {
         shareContainerNode.style.display = 'none';
 
         stage.clearAllDisplayObject();
+
+        bg.jumpFrames = 1.5;
         stage.addDisplayObject(bg);
         resultText.changeContent('0米');
         stage.addDisplayObject(resultText);
+
+        player.change(
+            util.extend(true, {
+                width: 48,
+                jumpFrames: 4,
+                asset: game.asset.spritesImg,
+                status: STATUS.NORMAL,
+                y: player.backupY
+            }, spritesData.normalRun)
+        );
+        player.runStatus = 'normal';
+
         stage.addDisplayObject(player);
 
         game.increaseMeter = 1;
@@ -56,7 +70,10 @@ window.onload = function () {
     });
 
     shareContainerNode.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
         shareContainerNode.style.display = 'none';
+        document.title = '熊出没';
     });
 
     var resultText;
@@ -126,7 +143,7 @@ window.onload = function () {
         image: 'bg',
         sheet: 'spritesData',
         sheetKey: 'bg',
-        jumpFrames: 1.2, // [0.5, 1.2]
+        jumpFrames: 1.5, // [0.5, 1.2]
         zIndex: 1,
         // debug: 1,
         width: CONFIG.width * game.ratioX,
@@ -150,12 +167,18 @@ window.onload = function () {
     });
 
     player.step = function () {
-        var bear = stage.getDisplayObjectByName('bear');
-        if (!bear) {
-            return;
+        var x = player.x;
+        var left = 50 * game.ratioX;
+        var right = 270 * game.ratioX;
+        if (x < left) {
+            player.x = left;
+        }
+        else if (x > right) {
+            player.x = right;
         }
 
-        if (bear.scaleX >= '1.1') {
+        var bear = stage.getDisplayObjectByName('bear');
+        if (bear && bear.scaleX >= '2.0') {
             gameOver();
         }
     };
@@ -234,8 +257,8 @@ window.onload = function () {
             duration: 1000,
             tween: ig.easing.easeOutBounce,
             completeFunc: function () {
-                stage.clearAllDisplayObject();
-                stage.addDisplayObject(bg);
+                // stage.clearAllDisplayObject();
+                // stage.addDisplayObject(bg);
                 game.stop();
 
                 shareNode.style.display = 'block';
@@ -280,15 +303,18 @@ window.onload = function () {
 
         var x = player.x;
         var dx = e.x - captureX;
-        if (x >= 50 * game.ratioX && x <= 270 * game.ratioX) {
+
+        var left = 50 * game.ratioX;
+        var right = 270 * game.ratioX;
+        if (x >= left && x <= right) {
             player.move(dx + x, player.y);
         }
         else {
-            if (x < 50 * game.ratioX) {
-                player.x = 50 * game.ratioX;
+            if (x < left) {
+                player.x = left;
             }
-            else if (x > 270 * game.ratioX) {
-                player.x = 270 * game.ratioX;
+            else if (x > right) {
+                player.x = right;
             }
         }
         captureX = e.x;
@@ -381,10 +407,10 @@ window.onload = function () {
 
         var t = setTimeout(function () {
             clearTimeout(t);
-            // guide.initGuideStep1();
+            guide.initGuideStep1();
 
             // 不要引导就直接调用下面这句
-            bear.create();
+            // bear.create();
         }, 1000);
     });
 };

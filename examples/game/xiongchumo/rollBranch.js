@@ -42,6 +42,7 @@ var rollBranch = (function () {
                 vy: -3 * game.ratioY,
                 // x: x,
                 x: 10 * game.ratioX,
+                // alpha: (player.runStatus === 'super' ? 0 : 1)
                 // vx: vx * game.ratioX * 3,
                 // debug: 1,
             })

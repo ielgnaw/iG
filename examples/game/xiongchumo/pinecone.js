@@ -26,6 +26,8 @@ var pinecone = (function () {
 
     var pineconeCount = 0;
 
+    var superText;
+
     function _create(isLoop) {
         if (isLoop) {
             pineconeCount++;
@@ -47,13 +49,15 @@ var pinecone = (function () {
             vy: -3 * game.ratioY,
             x: x,
             vx: vx * game.ratioX * 3,
+            alpha: (player.runStatus === 'super' ? 0 : 1)
             // debug: 1,
-        })
+        });
 
         // isLoop 存在说明不是引导模式
         if (isLoop && player.runStatus !== 'super') {
             pineconeCount = 0;
-            var q = util.randomInt(0, 99);
+
+            var q = util.randomInt(0, 100);
             // 超级药水
             if (q % 3 === 0) {
                 p = new ig.Bitmap({
@@ -70,6 +74,7 @@ var pinecone = (function () {
                     sWidth: 50,
                     height: 65,
                     sHeight: 65,
+                    // alpha: (player.runStatus === 'super' ? 0 : 1)
                 });
             }
         }
@@ -152,15 +157,24 @@ var pinecone = (function () {
                                     game.increaseMeter = 10;
                                     var bg = stage.getDisplayObjectByName('bg');
                                     var player = stage.getDisplayObjectByName('player');
-                                    bg.jumpFrames = 0.5;
-                                    player.jumpFrames = 3;
+                                    bg.jumpFrames = 0;
+                                    player.jumpFrames = 2;
                                     player.runStatus = 'super';
-                                    bear.y = bear.backupY;
-                                    bear.scaleX = bear.backupScaleX;
-                                    bear.scaleY = bear.backupScaleY;
+
+                                    stage.addDisplayObject(superText);
+
+                                    if (bear) {
+                                        bear.jumpFrames = 10;
+                                        bear.y = bear.backupY;
+                                        bear.scaleX = bear.backupScaleX;
+                                        bear.scaleY = bear.backupScaleY;
+                                    }
+
                                     var timeout1 = setTimeout(function () {
                                         clearTimeout(timeout1);
+                                        superText.setStatus(STATUS.DESTROYED);
                                         game.increaseMeter = 1;
+                                        bear && (bear.jumpFrames = 7);
                                         bg.jumpFrames = 1.2;
                                         player.jumpFrames = 4;
                                         player.runStatus = 'normal';
@@ -176,7 +190,7 @@ var pinecone = (function () {
                                                 spritesData.normalRun
                                             )
                                         );
-                                    }, 10000);
+                                    }, 7000);
                                 }
                             }
                         })
@@ -201,8 +215,8 @@ var pinecone = (function () {
                 if (p instanceof ig.Bitmap) {
                     bear.y += game.ratioY * 2;
                     bear.setScale(
-                        (parseFloat(bear.scaleX) + 0.2).toFixed(1),
-                        (parseFloat(bear.scaleY) + 0.2).toFixed(1)
+                        (parseFloat(bear.scaleX) + 0.3).toFixed(1),
+                        (parseFloat(bear.scaleY) + 0.3).toFixed(1)
                     );
                 }
                 else {
@@ -256,7 +270,7 @@ var pinecone = (function () {
                             var t = setTimeout(function () {
                                 clearTimeout(t);
                                 _create(isLoop);
-                            }, util.randomInt(2000, 5000));
+                            }, util.randomInt(4000, 8000));
                         }
                     }
                 });
@@ -269,7 +283,7 @@ var pinecone = (function () {
                     var t1 = setTimeout(function () {
                         clearTimeout(t1);
                         _create(isLoop);
-                    }, util.randomInt(2000, 5000));
+                    }, util.randomInt(4000, 8000));
                 }
             }
         };
@@ -295,6 +309,28 @@ var pinecone = (function () {
         spritesData = opts.spritesData;
         boomData = opts.boomData;
         scaleRatio = Math.max(0.006 / game.ratioX, 0.006 / game.ratioY);
+
+        superText = new ig.Bitmap({
+            name: 'superText' + Date.now(),
+            asset: game.asset.spritesImg,
+            x: (game.width - 273) / 2,
+            y: -100,
+            sx: 646,
+            sy: 885,
+            width: 273,
+            sWidth: 273,
+            height: 45,
+            sHeight: 45,
+            zIndex: 20,
+        });
+
+        superText.setAnimate({
+            target: {
+                y: 10 * game.ratioY,
+            },
+            duration: 500,
+            tween: ig.easing.easeOutBounce
+        });
     };
 
     return exports;

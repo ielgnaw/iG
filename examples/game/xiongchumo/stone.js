@@ -44,6 +44,7 @@ var stone = (function () {
                 vx: vx * game.ratioX * 3,
                 scaleX: 1.3,
                 scaleY: 1.3,
+                // alpha: (player.runStatus === 'super' ? 0 : 1)
                 // debug: 1,
             })
         );
