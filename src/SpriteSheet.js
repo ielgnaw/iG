@@ -7,6 +7,7 @@
 
 define(function (require) {
 
+    var ig = require('./ig');
     var util = require('./util');
     var Rectangle = require('./Rectangle');
 
@@ -41,7 +42,7 @@ define(function (require) {
             // isOnceDestroyed 为 true 时，一组动画结束后的回调
             onceDestroyedDone: util.noop,
             isOnce: false,
-            onceDone: util.noop,
+            onceDone: util.noop
         }, opts);
 
         // 帧更新的计数器，辅助 jumpFrames 计数的
@@ -140,6 +141,7 @@ define(function (require) {
          *
          * @return {Object} SpriteSheet 实例
          */
+        /* eslint-disable fecs-camelcase */
         _step: function (dt, stepCount, requestID) {
             this.frameUpdateCount++;
 
@@ -166,10 +168,10 @@ define(function (require) {
                     // 还原 sy
                     this.sy -= (this.rows - 1) * this.tileH;
 
-                    if (this.isOnceDestroyed) {
-                        this.status = STATUS.DESTROYED;
-                        if (util.getType(this.onceDestroyedDone) === 'function') {
-                            var me = this;
+                    var me = this;
+                    if (me.isOnceDestroyed) {
+                        me.status = STATUS.DESTROYED;
+                        if (util.getType(me.onceDestroyedDone) === 'function') {
                             var timeout = setTimeout(function () {
                                 clearTimeout(timeout);
                                 me.onceDestroyedDone(me);
@@ -177,10 +179,9 @@ define(function (require) {
                         }
                     }
 
-                    if (this.isOnce) {
-                        this.status = STATUS.NOT_UPDATE;
-                        if (util.getType(this.onceDone) === 'function') {
-                            var me = this;
+                    if (me.isOnce) {
+                        me.status = STATUS.NOT_UPDATE;
+                        if (util.getType(me.onceDone) === 'function') {
                             me.onceDone(me);
                         }
                     }
@@ -206,6 +207,7 @@ define(function (require) {
 
             return this;
         },
+        /* eslint-enable fecs-camelcase */
 
         /**
          * 动画帧渲染
@@ -250,6 +252,7 @@ define(function (require) {
      *
      * @return {Object} SpriteSheet 实例
      */
+    /* eslint-disable fecs-camelcase */
     function _setup() {
         if (!this._.isSetup) {
             this._.isSetup = true;
@@ -310,6 +313,7 @@ define(function (require) {
         }
         return this;
     }
+    /* eslint-enable fecs-camelcase */
 
     util.inherits(SpriteSheet, Rectangle);
 

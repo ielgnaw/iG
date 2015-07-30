@@ -382,7 +382,7 @@ define(function (require) {
         /**
          * 设置横轴和纵轴缩放倍数
          *
-         * * @param {number} scaleX 横轴缩放倍数
+         * @param {number} scaleX 横轴缩放倍数
          * @param {number} scaleY 纵轴缩放倍数
          *
          * @return {Object} DisplayObject 实例
@@ -465,8 +465,8 @@ define(function (require) {
                     this._.isHandleChildren = true;
 
                     // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
-                    for (var i = 0; i < childLen; i++) {
-                        var child = children[i];
+                    for (var j = 0; j < childLen; j++) {
+                        var child = children[j];
                         child.setRelativeXY(child.x, child.y);
                         child.x += this.x;
                         child.y += this.y;
@@ -561,9 +561,11 @@ define(function (require) {
          * @param {number} stepCount 每帧中切分出来的每个时间片里执行的函数的计数器
          * @param {number} requestID requestAnimationFrame 标识
          */
+        /* eslint-disable fecs-camelcase */
         _step: function (dt, stepCount, requestID) {
             return this;
         },
+        /* eslint-enable fecs-camelcase */
 
         /**
          * 每帧更新，这个方法应该是由子类重写的

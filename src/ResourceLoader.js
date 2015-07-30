@@ -149,6 +149,7 @@ define(function (require) {
 
             for (var i = 0; i < totalCount; i++) {
                 /* jshint loopfunc:true */
+                /* eslint-disable no-loop-func */
                 (function (index) {
                     var curResource = resource[index];
                     var resourceId;
@@ -194,6 +195,7 @@ define(function (require) {
                         loadOneCallback(resourceId, me.asset[resourceId]);
                     }
                 })(i);
+                /* eslint-enable no-loop-func */
             }
         }
     };

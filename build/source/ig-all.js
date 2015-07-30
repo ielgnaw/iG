@@ -1683,7 +1683,7 @@ define('ig/env', [
     }
     var isSupportLocalStorage = function () {
         try {
-            var support = 'localStorage' in window && window['localStorage'] !== null;
+            var support = 'localStorage' in window && window.localStorage !== null;
             var test = {
                 k: 'test key',
                 v: 'test value'
@@ -2475,8 +2475,8 @@ define('ig/DisplayObject', [
                 if (!this._.isHandleChildren) {
                     var children = this.children;
                     this._.isHandleChildren = true;
-                    for (var i = 0; i < childLen; i++) {
-                        var child = children[i];
+                    for (var j = 0; j < childLen; j++) {
+                        var child = children[j];
                         child.setRelativeXY(child.x, child.y);
                         child.x += this.x;
                         child.y += this.y;
@@ -2912,9 +2912,11 @@ define('ig/BitmapPolygon', [
 });'use strict';
 define('ig/SpriteSheet', [
     'require',
+    './ig',
     './util',
     './Rectangle'
 ], function (require) {
+    var ig = require('./ig');
     var util = require('./util');
     var Rectangle = require('./Rectangle');
     var STATUS = ig.getConfig('status');
@@ -2982,20 +2984,19 @@ define('ig/SpriteSheet', [
                     this.sx = this.originalSX;
                     this.realCols = floor(this.cols - this.originalSX / this.tileW);
                     this.sy -= (this.rows - 1) * this.tileH;
-                    if (this.isOnceDestroyed) {
-                        this.status = STATUS.DESTROYED;
-                        if (util.getType(this.onceDestroyedDone) === 'function') {
-                            var me = this;
+                    var me = this;
+                    if (me.isOnceDestroyed) {
+                        me.status = STATUS.DESTROYED;
+                        if (util.getType(me.onceDestroyedDone) === 'function') {
                             var timeout = setTimeout(function () {
                                 clearTimeout(timeout);
                                 me.onceDestroyedDone(me);
                             }, 10);
                         }
                     }
-                    if (this.isOnce) {
-                        this.status = STATUS.NOT_UPDATE;
-                        if (util.getType(this.onceDone) === 'function') {
-                            var me = this;
+                    if (me.isOnce) {
+                        me.status = STATUS.NOT_UPDATE;
+                        if (util.getType(me.onceDone) === 'function') {
                             me.onceDone(me);
                         }
                     }
@@ -3847,12 +3848,14 @@ define('ig/Stage', [
         if (!Array.isArray(children)) {
             return;
         }
+        var stage = this;
+        var len = children.length;
+        var i = 0;
+        var child;
         if (!displayObj._.isHandleChildren) {
             displayObj._.isHandleChildren = true;
-            var stage = this;
-            var len = children.length;
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
+            for (i = 0; i < len; i++) {
+                child = children[i];
                 child.setRelativeXY(child.x, child.y);
                 child.x += displayObj.x;
                 child.y += displayObj.y;
@@ -3862,10 +3865,8 @@ define('ig/Stage', [
                 stage.addDisplayObject(child);
             }
         } else {
-            var stage = this;
-            var len = children.length;
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
+            for (i = 0; i < len; i++) {
+                child = children[i];
                 stage.addDisplayObject(child);
             }
         }
@@ -4635,8 +4636,8 @@ define('ig/Polygon', [
             this.cx = minX + (maxX - minX) / 2;
             this.cy = minY + (maxY - minY) / 2;
             this.getOriginBounds();
-            for (var i = 0; i < this.children.length; i++) {
-                var child = this.children[i];
+            for (var childIndex = 0; childIndex < this.children.length; childIndex++) {
+                var child = this.children[childIndex];
                 if (child.followParent) {
                     child.move(x + child.relativeX, y + child.relativeY);
                 }

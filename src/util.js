@@ -174,7 +174,7 @@ define(function (require) {
      *
      * @param {Function} func 传入函数
      * @param {number} wait 表示时间窗口的间隔
-     * @param {object} options 如果想忽略开始边界上的调用，传入 {leading: false}。
+     * @param {Object} options 如果想忽略开始边界上的调用，传入 {leading: false}。
      *                         如果想忽略结尾边界上的调用，传入 {trailing: false}
      * @return {Function} 返回客户调用函数
      */

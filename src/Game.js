@@ -9,6 +9,8 @@
 
 define(function (require) {
 
+    /* eslint-disable fecs-camelcase */
+
     var ig = require('./ig');
     var Event = require('./Event');
     var util = require('./util');
@@ -799,5 +801,5 @@ define(function (require) {
     util.inherits(Game, Event);
 
     return Game;
-
+    /* eslint-enable fecs-camelcase */
 });

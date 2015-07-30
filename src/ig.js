@@ -146,7 +146,9 @@ define(function (require) {
         // 每帧执行的函数的计数器
         var execCount = 0;
 
+        /* eslint-disable fecs-camelcase */
         var _jumpFrames = (conf.jumpFrames === 0 ? 1 : conf.jumpFrames);
+        /* eslint-enable fecs-camelcase */
 
         (function tick() {
             requestID = window.requestAnimationFrame(tick);

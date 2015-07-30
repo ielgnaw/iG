@@ -146,6 +146,7 @@ define(function (require) {
      * 由于在实例化 Bitmap 的时候，图片资源还没有加载完成
      * 只有在 render 的时候才能获取到图片的 asset，这个时候去设置当前 Bitmap 实例的 sWidth 等
      */
+    /* eslint-disable fecs-camelcase */
     function _setInitDimension() {
         if (!this._.isInitDimension) {
             this._.isInitDimension = true;
@@ -167,6 +168,7 @@ define(function (require) {
             }
         }
     }
+    /* eslint-enable fecs-camelcase */
 
     util.inherits(BitmapPolygon, Polygon);
 

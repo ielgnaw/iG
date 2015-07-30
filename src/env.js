@@ -271,7 +271,7 @@ define(function (require) {
 
     var isSupportLocalStorage = (function () {
         try {
-            var support = 'localStorage' in window && window['localStorage'] !== null;
+            var support = 'localStorage' in window && window.localStorage !== null;
 
             var test = {
                 k: 'test key',

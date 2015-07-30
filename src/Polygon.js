@@ -343,8 +343,8 @@ define(function (require) {
 
             this.getOriginBounds();
 
-            for (var i = 0; i < this.children.length; i++) {
-                var child = this.children[i];
+            for (var childIndex = 0; childIndex < this.children.length; childIndex++) {
+                var child = this.children[childIndex];
                 if (child.followParent) {
                     child.move(x + child.relativeX, y + child.relativeY);
                 }

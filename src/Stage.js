@@ -248,12 +248,12 @@ define(function (require) {
          * 设置时差滚动
          *
          * @param {Array.<Object>} parallaxOpts 配置项
-         * @param {HTMLImageElement} parallaxOpts[i].image 图片
-         * @param {string} parallaxOpts[i].repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
-         * @param {number} parallaxOpts[i].animInterval parallaxOpts[i].anims 的循环间隔，
+         * @property {HTMLImageElement} parallaxOpts[i].image 图片
+         * @property {string} parallaxOpts[i].repeat 是否重复，可选值: repeat, repeat-x, repeat-y ，默认 no-repeat
+         * @property {number} parallaxOpts[i].animInterval parallaxOpts[i].anims 的循环间隔，
          *                                              这个间隔不是指的时间间隔，
          *                                              当 totalFrameCounter % parallaxOpts[i].animInterval === 0 时触发
-         * @param {Array} parallaxOpts[i].anims 动画组，如果设置了次属性，那么会根据这个属性里面的值来切换动画
+         * @property {Array} parallaxOpts[i].anims 动画组，如果设置了次属性，那么会根据这个属性里面的值来切换动画
          *                           例如: parallaxOpts[i].anims = [{aX: 1, aY: 1}, {aX: -1, aY: -1}]，
          *                           那么首先会执行 parallaxOpts[i].anims[0] 的变化，
          *                           在 totalFrameCounter % animInterval === 0 后，会执行 parallaxOpts[i].anims[1] ，
@@ -486,21 +486,23 @@ define(function (require) {
      *
      * @param {Object} displayObj displayObject 对象
      */
+    /* eslint-disable fecs-camelcase */
     function _childrenHandler(displayObj) {
         var children = displayObj.children;
         if (!Array.isArray(children)) {
             return;
         }
 
+        var stage = this;
+        var len = children.length;
+        var i = 0;
+        var child;
         if (!displayObj._.isHandleChildren) {
             displayObj._.isHandleChildren = true;
 
-            var stage = this;
-            var len = children.length;
-
             // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
+            for (i = 0; i < len; i++) {
+                child = children[i];
                 child.setRelativeXY(child.x, child.y);
                 // child.relativeX = child.x;
                 // child.relativeY = child.y;
@@ -513,16 +515,14 @@ define(function (require) {
             }
         }
         else {
-            var stage = this;
-            var len = children.length;
-
             // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
-            for (var i = 0; i < len; i++) {
-                var child = children[i];
+            for (i = 0; i < len; i++) {
+                child = children[i];
                 stage.addDisplayObject(child);
             }
         }
     }
+    /* eslint-enable fecs-camelcase */
 
     /**
      * 渲染场景里面的精灵
