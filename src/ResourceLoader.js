@@ -147,6 +147,8 @@ define(function (require) {
             var customResourceTypes = opts.customResourceTypes || {};
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
 
+            var delayTimer = (totalCount >= 30 ? 50 : 300);
+
             for (var i = 0; i < totalCount; i++) {
                 /* jshint loopfunc:true */
                 /* eslint-disable no-loop-func */
@@ -189,7 +191,7 @@ define(function (require) {
                                     resourceId, resourceSrc, loadOneCallback, errorCallback
                                 );
                             }
-                        }, (index + 1) * 300);
+                        }, (index + 1) * delayTimer);
                     }
                     else {
                         loadOneCallback(resourceId, me.asset[resourceId]);

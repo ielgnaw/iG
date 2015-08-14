@@ -3144,6 +3144,7 @@ define('ig/SpriteSheet', [
             };
             var customResourceTypes = opts.customResourceTypes || {};
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
+            var delayTimer = totalCount >= 30 ? 50 : 300;
             for (var i = 0; i < totalCount; i++) {
                 (function (index) {
                     var curResource = resource[index];
@@ -3177,7 +3178,7 @@ define('ig/SpriteSheet', [
                                 }
                                 invokeMethod(resourceId, resourceSrc, loadOneCallback, errorCallback);
                             }
-                        }, (index + 1) * 300);
+                        }, (index + 1) * delayTimer);
                     } else {
                         loadOneCallback(resourceId, me.asset[resourceId]);
                     }
