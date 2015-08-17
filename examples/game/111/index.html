@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>demo</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="full-screen" content="true"/>
+        <!-- <meta name="screen-orientation" content="portrait"/> -->
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <meta name="x5-orientation" content="landscape">
+        <meta name="screen-orientation" content="landscape">
+        <style type="text/css">
+            .container {
+                width: 800px;
+                height: 400px;
+                margin: 20px auto;
+                /*border: 1px solid #ddd;*/
+                position: relative;
+            }
+            .control {
+                position: absolute;
+                right: 100px;
+                z-index: 100;
+            }
+            .control a {
+                color: #000;
+                display: inline-block;
+                text-decoration: none;
+                border: 1px solid #ddd;
+                border-radius: 3px;
+                padding: 5px;
+                text-align: center;
+                font-size: 14px;
+            }
+            .control a:hover {
+                background: #5580dd;
+                color: #fff;
+            }
+            #fps {
+                position: absolute;
+                z-index: 10000;
+                top: 5px;
+                left: 5px;
+            }
+            #load-process {
+                display: none;
+                position: absolute;
+                z-index: 10000;
+                /*top: 100px;*/
+                /*left: 5px;*/
+
+                width: 110px;
+                margin: 0 auto;
+                height: 30px;
+                line-height: 30px;
+            }
+
+            .panel {
+                position: absolute;
+                z-index: 10;
+                font-size: 1.5em;
+                width: 100%;
+                color: #fff;
+                text-align: center;
+                top: 5px;
+                display: none;
+            }
+
+            .panel .score {
+                color: #ffec00;
+            }
+
+            .panel .time {
+                margin-top: 5px;
+            }
+
+            .game-again {
+                position: absolute;
+                z-index: 10;
+                width: 100%;
+                display: inline-block;
+                top: 200px;
+                text-align: center;
+                font-size: 2em;
+                display: none;
+            }
+        </style>
+        <script type="text/javascript" src="/build/source/ig-all.js"></script>
+    </head>
+    <body>
+        <div class="panel">
+            <label>当前得分：</label>
+            <span class="score">0</span>
+            <div class="time"></div>
+        </div>
+        <div class="game-again">
+            <a href="###">再来</a>
+        </div>
+        <div id="load-process">loading: </div>
+        <canvas id="canvas"></canvas>
+        <script src="./index.js"></script>
+    </body>
+</html>

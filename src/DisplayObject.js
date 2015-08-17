@@ -430,6 +430,7 @@ define(function (require) {
                 },
                 opts
             );
+
             var stepFunc = util.getType(animOpts.stepFunc) === 'function'
                 ? animOpts.stepFunc
                 : util.noop;
@@ -476,15 +477,24 @@ define(function (require) {
                     }
                 }
 
+                var target = opts.target || {};
+                var range = opts.range || {};
                 for (var i = 0; i < childLen; i++) {
                     if (this.children[i].followParent) {
                         childAnimOpts = util.extend(true, {}, {source: this.children[i]}, opts);
                         // 子精灵的 x, y 是相对于父精灵的 x, y 来定位的
-                        if (opts.target.x) {
+                        if (target.x) {
                             childAnimOpts.target.x += this.children[i].x + this.x;
                         }
-                        if (opts.target.y) {
+                        if (target.y) {
                             childAnimOpts.target.y += this.children[i].y - this.y;
+                        }
+
+                        if (range.x) {
+                            childAnimOpts.range.x += this.children[i].x + this.x;
+                        }
+                        if (range.y) {
+                            childAnimOpts.range.y += this.children[i].y - this.y;
                         }
                         this.children[i].animate = new Animation(childAnimOpts).play();
                     }
