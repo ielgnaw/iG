@@ -70,8 +70,8 @@ window.onload = function () {
         }
     });
 
-    var playerWidth = 75;
-    var playerHeight = 88; // 错误的时候 player 高度是 100
+    var playerWidth = 85;
+    var playerHeight = 114; // 错误的时候 player 高度是 100
 
     var teacherWidth = 78;
     var teacherHeight = 94;
