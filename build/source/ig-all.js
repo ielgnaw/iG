@@ -3152,7 +3152,7 @@ define('ig/SpriteSheet', [
             };
             var customResourceTypes = opts.customResourceTypes || {};
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
-            var delayTimer = totalCount >= 30 ? 50 : 300;
+            var delayTimer = totalCount >= 10 ? 100 : 300;
             for (var i = 0; i < totalCount; i++) {
                 (function (index) {
                     var curResource = resource[index];
@@ -3594,8 +3594,8 @@ define('ig/Game', [
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
-        this.width = this.canvas.width = width;
-        this.height = this.canvas.height = height;
+        this.width = this.canvas.width = width * 2;
+        this.height = this.canvas.height = height * 2;
         this.canvas.style.position = 'relative';
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';

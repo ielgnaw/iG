@@ -14,7 +14,7 @@ var stage1 = (function () {
     var STATUS = CONFIG.status;
     var randomInt = util.randomInt;
 
-    var arrowNode = $('.arrow-container span');
+    var arrowNode = $('.arrow-container');
 
     var game;
     var stage;
@@ -101,12 +101,16 @@ var stage1 = (function () {
     var planetControl = (function () {
 
         function createPlanet1() {
-            stage.addDisplayObject(
+            var s = stage.addDisplayObject(
                 new ig.Bitmap({
                     name: 'planet1',
                     asset: game.asset.planet1,
                     x: 50 * game.ratioX,
                     y: 270 * game.ratioY,
+                    // scaleX: 0.5,
+                    // scaleY: 0.5,
+                    // width: 288,
+                    // height: 200,
                     zIndex: baseZIndex
                 })
             );
@@ -166,9 +170,7 @@ var stage1 = (function () {
 
             star1.setAnimate({
                 range: {
-                    scaleX: 0.3,
-                    scaleY: 0.3,
-                    alpha: 1,
+                    alpha: 1
                 },
                 repeat: 1,
                 duration: 1000
@@ -188,12 +190,10 @@ var stage1 = (function () {
 
             star2.setAnimate({
                 range: {
-                    scaleX: 0.3,
-                    scaleY: 0.3,
-                    alpha: 1,
+                    alpha: 1
                 },
                 repeat: 1,
-                duration: 1000
+                duration: 900
             });
         }
 
@@ -201,10 +201,7 @@ var stage1 = (function () {
 
         exports.create = function () {
             createStar1();
-            var t = setTimeout(function () {
-                clearTimeout(t);
-                createStar2();
-            }, 500);
+            createStar2();
         };
 
         return exports;
@@ -254,7 +251,7 @@ var stage1 = (function () {
                     },
                     duration: 2000,
                     completeFunc: function () {
-                        arrowNode.parent().css('display', 'block');
+                        arrowNode.css('display', 'block');
                     }
                 });
             }
@@ -264,7 +261,7 @@ var stage1 = (function () {
 
     function switchStage(e) {
         arrowNode.off('click', switchStage);
-        arrowNode.parent().css('display', 'none');
+        arrowNode.css('display', 'none');
         exports.dispose();
         var canvasNode = $(game.canvas);
         game.pause();

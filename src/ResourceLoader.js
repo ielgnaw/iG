@@ -147,7 +147,7 @@ define(function (require) {
             var customResourceTypes = opts.customResourceTypes || {};
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
 
-            var delayTimer = (totalCount >= 30 ? 50 : 300);
+            var delayTimer = (totalCount >= 10 ? 100 : 300);
 
             for (var i = 0; i < totalCount; i++) {
                 /* jshint loopfunc:true */

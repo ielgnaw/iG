@@ -25,15 +25,24 @@ window.onload = function () {
         resource: [
             {id: 'meteor1', src: './img/meteor1.png'},
             {id: 'meteor2', src: './img/meteor2.png'},
-            {id: 'planet1', src: './img/planet1.png'},
+            // {id: 'planet1', src: './img/planet1.png'},
+            {id: 'planet1', src: './img/planet1-new.png'},
             {id: 'planet2', src: './img/planet2.png'},
             {id: 'planet3', src: './img/planet3.png'},
             {id: 'star1', src: './img/star1.png'},
             {id: 'star2', src: './img/star2.png'},
             {id: 'stage2Bg', src: './img/stage2-bg.png'},
-            {id: 'eddy1', src: './img/eddy1.png'},
+            // {id: 'eddy1', src: './img/eddy1.png'},
+            // {id: 'eddy1', src: './img/eddy1-new.png'},
+            {id: 'eddy1', src: './img/eddy1-new.png'},
             {id: 'eddy2', src: './img/eddy2.png'},
             {id: 'robot', src: './img/robot.png'},
+            {id: 'stage3Bg', src: './img/stage3-bg.png'},
+            {id: 'sPlanet1', src: './img/planet1-small.png'},
+            {id: 'bPlanet3', src: './img/planet3-big.png'},
+            {id: 'earth', src: './img/earth.png'},
+            {id: 'spin', src: './img/spin.png'},
+            {id: 'robot2', src: './img/robot2.png'},
         ]
     }).on('loadResProcess', function (e) {
         loadProcessNode.style.display = 'block';
@@ -55,8 +64,10 @@ window.onload = function () {
 
     game.start('xiaoduStage', function () {
         isStart = true;
-        stage1.init({
+        // stage1.init({
         // stage2.init({
+        stage3.init({
+        // stage4.init({
             game: game,
             stage: stage,
             baseZIndex: BASE_Z_INDEX,

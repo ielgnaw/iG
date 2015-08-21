@@ -704,8 +704,8 @@ define(function (require) {
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
-        this.width = this.canvas.width = width;
-        this.height = this.canvas.height = height;
+        this.width = this.canvas.width = width * 2;
+        this.height = this.canvas.height = height * 2;
         this.canvas.style.position = 'relative';
 
         // setOffCanvas.call(this);

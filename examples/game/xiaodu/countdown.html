@@ -1,0 +1,337 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>基于jQuery个性圆圈倒计时特效 - 爱编程w2bc.com</title>
+<!--[if IE]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+<script type="text/javascript" src="./jquery-1.10.2.min.js"></script>
+<script src="./jquery.knob.min.js"></script>
+<script src="./jquery.ba-throttle-debounce.min.js"></script>
+<script src="./jquery.redcountdown.js"></script>
+<style>
+.redCountdownDemo { margin:0 auto 30px auto; max-width:800px; width:calc(100%;); padding:30px; display:block; }
+</style>
+</head>
+<body>
+<div id="rC_PB" class="redCountdownDemo"></div>
+<script type="text/javascript">
+    $('#rC_PB').redCountdown({
+        preset: "flat-colors-fat",
+        end: $.now() + 11,
+        now: $.now(),
+        labelsOptions: {
+            lang: {
+                seconds: 'S'
+            },
+            style: 'font-size:0.5em;'
+        },
+        onEndCallback: function () {
+            console.warn('done');
+        }
+    });
+    /*$('#rC_B').redCountdown({
+        end: $.now() + 10000,
+        labels: true,
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .03,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "#1abc9c"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#fff;'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .03,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "#2980b9"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#fff;'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .03,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "#8e44ad"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#fff;'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .03,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "#f39c12"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#fff;'
+            }
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });
+    $('#rC_A').redCountdown({
+        end: '1388468325',
+        now: '1378441323',
+        labels: true,
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .01,
+                    bgColor: "rgba(0,0,0,0.05)",
+                    fgColor: "#1abc9c"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .01,
+                    bgColor: "rgba(0,0,0,0.05)",
+                    fgColor: "#2980b9"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .01,
+                    bgColor: "rgba(0,0,0,0.05)",
+                    fgColor: "#8e44ad"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .01,
+                    bgColor: "rgba(0,0,0,0.05)",
+                    fgColor: "#f39c12"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            }
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });
+
+    $('#rC_E').redCountdown({
+        end: '1388468325',
+        now: '1380501323',
+        labels: true,
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .05,
+                    bgColor: "rgba(0,0,0,0)",
+                    fgColor: "#1abc9c",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .05,
+                    bgColor: "rgba(0,0,0,0)",
+                    fgColor: "#2980b9",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .05,
+                    bgColor: "rgba(0,0,0,0)",
+                    fgColor: "#8e44ad",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .05,
+                    bgColor: "rgba(0,0,0,0)",
+                    fgColor: "#f39c12",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:#34495e;'
+            }
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });
+
+
+    $('#rC_D').redCountdown({
+        end: '1397468325',
+        now: '1388471324',
+        labels: true,
+        labelsOptions: {
+            lang: {
+                days: 'D',
+                hours: 'H',
+                minutes: 'M',
+                seconds: 'S'
+            },
+            style: 'font-size:0.5em; text-transform:uppercase;'
+        },
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .02,
+                    bgColor: "rgba(255,255,255,0.1)",
+                    fgColor: "rgba(255,255,255,1)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .02,
+                    bgColor: "rgba(255,255,255,0.1)",
+                    fgColor: "rgba(255,255,255,1)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .02,
+                    bgColor: "rgba(255,255,255,0.1)",
+                    fgColor: "rgba(255,255,255,1)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .02,
+                    bgColor: "rgba(255,255,255,0.1)",
+                    fgColor: "rgba(255,255,255,1)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });
+
+    $('#rC_C').redCountdown({
+        end: '1390868325',
+        now: '1388461323',
+        labels: true,
+        labelsOptions: {
+            lang: {
+                days: 'Dni',
+                hours: 'Godzin',
+                minutes: 'Minut',
+                seconds: 'Sekund'
+            },
+            style: 'font-size:0.5em; text-transform:uppercase;'
+        },
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "rgba(255,255,255,0.2)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "rgba(255,255,255,0.2)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "rgba(255,255,255,0.2)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.05)",
+                    fgColor: "rgba(255,255,255,0.2)",
+                    lineCap: 'round'
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            }
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });
+
+    $('#rC_F').redCountdown({
+        end: '1390868325',
+        now: '1388461323',
+        labels: true,
+        labelsOptions: {
+            lang: {
+                days: 'Dni',
+                hours: 'Godzin',
+                minutes: 'Minut',
+                seconds: 'Sekund'
+            },
+            style: 'font-size:0.5em; text-transform:uppercase;'
+        },
+        style: {
+            element: "",
+            textResponsive: .5,
+            daysElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.2)",
+                    fgColor: "rgb(241, 196, 15)"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            hoursElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.2)",
+                    fgColor: "rgb(241, 196, 15)"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            minutesElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.2)",
+                    fgColor: "rgb(241, 196, 15)"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            },
+            secondsElement: {
+                gauge: {
+                    thickness: .2,
+                    bgColor: "rgba(255,255,255,0.2)",
+                    fgColor: "rgb(241, 196, 15)"
+                },
+                textCSS: 'font-family:\'Open Sans\'; font-size:25px; font-weight:300; color:rgba(255,255,255,0.7);'
+            }
+
+        },
+        onEndCallback: function() { console.log("Time out!"); }
+    });*/
+
+</script>
+</body>
+</html>

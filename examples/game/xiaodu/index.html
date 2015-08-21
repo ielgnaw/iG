@@ -37,7 +37,9 @@
 
             .arrow-container {
                 position: absolute;
-                bottom: 20px;
+                bottom: 0;
+                height: 35px;
+                line-height: 35px;
                 z-index: 100;
                 width: 100%;
                 text-align: center;
@@ -50,8 +52,55 @@
                 display: inline-block;
                 background-image: url(./img/arrow.png);
             }
+
+            .awake-container {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                color: #ffad26;
+                z-index: 100;
+                display: none;
+            }
+
+            .awake-container p {
+                line-height: 6px;
+                height: 6px;
+            }
+
+            .awake-container p.awake {
+                color: #67d7f2;
+            }
+
+            .awake-container .trigger {
+                background-color: #ffad26;
+                text-decoration: none;
+                color: #000;
+                display: inline-block;
+                height: 35px;
+                line-height: 35px;
+                padding: 0 25px;
+                border-radius: 20px;
+                width: 153px;
+                font-weight: 700;
+            }
+
+            .countdown-container {
+                position: absolute;
+                text-align: center;
+                z-index: 100;
+                display: block;
+                width: 100%;
+                margin-top: 30px;
+            }
+
+            .countdown-container .countdown {
+                /*width:calc(100%;);*/
+            }
         </style>
         <script type="text/javascript" src="./jquery-1.10.2.min.js"></script>
+        <script src="./jquery.knob.min.js"></script>
+        <script src="./jquery.ba-throttle-debounce.min.js"></script>
+        <script src="./jquery.redcountdown.js"></script>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
@@ -59,10 +108,20 @@
         <div class="arrow-container">
             <span></span>
         </div>
+        <div class="awake-container">
+            <p>也许在你的帮助下，小度可以很</p>
+            <p>快苏醒，可以试试点击</p>
+            <p class="awake">【唤醒小度】</p>
+            <a href="#" class="trigger">唤醒小度</a>
+        </div>
+        <div class="countdown-container">
+            <div id="rC_PB" class="countdown"></div>
+        </div>
         <canvas id="canvas"></canvas>
         <script src="./index.js"></script>
         <script src="./stage1.js"></script>
         <script src="./stage2.js"></script>
         <script src="./stage3.js"></script>
+        <script src="./stage4.js"></script>
     </body>
 </html>
