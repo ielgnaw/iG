@@ -148,6 +148,15 @@ define(function (require) {
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
 
             var delayTimer = (totalCount >= 10 ? 100 : 300);
+            if (totalCount <= 10) {
+                delayTimer = 300;
+            }
+            else if (totalCount > 10 && totalCount <= 100) {
+                delayTimer = 100;
+            }
+            else if (totalCount > 100) {
+                delayTimer = 10;
+            }
 
             for (var i = 0; i < totalCount; i++) {
                 /* jshint loopfunc:true */
