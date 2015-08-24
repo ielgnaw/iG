@@ -2359,12 +2359,21 @@ define('ig/DisplayObject', [
         }, opts);
         this._ = {};
         this.matrix = new Matrix();
+        this.scaleOrigin = {
+            x: this.x,
+            y: this.y
+        };
         this.setPosX(this.x);
         this.setPosY(this.y);
         return this;
     }
     DisplayObject.prototype = {
         constructor: DisplayObject,
+        setScaleOrigin: function (x, y) {
+            this.scaleOrigin.x = x || this.scaleOrigin.x;
+            this.scaleOrigin.y = y || this.scaleOrigin.y;
+            return this;
+        },
         setMatrix: function (m) {
             this.matrix.m = m;
             return this;
@@ -3153,6 +3162,13 @@ define('ig/SpriteSheet', [
             var customResourceTypes = opts.customResourceTypes || {};
             var resourceTypes = util.extend({}, defaultResourceTypes, customResourceTypes);
             var delayTimer = totalCount >= 10 ? 100 : 300;
+            if (totalCount <= 10) {
+                delayTimer = 300;
+            } else if (totalCount > 10 && totalCount <= 100) {
+                delayTimer = 100;
+            } else if (totalCount > 100) {
+                delayTimer = 10;
+            }
             for (var i = 0; i < totalCount; i++) {
                 (function (index) {
                     var curResource = resource[index];
@@ -4406,15 +4422,21 @@ define('ig/Rectangle', [
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
             this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
             if (this.parent && this.followParent) {
-                this.matrix.rotate(this.parent.angle);
+                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
                 this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
+                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.parent.angle);
+                this.matrix.translate(-this.cx, -this.cy);
             } else {
-                this.matrix.rotate(this.angle);
+                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
                 this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.translate(-this.cx, -this.cy);
             }
-            this.matrix.translate(-this.cx, -this.cy);
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);
@@ -4659,15 +4681,21 @@ define('ig/Polygon', [
             ctx.strokeStyle = this.strokeStyle;
             ctx.globalAlpha = this.alpha;
             this.matrix.reset();
-            this.matrix.translate(this.cx, this.cy);
             if (this.parent && this.followParent) {
-                this.matrix.rotate(this.parent.angle);
+                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
                 this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
+                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.parent.angle);
+                this.matrix.translate(-this.cx, -this.cy);
             } else {
-                this.matrix.rotate(this.angle);
+                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
                 this.matrix.scale(this.scaleX, this.scaleY);
+                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                this.matrix.translate(this.cx, this.cy);
+                this.matrix.rotate(this.angle);
+                this.matrix.translate(-this.cx, -this.cy);
             }
-            this.matrix.translate(-this.cx, -this.cy);
             this.generatePoints();
             this.getBounds();
             this.createPath(ctx);

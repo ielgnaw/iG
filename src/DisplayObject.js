@@ -142,6 +142,16 @@ define(function (require) {
         // 当前 DisplayObject 实例的变换矩阵
         this.matrix = new Matrix();
 
+        /**
+         * 缩放的原点，默认为起始点，可以被覆盖
+         *
+         * @type {Object}
+         */
+        this.scaleOrigin = {
+            x: this.x,
+            y: this.y
+        };
+
         // 初始化的时候设置位置
         this.setPosX(this.x);
         this.setPosY(this.y);
@@ -154,6 +164,18 @@ define(function (require) {
          * 还原 constructor
          */
         constructor: DisplayObject,
+
+        /**
+         * @return {Object} DisplayObject 实例
+         *
+         * @param {number} x 横坐标
+         * @param {number} y 纵坐标
+         */
+        setScaleOrigin: function (x, y) {
+            this.scaleOrigin.x = x || this.scaleOrigin.x;
+            this.scaleOrigin.y = y || this.scaleOrigin.y;
+            return this;
+        },
 
         /**
          * 设置 DisplayObject 实例的 matrix
