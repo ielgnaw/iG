@@ -1681,6 +1681,16 @@ define('ig/env', [
         } catch (e) {
         }
     }
+    var dpr = function () {
+        var tmpCtx = document.createElement('canvas').getContext('2d');
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = tmpCtx.backingStorePixelRatio || tmpCtx.webkitBackingStorePixelRatio || tmpCtx.mozBackingStorePixelRatio || tmpCtx.msBackingStorePixelRatio || tmpCtx.oBackingStorePixelRatio || tmpCtx.backingStorePixelRatio || 1;
+        var ratio = 1;
+        if (devicePixelRatio !== backingStoreRatio) {
+            ratio = devicePixelRatio / backingStoreRatio;
+        }
+        return ratio;
+    }();
     var isSupportLocalStorage = function () {
         try {
             var support = 'localStorage' in window && window.localStorage !== null;
@@ -1710,7 +1720,8 @@ define('ig/env', [
         isIOS: env.os.ios,
         isPhone: env.os.phone,
         isTablet: env.os.tablet,
-        isMobile: env.os.phone || env.os.tablet
+        isMobile: env.os.phone || env.os.tablet,
+        dpr: dpr
     };
     checkAudio(exports);
     return exports;
@@ -2492,6 +2503,7 @@ define('ig/DisplayObject', [
                         child.move(child.x, child.y);
                         child.parent = this;
                         child.setMatrix(this.matrix.m);
+                        child.setScaleOrigin(this.scaleOrigin.x, this.scaleOrigin.y);
                     }
                 }
                 var target = opts.target || {};
@@ -2500,16 +2512,16 @@ define('ig/DisplayObject', [
                     if (this.children[i].followParent) {
                         childAnimOpts = util.extend(true, {}, { source: this.children[i] }, opts);
                         if (target.x) {
-                            childAnimOpts.target.x += this.children[i].x + this.x;
+                            childAnimOpts.target.x = this.children[i].x + animOpts.target.x - this.x;
                         }
                         if (target.y) {
-                            childAnimOpts.target.y += this.children[i].y - this.y;
+                            childAnimOpts.target.y = this.children[i].y + animOpts.target.y - this.y;
                         }
                         if (range.x) {
-                            childAnimOpts.range.x += this.children[i].x + this.x;
+                            childAnimOpts.range.x = animOpts.range.x;
                         }
                         if (range.y) {
-                            childAnimOpts.range.y += this.children[i].y - this.y;
+                            childAnimOpts.range.y = animOpts.range.y;
                         }
                         this.children[i].animate = new Animation(childAnimOpts).play();
                     }
@@ -3083,6 +3095,7 @@ define('ig/SpriteSheet', [
     './dep/howler'
 ], function (require) {
     var util = require('./util');
+    var REG_BASE64 = /^(data:\s*image\/(\w+);\s*base64,)/;
     var Howl = require('./dep/howler').Howl;
     var defaultResourceTypes = {
         png: 'Image',
@@ -3211,6 +3224,9 @@ define('ig/SpriteSheet', [
         }
     };
     function getFileExt(fileName) {
+        if (REG_BASE64.test(fileName)) {
+            return RegExp.$2;
+        }
         var segments = fileName.split('.');
         return segments[segments.length - 1].toLowerCase();
     }
@@ -3577,6 +3593,22 @@ define('ig/Game', [
             me.fire('loadResDone');
         }
     }
+    function setPixelRatio() {
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = this.ctx.backingStorePixelRatio || this.ctx.webkitBackingStorePixelRatio || this.ctx.mozBackingStorePixelRatio || this.ctx.msBackingStorePixelRatio || this.ctx.oBackingStorePixelRatio || this.ctx.backingStorePixelRatio || 1;
+        var ratio = 1;
+        if (devicePixelRatio !== backingStoreRatio) {
+            ratio = devicePixelRatio / backingStoreRatio;
+            var oldWidth = this.canvas.width;
+            var oldHeight = this.canvas.height;
+            this.canvas.width = oldWidth * ratio;
+            this.canvas.height = oldHeight * ratio;
+            this.canvas.style.width = oldWidth + 'px';
+            this.canvas.style.height = oldHeight + 'px';
+        }
+        this.dpr = ratio;
+        return (window.devicePixelRatio || 1) / backingStoreRatio;
+    }
     function initGame() {
         this.canvas = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
         this.canvas.width = this.width;
@@ -3610,8 +3642,8 @@ define('ig/Game', [
         this.ctx = this.canvas.getContext('2d');
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
-        this.width = this.canvas.width = width * 2;
-        this.height = this.canvas.height = height * 2;
+        this.width = this.canvas.width = width * env.dpr;
+        this.height = this.canvas.height = height * env.dpr;
         this.canvas.style.position = 'relative';
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
@@ -3873,8 +3905,11 @@ define('ig/Stage', [
         if (!Array.isArray(children)) {
             return;
         }
-        var stage = this;
         var len = children.length;
+        if (!len) {
+            return;
+        }
+        var stage = this;
         var i = 0;
         var child;
         if (!displayObj._.isHandleChildren) {
@@ -3887,6 +3922,7 @@ define('ig/Stage', [
                 child.move(child.x, child.y);
                 child.parent = displayObj;
                 child.setMatrix(displayObj.matrix.m);
+                child.setScaleOrigin(displayObj.scaleOrigin.x, displayObj.scaleOrigin.y);
                 stage.addDisplayObject(child);
             }
         } else {

@@ -655,6 +655,39 @@ define(function (require) {
     }
 
     /**
+     * 根据屏幕的像素比设置 ratio
+     *
+     * @return {number} 比例值
+     */
+    function setPixelRatio() {
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = this.ctx.backingStorePixelRatio
+            || this.ctx.webkitBackingStorePixelRatio
+            || this.ctx.mozBackingStorePixelRatio
+            || this.ctx.msBackingStorePixelRatio
+            || this.ctx.oBackingStorePixelRatio
+            || this.ctx.backingStorePixelRatio
+            || 1;
+
+        var ratio = 1;
+        if (devicePixelRatio !== backingStoreRatio) {
+            ratio = devicePixelRatio / backingStoreRatio;
+            var oldWidth = this.canvas.width;
+            var oldHeight = this.canvas.height;
+
+            this.canvas.width = oldWidth * ratio;
+            this.canvas.height = oldHeight * ratio;
+
+            this.canvas.style.width = oldWidth + 'px';
+            this.canvas.style.height = oldHeight + 'px';
+            // this.ctx.scale(ratio, ratio);
+        }
+        this.dpr = ratio;
+
+        return (window.devicePixelRatio || 1) / backingStoreRatio;
+    }
+
+    /**
      * game 初始化
      *
      * @return {Object} 当前 Game 实例
@@ -702,10 +735,12 @@ define(function (require) {
         height = Math.min(window.innerHeight, maxHeight);
 
         this.ctx = this.canvas.getContext('2d');
+
         this.cssWidth = this.canvas.style.height = height + 'px';
         this.cssHeight = this.canvas.style.width = width + 'px';
-        this.width = this.canvas.width = width * 2;
-        this.height = this.canvas.height = height * 2;
+        this.width = this.canvas.width = width * env.dpr;
+        this.height = this.canvas.height = height * env.dpr;
+        // this.ctx.scale(env.dpr, env.dpr);
         this.canvas.style.position = 'relative';
 
         // setOffCanvas.call(this);

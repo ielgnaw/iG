@@ -493,13 +493,17 @@ define(function (require) {
             return;
         }
 
-        var stage = this;
         var len = children.length;
+        if (!len) {
+            return;
+        }
+
+        var stage = this;
         var i = 0;
         var child;
         if (!displayObj._.isHandleChildren) {
             displayObj._.isHandleChildren = true;
-
+            // debugger
             // 实例化 children 的时候，children 的 x, y 是相对于 parent 的 x, y 的
             for (i = 0; i < len; i++) {
                 child = children[i];
@@ -511,6 +515,7 @@ define(function (require) {
                 child.move(child.x, child.y);
                 child.parent = displayObj;
                 child.setMatrix(displayObj.matrix.m);
+                child.setScaleOrigin(displayObj.scaleOrigin.x, displayObj.scaleOrigin.y);
                 stage.addDisplayObject(child);
             }
         }

@@ -269,6 +269,29 @@ define(function (require) {
         catch (e) { }
     }
 
+    /**
+     * 获取设备像素比
+     *
+     * @return {number} 设备像素比
+     */
+    var dpr = (function () {
+        var tmpCtx = document.createElement('canvas').getContext('2d');
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = tmpCtx.backingStorePixelRatio
+            || tmpCtx.webkitBackingStorePixelRatio
+            || tmpCtx.mozBackingStorePixelRatio
+            || tmpCtx.msBackingStorePixelRatio
+            || tmpCtx.oBackingStorePixelRatio
+            || tmpCtx.backingStorePixelRatio
+            || 1;
+
+        var ratio = 1;
+        if (devicePixelRatio !== backingStoreRatio) {
+            ratio = devicePixelRatio / backingStoreRatio;
+        }
+        return ratio;
+    })();
+
     var isSupportLocalStorage = (function () {
         try {
             var support = 'localStorage' in window && window.localStorage !== null;
@@ -302,7 +325,8 @@ define(function (require) {
         isIOS: env.os.ios,
         isPhone: env.os.phone,
         isTablet: env.os.tablet,
-        isMobile: env.os.phone || env.os.tablet
+        isMobile: env.os.phone || env.os.tablet,
+        dpr: dpr
     };
 
     checkAudio(exports);
