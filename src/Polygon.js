@@ -372,18 +372,28 @@ define(function (require) {
 
             // 如果有父精灵，那么就不需要自己设置 matrix 了，跟随父精灵变化
             if (this.parent && this.followParent) {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
 
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.parent.angle);
                 this.matrix.translate(-this.cx, -this.cy);
             }
             else {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.scaleX, this.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
 
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.angle);

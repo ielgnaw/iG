@@ -85,6 +85,11 @@ define(function (require) {
             scaleX: 1,
             // 纵轴缩放倍数
             scaleY: 1,
+            // 缩放的原点，默认为坐标系原点，设置时需要设置为 {x: number, y: number} 的形式
+            scaleOrigin: {
+                x: 0,
+                y: 0
+            },
             // 旋转角度
             angle: 0,
             // 透明度
@@ -142,16 +147,6 @@ define(function (require) {
         // 当前 DisplayObject 实例的变换矩阵
         this.matrix = new Matrix();
 
-        /**
-         * 缩放的原点，默认为起始点，可以被覆盖
-         *
-         * @type {Object}
-         */
-        this.scaleOrigin = {
-            x: this.x,
-            y: this.y
-        };
-
         // 初始化的时候设置位置
         this.setPosX(this.x);
         this.setPosY(this.y);
@@ -166,14 +161,19 @@ define(function (require) {
         constructor: DisplayObject,
 
         /**
-         * @return {Object} DisplayObject 实例
+         * 设置缩放的原点
          *
          * @param {number} x 横坐标
          * @param {number} y 纵坐标
+         *
+         * @return {Object} DisplayObject 实例
          */
         setScaleOrigin: function (x, y) {
-            this.scaleOrigin.x = x || this.scaleOrigin.x;
-            this.scaleOrigin.y = y || this.scaleOrigin.y;
+            if (!this.scaleOrigin) {
+                this.scaleOrigin = {};
+            }
+            this.scaleOrigin.x = x || 0;
+            this.scaleOrigin.y = y || 0;
             return this;
         },
 

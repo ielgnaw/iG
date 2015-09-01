@@ -59,9 +59,11 @@ define(function (require) {
             var img = new Image();
             img.addEventListener('load', function (e) {
                 callback(id, img);
+                img = null;
             });
             img.addEventListener('error', function (e) {
                 errorCallback(src);
+                img = null;
             });
             img.src = src;
         },
@@ -155,7 +157,7 @@ define(function (require) {
                 delayTimer = 300;
             }
             else if (totalCount > 10 && totalCount <= 100) {
-                delayTimer = 100;
+                delayTimer = 30;
             }
             else if (totalCount > 100) {
                 delayTimer = 10;
