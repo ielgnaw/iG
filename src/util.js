@@ -445,6 +445,34 @@ define(function (require) {
         };
     };
 
+    /**
+     * 绘制矩形路径
+     *
+     * @param {number} x 起点横坐标
+     * @param {number} y 起点纵坐标
+     * @param {number} w 宽度
+     * @param {number} h 高度
+     * @param {Object} ctx 2d 上下文对象
+     * @param {boolean} direction 是否逆时针，true 为逆时针
+     */
+    exports.rect = function (x, y, w, h, ctx, direction) {
+        // CCW 逆时针
+        if (direction) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x + w, y);
+        }
+        // 顺时针
+        else {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x, y + h);
+        }
+        ctx.closePath();
+    }
+
     return exports;
 
 });

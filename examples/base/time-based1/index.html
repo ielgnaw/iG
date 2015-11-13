@@ -50,68 +50,19 @@
 
             canvas {
                 border: 1px solid #ddd;
-                display: block;
             }
 
             div {
                 margin: 10px;
             }
-
-            .wrapper {
-                margin: 0;
-                margin-top: 10px;
-            }
-
-            .div {
-                width: 30px;
-                height: 20px;
-                position: relative;
-            }
-
-            .green {
-                background-color: green;
-            }
-
-            .red {
-                background-color: red;
-            }
-
-            .blue {
-                background-color: blue;
-            }
         </style>
         <script type="text/javascript" src="/build/source/ig-all.js"></script>
     </head>
     <body>
-        <div class="wrapper">
-            <div>
-                <span id="fps5">fps5: <span></span></span>
-                <canvas id="fps5-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps10">fps10: <span></span></span>
-                <canvas id="fps10-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps20">fps20: <span></span></span>
-                <canvas id="fps20-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps30">fps30: <span></span></span>
-                <canvas id="fps30-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps40">fps40: <span></span></span>
-                <canvas id="fps40-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps50">fps50: <span></span></span>
-                <canvas id="fps50-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps60">fps60: <span></span></span>
-                <canvas id="fps60-canvas" width="300" height="40"></canvas>
-            </div>
+        <div>
+            <span>timed-based:</span>
+            <canvas id="time-based-canvas"></canvas>
+            <button id="time-based-start">开始</button>
         </div>
         <script src="./index.js"></script>
     </body>

@@ -1292,6 +1292,20 @@ define('ig/util', ['require'], function (require) {
             y: y
         };
     };
+    exports.rect = function (x, y, w, h, ctx, direction) {
+        if (direction) {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y + h);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x + w, y);
+        } else {
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + w, y);
+            ctx.lineTo(x + w, y + h);
+            ctx.lineTo(x, y + h);
+        }
+        ctx.closePath();
+    };
     return exports;
 });'use strict';
 define('ig/easing', ['require'], function (require) {
@@ -2346,6 +2360,10 @@ define('ig/DisplayObject', [
             radius: 0,
             scaleX: 1,
             scaleY: 1,
+            scaleOrigin: {
+                x: 0,
+                y: 0
+            },
             angle: 0,
             alpha: 1,
             zIndex: 0,
@@ -2370,10 +2388,6 @@ define('ig/DisplayObject', [
         }, opts);
         this._ = {};
         this.matrix = new Matrix();
-        this.scaleOrigin = {
-            x: this.x,
-            y: this.y
-        };
         this.setPosX(this.x);
         this.setPosY(this.y);
         return this;
@@ -2381,8 +2395,11 @@ define('ig/DisplayObject', [
     DisplayObject.prototype = {
         constructor: DisplayObject,
         setScaleOrigin: function (x, y) {
-            this.scaleOrigin.x = x || this.scaleOrigin.x;
-            this.scaleOrigin.y = y || this.scaleOrigin.y;
+            if (!this.scaleOrigin) {
+                this.scaleOrigin = {};
+            }
+            this.scaleOrigin.x = x || 0;
+            this.scaleOrigin.y = y || 0;
             return this;
         },
         setMatrix: function (m) {
@@ -3117,9 +3134,11 @@ define('ig/SpriteSheet', [
             var img = new Image();
             img.addEventListener('load', function (e) {
                 callback(id, img);
+                img = null;
             });
             img.addEventListener('error', function (e) {
                 errorCallback(src);
+                img = null;
             });
             img.src = src;
         },
@@ -3178,7 +3197,7 @@ define('ig/SpriteSheet', [
             if (totalCount <= 10) {
                 delayTimer = 300;
             } else if (totalCount > 10 && totalCount <= 100) {
-                delayTimer = 100;
+                delayTimer = 30;
             } else if (totalCount > 100) {
                 delayTimer = 10;
             }
@@ -3644,6 +3663,7 @@ define('ig/Game', [
         this.cssHeight = this.canvas.style.width = width + 'px';
         this.width = this.canvas.width = width * env.dpr;
         this.height = this.canvas.height = height * env.dpr;
+        this.ctx.scale(env.dpr, env.dpr);
         this.canvas.style.position = 'relative';
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
@@ -3653,8 +3673,8 @@ define('ig/Game', [
             if (this.scaleFit) {
                 fitScreen.call(this);
             }
-            this.ratioX = this.width / CONFIG.width;
-            this.ratioY = this.height / CONFIG.height;
+            this.ratioX = this.width / CONFIG.width / env.dpr;
+            this.ratioY = this.height / CONFIG.height / env.dpr;
             this.cssRatioX = this.width / parseInt(this.cssWidth, 10);
             this.cssRatioY = this.height / parseInt(this.cssHeight, 10);
         };
@@ -4459,16 +4479,26 @@ define('ig/Rectangle', [
             ctx.globalAlpha = this.alpha;
             this.matrix.reset();
             if (this.parent && this.followParent) {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.parent.angle);
                 this.matrix.translate(-this.cx, -this.cy);
             } else {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.scaleX, this.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.angle);
                 this.matrix.translate(-this.cx, -this.cy);
@@ -4718,16 +4748,26 @@ define('ig/Polygon', [
             ctx.globalAlpha = this.alpha;
             this.matrix.reset();
             if (this.parent && this.followParent) {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.parent.scaleX, this.parent.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.parent.angle);
                 this.matrix.translate(-this.cx, -this.cy);
             } else {
-                this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                var hasScaleOrigin = this.scaleOrigin;
+                if (hasScaleOrigin) {
+                    this.matrix.translate(this.scaleOrigin.x, this.scaleOrigin.y);
+                }
                 this.matrix.scale(this.scaleX, this.scaleY);
-                this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                if (hasScaleOrigin) {
+                    this.matrix.translate(-this.scaleOrigin.x, -this.scaleOrigin.y);
+                }
                 this.matrix.translate(this.cx, this.cy);
                 this.matrix.rotate(this.angle);
                 this.matrix.translate(-this.cx, -this.cy);

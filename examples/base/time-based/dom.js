@@ -41,7 +41,6 @@ window.onload = function () {
 
         function loop() {
             handle.value = requestAnimationFrame(loop);
-            var last = 0;
             var current = new Date().getTime();
             var delta = current - start;
             if(delta >= delay) {
@@ -66,14 +65,50 @@ window.onload = function () {
         }
     };
 
-    var timer;
-    document.querySelector('#start').addEventListener('click', function (e) {
-        clearRequestTimeout(timer);
-        timer = requestTimeout(function (delta) {
-            document.querySelector('#fps').innerHTML = Math.floor(1000 / (delta));
-            if (timer.value > 1500) {
-                clearRequestTimeout(timer);
+    function moveDivTimeBasedImprove(div, fps) {
+        var left = 0;
+        var current = +new Date;
+        var previous = +new Date;
+        var dt = 1000 / 60;
+        var acc = 0;
+        var param = 1;
+
+        function loop() {
+            var current = +new Date;
+            var passed = current - previous;
+            previous = current;
+            acc += passed;
+            while (acc >= dt) {
+                update(dt);
+                acc -= dt;
             }
-        }, document.querySelector('#f').value);
-    });
+            draw();
+        }
+
+        function update(dt) {
+            left += param * (dt * 0.1);
+            if (left > 270) {
+                left = 270;
+                param = -1;
+            } else if (left < 0) {
+                left = 0;
+                param = 1;
+            }
+        }
+
+        function draw() {
+            div.style.left = left + 'px';
+        }
+
+        // setInterval(loop, 1000 / fps);
+        requestTimeout(function (delta) {
+            loop();
+        }, 1000 / fps);
+
+    }
+
+    moveDivTimeBasedImprove(document.getElementById('div7'), 60);
+    moveDivTimeBasedImprove(document.getElementById('div8'), 30);
+    moveDivTimeBasedImprove(document.getElementById('div9'), 10);
+
 }
