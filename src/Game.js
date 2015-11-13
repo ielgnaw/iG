@@ -740,7 +740,7 @@ define(function (require) {
         this.cssHeight = this.canvas.style.width = width + 'px';
         this.width = this.canvas.width = width * env.dpr;
         this.height = this.canvas.height = height * env.dpr;
-        this.ctx.scale(env.dpr, env.dpr);
+        // this.ctx.scale(env.dpr, env.dpr);
         this.canvas.style.position = 'relative';
 
         // setOffCanvas.call(this);
@@ -755,9 +755,9 @@ define(function (require) {
                 fitScreen.call(this);
             }
             // 实际宽度和默认宽度的比值
-            this.ratioX = this.width / CONFIG.width / env.dpr;
+            this.ratioX = this.width / CONFIG.width;// / env.dpr;
             // 实际高度和默认高度的比值
-            this.ratioY = this.height / CONFIG.height / env.dpr;
+            this.ratioY = this.height / CONFIG.height;// / env.dpr;
             // 宽度和 css 宽度的比值
             this.cssRatioX = this.width / parseInt(this.cssWidth, 10);
             // 高度和 css 高度的比值

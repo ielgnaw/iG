@@ -3663,7 +3663,6 @@ define('ig/Game', [
         this.cssHeight = this.canvas.style.width = width + 'px';
         this.width = this.canvas.width = width * env.dpr;
         this.height = this.canvas.height = height * env.dpr;
-        this.ctx.scale(env.dpr, env.dpr);
         this.canvas.style.position = 'relative';
         var canvasParent = this.canvas.parentNode;
         canvasParent.style.width = width + 'px';
@@ -3673,8 +3672,8 @@ define('ig/Game', [
             if (this.scaleFit) {
                 fitScreen.call(this);
             }
-            this.ratioX = this.width / CONFIG.width / env.dpr;
-            this.ratioY = this.height / CONFIG.height / env.dpr;
+            this.ratioX = this.width / CONFIG.width;
+            this.ratioY = this.height / CONFIG.height;
             this.cssRatioX = this.width / parseInt(this.cssWidth, 10);
             this.cssRatioY = this.height / parseInt(this.cssHeight, 10);
         };
