@@ -54,10 +54,6 @@ window.onload = function () {
         return handle;
     };
 
-    /**
-     * Behaves the same as clearTimeout except uses cancelRequestAnimationFrame() where possible for better performance
-     * @param {int|object} fn The callback function
-     */
     window.clearRequestTimeout = function (handle) {
         if (!handle) {
             return;
