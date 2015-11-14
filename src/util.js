@@ -20,6 +20,17 @@ define(function (require) {
     exports.noop = function () {};
 
     /**
+     * getTime polyfill
+     *
+     * @return {Function} getTime()
+     */
+    exports.getTimestamp = (function () {
+        return Date.now || function () {
+            return new Date().getTime();
+        };
+    })();
+
+    /**
      * 获取对象类型
      *
      * @param {*} obj 待检测对象
