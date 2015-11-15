@@ -79,7 +79,7 @@ window.onload = function () {
         // this.current = +new Date;
         this.previous = +new Date;
         this.dt = 1000 / 60;
-        this.acc = 0;
+        this.accumulateTime = 0;
     }
 
     Circle.prototype.draw = function () {
@@ -105,13 +105,15 @@ window.onload = function () {
         var current = +new Date;
         var passed = current - this.previous;
         this.previous = current;
-        this.acc += passed;
-        while (this.acc >= this.dt) {
+        this.accumulateTime += passed;
+        while (this.accumulateTime >= this.dt) {
             this.step(this.dt);
-            this.acc -= this.dt;
+            this.accumulateTime -= this.dt;
         }
         this.draw();
     };
+
+    console.warn(ig.util.getTimestamp());
 
     function create(ident) {
         var canvas = document.querySelector('#fps' + ident + '-canvas');
@@ -266,17 +268,17 @@ window.onload = function () {
         var current = +new Date;
         var previous = +new Date;
         var dt = 1000 / 60;
-        var acc = 0;
+        var accumulateTime = 0;
         var param = 1;
 
         function loop() {
             var current = +new Date;
             var passed = current - previous;
             previous = current;
-            acc += passed;
-            while (acc >= dt) {
+            accumulateTime += passed;
+            while (accumulateTime >= dt) {
                 update(dt);
-                acc -= dt;
+                accumulateTime -= dt;
             }
             draw();
         }
@@ -402,17 +404,17 @@ window.onload = function () {
     //     var current = +new Date;
     //     var previous = +new Date;
     //     var dt = 1000 / fps;
-    //     var acc = 0;
+    //     var accumulateTime = 0;
     //     var param = 1;
 
     //     function loop() {
     //         var current = +new Date;
     //         var passed = current - previous;
     //         previous = current;
-    //         acc += passed; // 累积过去的时间
-    //         while(acc >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
+    //         accumulateTime += passed; // 累积过去的时间
+    //         while(accumulateTime >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
     //             update(dt); // 分片更新时间
-    //             acc -= dt;
+    //             accumulateTime -= dt;
     //         }
     //         draw();
     //     }
@@ -466,17 +468,17 @@ window.onload = function () {
     //     // var current = +new Date;
     //     var previous = +new Date;
     //     var dt = 1000 / fps;
-    //     var acc = 0;
+    //     var accumulateTime = 0;
     //     var param = 1;
 
     //     function loop() {
     //         var current = +new Date;
     //         var passed = current - previous;
     //         previous = current;
-    //         acc += passed; // 累积过去的时间
-    //         while(acc >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
+    //         accumulateTime += passed; // 累积过去的时间
+    //         while(accumulateTime >= dt) { // 当时间大于我们的固定的时间片的时候可以进行更新
     //             update(dt); // 分片更新时间
-    //             acc -= dt;
+    //             accumulateTime -= dt;
     //         }
     //         draw();
     //     }

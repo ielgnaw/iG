@@ -1069,6 +1069,11 @@ define('ig/util', ['require'], function (require) {
     var exports = {};
     exports.noop = function () {
     };
+    exports.getTimestamp = function () {
+        return Date.now || function () {
+            return new Date().getTime();
+        };
+    }();
     exports.getType = function (obj) {
         var cls = objectProto.toString.call(obj).slice(8, -1);
         return cls.toLowerCase();
