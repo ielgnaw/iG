@@ -40,21 +40,35 @@
             #example-container > a {
                 display: block;
                 margin:0;
-                padding:0;
-                padding: 1.5em;
-                border-bottom:1px dashed #ccc;
+                padding: 1rem .5rem;
+                border-bottom: 1px dashed #ccc;
                 color: #4183c5;
                 font-weight: bold;
-                font-size: 110%;
+                font-size: 1.5rem;
                 cursor: pointer;
                 text-decoration: none;
+                height: 30px;
+                line-height: 30px;
+            }
+
+            #example-container > a > span {
+                margin-left: 10px;
+                color: #aaa;
+                font-size: 1rem;
+                display: inline-block;
             }
         </style>
     </head>
     <body>
         <div id="wrapper">
             <div id="example-container">
-                <a href="./examples/base/time-based/index.html">time-based</a>
+                <a href="./examples/base/raf/index.html">
+                    raf<!-- <span>window.requestAnimationFrame polyfill</span> -->
+                </a>
+                <a href="./examples/base/time-based/index.html">
+                    time-based
+                </a>
+                <!-- <a href="./examples/base/time-based/index.html">time-based</a>
                 <a href="./examples/base/resource-loader/index.html">resource-loader</a>
                 <a href="./examples/base/animation/index.html">animation</a>
                 <a href="./examples/base/stage/index.html">stage</a>
@@ -85,7 +99,7 @@
 
                 <a href="./examples/game/balloon/index.html">balloon</a>
                 <a href="./examples/game/xiongchumo/index.html">xiongchumo</a>
-                <a href="./examples/game/duimutou/index.html">duimutou</a>
+                <a href="./examples/game/duimutou/index.html">duimutou</a> -->
             </div>
         </div>
     </body>

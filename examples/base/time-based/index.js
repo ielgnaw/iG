@@ -43,7 +43,7 @@ window.onload = function () {
             handle.value = window.requestAnimationFrame(loop);
             var current = new Date().getTime();
             var delta = current - start;
-            if(delta >= delay) {
+            if (delta >= delay) {
                 fn.call(null, delta);
                 start = new Date().getTime();
             }
@@ -78,9 +78,9 @@ window.onload = function () {
         this.ctx = opts.ctx;
         this.fps = opts.fps;
 
-        this.previous = +new Date();
-        this.dt = 1000 / 60;
-        this.accumulateTime = 0;
+        // this.previous = +new Date();
+        // this.dt = 1000 / 60;
+        // this.accumulateTime = 0;
     }
 
     Circle.prototype.draw = function () {
@@ -102,18 +102,18 @@ window.onload = function () {
         }
     };
 
-    Circle.prototype.loop = function () {
-        var current = +new Date();
-        var passed = current - this.previous;
-        this.previous = current;
-        this.accumulateTime += passed;
-        while (this.accumulateTime >= this.dt) {
-            // console.warn(this.dt);
-            this.step(this.dt);
-            this.accumulateTime -= this.dt;
-        }
-        this.draw();
-    };
+    // Circle.prototype.loop = function () {
+    //     var current = +new Date();
+    //     var passed = current - this.previous;
+    //     this.previous = current;
+    //     this.accumulateTime += passed;
+    //     while (this.accumulateTime >= this.dt) {
+    //         // console.warn(this.dt);
+    //         this.step(this.dt);
+    //         this.accumulateTime -= this.dt;
+    //     }
+    //     this.draw();
+    // };
 
     console.warn(ig.util.getTimestamp());
 
@@ -122,7 +122,7 @@ window.onload = function () {
         var circle = new Circle({
             x: 15,
             y: 20,
-            vx: 1,
+            vx: 1.5,
             vy: 0,
             ax: 1,
             ay: 0,
@@ -156,4 +156,5 @@ window.onload = function () {
     create(40);
     create(50);
     create(60);
+
 };

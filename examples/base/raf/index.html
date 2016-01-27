@@ -19,44 +19,33 @@
                 padding: 0;
                 margin: 0;
             }
-            .container {
-                width: 800px;
-                height: 400px;
-                margin: 20px auto;
-                /*border: 1px solid #ddd;*/
-                position: relative;
-            }
-            .control a {
-                color: #000;
-                display: inline-block;
-                text-decoration: none;
-                border: 1px solid #ddd;
-                border-radius: 3px;
-                padding: 5px;
-                text-align: center;
-                font-size: 14px;
-            }
-            .control a:hover {
-                background: #5580dd;
-                color: #fff;
-            }
-
-            canvas {
-                border: 1px solid #ddd;
-            }
-
             div {
                 margin: 10px;
             }
+            input {
+                width: 30px;
+                border: 1px solid #ddd;
+                text-align: center;
+            }
+            a {
+                display: block;
+                background: #ddd;
+                height: 30px;
+                line-height: 30px;
+                text-align: center;
+                text-decoration: none;
+                width: 50px;
+                color: #000;
+            }
         </style>
-        <script type="text/javascript" src="/build/source/ig-all.js"></script>
+        <!-- // <script type="text/javascript" src="/build/source/ig-all.js"></script> -->
     </head>
     <body>
         <div>
             <span>每帧持续毫秒:</span>
-            <input type="text" value="60" style="width: 20px;" id="f">
-            <p>当前fps: <span id="fps"></span></p>
-            <button id="start">开始</button>
+            <input type="text" value="16.7" id="f">
+            <p>当前 fps: <span id="fps"></span></p>
+            <a href="javascript:void(0);" id="start">开始</a>
         </div>
         <script src="./index.js"></script>
     </body>

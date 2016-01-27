@@ -13,21 +13,21 @@ exports.modules = {
         {name: 'ig/Event'},
         {name: 'ig/Vector', refName: 'Vector'},
         {name: 'ig/Matrix', refName: 'Matrix'},
-        {name: 'ig/Animation', refName: 'Animation'},
-        {name: 'ig/DisplayObject', refName: 'DisplayObject'},
-        {name: 'ig/Text', refName: 'Text'},
-        {name: 'ig/Bitmap', refName: 'Bitmap'},
-        {name: 'ig/BitmapPolygon', refName: 'BitmapPolygon'},
-        {name: 'ig/SpriteSheet', refName: 'SpriteSheet'},
-        {name: 'ig/ResourceLoader'},
-        {name: 'ig/Game', refName: 'Game'},
-        {name: 'ig/Stage'},
+        // {name: 'ig/Animation', refName: 'Animation'},
+        // {name: 'ig/DisplayObject', refName: 'DisplayObject'},
+        // {name: 'ig/Text', refName: 'Text'},
+        // {name: 'ig/Bitmap', refName: 'Bitmap'},
+        // {name: 'ig/BitmapPolygon', refName: 'BitmapPolygon'},
+        // {name: 'ig/SpriteSheet', refName: 'SpriteSheet'},
+        // {name: 'ig/ResourceLoader'},
+        // {name: 'ig/Game', refName: 'Game'},
+        // {name: 'ig/Stage'},
         {name: 'ig/domEvt'},
-        {name: 'ig/Storage', refName: 'Storage'},
+        // {name: 'ig/Storage', refName: 'Storage'},
 
-        {name: 'ig/Projection'},
-        {name: 'ig/Rectangle', refName: 'Rectangle'},
-        {name: 'ig/Polygon', refName: 'Polygon'}
+        // {name: 'ig/Projection'},
+        // {name: 'ig/Rectangle', refName: 'Rectangle'},
+        // {name: 'ig/Polygon', refName: 'Polygon'}
 
 
         // refName 指要挂载到 window.ig 这个全局空间上的名字

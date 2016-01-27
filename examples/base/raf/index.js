@@ -71,9 +71,9 @@ window.onload = function () {
         clearRequestTimeout(timer);
         timer = requestTimeout(function (delta) {
             document.querySelector('#fps').innerHTML = Math.floor(1000 / (delta));
-            if (timer.value > 1500) {
-                clearRequestTimeout(timer);
-            }
+            // if (timer.value > 1500) {
+                // clearRequestTimeout(timer);
+            // }
         }, document.querySelector('#f').value);
     });
 }

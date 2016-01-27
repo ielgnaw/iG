@@ -40,6 +40,30 @@ define(function (require) {
         }
     })();
 
+    window.raf = function (fn, delay) {
+        if (!delay) {
+            delay = 4;
+        }
+        var start = new Date().getTime();
+        var reqID = null;
+        function _loop() {
+            reqID = window.requestAnimationFrame(_loop);
+            var last = 0;
+            var current = new Date().getTime();
+            var delta = current - start;
+            if(delta >= delay) {
+                fn.call(null, delta);
+                start = new Date().getTime();
+            }
+        };
+        reqID = window.requestAnimationFrame(_loop);
+        return reqID;
+    };
+
+    window.caf = function (reqID) {
+        window.cancelAnimationFrame(reqID);
+    };
+
     var util = require('./util');
     var config = require('./config');
 
@@ -193,6 +217,8 @@ define(function (require) {
             }
         })();
     };
+
+    exports.aa = 123;
 
     /*var a= ['a', 'b', 'c', 'd']
     var i = -1;while(++i < a.length) {console.log(i, a[i])};console.warn(i);

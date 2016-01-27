@@ -1,5 +1,5 @@
 /*!
- *  howler.js v1.1.26
+ *  howler.js v1.1.28
  *  howlerjs.com
  *
  *  (c) 2013-2015, James Simpson of GoldFire Studios
@@ -8,10 +8,10 @@
  *  MIT License
  */
 
-// (function() {
 'use strict';
 
 define(function (require) {
+
   // setup
   var cache = {};
 
@@ -190,13 +190,13 @@ define(function (require) {
             self.iOSAutoEnable = false;
 
             // remove the touch start listener
-            window.removeEventListener('touchstart', unlock, false);
+            window.removeEventListener('touchend', unlock, false);
           }
         }, 0);
       };
 
       // setup a touch start listener to attempt an unlock in
-      window.addEventListener('touchstart', unlock, false);
+      window.addEventListener('touchend', unlock, false);
 
       return self;
     }
@@ -1325,41 +1325,15 @@ define(function (require) {
     };
 
   }
+
   if (typeof window !== 'undefined') {
     window.Howler = Howler;
     window.Howl = Howl;
   }
+
   return {
     Howler: Howler,
     Howl: Howl
   }
 
-  /**
-   * Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
-   */
-  // if (typeof define === 'function' && define.amd) {
-  //   define(function() {
-  //     return {
-  //       Howler: Howler,
-  //       Howl: Howl
-  //     };
-  //   });
-  // }
-
-  // /**
-  //  * Add support for CommonJS libraries such as browserify.
-  //  */
-  // if (typeof exports !== 'undefined') {
-  //   exports.Howler = Howler;
-  //   exports.Howl = Howl;
-  // }
-
-  // // define globally in case AMD is not available or available but not used
-
-  // if (typeof window !== 'undefined') {
-  //   window.Howler = Howler;
-  //   window.Howl = Howl;
-  // }
-
-// })();
 });
