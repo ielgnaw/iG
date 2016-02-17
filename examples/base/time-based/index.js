@@ -31,16 +31,23 @@ window.onload = function () {
         }
     })();
 
-    window.requestTimeout = function (fn, delay) {
+    window.requestTimeout = function (fn, delay, loopId) {
         if (!delay) {
             delay = 0;
         }
 
+        if (!loopId) {
+            loopId = String(ig.util.getTimestamp());
+        }
+
         var start = new Date().getTime();
-        var handle = {};
+
+        var handle = {
+            loopId: loopId
+        };
 
         function loop() {
-            handle.value = window.requestAnimationFrame(loop);
+            handle.reqId = window.requestAnimationFrame(loop);
             var current = new Date().getTime();
             var delta = current - start;
             if (delta >= delay) {
@@ -49,20 +56,27 @@ window.onload = function () {
             }
         }
 
-        handle.value = window.requestAnimationFrame(loop);
+        handle.reqId = window.requestAnimationFrame(loop);
         return handle;
     };
 
-    window.clearRequestTimeout = function (handle) {
-        if (!handle) {
+    // window.clearRequestTimeout = function (handle) {
+    //     if (!handle) {
+    //         return;
+    //     }
+    //     if (typeof handle === 'object') {
+    //         window.cancelAnimationFrame(handle.reqId);
+    //     }
+    //     else {
+    //         window.cancelAnimationFrame(handle);
+    //     }
+    // };
+
+    window.clearRequestTimeout = function (reqId) {
+        if (!reqId) {
             return;
         }
-        if (typeof handle === 'object') {
-            window.cancelAnimationFrame(handle.value);
-        }
-        else {
-            window.cancelAnimationFrame(handle);
-        }
+        window.cancelAnimationFrame(reqId);
     };
 
     var dt = 1000 / 60;
@@ -115,10 +129,10 @@ window.onload = function () {
     //     this.draw();
     // };
 
-    console.warn(ig.util.getTimestamp());
+    // console.warn(ig.util.getTimestamp());
 
-    function create(ident) {
-        var canvas = document.querySelector('#fps' + ident + '-canvas');
+    function create(fps, loopId) {
+        var canvas = document.querySelector('#fps' + fps + '-canvas');
         var circle = new Circle({
             x: 15,
             y: 20,
@@ -128,12 +142,13 @@ window.onload = function () {
             ay: 0,
             radius: 15,
             ctx: canvas.getContext('2d'),
-            fps: ident
+            fps: fps
         });
         circle.previous = +new Date();
         circle.accumulateTime = 0;
-        window.requestTimeout(function (delta) {
-            document.querySelector('#fps' + ident + ' span').innerHTML = Math.floor(1000 / (delta));
+
+        var q = window.requestTimeout(function (delta) {
+            document.querySelector('#fps' + fps + ' span').innerHTML = Math.floor(1000 / (delta));
             // circle.loop();
 
             var current = +new Date();
@@ -145,16 +160,26 @@ window.onload = function () {
                 circle.accumulateTime -= dt;
             }
             circle.draw();
+        }, 1000 / circle.fps, 'mainReq' + loopId);
 
-        }, 1000 / circle.fps);
+        setInterval(function () {
+            console.warn(q);
+        }, 3000);
+
+        setTimeout(function () {
+            console.warn('over');
+            if (q.loopId === 'mainReq3') {
+                window.clearRequestTimeout(q.reqId);
+            }
+        }, 6000);
     }
 
-    create(5);
-    create(10);
-    create(20);
-    create(30);
-    create(40);
-    create(50);
-    create(60);
+    create(5, 0);
+    create(10, 1);
+    create(20, 2);
+    create(30, 3);
+    create(40, 4);
+    create(50, 5);
+    create(60, 6);
 
 };
