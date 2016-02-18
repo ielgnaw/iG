@@ -36,129 +36,124 @@ define(function (require) {
         return this;
     }
 
-    Queue.prototype = {
-        /**
-         * 还原 constructor
-         */
-        constructor: Storage,
+    var p = Queue.prototype;
 
-        /**
-         * 入队
-         *
-         * @param {*} item 队列元素
-         * @param {number} priority 优先级，优先级越大越高，默认为 0
-         *
-         * @return {Object} 当前队列实例对象
-         */
-        enqueue: function (item, priority) {
-            if (!priority) {
-                priority = 0;
-            }
+    /**
+     * 入队
+     *
+     * @param {*} item 队列元素
+     * @param {number} priority 优先级，优先级越大越高，默认为 0
+     *
+     * @return {Object} 当前队列实例对象
+     */
+    p.enqueue = function (item, priority) {
+        if (!priority) {
+            priority = 0;
+        }
 
-            var queueItem = new QueueItem(item, priority);
+        var queueItem = new QueueItem(item, priority);
 
-            if (this.isEmpty()) {
-                this.items.push(queueItem);
-                this.maxItem = queueItem;
-            }
-            else {
-                var isAdd = false;
-                var i = -1;
-                var length = this.items.length;
-
-                while (++i < length) {
-                    if (queueItem.priority > this.items[i].priority) {
-                        this.items.splice(i, 0, queueItem);
-                        isAdd = true;
-                        this.maxItem = queueItem;
-                        break;
-                    }
-                }
-
-                if (!isAdd) {
-                    this.items.push(queueItem);
-                }
-            }
-        },
-
-        /**
-         * 判断队列是否为空
-         *
-         * @return {boolean} 是否为空
-         */
-        isEmpty: function () {
-            return this.items.length === 0;
-        },
-
-        /**
-         * 出队
-         *
-         * @return {*} 出队的那个队列元素
-         */
-        dequeue: function () {
-            return this.items.shift();
-        },
-
-        /**
-         * 队列头部元素
-         *
-         * @return {*} 队列元素
-         */
-        head: function () {
-            return this.items[0];
-        },
-
-        /**
-         * 队列尾部元素
-         *
-         * @return {*} 队列元素
-         */
-        tail: function () {
-            return this.items[this.items.length - 1];
-        },
-
-        /**
-         * 队列的大小
-         *
-         * @return {number} 队列的大小
-         */
-        size: function () {
-            return this.items.length;
-        },
-
-        /**
-         * 获取优先级最大的那个元素
-         *
-         * @return {*} 队列元素
-         */
-        max: function () {
-            return this.maxItem;
-        },
-
-        /**
-         * 清空队列
-         *
-         * @return {Object} 当前队列实例对象
-         */
-        clear: function () {
-            this.maxItem = null;
-            this.items.length = 0;
-        },
-
-        /**
-         * 输出队列元素
-         *
-         * @return {string} 队列元素的字符串形式
-         */
-        print: function () {
+        if (this.isEmpty()) {
+            this.items.push(queueItem);
+            this.maxItem = queueItem;
+        }
+        else {
+            var isAdd = false;
             var i = -1;
             var length = this.items.length;
 
             while (++i < length) {
-                console.log(this.items[i].item + ' - ' + this.items[i].priority);
+                if (queueItem.priority > this.items[i].priority) {
+                    this.items.splice(i, 0, queueItem);
+                    isAdd = true;
+                    this.maxItem = queueItem;
+                    break;
+                }
+            }
+
+            if (!isAdd) {
+                this.items.push(queueItem);
             }
         }
-    }
+    };
+
+    /**
+     * 出队
+     *
+     * @return {*} 出队的那个队列元素
+     */
+    p.dequeue = function () {
+        return this.items.shift();
+    };
+
+    /**
+     * 队列头部元素
+     *
+     * @return {*} 队列元素
+     */
+    p.head = function () {
+        return this.items[0];
+    };
+
+    /**
+     * 队列尾部元素
+     *
+     * @return {*} 队列元素
+     */
+    p.tail = function () {
+        return this.items[this.items.length - 1];
+    };
+
+    /**
+     * 队列的大小
+     *
+     * @return {number} 队列的大小
+     */
+    p.size = function () {
+        return this.items.length;
+    };
+
+    /**
+     * 获取优先级最大的那个元素
+     *
+     * @return {*} 队列元素
+     */
+    p.max = function () {
+        return this.maxItem;
+    };
+
+    /**
+     * 判断队列是否为空
+     *
+     * @return {boolean} 是否为空
+     */
+    p.isEmpty = function () {
+        return this.items.length === 0;
+    };
+
+    /**
+     * 清空队列
+     *
+     * @return {Object} 当前队列实例对象
+     */
+    p.clear = function () {
+        this.maxItem = null;
+        this.items.length = 0;
+    };
+
+    /**
+     * 输出队列元素
+     *
+     * @return {string} 队列元素的字符串形式
+     */
+    p.print = function () {
+        var i = -1;
+        var length = this.items.length;
+
+        while (++i < length) {
+            console.log(this.items[i].item + ' - ' + this.items[i].priority);
+        }
+    };
 
     util.inherits(Queue, Event);
 
