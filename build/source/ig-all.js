@@ -1069,7 +1069,8 @@ define('ig/dep/howler', ['require'], function (require) {
         Howler: Howler,
         Howl: Howl
     };
-});define('ig/config', ['require'], function (require) {
+});'use strict';
+define('ig/config', ['require'], function (require) {
     var config = {};
     var exports = {};
     exports.setConfig = function (key, value) {
@@ -1959,6 +1960,82 @@ define('ig/Matrix', [
     };
     return Matrix;
 });'use strict';
+define('ig/Queue', [
+    'require',
+    './util',
+    './Event'
+], function (require) {
+    var util = require('./util');
+    var Event = require('./Event');
+    function QueueItem(item, priority) {
+        this.item = item;
+        this.priority = priority;
+    }
+    function Queue() {
+        this.items = [];
+        this.maxItem = null;
+        return this;
+    }
+    Queue.prototype = {
+        constructor: Storage,
+        enqueue: function (item, priority) {
+            if (!priority) {
+                priority = 0;
+            }
+            var queueItem = new QueueItem(item, priority);
+            if (this.isEmpty()) {
+                this.items.push(queueItem);
+                this.maxItem = queueItem;
+            } else {
+                var isAdd = false;
+                var i = -1;
+                var length = this.items.length;
+                while (++i < length) {
+                    if (queueItem.priority > this.items[i].priority) {
+                        this.items.splice(i, 0, queueItem);
+                        isAdd = true;
+                        this.maxItem = queueItem;
+                        break;
+                    }
+                }
+                if (!isAdd) {
+                    this.items.push(queueItem);
+                }
+            }
+        },
+        isEmpty: function () {
+            return this.items.length === 0;
+        },
+        dequeue: function () {
+            return this.items.shift();
+        },
+        head: function () {
+            return this.items[0];
+        },
+        tail: function () {
+            return this.items[this.items.length - 1];
+        },
+        size: function () {
+            return this.items.length;
+        },
+        max: function () {
+            return this.maxItem;
+        },
+        clear: function () {
+            this.maxItem = null;
+            this.items.length = 0;
+        },
+        print: function () {
+            var i = -1;
+            var length = this.items.length;
+            while (++i < length) {
+                console.log(this.items[i].item + ' - ' + this.items[i].priority);
+            }
+        }
+    };
+    util.inherits(Queue, Event);
+    return Queue;
+});'use strict';
 define('ig/domEvt', [
     'require',
     './util',
@@ -2251,6 +2328,28 @@ else {
 
 var modName = 'ig/Matrix';
 var refName = 'Matrix';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Queue';
+var refName = 'Queue';
 var folderName = '';
 
 var tmp;

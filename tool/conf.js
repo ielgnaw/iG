@@ -13,6 +13,8 @@ exports.modules = {
         {name: 'ig/Event'},
         {name: 'ig/Vector', refName: 'Vector'},
         {name: 'ig/Matrix', refName: 'Matrix'},
+
+        {name: 'ig/Queue', refName: 'Queue'},
         // {name: 'ig/Animation', refName: 'Animation'},
         // {name: 'ig/DisplayObject', refName: 'DisplayObject'},
         // {name: 'ig/Text', refName: 'Text'},
