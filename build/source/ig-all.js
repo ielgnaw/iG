@@ -1701,95 +1701,93 @@ define('ig/Event', ['require'], function (require) {
     function Event() {
         this._events = {};
     }
-    Event.prototype = {
-        constructor: Event,
-        on: function (type, handler) {
-            if (!this._events) {
-                this._events = {};
-            }
-            var pool = this._events[type];
-            if (!pool) {
-                pool = this._events[type] = [];
-            }
-            if (!handler.hasOwnProperty(guidKey)) {
-                handler[guidKey] = +new Date();
-            }
-            pool.push(handler);
-            return this;
-        },
-        un: function (type, handler) {
-            if (!this._events) {
-                return;
-            }
-            if (!handler) {
-                this._events[type] = [];
-                return;
-            }
-            var pool = this._events[type];
-            if (pool) {
-                for (var i = 0; i < pool.length; i++) {
-                    if (pool[i] === handler) {
-                        pool.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-            return this;
-        },
-        fire: function (type, event) {
-            if (arguments.length === 1 && typeof type === 'object') {
-                event = type;
-                type = event.type;
-            }
-            var inlineHandler = this['on' + type];
-            if (typeof inlineHandler === 'function') {
-                inlineHandler.call(this, event);
-            }
-            if (!this._events) {
-                return;
-            }
-            if (event == null) {
-                event = {};
-            }
-            if (Object.prototype.toString.call(event) !== '[object Object]') {
-                event = { data: event };
-            }
-            event.type = type;
-            event.target = this;
-            var alreadyInvoked = {};
-            var pool = this._events[type];
-            if (pool) {
-                pool = pool.slice();
-                for (var i = 0; i < pool.length; i++) {
-                    var handler = pool[i];
-                    if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
-                        handler.call(this, event);
-                    }
-                }
-            }
-            if (type !== '*') {
-                var allPool = this._events['*'];
-                if (!allPool) {
-                    return;
-                }
-                allPool = allPool.slice();
-                for (var i = 0; i < allPool.length; i++) {
-                    var handler = allPool[i];
-                    if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
-                        handler.call(this, event);
-                    }
-                }
-            }
-        },
-        clearEvents: function () {
+    var p = Event.prototype;
+    p.on = function (type, handler) {
+        if (!this._events) {
             this._events = {};
-        },
-        enable: function (target) {
-            target._events = {};
-            target.on = Event.prototype.on;
-            target.un = Event.prototype.un;
-            target.fire = Event.prototype.fire;
         }
+        var pool = this._events[type];
+        if (!pool) {
+            pool = this._events[type] = [];
+        }
+        if (!handler.hasOwnProperty(guidKey)) {
+            handler[guidKey] = +new Date();
+        }
+        pool.push(handler);
+        return this;
+    };
+    p.un = function (type, handler) {
+        if (!this._events) {
+            return;
+        }
+        if (!handler) {
+            this._events[type] = [];
+            return;
+        }
+        var pool = this._events[type];
+        if (pool) {
+            for (var i = 0; i < pool.length; i++) {
+                if (pool[i] === handler) {
+                    pool.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+        return this;
+    };
+    p.fire = function (type, event) {
+        if (arguments.length === 1 && typeof type === 'object') {
+            event = type;
+            type = event.type;
+        }
+        var inlineHandler = this['on' + type];
+        if (typeof inlineHandler === 'function') {
+            inlineHandler.call(this, event);
+        }
+        if (!this._events) {
+            return;
+        }
+        if (event == null) {
+            event = {};
+        }
+        if (Object.prototype.toString.call(event) !== '[object Object]') {
+            event = { data: event };
+        }
+        event.type = type;
+        event.target = this;
+        var alreadyInvoked = {};
+        var pool = this._events[type];
+        if (pool) {
+            pool = pool.slice();
+            for (var i = 0; i < pool.length; i++) {
+                var handler = pool[i];
+                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                    handler.call(this, event);
+                }
+            }
+        }
+        if (type !== '*') {
+            var allPool = this._events['*'];
+            if (!allPool) {
+                return;
+            }
+            allPool = allPool.slice();
+            for (var i = 0; i < allPool.length; i++) {
+                var handler = allPool[i];
+                if (!alreadyInvoked.hasOwnProperty(handler[guidKey])) {
+                    handler.call(this, event);
+                }
+            }
+        }
+    };
+    p.clearEvents = function () {
+        this._events = {};
+    };
+    p.enable = function (target) {
+        target._events = {};
+        target.on = Event.prototype.on;
+        target.un = Event.prototype.un;
+        target.fire = Event.prototype.fire;
     };
     return Event;
 });'use strict';
@@ -1800,58 +1798,56 @@ define('ig/Vector', ['require'], function (require) {
         this.x = x || 0;
         this.y = y || x || 0;
     }
-    Vector.prototype = {
-        constructor: Vector,
-        normalize: function () {
-            var m = this.getMagnitude();
-            if (m !== 0) {
-                this.x /= m;
-                this.y /= m;
-            }
-            return this;
-        },
-        getMagnitude: function () {
-            return sqrt(pow(this.x, 2) + pow(this.y, 2));
-        },
-        add: function (other, isNew) {
-            var x = this.x + other.x;
-            var y = this.y + other.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        sub: function (other, isNew) {
-            var x = this.x - other.x;
-            var y = this.y - other.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        dot: function (other) {
-            return this.x * other.x + this.y * other.y;
-        },
-        edge: function (other) {
-            return this.sub(other, true);
-        },
-        perpendicular: function (isNew) {
-            var x = -this.x;
-            var y = this.y;
-            if (isNew) {
-                return new Vector(x, y);
-            }
-            this.x = x;
-            this.y = y;
-            return this;
-        },
-        normal: function () {
-            return this.perpendicular(true).normalize();
+    var p = Vector.prototype;
+    p.normalize = function () {
+        var m = this.getMagnitude();
+        if (m !== 0) {
+            this.x /= m;
+            this.y /= m;
         }
+        return this;
+    };
+    p.getMagnitude = function () {
+        return sqrt(pow(this.x, 2) + pow(this.y, 2));
+    };
+    p.add = function (other, isNew) {
+        var x = this.x + other.x;
+        var y = this.y + other.y;
+        if (isNew) {
+            return new Vector(x, y);
+        }
+        this.x = x;
+        this.y = y;
+        return this;
+    };
+    p.sub = function (other, isNew) {
+        var x = this.x - other.x;
+        var y = this.y - other.y;
+        if (isNew) {
+            return new Vector(x, y);
+        }
+        this.x = x;
+        this.y = y;
+        return this;
+    };
+    p.dot = function (other) {
+        return this.x * other.x + this.y * other.y;
+    };
+    p.edge = function (other) {
+        return this.sub(other, true);
+    };
+    p.perpendicular = function (isNew) {
+        var x = -this.x;
+        var y = this.y;
+        if (isNew) {
+            return new Vector(x, y);
+        }
+        this.x = x;
+        this.y = y;
+        return this;
+    };
+    p.normal = function () {
+        return this.perpendicular(true).normalize();
     };
     return Vector;
 });'use strict';
@@ -1873,90 +1869,88 @@ define('ig/Matrix', [
         ];
         return this;
     }
-    Matrix.prototype = {
-        constructor: Matrix,
-        reset: function () {
-            this.m = [
-                1,
-                0,
-                0,
-                1,
-                0,
-                0
-            ];
-            return this;
-        },
-        mul: function (matrix) {
-            var m11 = this.m[0] * matrix.m[0] + this.m[2] * matrix.m[1];
-            var m12 = this.m[1] * matrix.m[0] + this.m[3] * matrix.m[1];
-            var m21 = this.m[0] * matrix.m[2] + this.m[2] * matrix.m[3];
-            var m22 = this.m[1] * matrix.m[2] + this.m[3] * matrix.m[3];
-            var dx = this.m[0] * matrix.m[4] + this.m[2] * matrix.m[5] + this.m[4];
-            var dy = this.m[1] * matrix.m[4] + this.m[3] * matrix.m[5] + this.m[5];
-            this.m[0] = m11;
-            this.m[1] = m12;
-            this.m[2] = m21;
-            this.m[3] = m22;
-            this.m[4] = dx;
-            this.m[5] = dy;
-            return this;
-        },
-        invert: function () {
-            var d = 1 / (this.m[0] * this.m[3] - this.m[1] * this.m[2]);
-            var m0 = this.m[3] * d;
-            var m1 = -this.m[1] * d;
-            var m2 = -this.m[2] * d;
-            var m3 = this.m[0] * d;
-            var m4 = d * (this.m[2] * this.m[5] - this.m[3] * this.m[4]);
-            var m5 = d * (this.m[1] * this.m[4] - this.m[0] * this.m[5]);
-            this.m[0] = m0;
-            this.m[1] = m1;
-            this.m[2] = m2;
-            this.m[3] = m3;
-            this.m[4] = m4;
-            this.m[5] = m5;
-            return this;
-        },
-        rotate: function (angle) {
-            var rad = util.deg2Rad(angle);
-            var c = cos(rad);
-            var s = sin(rad);
-            var m11 = this.m[0] * c + this.m[2] * s;
-            var m12 = this.m[1] * c + this.m[3] * s;
-            var m21 = this.m[0] * -s + this.m[2] * c;
-            var m22 = this.m[1] * -s + this.m[3] * c;
-            this.m[0] = m11;
-            this.m[1] = m12;
-            this.m[2] = m21;
-            this.m[3] = m22;
-            return this;
-        },
-        translate: function (x, y) {
-            this.m[4] += this.m[0] * x + this.m[2] * y;
-            this.m[5] += this.m[1] * x + this.m[3] * y;
-            return this;
-        },
-        scale: function (sx, sy) {
-            this.m[0] *= sx;
-            this.m[1] *= sx;
-            this.m[2] *= sy;
-            this.m[3] *= sy;
-            return this;
-        },
-        transformPoint: function (px, py) {
-            var x = px;
-            var y = py;
-            px = x * this.m[0] + y * this.m[2] + this.m[4];
-            py = x * this.m[1] + y * this.m[3] + this.m[5];
-            return {
-                x: px,
-                y: py
-            };
-        },
-        setCtxTransform: function (ctx) {
-            var m = this.m;
-            ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
-        }
+    var p = Matrix.prototype;
+    p.reset = function () {
+        this.m = [
+            1,
+            0,
+            0,
+            1,
+            0,
+            0
+        ];
+        return this;
+    };
+    p.mul = function (matrix) {
+        var m11 = this.m[0] * matrix.m[0] + this.m[2] * matrix.m[1];
+        var m12 = this.m[1] * matrix.m[0] + this.m[3] * matrix.m[1];
+        var m21 = this.m[0] * matrix.m[2] + this.m[2] * matrix.m[3];
+        var m22 = this.m[1] * matrix.m[2] + this.m[3] * matrix.m[3];
+        var dx = this.m[0] * matrix.m[4] + this.m[2] * matrix.m[5] + this.m[4];
+        var dy = this.m[1] * matrix.m[4] + this.m[3] * matrix.m[5] + this.m[5];
+        this.m[0] = m11;
+        this.m[1] = m12;
+        this.m[2] = m21;
+        this.m[3] = m22;
+        this.m[4] = dx;
+        this.m[5] = dy;
+        return this;
+    };
+    p.invert = function () {
+        var d = 1 / (this.m[0] * this.m[3] - this.m[1] * this.m[2]);
+        var m0 = this.m[3] * d;
+        var m1 = -this.m[1] * d;
+        var m2 = -this.m[2] * d;
+        var m3 = this.m[0] * d;
+        var m4 = d * (this.m[2] * this.m[5] - this.m[3] * this.m[4]);
+        var m5 = d * (this.m[1] * this.m[4] - this.m[0] * this.m[5]);
+        this.m[0] = m0;
+        this.m[1] = m1;
+        this.m[2] = m2;
+        this.m[3] = m3;
+        this.m[4] = m4;
+        this.m[5] = m5;
+        return this;
+    };
+    p.rotate = function (angle) {
+        var rad = util.deg2Rad(angle);
+        var c = cos(rad);
+        var s = sin(rad);
+        var m11 = this.m[0] * c + this.m[2] * s;
+        var m12 = this.m[1] * c + this.m[3] * s;
+        var m21 = this.m[0] * -s + this.m[2] * c;
+        var m22 = this.m[1] * -s + this.m[3] * c;
+        this.m[0] = m11;
+        this.m[1] = m12;
+        this.m[2] = m21;
+        this.m[3] = m22;
+        return this;
+    };
+    p.translate = function (x, y) {
+        this.m[4] += this.m[0] * x + this.m[2] * y;
+        this.m[5] += this.m[1] * x + this.m[3] * y;
+        return this;
+    };
+    p.scale = function (sx, sy) {
+        this.m[0] *= sx;
+        this.m[1] *= sx;
+        this.m[2] *= sy;
+        this.m[3] *= sy;
+        return this;
+    };
+    p.transformPoint = function (px, py) {
+        var x = px;
+        var y = py;
+        px = x * this.m[0] + y * this.m[2] + this.m[4];
+        py = x * this.m[1] + y * this.m[3] + this.m[5];
+        return {
+            x: px,
+            y: py
+        };
+    };
+    p.setCtxTransform = function (ctx) {
+        var m = this.m;
+        ctx.transform(m[0], m[1], m[2], m[3], m[4], m[5]);
     };
     return Matrix;
 });'use strict';

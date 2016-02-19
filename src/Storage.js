@@ -15,18 +15,6 @@ define(function (require) {
         OUT_OF_LIMIT: 'Out of space limit'
     };
 
-    var stringify = function (v) {
-        return JSON.stringify(v);
-    };
-
-    var parse = function (v) {
-        try {
-            v = JSON.parse(v);
-        }
-        catch (e) {}
-        return v;
-    };
-
     var memoryStorage = {
         data: {},
         setItem: function (k, v) {
@@ -64,86 +52,81 @@ define(function (require) {
         return this;
     }
 
-    Storage.prototype = {
-        /**
-         * 还原 constructor
-         */
-        constructor: Storage,
+    var p  = Storage.prototype;
 
-        /**
-         * 存入数据
-         *
-         * @param {string} key 键
-         * @param {Object} val 值
-         * @return {boolean} 存储成功返回 true；存储失败返回 false，并抛出 Stroage.Event.OUT_OF_LIMIT 事件
-         *         注意：value 会使用环境内置的 JSON.stringify 方法序列化。
-         *         其中 undefined 在 Object 结构下会被忽略，在 Array 结构下会被转换为 null，使用时请注意！
-         */
-        setItem: function (key, val) {
-            var data = this._getData();
-            data[key] = val;
-            try {
-                this.storage.setItem(this.storageId, stringify(data));
-                return true;
-            }
-            catch (err) {
-                this.fire(EVENT.OUT_OF_LIMIT, {
-                    data: err
-                });
-                return false;
-            }
-        },
-
-        /**
-         * 根据 key 返回数据
-         *
-         * @param {string} key 键
-         *
-         * @return {Object} 数据
-         */
-        getItem: function (key) {
-            return this._getData()[key];
-        },
-
-        /**
-         * 移除某键位下的数据
-         *
-         * @param {string} key 键
-         */
-        removeItem: function (key) {
-            var data = this._getData();
-            delete data[key];
-            this.storage.setItem(this.storageId, stringify(data));
-        },
-
-        /**
-         * 清空已持久化的数据
-         *
-         */
-        clear: function () {
-            this.storage.removeItem(this.storageId);
-        },
-
-        /**
-         * 获得持久化数据的 key
-         *
-         * @return {Array}
-         */
-        key: function () {
-            return Object.keys(this._getData());
-        },
-
-        /**
-         * 获取存于 STORAGE_ID 下的数据
-         *
-         * @private
-         *
-         * @return {Object}
-         */
-        _getData: function () {
-            var data = this.storage.getItem(this.storageId);
-            return data ? parse(data) : {};
+    /**
+     * 存入数据
+     *
+     * @param {string} key 键
+     * @param {Object} val 值
+     * @return {boolean} 存储成功返回 true；存储失败返回 false，并抛出 Stroage.Event.OUT_OF_LIMIT 事件
+     *         注意：value 会使用环境内置的 JSON.stringify 方法序列化。
+     *         其中 undefined 在 Object 结构下会被忽略，在 Array 结构下会被转换为 null，使用时请注意！
+     */
+    p.setItem = function (key, val) {
+        var data = this._getData();
+        data[key] = val;
+        try {
+            this.storage.setItem(this.storageId, JSON.stringify(data));
+            return true;
         }
+        catch (err) {
+            this.fire(EVENT.OUT_OF_LIMIT, {
+                data: err
+            });
+            return false;
+        }
+    };
+
+    /**
+     * 根据 key 返回数据
+     *
+     * @param {string} key 键
+     *
+     * @return {Object} 数据
+     */
+    p.getItem = function (key) {
+        return this._getData()[key];
+    };
+
+    /**
+     * 移除某键位下的数据
+     *
+     * @param {string} key 键
+     */
+    p.removeItem = function (key) {
+        var data = this._getData();
+        delete data[key];
+        this.storage.setItem(this.storageId, JSON.stringify(data));
+    };
+
+    /**
+     * 清空已持久化的数据
+     *
+     */
+    p.clear = function () {
+        this.storage.removeItem(this.storageId);
+    };
+
+    /**
+     * 获得持久化数据的 key
+     *
+     * @return {Array}
+     */
+    p.key = function () {
+        return Object.keys(this._getData());
+    };
+
+    /**
+     * 获取存于 STORAGE_ID 下的数据
+     *
+     * @private
+     *
+     * @return {Object}
+     */
+    p._getData = function () {
+        var data = this.storage.getItem(this.storageId);
+        return data ? JSON.parse(data) : {};
     };
 
     util.inherits(Storage, Event);
