@@ -40,30 +40,6 @@ define(function (require) {
         }
     })();
 
-    window.raf = function (fn, delay) {
-        if (!delay) {
-            delay = 4;
-        }
-        var start = new Date().getTime();
-        var reqID = null;
-        function _loop() {
-            reqID = window.requestAnimationFrame(_loop);
-            var last = 0;
-            var current = new Date().getTime();
-            var delta = current - start;
-            if(delta >= delay) {
-                fn.call(null, delta);
-                start = new Date().getTime();
-            }
-        };
-        reqID = window.requestAnimationFrame(_loop);
-        return reqID;
-    };
-
-    window.caf = function (reqID) {
-        window.cancelAnimationFrame(reqID);
-    };
-
     var util = require('./util');
     var config = require('./config');
 
@@ -72,68 +48,6 @@ define(function (require) {
     exports.setConfig = config.setConfig;
 
     exports.getConfig = config.getConfig;
-
-    /**
-     * displayObject 的各种状态
-     *     1: 可见，每帧需要更新，各种状态都正常
-     *     2: 不可见，每帧需要更新，各种状态都正常
-     *     3: 可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
-     *     4: 不可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
-     *     5: 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
-     *
-     * @type {Object}
-     */
-    exports.setConfig('status', {
-        // 可见，每帧需要更新，各种状态都正常
-        NORMAL: 1,
-        // 不可见，每帧需要更新，各种状态都正常
-        NOT_RENDER: 2,
-        // 可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
-        NOT_UPDATE: 3,
-        // 不可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
-        NOT_RU: 4,
-        // 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
-        DESTROYED: 5
-    });
-
-    /**
-     * 游戏窗口宽度的默认值
-     *
-     * @type {number}
-     */
-    // exports.setConfig('width', 320);
-    // exports.setConfig('width', 414);
-    exports.setConfig('width', 383);
-
-    /**
-     * 游戏窗口高度的默认值
-     *
-     * @type {number}
-     */
-    // exports.setConfig('height', 480);
-    // exports.setConfig('height', 736);
-    exports.setConfig('height', 550);
-
-    /**
-     * 游戏窗口最大宽度的默认值
-     *
-     * @type {number}
-     */
-    exports.setConfig('maxWidth', 5000);
-
-    /**
-     * 游戏窗口最大高度的默认值
-     *
-     * @type {number}
-     */
-    exports.setConfig('maxHeight', 5000);
-
-    /**
-     * 标准 fps
-     *
-     * @type {number}
-     */
-    exports.setConfig('fps', 60);
 
     /**
      * 利用 requestAnimationFrame 来循环

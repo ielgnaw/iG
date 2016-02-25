@@ -105,6 +105,7 @@ window.onload = function () {
     };
 
     Circle.prototype.step = function (dt) {
+        // console.warn(dt);
         this.x += this.vx ;// * 0.1;
         this.y += this.vy ;// * 0.1;
 
@@ -175,12 +176,12 @@ window.onload = function () {
     }
 
     create(5, 0);
-    create(10, 1);
-    create(20, 2);
-    create(30, 3);
-    create(40, 4);
-    create(50, 5);
-    create(60, 6);
+    // create(10, 1);
+    // create(20, 2);
+    // create(30, 3);
+    // create(40, 4);
+    // create(50, 5);
+    // create(60, 6);
 
     console.warn(ig);
     var q = new ig.Queue();

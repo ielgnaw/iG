@@ -15,6 +15,144 @@ define(function (require) {
     var config = {};
 
     /**
+     * displayObject 的各种状态
+     *     1: 可见，每帧需要更新，各种状态都正常
+     *     2: 不可见，每帧需要更新，各种状态都正常
+     *     3: 可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+     *     4: 不可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+     *     5: 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
+     *
+     * @private
+     * @type {Object}
+     */
+    var _status = {
+        // 可见，每帧需要更新，各种状态都正常
+        NORMAL: 1,
+        // 不可见，每帧需要更新，各种状态都正常
+        NOT_RENDER: 2,
+        // 可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+        NOT_UPDATE: 3,
+        // 不可见，不需要更新，但还是保存在整体的 DisplayObject 实例集合中
+        NOT_RU: 4,
+        // 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
+        DESTROYED: 5
+    };
+
+    Object.defineProperty(config, 'status', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _status;
+        }
+    });
+
+    /**
+     * 游戏窗口宽度的默认值
+     *
+     * @type {number}
+     */
+    var _width = 375;
+
+    Object.defineProperty(config, 'width', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _width;
+        },
+        set: function setter(val) {
+            _width = val;
+        }
+    });
+
+    /**
+     * 游戏窗口高度的默认值
+     *
+     * @type {number}
+     */
+    var _height = 627;
+
+    Object.defineProperty(config, 'height', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _height;
+        },
+        set: function setter(val) {
+            _height = val;
+        }
+    });
+
+    /**
+     * 游戏窗口最大宽度的默认值
+     *
+     * @type {number}
+     */
+    var _maxWidth = 5000;
+
+    Object.defineProperty(config, 'maxWidth', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _maxWidth;
+        },
+        set: function setter(val) {
+            _maxWidth = val;
+        }
+    });
+
+    /**
+     * 游戏窗口最大高度的默认值
+     *
+     * @type {number}
+     */
+    var _maxHeight = 5000;
+
+    Object.defineProperty(config, 'maxHeight', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _maxHeight;
+        },
+        set: function setter(val) {
+            _maxHeight = val;
+        }
+    });
+
+    /**
+     * 默认 fps
+     *
+     * @type {number}
+     */
+    var _fps = 60;
+
+    Object.defineProperty(config, 'fps', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _fps;
+        },
+        set: function setter(val) {
+            _fps = val;
+            this.dt = 1000 / val;
+        }
+    });
+
+    /**
+     * 默认 delta
+     *
+     * @type {number}
+     */
+    var _dt = 1000 / config.fps;
+
+    Object.defineProperty(config, 'dt', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _dt;
+        }
+    });
+
+    /**
      * 模块导出对象
      *
      * @type {Object}
@@ -33,6 +171,7 @@ define(function (require) {
         if (key) {
             config[key] = value;
         }
+
         return config;
     };
 

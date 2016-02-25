@@ -162,46 +162,11 @@ define('ig/ig', [
             };
         }
     }());
-    window.raf = function (fn, delay) {
-        if (!delay) {
-            delay = 4;
-        }
-        var start = new Date().getTime();
-        var reqID = null;
-        function _loop() {
-            reqID = window.requestAnimationFrame(_loop);
-            var last = 0;
-            var current = new Date().getTime();
-            var delta = current - start;
-            if (delta >= delay) {
-                fn.call(null, delta);
-                start = new Date().getTime();
-            }
-        }
-        ;
-        reqID = window.requestAnimationFrame(_loop);
-        return reqID;
-    };
-    window.caf = function (reqID) {
-        window.cancelAnimationFrame(reqID);
-    };
     var util = require('./util');
     var config = require('./config');
     var exports = {};
     exports.setConfig = config.setConfig;
     exports.getConfig = config.getConfig;
-    exports.setConfig('status', {
-        NORMAL: 1,
-        NOT_RENDER: 2,
-        NOT_UPDATE: 3,
-        NOT_RU: 4,
-        DESTROYED: 5
-    });
-    exports.setConfig('width', 383);
-    exports.setConfig('height', 550);
-    exports.setConfig('maxWidth', 5000);
-    exports.setConfig('maxHeight', 5000);
-    exports.setConfig('fps', 60);
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
@@ -1072,6 +1037,84 @@ define('ig/dep/howler', ['require'], function (require) {
 });'use strict';
 define('ig/config', ['require'], function (require) {
     var config = {};
+    var _status = {
+        NORMAL: 1,
+        NOT_RENDER: 2,
+        NOT_UPDATE: 3,
+        NOT_RU: 4,
+        DESTROYED: 5
+    };
+    Object.defineProperty(config, 'status', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _status;
+        }
+    });
+    var _width = 375;
+    Object.defineProperty(config, 'width', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _width;
+        },
+        set: function setter(val) {
+            _width = val;
+        }
+    });
+    var _height = 627;
+    Object.defineProperty(config, 'height', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _height;
+        },
+        set: function setter(val) {
+            _height = val;
+        }
+    });
+    var _maxWidth = 5000;
+    Object.defineProperty(config, 'maxWidth', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _maxWidth;
+        },
+        set: function setter(val) {
+            _maxWidth = val;
+        }
+    });
+    var _maxHeight = 5000;
+    Object.defineProperty(config, 'maxHeight', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _maxHeight;
+        },
+        set: function setter(val) {
+            _maxHeight = val;
+        }
+    });
+    var _fps = 60;
+    Object.defineProperty(config, 'fps', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _fps;
+        },
+        set: function setter(val) {
+            _fps = val;
+            this.dt = 1000 / val;
+        }
+    });
+    var _dt = 1000 / config.fps;
+    Object.defineProperty(config, 'dt', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _dt;
+        }
+    });
     var exports = {};
     exports.setConfig = function (key, value) {
         if (key) {
