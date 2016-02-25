@@ -33,6 +33,9 @@ define(function (require) {
         // 最大优先级元素暂只记录一个，多个相同优先级时只会记录最后添加的那个
         this.maxItem = null;
 
+        // 当前索引
+        this.index = -1;
+
         return this;
     }
 
@@ -65,6 +68,12 @@ define(function (require) {
             while (++i < length) {
                 if (queueItem.priority > this.items[i].priority) {
                     this.items.splice(i, 0, queueItem);
+
+                    // 如果插入的那个队列元素在队列中的位置在当前 index 所指元素的前面
+                    // 就把当前 index 顺序往后移动一位
+                    if (i <= this.index) {
+                        this.index++;
+                    }
                     isAdd = true;
                     this.maxItem = queueItem;
                     break;
@@ -122,6 +131,21 @@ define(function (require) {
      */
     p.max = function () {
         return this.maxItem;
+    };
+
+    /**
+     * 正序获取队列的下一个元素，默认从头开始
+     * 如果已经到队列最后一个元素，那么下一个元素就是队列第一个元素
+     *
+     * @return {*} 队列元素
+     */
+    p.pick = function () {
+        this.index++;
+        if (this.index === this.items.length) {
+            this.index = 0;
+        }
+
+        return this.items[this.index];
     };
 
     /**

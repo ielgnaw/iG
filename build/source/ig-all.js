@@ -2046,6 +2046,7 @@ define('ig/Queue', [
     function Queue() {
         this.items = [];
         this.maxItem = null;
+        this.index = -1;
         return this;
     }
     var p = Queue.prototype;
@@ -2064,6 +2065,9 @@ define('ig/Queue', [
             while (++i < length) {
                 if (queueItem.priority > this.items[i].priority) {
                     this.items.splice(i, 0, queueItem);
+                    if (i <= this.index) {
+                        this.index++;
+                    }
                     isAdd = true;
                     this.maxItem = queueItem;
                     break;
@@ -2089,6 +2093,13 @@ define('ig/Queue', [
     };
     p.max = function () {
         return this.maxItem;
+    };
+    p.pick = function () {
+        this.index++;
+        if (this.index === this.items.length) {
+            this.index = 0;
+        }
+        return this.items[this.index];
     };
     p.isEmpty = function () {
         return this.items.length === 0;
