@@ -5,6 +5,8 @@
 
 'use strict';
 
+/* global ig */
+
 define(function (require) {
 
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -40,14 +42,88 @@ define(function (require) {
         }
     })();
 
-    var util = require('./util');
-    var config = require('./config');
-
     var exports = {};
 
+    var util = require('./util');
+
+    /**
+     * requestAnimationFrame 封装
+     *
+     * @param {Function} fn 循环执行的函数
+     * @param {number} delay 延迟时间间隔
+     * @param {string} loopId 标示，可以根据这个标示停止循环
+     *
+     * @return {Object} 带有标示属性的对象
+     */
+    window.requestTimeout = function (fn, delay, loopId) {
+        if (!delay) {
+            delay = 0;
+        }
+
+        if (!loopId) {
+            loopId = String(ig.util.getTimestamp());
+        }
+
+        var start = new Date().getTime();
+
+        var handler = {
+            loopId: loopId
+        };
+
+        function loop() {
+            handler.reqId = window.requestAnimationFrame(loop);
+            var current = util.getTimestamp();
+            var realDelta = current - start;
+            if (realDelta >= delay) {
+                fn.call(null, realDelta);
+                start = new Date().getTime();
+            }
+        }
+
+        handler.reqId = window.requestAnimationFrame(loop);
+
+        return handler;
+    };
+
+    /**
+     * 清除 requestAnimationFrame
+     *
+     * @param {number} reqId requestAnimationFrame 的 id
+     * @param {string} loopId 标示，可以根据这个标示停止循环
+     */
+    window.clearRequestTimeout = function (reqId, loopId) {
+        if (!reqId) {
+            return;
+        }
+        window.cancelAnimationFrame(reqId);
+
+        var pools = exports.reqAniPools;
+        var index = pools.indexOf(loopId);
+        index > -1 ? pools.splice(index, 1) : '';
+    };
+
+    var config = require('./config');
+
+    /**
+     * 挂载 config.setConfig
+     *
+     * @type {Function}
+     */
     exports.setConfig = config.setConfig;
 
+    /**
+     * 挂载 config.getConfig
+     *
+     * @type {Function}
+     */
     exports.getConfig = config.getConfig;
+
+    /**
+     * requestAnimationFrame 池
+     *
+     * @type {Array}
+     */
+    exports.reqAniPools = [];
 
     /**
      * 利用 requestAnimationFrame 来循环
@@ -55,86 +131,48 @@ define(function (require) {
      * @param {Object} opts 参数对象
      * @param {Function} opts.step 每帧中切分出来的每个时间片里执行的函数
      * @param {Function} opts.exec 每帧执行的函数
-     * @param {number} opts.jumpFrames 跳帧的个数，可以用来设置延迟
-     *                                 如果帧数是 60fps，意味着每 1000 / 60 = 16ms 就执行一帧，
-     *                                 如果设置为 3，那么就代表每 3 * 16 = 48ms 执行一次，帧数为 1000 / 48 = 20fps
+     * @param {number} opts.fps 当前这个 loop 的 fps，可以通过设置这个值来变相的实现
+     *                          改变 requestAnimationFrame 的时间间隔，如果不设置，则使用
+     *                          exports.getConfig('fps') 里的 fps 默认值即 60fps，如果帧数
+     *                          为 60，那么意味着每 1000 / 60 = 16ms 就执行一帧
+     *
+     * @return {Object} 带有标示属性的对象
      */
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
             exec: util.noop,
-            jumpFrames: 0
+            fps: exports.getConfig('fps'),
+            loopId: String(util.getTimestamp())
         }, opts);
 
-        var fps = exports.getConfig('fps') || 60;
-        // 毫秒，固定的时间片
-        var dt = 1000 / fps;
+        exports.reqAniPools.push(conf.loopId);
 
-        var requestID;
+        var previous = util.getTimestamp();
+        var accumulateTime = 0;
 
-        var passed = 0;
-        var frameUpdateCount = 0;
-        var now;
-        var then = Date.now();
-        var acc = 0;
+        // dt 是 ig 环境默认的 delta，用这个值是为了保证 time based animation
+        var dt = ig.getConfig('dt');
 
-        // 每帧中切分出来的每个时间片里执行的函数的计数器
-        var stepCount = 0;
-
-        // 每帧执行的函数的计数器
-        var execCount = 0;
-
-        /* eslint-disable fecs-camelcase */
-        var _jumpFrames = (conf.jumpFrames === 0 ? 1 : conf.jumpFrames);
-        /* eslint-enable fecs-camelcase */
-
-        (function tick() {
-            requestID = window.requestAnimationFrame(tick);
-            frameUpdateCount++;
-
-            if (frameUpdateCount > conf.jumpFrames) {
-                frameUpdateCount = 0;
-
-                now = Date.now();
-                passed = now - then;
-                then = now;
-                acc += passed; // 过去的时间的累积
-
-                // 这里设置 passed <= 1000ms 时才会执行
-                // 1000ms 意味着 fps = 1，即每秒才执行 1 帧动画，
-                // 这里我们排除掉这么低的帧率，认为大部分 passed > 1000ms 的情况是指切换页面了，
-                // 切换到其他页面后， requestAnimationFrame 不会执行了，这时 while 循环里的内容实际上也不执行，但是回到动画页面时，
-                // 由于 now 是回到动画页面的时间戳，而 then 是切换到其他页面那个时刻的时间戳，
-                // 因此 now 和 then 的差值即 passed 会变得特别大，这就会导致 while 循环里面的内容会执行很多次，这是没有必要的
-                // 所以这里用 passed <= 1000 来限制这种情况，当 > 1000 后，需要把 acc 还原为切换到其他页面那个时刻的值即减去 passed
-                //
-                // 这里还有可能出现一个问题，就是当 cancelAnimationFrame 时，那么不会执行下一次的 tick 了，但是当前这一次 tick 里的
-                // while 循环还没有执行完成，所以会导致多执行，这个问题不在这里修改，在调用处修改
-                // 例如 Animation.play 以及 Game._gameStartExec 的 ig.loop 初，
-                // 同时在调用处 cancelAnimationFrame 时要把 requestID 设置为 null
-                if (passed <= 1000 * _jumpFrames) {
-                    while (acc >= dt * _jumpFrames) { // 时间大于固定的 dt（每跳一帧会经过一个 dt）才能更新
-                        stepCount++;
-                        // 如果这里直接写成 conf.step(dt)，
-                        // 那么在 sprite 的 step 里面需要写 this.vx * dt * (this.fps / 1000);
-                        // 是因为 60 fps 即每秒 60 帧，每帧移动一个单位距离，那么每秒移动 60 个单位距离，
-                        // 那么每毫秒移动 60/1000 个单位距离
-                        conf.step(dt * (fps / 1000), stepCount, requestID); // 分片更新时间
-                        acc -= dt * _jumpFrames;
-                    }
-                    execCount++;
-                    conf.exec(execCount);
-                }
-                else {
-                    acc -= passed;
-                }
+        // realDelta 是根据不同 fps 计算出来的实际的 realDelta，用这个值可以用来计算真实的 fps
+        var handler = window.requestTimeout(function (realDelta) {
+            var current = util.getTimestamp();
+            var passed = current - previous;
+            previous = current;
+            accumulateTime += passed;
+            while (accumulateTime >= dt) {
+                conf.step(dt, realDelta);
+                accumulateTime -= dt;
             }
-        })();
+            conf.exec(dt, realDelta);
+        }, 1000 / conf.fps, conf.loopId);
+
+        return handler;
     };
 
     exports.aa = 123;
 
-    /*var a= ['a', 'b', 'c', 'd']
+    /* var a= ['a', 'b', 'c', 'd']
     var i = -1;while(++i < a.length) {console.log(i, a[i])};console.warn(i);
 
     var a= ['a', 'b', 'c', 'd']

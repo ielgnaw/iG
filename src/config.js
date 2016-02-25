@@ -25,6 +25,7 @@ define(function (require) {
      * @private
      * @type {Object}
      */
+    /* eslint-disable fecs-camelcase */
     var _status = {
         // 可见，每帧需要更新，各种状态都正常
         NORMAL: 1,
@@ -37,6 +38,7 @@ define(function (require) {
         // 已经销毁（不可见），不需要更新，也不在整体的 DisplayObject 实例集合中了
         DESTROYED: 5
     };
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'status', {
         configurable: true,
@@ -51,7 +53,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _width = 375;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'width', {
         configurable: true,
@@ -69,7 +73,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _height = 627;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'height', {
         configurable: true,
@@ -87,7 +93,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _maxWidth = 5000;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'maxWidth', {
         configurable: true,
@@ -105,7 +113,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _maxHeight = 5000;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'maxHeight', {
         configurable: true,
@@ -123,7 +133,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _fps = 60;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'fps', {
         configurable: true,
@@ -142,7 +154,9 @@ define(function (require) {
      *
      * @type {number}
      */
+    /* eslint-disable fecs-camelcase */
     var _dt = 1000 / config.fps;
+    /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'dt', {
         configurable: true,

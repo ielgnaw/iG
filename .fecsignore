@@ -1,5 +1,5 @@
 *.bak
-src/dep
+src/dep/
 examples
 tool
 node_modules

@@ -75,6 +75,8 @@ define(function (require) {
                 this.items.push(queueItem);
             }
         }
+
+        return this;
     };
 
     /**
@@ -139,20 +141,21 @@ define(function (require) {
     p.clear = function () {
         this.maxItem = null;
         this.items.length = 0;
+        return this;
     };
 
     /**
      * 输出队列元素
-     *
-     * @return {string} 队列元素的字符串形式
      */
     p.print = function () {
         var i = -1;
         var length = this.items.length;
 
+        /* eslint-disable no-console */
         while (++i < length) {
             console.log(this.items[i].item + ' - ' + this.items[i].priority);
         }
+        /* eslint-enable no-console */
     };
 
     util.inherits(Queue, Event);

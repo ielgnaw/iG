@@ -3,6 +3,8 @@
  * @author ielgnaw(wuji0223@gmail.com)
  */
 
+'use strict';
+
 define(function (require) {
 
     var util = require('./util');

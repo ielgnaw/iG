@@ -361,7 +361,7 @@ define(function (require) {
             ctx.lineTo(x, y + h);
         }
         ctx.closePath();
-    }
+    };
 
     return exports;
 

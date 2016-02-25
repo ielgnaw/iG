@@ -162,50 +162,65 @@ define('ig/ig', [
             };
         }
     }());
-    var util = require('./util');
-    var config = require('./config');
     var exports = {};
+    var util = require('./util');
+    window.requestTimeout = function (fn, delay, loopId) {
+        if (!delay) {
+            delay = 0;
+        }
+        if (!loopId) {
+            loopId = String(ig.util.getTimestamp());
+        }
+        var start = new Date().getTime();
+        var handler = { loopId: loopId };
+        function loop() {
+            handler.reqId = window.requestAnimationFrame(loop);
+            var current = util.getTimestamp();
+            var realDelta = current - start;
+            if (realDelta >= delay) {
+                fn.call(null, realDelta);
+                start = new Date().getTime();
+            }
+        }
+        handler.reqId = window.requestAnimationFrame(loop);
+        return handler;
+    };
+    window.clearRequestTimeout = function (reqId, loopId) {
+        if (!reqId) {
+            return;
+        }
+        window.cancelAnimationFrame(reqId);
+        var pools = exports.reqAniPools;
+        var index = pools.indexOf(loopId);
+        index > -1 ? pools.splice(index, 1) : '';
+    };
+    var config = require('./config');
     exports.setConfig = config.setConfig;
     exports.getConfig = config.getConfig;
+    exports.reqAniPools = [];
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
             exec: util.noop,
-            jumpFrames: 0
+            fps: exports.getConfig('fps'),
+            loopId: String(util.getTimestamp())
         }, opts);
-        var fps = exports.getConfig('fps') || 60;
-        var dt = 1000 / fps;
-        var requestID;
-        var passed = 0;
-        var frameUpdateCount = 0;
-        var now;
-        var then = Date.now();
-        var acc = 0;
-        var stepCount = 0;
-        var execCount = 0;
-        var _jumpFrames = conf.jumpFrames === 0 ? 1 : conf.jumpFrames;
-        (function tick() {
-            requestID = window.requestAnimationFrame(tick);
-            frameUpdateCount++;
-            if (frameUpdateCount > conf.jumpFrames) {
-                frameUpdateCount = 0;
-                now = Date.now();
-                passed = now - then;
-                then = now;
-                acc += passed;
-                if (passed <= 1000 * _jumpFrames) {
-                    while (acc >= dt * _jumpFrames) {
-                        stepCount++;
-                        conf.step(dt * (fps / 1000), stepCount, requestID);
-                        acc -= dt * _jumpFrames;
-                    }
-                    execCount++;
-                    conf.exec(execCount);
-                } else {
-                    acc -= passed;
-                }
+        exports.reqAniPools.push(conf.loopId);
+        var previous = util.getTimestamp();
+        var accumulateTime = 0;
+        var dt = ig.getConfig('dt');
+        var handler = window.requestTimeout(function (realDelta) {
+            var current = util.getTimestamp();
+            var passed = current - previous;
+            previous = current;
+            accumulateTime += passed;
+            while (accumulateTime >= dt) {
+                conf.step(dt, realDelta);
+                accumulateTime -= dt;
             }
-        }());
+            conf.exec(dt, realDelta);
+        }, 1000 / conf.fps, conf.loopId);
+        return handler;
     };
     exports.aa = 123;
     return exports;
@@ -2058,6 +2073,7 @@ define('ig/Queue', [
                 this.items.push(queueItem);
             }
         }
+        return this;
     };
     p.dequeue = function () {
         return this.items.shift();
@@ -2080,6 +2096,7 @@ define('ig/Queue', [
     p.clear = function () {
         this.maxItem = null;
         this.items.length = 0;
+        return this;
     };
     p.print = function () {
         var i = -1;

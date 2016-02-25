@@ -175,13 +175,13 @@ window.onload = function () {
         }, 6000);
     }
 
-    create(5, 0);
+    // create(5, 0);
     // create(10, 1);
     // create(20, 2);
     // create(30, 3);
     // create(40, 4);
     // create(50, 5);
-    // create(60, 6);
+    create(60, 6);
 
     console.warn(ig);
     var q = new ig.Queue();
