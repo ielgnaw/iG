@@ -65,7 +65,7 @@ define(function (require) {
      *
      * @param {Function} fn 循环执行的函数
      * @param {number} delay 延迟时间间隔
-     * @param {Object} requestAnimationFrame 的参数对象
+     * @param {Object} conf requestAnimationFrame 的参数对象
      *                 这里传入这个对象是为了把 requestId 挂载到这个对象上，便于在 rafPools 里面的处理，
      *                 conf.loopId 是 requestAnimationFrame 的标示，可以根据这个标示停止循环
      *

@@ -2176,7 +2176,6 @@ define('ig/Game', [
         obj.game = this;
         this.stageStack.push(obj);
         this.stages[obj.name] = obj;
-        console.warn(123);
     };
     p.start = function (stepFunc, execFunc, fps, loopId) {
         var q = ig.loop({
