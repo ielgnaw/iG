@@ -164,62 +164,80 @@ define('ig/ig', [
     }());
     var exports = {};
     var util = require('./util');
-    window.requestTimeout = function (fn, delay, loopId) {
+    var config = require('./config');
+    exports.setConfig = config.setConfig;
+    exports.getConfig = config.getConfig;
+    exports.raf = function (fn, delay, conf) {
         if (!delay) {
             delay = 0;
         }
-        if (!loopId) {
-            loopId = String(ig.util.getTimestamp());
-        }
-        var start = new Date().getTime();
+        var loopId = conf.loopId ? conf.loopId : String(util.getTimestamp());
+        var start = util.getTimestamp();
         var handler = { loopId: loopId };
         function loop() {
             handler.reqId = window.requestAnimationFrame(loop);
+            conf.reqId = handler.reqId;
             var current = util.getTimestamp();
             var realDelta = current - start;
             if (realDelta >= delay) {
-                fn.call(null, realDelta);
+                fn.call(null, realDelta, handler.reqId);
                 start = new Date().getTime();
             }
         }
         handler.reqId = window.requestAnimationFrame(loop);
+        conf.reqId = handler.reqId;
         return handler;
     };
-    window.clearRequestTimeout = function (reqId, loopId) {
-        if (!reqId) {
+    exports.craf = function (opts) {
+        var pools = exports.rafPools;
+        var loopId = opts.loopId;
+        var reqId = opts.reqId;
+        if (!loopId && !reqId) {
             return;
         }
-        window.cancelAnimationFrame(reqId);
-        var pools = exports.reqAniPools;
-        var index = pools.indexOf(loopId);
-        index > -1 ? pools.splice(index, 1) : '';
+        var i = -1;
+        var length = pools.length;
+        if (reqId) {
+            window.cancelAnimationFrame(reqId);
+            while (++i < length) {
+                if (pools[i].reqId === reqId) {
+                    pools.splice(i, 1);
+                    break;
+                }
+            }
+        } else {
+            while (++i < length) {
+                if (pools[i].loopId === loopId) {
+                    window.cancelAnimationFrame(pools[i].reqId);
+                    pools.splice(i, 1);
+                    break;
+                }
+            }
+        }
     };
-    var config = require('./config');
-    exports.setConfig = config.setConfig;
-    exports.getConfig = config.getConfig;
-    exports.reqAniPools = [];
+    exports.rafPools = [];
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
             exec: util.noop,
             fps: exports.getConfig('fps'),
-            loopId: String(util.getTimestamp())
+            loopId: 'loopId-' + util.getTimestamp()
         }, opts);
-        exports.reqAniPools.push(conf.loopId);
+        exports.rafPools.push(conf);
         var previous = util.getTimestamp();
         var accumulateTime = 0;
-        var dt = ig.getConfig('dt');
-        var handler = window.requestTimeout(function (realDelta) {
+        var dt = exports.getConfig('dt');
+        var handler = exports.raf(function (realDelta, requestId) {
             var current = util.getTimestamp();
             var passed = current - previous;
             previous = current;
             accumulateTime += passed;
             while (accumulateTime >= dt) {
-                conf.step(dt, realDelta);
+                conf.step(dt, realDelta, requestId);
                 accumulateTime -= dt;
             }
-            conf.exec(dt, realDelta);
-        }, 1000 / conf.fps, conf.loopId);
+            conf.exec(dt, realDelta, requestId);
+        }, 1000 / conf.fps, conf);
         return handler;
     };
     exports.aa = 123;
@@ -2119,6 +2137,62 @@ define('ig/Queue', [
     util.inherits(Queue, Event);
     return Queue;
 });'use strict';
+define('ig/Game', [
+    'require',
+    './ig',
+    './util',
+    './Event'
+], function (require) {
+    var ig = require('./ig');
+    var util = require('./util');
+    var Event = require('./Event');
+    var CONFIG = ig.getConfig();
+    var GUID_KEY = 0;
+    function Game(opts) {
+        util.extend(true, this, {
+            name: 'ig_game_' + GUID_KEY++,
+            canvas: null,
+            maximize: false,
+            scaleFit: true,
+            resource: [],
+            fps: CONFIG.fps,
+            width: CONFIG.width,
+            height: CONFIG.height,
+            maxWidth: CONFIG.maxWidth,
+            maxHeight: CONFIG.maxHeight,
+            horizontalPageScroll: null
+        }, opts);
+        if (!this.canvas) {
+            throw new Error('Game initialize must be require a canvas param');
+        }
+        this.paused = false;
+        this.stageStack = [];
+        this.stages = {};
+        this._ = {};
+        return this;
+    }
+    var p = Game.prototype;
+    p.add = function (obj) {
+        obj.game = this;
+        this.stageStack.push(obj);
+        this.stages[obj.name] = obj;
+        console.warn(123);
+    };
+    p.start = function (stepFunc, execFunc, fps, loopId) {
+        var q = ig.loop({
+            step: stepFunc,
+            exec: execFunc,
+            fps: fps,
+            loopId: 'mainReq' + loopId
+        });
+        this.loopId = q.loopId;
+    };
+    p.stop = function () {
+        ig.craf({ loopId: this.loopId });
+    };
+    util.inherits(Game, Event);
+    return Game;
+});'use strict';
 define('ig/domEvt', [
     'require',
     './util',
@@ -2433,6 +2507,28 @@ else {
 
 var modName = 'ig/Queue';
 var refName = 'Queue';
+var folderName = '';
+
+var tmp;
+if (folderName) {
+    if (!ig[folderName]) {
+        tmp = {};
+        tmp[refName] = require(modName);
+        ig[folderName] = tmp;
+    }
+    else {
+        ig[folderName][refName] = require(modName);
+    }
+}
+else {
+    tmp = require(modName);
+    if (refName) {
+        ig[refName] = tmp;
+    }
+}
+
+var modName = 'ig/Game';
+var refName = 'Game';
 var folderName = '';
 
 var tmp;

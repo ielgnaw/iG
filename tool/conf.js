@@ -15,6 +15,9 @@ exports.modules = {
         {name: 'ig/Matrix', refName: 'Matrix'},
 
         {name: 'ig/Queue', refName: 'Queue'},
+
+        {name: 'ig/Game', refName: 'Game'},
+
         // {name: 'ig/Animation', refName: 'Animation'},
         // {name: 'ig/DisplayObject', refName: 'DisplayObject'},
         // {name: 'ig/Text', refName: 'Text'},

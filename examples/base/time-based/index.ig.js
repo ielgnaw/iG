@@ -63,19 +63,21 @@ window.onload = function () {
         })
 
         setTimeout(function () {
-            // if (q.loopId === 'mainReq3') {
-            //     console.warn('over');
-            //     window.clearRequestTimeout(q.reqId, q.loopId);
-            // }
+            if (q.loopId === 'mainReq3') {
+                ig.craf({
+                    // reqId: q.reqId,
+                    loopId: q.loopId
+                });
+            }
         }, 6000);
     }
 
     create(5, 0);
-    // create(10, 1);
-    // create(20, 2);
-    // create(30, 3);
-    // create(40, 4);
-    // create(50, 5);
+    create(10, 1);
+    create(20, 2);
+    create(30, 3);
+    create(40, 4);
+    create(50, 5);
     create(60, 6);
 
     // var q = new ig.Queue();
@@ -90,6 +92,7 @@ window.onload = function () {
     // q.print();
     // // console.warn(q);
     // setInterval(function () {
+    //     console.warn(q.pick());
     //     console.warn(q.pick());
     // }, 1000);
 

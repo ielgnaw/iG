@@ -85,6 +85,7 @@ define(function (require) {
         ) {
             return false;
         }
+
         return true;
     };
 

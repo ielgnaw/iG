@@ -5,8 +5,6 @@
 
 'use strict';
 
-/* global ig */
-
 define(function (require) {
 
     // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -46,62 +44,6 @@ define(function (require) {
 
     var util = require('./util');
 
-    /**
-     * requestAnimationFrame 封装
-     *
-     * @param {Function} fn 循环执行的函数
-     * @param {number} delay 延迟时间间隔
-     * @param {string} loopId 标示，可以根据这个标示停止循环
-     *
-     * @return {Object} 带有标示属性的对象
-     */
-    window.requestTimeout = function (fn, delay, loopId) {
-        if (!delay) {
-            delay = 0;
-        }
-
-        if (!loopId) {
-            loopId = String(ig.util.getTimestamp());
-        }
-
-        var start = new Date().getTime();
-
-        var handler = {
-            loopId: loopId
-        };
-
-        function loop() {
-            handler.reqId = window.requestAnimationFrame(loop);
-            var current = util.getTimestamp();
-            var realDelta = current - start;
-            if (realDelta >= delay) {
-                fn.call(null, realDelta);
-                start = new Date().getTime();
-            }
-        }
-
-        handler.reqId = window.requestAnimationFrame(loop);
-
-        return handler;
-    };
-
-    /**
-     * 清除 requestAnimationFrame
-     *
-     * @param {number} reqId requestAnimationFrame 的 id
-     * @param {string} loopId 标示，可以根据这个标示停止循环
-     */
-    window.clearRequestTimeout = function (reqId, loopId) {
-        if (!reqId) {
-            return;
-        }
-        window.cancelAnimationFrame(reqId);
-
-        var pools = exports.reqAniPools;
-        var index = pools.indexOf(loopId);
-        index > -1 ? pools.splice(index, 1) : '';
-    };
-
     var config = require('./config');
 
     /**
@@ -119,11 +61,93 @@ define(function (require) {
     exports.getConfig = config.getConfig;
 
     /**
+     * requestAnimationFrame 封装
+     *
+     * @param {Function} fn 循环执行的函数
+     * @param {number} delay 延迟时间间隔
+     * @param {Object} requestAnimationFrame 的参数对象
+     *                 这里传入这个对象是为了把 requestId 挂载到这个对象上，便于在 rafPools 里面的处理，
+     *                 conf.loopId 是 requestAnimationFrame 的标示，可以根据这个标示停止循环
+     *
+     * @return {Object} 带有标示属性的对象
+     */
+    exports.raf = function (fn, delay, conf) {
+        if (!delay) {
+            delay = 0;
+        }
+
+        var loopId = conf.loopId ? conf.loopId : String(util.getTimestamp());
+
+        var start = util.getTimestamp();
+
+        var handler = {
+            loopId: loopId
+        };
+
+        function loop() {
+            handler.reqId = window.requestAnimationFrame(loop);
+            conf.reqId = handler.reqId;
+            var current = util.getTimestamp();
+            var realDelta = current - start;
+            if (realDelta >= delay) {
+                fn.call(null, realDelta, handler.reqId);
+                start = new Date().getTime();
+            }
+        }
+
+        handler.reqId = window.requestAnimationFrame(loop);
+
+        conf.reqId = handler.reqId;
+
+        return handler;
+    };
+
+    /**
+     * 清除 requestAnimationFrame
+     *
+     * @param {Object} opts 参数对象
+     * @param {string} loopId 标示，可以根据这个标示停止循环
+     * @param {number} reqId requestAnimationFrame 的 id
+     */
+    exports.craf = function (opts) {
+        var pools = exports.rafPools;
+
+        var loopId = opts.loopId;
+        var reqId = opts.reqId;
+
+        if (!loopId && !reqId) {
+            return;
+        }
+
+        var i = -1;
+        var length = pools.length;
+
+        if (reqId) {
+            window.cancelAnimationFrame(reqId);
+            while (++i < length) {
+                if (pools[i].reqId === reqId) {
+                    pools.splice(i, 1);
+                    break;
+                }
+            }
+        }
+        else {
+            while (++i < length) {
+                if (pools[i].loopId === loopId) {
+                    window.cancelAnimationFrame(pools[i].reqId);
+                    pools.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    };
+
+    /**
      * requestAnimationFrame 池
      *
      * @type {Array}
      */
-    exports.reqAniPools = [];
+    exports.rafPools = [];
 
     /**
      * 利用 requestAnimationFrame 来循环
@@ -143,29 +167,29 @@ define(function (require) {
             step: util.noop,
             exec: util.noop,
             fps: exports.getConfig('fps'),
-            loopId: String(util.getTimestamp())
+            loopId: 'loopId-' + util.getTimestamp()
         }, opts);
 
-        exports.reqAniPools.push(conf.loopId);
+        exports.rafPools.push(conf);
 
         var previous = util.getTimestamp();
         var accumulateTime = 0;
 
         // dt 是 ig 环境默认的 delta，用这个值是为了保证 time based animation
-        var dt = ig.getConfig('dt');
+        var dt = exports.getConfig('dt');
 
         // realDelta 是根据不同 fps 计算出来的实际的 realDelta，用这个值可以用来计算真实的 fps
-        var handler = window.requestTimeout(function (realDelta) {
+        var handler = exports.raf(function (realDelta, requestId) {
             var current = util.getTimestamp();
             var passed = current - previous;
             previous = current;
             accumulateTime += passed;
             while (accumulateTime >= dt) {
-                conf.step(dt, realDelta);
+                conf.step(dt, realDelta, requestId);
                 accumulateTime -= dt;
             }
-            conf.exec(dt, realDelta);
-        }, 1000 / conf.fps, conf.loopId);
+            conf.exec(dt, realDelta, requestId);
+        }, 1000 / conf.fps, conf);
 
         return handler;
     };
