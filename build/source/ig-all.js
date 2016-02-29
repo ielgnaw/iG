@@ -1137,15 +1137,13 @@ define('ig/config', ['require'], function (require) {
         },
         set: function setter(val) {
             _fps = val;
-            this.dt = 1000 / val;
         }
     });
-    var _dt = 1000 / config.fps;
     Object.defineProperty(config, 'dt', {
         configurable: true,
         enumerable: true,
         get: function getter() {
-            return _dt;
+            return 1000 / _fps;
         }
     });
     var exports = {};

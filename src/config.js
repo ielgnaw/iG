@@ -145,7 +145,7 @@ define(function (require) {
         },
         set: function setter(val) {
             _fps = val;
-            this.dt = 1000 / val;
+            // this.dt = 1000 / val;
         }
     });
 
@@ -155,14 +155,15 @@ define(function (require) {
      * @type {number}
      */
     /* eslint-disable fecs-camelcase */
-    var _dt = 1000 / config.fps;
+    // var _dt = 1000 / config.fps;
     /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'dt', {
         configurable: true,
         enumerable: true,
         get: function getter() {
-            return _dt;
+            // return _dt;
+            return 1000 / _fps;
         }
     });
 
