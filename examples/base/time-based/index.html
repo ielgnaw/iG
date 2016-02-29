@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>base</title>
+        <title>time-based</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="HandheldFriendly" content="True">
@@ -58,8 +58,7 @@
             }
 
             .wrapper {
-                margin: 0;
-                margin-top: 10px;
+                margin: 10px;
             }
 
             .div {
@@ -85,35 +84,21 @@
     <body>
         <div class="wrapper">
             <div>
-                <span id="fps5">fps5: <span></span></span>
-                <canvas id="fps5-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps10">fps10: <span></span></span>
-                <canvas id="fps10-canvas" width="300" height="40"></canvas>
-            </div>
-            <div>
-                <span id="fps20">fps20: <span></span></span>
-                <canvas id="fps20-canvas" width="300" height="40"></canvas>
+                <span id="fps60">fps60: <span></span></span>
             </div>
             <div>
                 <span id="fps30">fps30: <span></span></span>
-                <canvas id="fps30-canvas" width="300" height="40"></canvas>
             </div>
             <div>
-                <span id="fps40">fps40: <span></span></span>
-                <canvas id="fps40-canvas" width="300" height="40"></canvas>
+                <span id="fps10">fps10: <span></span></span>
             </div>
-            <div>
-                <span id="fps50">fps50: <span></span></span>
-                <canvas id="fps50-canvas" width="300" height="40"></canvas>
+             <div>
+                <span id="fps5">fps5: <span></span></span>
             </div>
-            <div>
-                <span id="fps60">fps60: <span></span></span>
-                <canvas id="fps60-canvas" width="300" height="40"></canvas>
-            </div>
+            <canvas id="canvas" width="300" height="300"></canvas>
+
+
         </div>
-        <!-- <script src="./index.js"></script> -->
-        <script src="./index.ig.js"></script>
+        <script src="./index.js"></script>
     </body>
 </html>

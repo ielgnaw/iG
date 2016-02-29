@@ -145,7 +145,7 @@ define(function (require) {
         },
         set: function setter(val) {
             _fps = val;
-            // this.dt = 1000 / val;
+            // this.delta = 1000 / val;
         }
     });
 
@@ -155,15 +155,36 @@ define(function (require) {
      * @type {number}
      */
     /* eslint-disable fecs-camelcase */
-    // var _dt = 1000 / config.fps;
+    // var _delta = 1000 / config.fps;
     /* eslint-enable fecs-camelcase */
 
-    Object.defineProperty(config, 'dt', {
+    Object.defineProperty(config, 'delta', {
         configurable: true,
         enumerable: true,
         get: function getter() {
-            // return _dt;
+            // return _delta;
             return 1000 / _fps;
+        }
+    });
+
+    /**
+     * 默认运动系数
+     * 可以用这个参数控制整体的运动速度
+     *
+     * @type {number}
+     */
+    /* eslint-disable fecs-camelcase */
+    var _motionCoefficient = 1;
+    /* eslint-enable fecs-camelcase */
+
+    Object.defineProperty(config, 'motionCoefficient', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _motionCoefficient;
+        },
+        set: function setter(val) {
+            _motionCoefficient = val;
         }
     });
 

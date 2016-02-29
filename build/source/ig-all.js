@@ -162,83 +162,66 @@ define('ig/ig', [
             };
         }
     }());
-    var exports = {};
     var util = require('./util');
     var config = require('./config');
+    var exports = {};
     exports.setConfig = config.setConfig;
     exports.getConfig = config.getConfig;
-    exports.raf = function (fn, delay, conf) {
-        if (!delay) {
-            delay = 0;
-        }
-        var loopId = conf.loopId ? conf.loopId : String(util.getTimestamp());
+    exports.rafInterval = function (fn, delay) {
         var start = util.getTimestamp();
-        var handler = { loopId: loopId };
+        var handler = {};
         function loop() {
-            handler.reqId = window.requestAnimationFrame(loop);
-            conf.reqId = handler.reqId;
             var current = util.getTimestamp();
             var realDelta = current - start;
             if (realDelta >= delay) {
-                fn.call(null, realDelta, handler.reqId);
-                start = new Date().getTime();
+                fn.call(null, exports.getConfig('delta'), realDelta, 1000 / realDelta);
+                start = util.getTimestamp();
             }
+            handler.reqId = window.requestAnimationFrame(loop);
         }
         handler.reqId = window.requestAnimationFrame(loop);
-        conf.reqId = handler.reqId;
         return handler;
     };
-    exports.craf = function (opts) {
-        var pools = exports.rafPools;
-        var loopId = opts.loopId;
-        var reqId = opts.reqId;
-        if (!loopId && !reqId) {
+    exports.rafTimeout = function (fn, delay) {
+        var start = util.getTimestamp();
+        var handler = {};
+        function loop() {
+            var current = util.getTimestamp();
+            var realDelta = current - start;
+            realDelta >= delay ? fn.call(null, exports.getConfig('delta'), realDelta, 1000 / realDelta) : handler.reqId = window.requestAnimationFrame(loop);
+        }
+        handler.reqId = window.requestAnimationFrame(loop);
+        return handler;
+    };
+    exports.clearRaf = function (handler) {
+        if (!handler) {
             return;
         }
-        var i = -1;
-        var length = pools.length;
-        if (reqId) {
-            window.cancelAnimationFrame(reqId);
-            while (++i < length) {
-                if (pools[i].reqId === reqId) {
-                    pools.splice(i, 1);
-                    break;
-                }
-            }
+        if (typeof handler === 'object') {
+            window.cancelAnimationFrame(handler.reqId);
         } else {
-            while (++i < length) {
-                if (pools[i].loopId === loopId) {
-                    window.cancelAnimationFrame(pools[i].reqId);
-                    pools.splice(i, 1);
-                    break;
-                }
-            }
+            window.cancelAnimationFrame(handler);
         }
     };
-    exports.rafPools = [];
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
-            exec: util.noop,
-            fps: exports.getConfig('fps'),
-            loopId: 'loopId-' + util.getTimestamp()
+            render: util.noop,
+            fps: exports.getConfig('fps')
         }, opts);
-        exports.rafPools.push(conf);
         var previous = util.getTimestamp();
         var accumulateTime = 0;
-        var dt = exports.getConfig('dt');
-        var handler = exports.raf(function (realDelta, requestId) {
+        return exports.rafInterval(function (delta, realDelta, realFps) {
             var current = util.getTimestamp();
             var passed = current - previous;
             previous = current;
             accumulateTime += passed;
-            while (accumulateTime >= dt) {
-                conf.step(dt, realDelta, requestId);
-                accumulateTime -= dt;
+            while (accumulateTime >= exports.getConfig('delta')) {
+                conf.step(delta, realDelta, realFps);
+                accumulateTime -= exports.getConfig('delta');
             }
-            conf.exec(dt, realDelta, requestId);
-        }, 1000 / conf.fps, conf);
-        return handler;
+            conf.render(delta, realDelta, realFps);
+        }, 1000 / conf.fps);
     };
     exports.aa = 123;
     return exports;
@@ -1139,11 +1122,22 @@ define('ig/config', ['require'], function (require) {
             _fps = val;
         }
     });
-    Object.defineProperty(config, 'dt', {
+    Object.defineProperty(config, 'delta', {
         configurable: true,
         enumerable: true,
         get: function getter() {
             return 1000 / _fps;
+        }
+    });
+    var _motionCoefficient = 1;
+    Object.defineProperty(config, 'motionCoefficient', {
+        configurable: true,
+        enumerable: true,
+        get: function getter() {
+            return _motionCoefficient;
+        },
+        set: function setter(val) {
+            _motionCoefficient = val;
         }
     });
     var exports = {};

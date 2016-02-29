@@ -40,11 +40,10 @@ define(function (require) {
         }
     })();
 
-    var exports = {};
-
     var util = require('./util');
-
     var config = require('./config');
+
+    var exports = {};
 
     /**
      * 挂载 config.setConfig
@@ -61,43 +60,56 @@ define(function (require) {
     exports.getConfig = config.getConfig;
 
     /**
-     * requestAnimationFrame 封装
+     * 利用 requestAnimationFrame 实现 setInterval 的功能
      *
      * @param {Function} fn 循环执行的函数
      * @param {number} delay 延迟时间间隔
-     * @param {Object} conf requestAnimationFrame 的参数对象
-     *                 这里传入这个对象是为了把 requestId 挂载到这个对象上，便于在 rafPools 里面的处理，
-     *                 conf.loopId 是 requestAnimationFrame 的标示，可以根据这个标示停止循环
      *
-     * @return {Object} 带有标示属性的对象
+     * @return {Object} 带有 requestId 的对象
      */
-    exports.raf = function (fn, delay, conf) {
-        if (!delay) {
-            delay = 0;
-        }
-
-        var loopId = conf.loopId ? conf.loopId : String(util.getTimestamp());
-
+    exports.rafInterval = function (fn, delay) {
         var start = util.getTimestamp();
-
-        var handler = {
-            loopId: loopId
-        };
+        var handler = {};
 
         function loop() {
-            handler.reqId = window.requestAnimationFrame(loop);
-            conf.reqId = handler.reqId;
             var current = util.getTimestamp();
             var realDelta = current - start;
-            if (realDelta >= delay) {
-                fn.call(null, realDelta, handler.reqId);
-                start = new Date().getTime();
+
+            if(realDelta >= delay) {
+                fn.call(null, exports.getConfig('delta'), realDelta, 1000 / realDelta);
+                start = util.getTimestamp();
             }
+
+            handler.reqId = window.requestAnimationFrame(loop);
         }
 
         handler.reqId = window.requestAnimationFrame(loop);
 
-        conf.reqId = handler.reqId;
+        return handler;
+    };
+
+    /**
+     * 利用 requestAnimationFrame 实现 setTimeout 的功能
+     *
+     * @param {Function} fn 循环执行的函数
+     * @param {number} delay 延迟时间间隔
+     *
+     * @return {Object} 带有 requestId 的对象
+     */
+    exports.rafTimeout = function (fn, delay) {
+        var start = util.getTimestamp();
+        var handler = {};
+
+        function loop() {
+            var current = util.getTimestamp();
+            var realDelta = current - start;
+
+            realDelta >= delay
+                ? fn.call(null, exports.getConfig('delta'), realDelta, 1000 / realDelta)
+                : handler.reqId = window.requestAnimationFrame(loop);
+        }
+
+        handler.reqId = window.requestAnimationFrame(loop);
 
         return handler;
     };
@@ -105,56 +117,26 @@ define(function (require) {
     /**
      * 清除 requestAnimationFrame
      *
-     * @param {Object} opts 参数对象
-     * @param {string} loopId 标示，可以根据这个标示停止循环
-     * @param {number} reqId requestAnimationFrame 的 id
+     * @param {Object} handler rafInterval, rafTimeout 中返回的那个带有 requestId 的对象
      */
-    exports.craf = function (opts) {
-        var pools = exports.rafPools;
-
-        var loopId = opts.loopId;
-        var reqId = opts.reqId;
-
-        if (!loopId && !reqId) {
+    exports.clearRaf = function (handler) {
+        if (!handler) {
             return;
         }
-
-        var i = -1;
-        var length = pools.length;
-
-        if (reqId) {
-            window.cancelAnimationFrame(reqId);
-            while (++i < length) {
-                if (pools[i].reqId === reqId) {
-                    pools.splice(i, 1);
-                    break;
-                }
-            }
+        if (typeof handler === 'object') {
+            window.cancelAnimationFrame(handler.reqId);
         }
         else {
-            while (++i < length) {
-                if (pools[i].loopId === loopId) {
-                    window.cancelAnimationFrame(pools[i].reqId);
-                    pools.splice(i, 1);
-                    break;
-                }
-            }
+            window.cancelAnimationFrame(handler);
         }
     };
 
     /**
-     * requestAnimationFrame 池
-     *
-     * @type {Array}
-     */
-    exports.rafPools = [];
-
-    /**
-     * 利用 requestAnimationFrame 来循环
+     * 循环
      *
      * @param {Object} opts 参数对象
-     * @param {Function} opts.step 每帧中切分出来的每个时间片里执行的函数
-     * @param {Function} opts.exec 每帧执行的函数
+     * @param {Function} opts.step 每帧中切分出来的每个时间片里执行的函数，通常做动画的更新
+     * @param {Function} opts.render 每帧执行的函数，通常做动画的渲染
      * @param {number} opts.fps 当前这个 loop 的 fps，可以通过设置这个值来变相的实现
      *                          改变 requestAnimationFrame 的时间间隔，如果不设置，则使用
      *                          exports.getConfig('fps') 里的 fps 默认值即 60fps，如果帧数
@@ -165,33 +147,24 @@ define(function (require) {
     exports.loop = function (opts) {
         var conf = util.extend(true, {}, {
             step: util.noop,
-            exec: util.noop,
-            fps: exports.getConfig('fps'),
-            loopId: 'loopId-' + util.getTimestamp()
+            render: util.noop,
+            fps: exports.getConfig('fps')
         }, opts);
-
-        exports.rafPools.push(conf);
 
         var previous = util.getTimestamp();
         var accumulateTime = 0;
 
-        // dt 是 ig 环境默认的 delta，用这个值是为了保证 time based animation
-        var dt = exports.getConfig('dt');
-
-        // realDelta 是根据不同 fps 计算出来的实际的 realDelta，用这个值可以用来计算真实的 fps
-        var handler = exports.raf(function (realDelta, requestId) {
+        return exports.rafInterval(function (delta, realDelta, realFps) {
             var current = util.getTimestamp();
             var passed = current - previous;
             previous = current;
             accumulateTime += passed;
-            while (accumulateTime >= dt) {
-                conf.step(dt, realDelta, requestId);
-                accumulateTime -= dt;
+            while (accumulateTime >= exports.getConfig('delta')) {
+                conf.step(delta, realDelta, realFps);
+                accumulateTime -= exports.getConfig('delta');
             }
-            conf.exec(dt, realDelta, requestId);
-        }, 1000 / conf.fps, conf);
-
-        return handler;
+            conf.render(delta, realDelta, realFps);
+        }, 1000 / conf.fps);
     };
 
     exports.aa = 123;
