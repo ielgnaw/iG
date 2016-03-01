@@ -84,6 +84,16 @@ window.onload = function () {
     var node5 = document.querySelector('#fps5 span');
 
     ig.loop({
+        fps: 100,
+        step: function (delta, realDelta, realFps) {
+
+        },
+        render: function (delta, realDelta, realFps) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    })
+
+    ig.loop({
         fps: circle60.fps,
         step: function (delta, realDelta, realFps) {
             circle60.step(delta);
@@ -119,7 +129,6 @@ window.onload = function () {
     ig.loop({
         fps: circle5.fps,
         step: function (delta, realDelta, realFps) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
             circle5.step(delta);
         },
         render: function (delta, realDelta, realFps) {
