@@ -49,12 +49,12 @@ define(function (require) {
     });
 
     /**
-     * 游戏窗口宽度的默认值
+     * 游戏窗口宽度的默认值，为屏幕宽度
      *
      * @type {number}
      */
     /* eslint-disable fecs-camelcase */
-    var _width = 375;
+    var _width = document.documentElement.clientWidth;
     /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'width', {
@@ -69,12 +69,12 @@ define(function (require) {
     });
 
     /**
-     * 游戏窗口高度的默认值
+     * 游戏窗口高度的默认值，为屏幕高度
      *
      * @type {number}
      */
     /* eslint-disable fecs-camelcase */
-    var _height = 627;
+    var _height = document.documentElement.clientHeight;
     /* eslint-enable fecs-camelcase */
 
     Object.defineProperty(config, 'height', {

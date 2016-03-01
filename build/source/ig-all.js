@@ -1067,7 +1067,7 @@ define('ig/config', ['require'], function (require) {
             return _status;
         }
     });
-    var _width = 375;
+    var _width = document.documentElement.clientWidth;
     Object.defineProperty(config, 'width', {
         configurable: true,
         enumerable: true,
@@ -1078,7 +1078,7 @@ define('ig/config', ['require'], function (require) {
             _width = val;
         }
     });
-    var _height = 627;
+    var _height = document.documentElement.clientHeight;
     Object.defineProperty(config, 'height', {
         configurable: true,
         enumerable: true,
@@ -1302,7 +1302,7 @@ define('ig/util', ['require'], function (require) {
         curNode.parentNode.insertBefore(newNode, curNode);
         newNode.appendChild(curNode);
         newNode.id = newNodeId || 'ig-create-dom-' + Date.now();
-        return curNode;
+        return newNode;
     };
     exports.getElementOffset = function (element) {
         var x = element.offsetLeft;
@@ -2133,10 +2133,12 @@ define('ig/Game', [
     'require',
     './ig',
     './util',
+    './env',
     './Event'
 ], function (require) {
     var ig = require('./ig');
     var util = require('./util');
+    var env = require('./env');
     var Event = require('./Event');
     var CONFIG = ig.getConfig();
     var GUID_KEY = 0;
@@ -2154,6 +2156,7 @@ define('ig/Game', [
             maxHeight: CONFIG.maxHeight,
             horizontalPageScroll: null
         }, opts);
+        ig.setConfig('fps', this.fps);
         if (!this.canvas) {
             throw new Error('Game initialize must be require a canvas param');
         }
@@ -2161,6 +2164,75 @@ define('ig/Game', [
         this.stageStack = [];
         this.stages = {};
         this._ = {};
+        initGame.call(this);
+        return this;
+    }
+    function fitScreen() {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var winRatio = winWidth / winHeight;
+        var canvasRatio = this.canvas.width / this.canvas.height;
+        var scaleRatio = canvasRatio < winRatio ? winHeight / this.canvas.height : winWidth / this.canvas.width;
+        var scaleWidth = this.canvas.width * scaleRatio;
+        var scaleHeight = this.canvas.height * scaleRatio;
+        this.cssWidth = parseInt(scaleWidth, 10) + 'px';
+        this.cssHeight = parseInt(scaleHeight, 10) + 'px';
+        this.width = parseInt(this.cssWidth, 10) * env.dpr;
+        this.height = parseInt(this.cssHeight, 10) * env.dpr;
+        var containerStyle = this.container.style;
+        containerStyle.width = this.cssWidth;
+        containerStyle.height = this.cssHeight;
+        var canvasStyle = this.canvas.style;
+        canvasStyle.width = this.cssWidth;
+        canvasStyle.height = this.cssHeight;
+        if (canvasRatio >= winRatio) {
+            var topPos = (winHeight - scaleHeight) / 2;
+            this.canvas.style.top = topPos + 'px';
+        }
+        this.canvas.setAttribute('width', this.width);
+        this.canvas.setAttribute('height', this.height);
+        this.scaleRatio = scaleRatio;
+        window.scrollTo(0, 1);
+    }
+    function initGame() {
+        this.container = util.domWrap(this.canvas, document.createElement('div'), 'ig-game-container-' + this.name);
+        this.cssWidth = this.width + 'px';
+        this.cssHeight = this.height + 'px';
+        var containerStyle = this.container.style;
+        if (this.maximize) {
+            containerStyle.position = 'absolute';
+            containerStyle.padding = 0;
+            containerStyle.margin = 0;
+            containerStyle.top = 0;
+            containerStyle.bottom = 0;
+            containerStyle.left = 0;
+            containerStyle.right = 0;
+            this.cssWidth = document.documentElement.clientWidth + 'px';
+            this.cssHeight = document.documentElement.clientHeight + 'px';
+        }
+        this.width = parseInt(this.cssWidth, 10) * env.dpr;
+        this.height = parseInt(this.cssHeight, 10) * env.dpr;
+        containerStyle.width = this.cssWidth;
+        containerStyle.height = this.cssHeight;
+        containerStyle.position = 'relative';
+        containerStyle.overflow = 'hidden';
+        var canvasStyle = this.canvas.style;
+        canvasStyle.width = this.cssWidth;
+        canvasStyle.height = this.cssHeight;
+        canvasStyle.position = 'absolute';
+        this.canvas.width = this.width;
+        this.canvas.height = this.height;
+        this.canvas['-webkit-user-select'] = 'none';
+        this.canvas['user-select'] = 'none';
+        this.canvas['-webkit-touch-callout'] = 'none';
+        this.canvas['-webkit-tap-highlight-color'] = 'rgba(0, 0, 0, 0)';
+        this.ctx = this.canvas.getContext('2d');
+        this.ctx.scale(env.dpr, env.dpr);
+        fitScreen.call(this);
+        var me = this;
+        window.addEventListener(env.supportOrientation ? 'orientationchange' : 'resize', function () {
+            fitScreen.call(me);
+        }, false);
         return this;
     }
     var p = Game.prototype;
@@ -2172,11 +2244,9 @@ define('ig/Game', [
     p.start = function (stepFunc, execFunc, fps, loopId) {
         var q = ig.loop({
             step: stepFunc,
-            exec: execFunc,
-            fps: fps,
-            loopId: 'mainReq' + loopId
+            render: execFunc,
+            fps: fps
         });
-        this.loopId = q.loopId;
     };
     p.stop = function () {
         ig.craf({ loopId: this.loopId });

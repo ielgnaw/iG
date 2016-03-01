@@ -305,13 +305,13 @@ define(function (require) {
      * @param {HTML.Element} newNode 要作为父节点的节点
      * @param {string} newNodeId 新 DOM 的 ID
      *
-     * @return {HTML.Element} 原节点
+     * @return {HTML.Element} 新 DOM 节点
      */
     exports.domWrap = function (curNode, newNode, newNodeId) {
         curNode.parentNode.insertBefore(newNode, curNode);
         newNode.appendChild(curNode);
         newNode.id = newNodeId || ('ig-create-dom-' + Date.now());
-        return curNode;
+        return newNode;
     };
 
     /**
