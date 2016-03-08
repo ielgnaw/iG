@@ -207,7 +207,7 @@ define(function (require) {
         this.stages[obj.name] = obj;
     };
 
-    p.start = function (stepFunc, execFunc, fps, loopId) {
+    p.start = function (stepFunc, execFunc, fps) {
         var q = ig.loop({
             step: stepFunc,
             render: execFunc,

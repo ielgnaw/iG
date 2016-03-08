@@ -31,8 +31,7 @@ Circle.prototype.step = function (dt) {
 };
 
 var motionCoefficient = ig.getConfig('motionCoefficient');
-var DT = ig.getConfig('dt');
-
+var DT = ig.getConfig('delta');
 function move(div, fps) {
     var left = 0;
     var param = 1;
@@ -66,7 +65,7 @@ var h60 = move(document.getElementById('div7'), 60);
 var h30 = move(document.getElementById('div8'), 30);
 var h10 = move(document.getElementById('div9'), 10);
 
-ig.rafTimeout(function () {
-    ig.clearRaf(h10);
-    ig.clearRaf(h60);
-}, 5000);
+// ig.rafTimeout(function () {
+//     ig.clearRaf(h10);
+//     ig.clearRaf(h60);
+// }, 5000);

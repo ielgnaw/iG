@@ -21,7 +21,7 @@ window.onload = function () {
         this.cacheCanvas.width = 2 * this.radius;
         this.cacheCanvas.height = 2 * this.radius;
 
-        this.cache();
+        // this.cache();
     }
 
     Circle.prototype.cache = function () {
@@ -35,15 +35,15 @@ window.onload = function () {
 
     Circle.prototype.draw = function () {
         // this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        this.ctx.drawImage(this.cacheCanvas, this.x - this.radius , this.y - this.radius);
+        // this.ctx.drawImage(this.cacheCanvas, this.x - this.radius , this.y - this.radius);
         // this.ctx.clearRect(this.x - this.radius * 2, this.y - this.radius, this.radius * 2, this.radius * 2);
-        // this.ctx.beginPath();
-        // this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
-        // this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, true);
+        this.ctx.fill();
     };
 
     Circle.prototype.step = function (dt) {
-        this.ctx.clearRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+        // this.ctx.clearRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
 
         this.x += this.vx ;// * 0.1;
         this.y += this.vy ;// * 0.1;
@@ -94,10 +94,12 @@ window.onload = function () {
     // game.add(circle60);
     game.add(circle5);
 
-    game.start(function (dt, realDelta) {
-        // circle60.step(dt);
-        circle5.step(dt);
-    }, function (dt, realDelta) {
+    game.start(function (delta, realDelta, realFps) {
+        // circle60.step(delta);
+        circle5.step();
+    }, function (delta, realDelta, realFps) {
+        // console.warn(delta, realDelta, realFps);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         // node60.innerHTML = Math.floor(1000 / (realDelta));
         // node5.innerHTML = Math.floor(1000 / (realDelta));
         // circle60.draw();

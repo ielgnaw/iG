@@ -40,6 +40,84 @@ define(function (require) {
         }
     })();
 
+    var now = Date.now || function() {
+        return (new Date).getTime()
+    }
+
+    function AnimationFrame(options) {
+        if (!(this instanceof AnimationFrame)) return new AnimationFrame(options)
+        options || (options = {})
+
+        // Its a frame rate.
+        if (typeof options == 'number') options = {frameRate: options}
+        this.options = options
+        this.frameRate = options.frameRate || AnimationFrame.FRAME_RATE
+        this._frameLength = 1000 / this.frameRate
+        this._isCustomFrameRate = this.frameRate !== AnimationFrame.FRAME_RATE
+        this._timeoutId = null
+        this._callbacks = {}
+        this._lastTickTime = 0
+        this._tickCounter = 0
+    }
+
+    AnimationFrame.FRAME_RATE = 60;
+
+    /**
+     * Request animation frame.
+     * We will use the native RAF as soon as we know it does works.
+     *
+     * @param {Function} callback
+     * @return {Number} timeout id or requested animation frame id
+     * @api public
+     */
+    AnimationFrame.prototype.request = function(callback) {
+        var self = this
+
+        // Alawys inc counter to ensure it never has a conflict with the native counter.
+        // After the feature test phase we don't know exactly which implementation has been used.
+        // Therefore on #cancel we do it for both.
+        ++this._tickCounter
+
+        if (!callback) throw new TypeError('Not enough arguments')
+
+        if (this._timeoutId == null) {
+            // Much faster than Math.max
+            // http://jsperf.com/math-max-vs-comparison/3
+            // http://jsperf.com/date-now-vs-date-gettime/11
+            var delay = this._frameLength + this._lastTickTime - now()
+            if (delay < 0) delay = 0
+
+            this._timeoutId = setTimeout(function() {
+                self._lastTickTime = now()
+                self._timeoutId = null
+                ++self._tickCounter
+                var callbacks = self._callbacks
+                self._callbacks = {}
+                for (var id in callbacks) {
+                    if (callbacks[id]) {
+                        callbacks[id](Date.now())
+                    }
+                }
+            }, delay)
+        }
+
+        this._callbacks[this._tickCounter] = callback
+
+        return this._tickCounter;
+    }
+
+    /**
+     * Cancel animation frame.
+     *
+     * @param {Number} timeout id or requested animation frame id
+     *
+     * @api public
+     */
+    AnimationFrame.prototype.cancel = function(id) {
+        if (nativeImpl.supported && this.options.useNative) nativeCancel(id)
+        delete this._callbacks[id];
+    }
+
     var util = require('./util');
     var config = require('./config');
 
@@ -75,7 +153,7 @@ define(function (require) {
             var current = util.getTimestamp();
             var realDelta = current - start;
 
-            if(realDelta >= delay) {
+            if (realDelta >= delay) {
                 fn.call(null, exports.getConfig('delta'), realDelta, 1000 / realDelta);
                 start = util.getTimestamp();
             }
@@ -154,17 +232,27 @@ define(function (require) {
         var previous = util.getTimestamp();
         var accumulateTime = 0;
 
-        return exports.rafInterval(function (delta, realDelta, realFps) {
-            var current = util.getTimestamp();
-            var passed = current - previous;
-            previous = current;
-            accumulateTime += passed;
-            while (accumulateTime >= exports.getConfig('delta')) {
-                conf.step(delta, realDelta, realFps);
-                accumulateTime -= exports.getConfig('delta');
-            }
-            conf.render(delta, realDelta, realFps);
-        }, 1000 / conf.fps);
+        // return exports.rafInterval(function (delta, realDelta, realFps) {
+        //     var current = util.getTimestamp();
+        //     var passed = current - previous;
+        //     previous = current;
+        //     accumulateTime += passed;
+        //     while (accumulateTime >= exports.getConfig('delta')) {
+        //         conf.step(delta, realDelta, realFps);
+        //         accumulateTime -= exports.getConfig('delta');
+        //     }
+        //     conf.render(delta, realDelta, realFps);
+        // // }, 1000 / conf.fps);
+        // }, 0);
+
+        var aaa = new AnimationFrame();
+
+        (function tick() {
+            conf.step();
+            conf.render();
+            aaa.request(tick);
+        })();
+
     };
 
     exports.aa = 123;

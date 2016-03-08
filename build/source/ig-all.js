@@ -162,6 +162,55 @@ define('ig/ig', [
             };
         }
     }());
+    var now = Date.now || function () {
+        return new Date().getTime();
+    };
+    function AnimationFrame(options) {
+        if (!(this instanceof AnimationFrame))
+            return new AnimationFrame(options);
+        options || (options = {});
+        if (typeof options == 'number')
+            options = { frameRate: options };
+        this.options = options;
+        this.frameRate = options.frameRate || AnimationFrame.FRAME_RATE;
+        this._frameLength = 1000 / this.frameRate;
+        this._isCustomFrameRate = this.frameRate !== AnimationFrame.FRAME_RATE;
+        this._timeoutId = null;
+        this._callbacks = {};
+        this._lastTickTime = 0;
+        this._tickCounter = 0;
+    }
+    AnimationFrame.FRAME_RATE = 60;
+    AnimationFrame.prototype.request = function (callback) {
+        var self = this;
+        ++this._tickCounter;
+        if (!callback)
+            throw new TypeError('Not enough arguments');
+        if (this._timeoutId == null) {
+            var delay = this._frameLength + this._lastTickTime - now();
+            if (delay < 0)
+                delay = 0;
+            this._timeoutId = setTimeout(function () {
+                self._lastTickTime = now();
+                self._timeoutId = null;
+                ++self._tickCounter;
+                var callbacks = self._callbacks;
+                self._callbacks = {};
+                for (var id in callbacks) {
+                    if (callbacks[id]) {
+                        callbacks[id](Date.now());
+                    }
+                }
+            }, delay);
+        }
+        this._callbacks[this._tickCounter] = callback;
+        return this._tickCounter;
+    };
+    AnimationFrame.prototype.cancel = function (id) {
+        if (nativeImpl.supported && this.options.useNative)
+            nativeCancel(id);
+        delete this._callbacks[id];
+    };
     var util = require('./util');
     var config = require('./config');
     var exports = {};
@@ -211,17 +260,12 @@ define('ig/ig', [
         }, opts);
         var previous = util.getTimestamp();
         var accumulateTime = 0;
-        return exports.rafInterval(function (delta, realDelta, realFps) {
-            var current = util.getTimestamp();
-            var passed = current - previous;
-            previous = current;
-            accumulateTime += passed;
-            while (accumulateTime >= exports.getConfig('delta')) {
-                conf.step(delta, realDelta, realFps);
-                accumulateTime -= exports.getConfig('delta');
-            }
-            conf.render(delta, realDelta, realFps);
-        }, 1000 / conf.fps);
+        var aaa = new AnimationFrame();
+        (function tick() {
+            conf.step();
+            conf.render();
+            aaa.request(tick);
+        }());
     };
     exports.aa = 123;
     return exports;
@@ -2241,7 +2285,7 @@ define('ig/Game', [
         this.stageStack.push(obj);
         this.stages[obj.name] = obj;
     };
-    p.start = function (stepFunc, execFunc, fps, loopId) {
+    p.start = function (stepFunc, execFunc, fps) {
         var q = ig.loop({
             step: stepFunc,
             render: execFunc,
