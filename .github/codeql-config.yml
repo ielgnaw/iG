@@ -1,0 +1,43 @@
+name: "CodeQL Config"
+
+# 禁用默认查询
+disable-default-queries: false
+
+# 指定要扫描的路径
+paths:
+  - src
+  - tool
+  - gulpfile.js
+
+# 排除的路径
+paths-ignore:
+  - "build/**"
+  - "dist/**"
+  - "examples/**"
+  - "**/*.min.js"
+  - "src/dep/**"     # 排除第三方依赖
+  - "tool/resource/**"  # 排除资源文件
+
+# 查询集合
+queries:
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality
+    uses: security-and-quality
+
+# 查询过滤器
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+
+# 语言特定配置
+javascript:
+  # 指定JavaScript/TypeScript相关的配置
+  index:
+    # 包含的文件扩展名
+    include: "**/*.js"
+    # 排除的文件
+    exclude:
+      - "**/*.min.js"
+      - "build/**"
+      - "dist/**"
