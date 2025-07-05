@@ -18,26 +18,71 @@ paths-ignore:
   - "src/dep/**"     # 排除第三方依赖
   - "tool/resource/**"  # 排除资源文件
 
-# 查询集合
+# 查询集合 - 前端项目推荐配置
 queries:
+  # 基础安全查询
+  - name: default
+    uses: default
+
+  # 扩展安全查询
   - name: security-extended
     uses: security-extended
+
+  # 安全和质量查询
   - name: security-and-quality
     uses: security-and-quality
 
+# 查询包 - 前端专用
+packs:
+  # JavaScript安全扩展包
+  - codeql/javascript-security-extended-queries
+
+  # JavaScript质量包
+  - codeql/javascript-quality-queries
+
+  # 如果使用React，可以添加：
+  # - codeql/javascript-react-queries
+
+  # 如果使用Vue，可以添加：
+  - codeql/javascript-vue-queries
+
+  # 如果使用Angular，可以添加：
+  # - codeql/javascript-angular-queries
+
 # 查询过滤器
 query-filters:
+  # 排除一些可能产生误报的查询
   - exclude:
       id: js/unused-local-variable
+  - exclude:
+      id: js/useless-assignment-to-local
+  # 包含高优先级安全查询
+  - include:
+      tags: security
+      severity: error
 
 # 语言特定配置
 javascript:
   # 指定JavaScript/TypeScript相关的配置
   index:
     # 包含的文件扩展名
-    include: "**/*.js"
+    include:
+      - "**/*.js"
+      - "**/*.ts"
+      - "**/*.jsx"
+      - "**/*.tsx"
+      - "**/*.vue"
     # 排除的文件
     exclude:
       - "**/*.min.js"
+      - "**/*.bundle.js"
       - "build/**"
       - "dist/**"
+      - "node_modules/**"
+
+  # 框架特定配置
+  framework:
+    # 如果使用特定框架，可以指定
+    # react: true
+    # vue: true
+    # angular: true
