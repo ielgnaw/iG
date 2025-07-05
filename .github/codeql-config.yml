@@ -32,23 +32,6 @@ queries:
   - name: security-and-quality
     uses: security-and-quality
 
-# 查询包 - 前端专用
-packs:
-  # JavaScript安全扩展包
-  - codeql/javascript-security-extended-queries
-
-  # JavaScript质量包
-  - codeql/javascript-quality-queries
-
-  # 如果使用React，可以添加：
-  # - codeql/javascript-react-queries
-
-  # 如果使用Vue，可以添加：
-  - codeql/javascript-vue-queries
-
-  # 如果使用Angular，可以添加：
-  # - codeql/javascript-angular-queries
-
 # 查询过滤器
 query-filters:
   # 排除一些可能产生误报的查询
@@ -71,7 +54,8 @@ javascript:
       - "**/*.ts"
       - "**/*.jsx"
       - "**/*.tsx"
-      - "**/*.vue"
+      - "**/*.vue"    # Vue单文件组件
+      - "**/*.mjs"    # ES模块
     # 排除的文件
     exclude:
       - "**/*.min.js"
@@ -82,7 +66,8 @@ javascript:
 
   # 框架特定配置
   framework:
-    # 如果使用特定框架，可以指定
+    # 启用Vue.js支持
+    vue: true
+    # 如果项目同时使用其他框架，也可以启用
     # react: true
-    # vue: true
     # angular: true
